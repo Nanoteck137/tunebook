@@ -9,6 +9,8 @@
 
 - [ ] Config Handling
 
+- [ ] Migration cleanup
+
 - [ ] Auth Rewrite [AuthLab](https://github.com/Nanoteck137/authlab)
     - [ ] Better API Tokens
 - [ ] Server Architecture/Structure
@@ -42,6 +44,7 @@
 - [ ] Graceful Shutdown
 
 - [ ] Jobs
+    - [ ] Auth Cleanup
     - [ ] Clear out cache
     - [ ] Create new search index
     - [ ] Library Syncing

@@ -5,6 +5,7 @@ import (
 
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/types"
 )
 
@@ -13,6 +14,12 @@ var _ App = (*BaseApp)(nil)
 type BaseApp struct {
 	db     *database.Database
 	config *config.Config
+
+	authService *service.AuthService
+}
+
+func (app *BaseApp) AuthService() *service.AuthService {
+	return app.authService
 }
 
 func (app *BaseApp) DB() *database.Database {
@@ -59,6 +66,10 @@ func (app *BaseApp) Bootstrap() error {
 			return err
 		}
 	}
+
+	app.authService = service.NewAuthService(app.db, app.config)
+	// TODO(patrik): This should be a worker
+	go app.authService.CleanRoutine()
 
 	return nil
 }

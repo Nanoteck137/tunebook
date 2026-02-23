@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/types"
 )
 
@@ -11,6 +12,8 @@ import (
 type App interface {
 	DB() *database.Database
 	Config() *config.Config
+
+	AuthService() *service.AuthService
 
 	WorkDir() types.WorkDir
 

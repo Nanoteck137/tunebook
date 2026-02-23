@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"math"
@@ -150,4 +152,50 @@ func IsValidTrackExt(ext string) bool {
 	}
 
 	return false
+}
+
+const (
+	letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	digits  = "0123456789"
+)
+
+func randomString(charset string, length int) (string, error) {
+	b := make([]byte, length)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	for i := range b {
+		b[i] = charset[int(b[i])%len(charset)]
+	}
+	return string(b), nil
+}
+
+func GenerateCode() (string, error) {
+	part1, err := randomString(letters, 4)
+	if err != nil {
+		return "", err
+	}
+
+	part2, err := randomString(digits, 4)
+	if err != nil {
+		return "", err
+	}
+
+	part3, err := randomString(letters, 4)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s-%s-%s", part1, part2, part3), nil
+}
+
+func GenerateAuthChallenge() (string, error) {
+	b := make([]byte, 64)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }

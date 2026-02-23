@@ -1,15 +1,15 @@
 module github.com/nanoteck137/dwebble
 
-go 1.21.0
-
-toolchain go1.21.5
+go 1.24.0
 
 require (
+	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gosimple/slug v1.14.0
 	github.com/kr/pretty v0.3.1
 	github.com/labstack/echo/v4 v4.12.0
+	github.com/maruel/natural v1.1.1
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/nanoteck137/pyrin v0.18.0
 	github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343
@@ -18,6 +18,7 @@ require (
 	github.com/pressly/goose/v3 v3.17.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
+	golang.org/x/oauth2 v0.28.0
 	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
 )
 
@@ -29,6 +30,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/golang-cz/devslog v0.0.13 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
@@ -42,7 +44,6 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/maruel/natural v1.1.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
