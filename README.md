@@ -1,7 +1,69 @@
 # dwebble
 
-```bash
-go install github.com/swaggo/swag/cmd/swag@latest
-```
+## Rewrite
 
-- lookat: [doug-martin/goqu](https://github.com/doug-martin/goqu)
+- [ ] Pyrin fix "Internal Server Errors"
+    - [ ] Print Errors to stderr using logger
+
+- [ ] Config Handling
+
+- [ ] Auth Rewrite [AuthLab](https://github.com/Nanoteck137/authlab)
+    - [ ] Better API Tokens
+- [ ] Server Architecture/Structure
+    - [ ] Services
+
+- [ ] Web Frontend
+    - [ ] Move away from SvelteKit server and use SvelteKit SPA Mode
+    - [ ] Finish the design of the pages
+    - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
+
+- [ ] Media
+    - [ ] Better management of media and transcoding
+    - [ ] More options for transcoding
+    - [ ] Caching settings
+
+- [ ] Playlists/Taglists
+    - [ ] Taglists renamed to SmartPlaylists
+    - [ ] Visibility
+    - [ ] Playlist Tracks should be ordered and then be re-ordered by the user
+    - [ ] Playlist should have cover image
+        - [ ] Generate the cover image (like Youtube Music)
+        - [ ] Custom Covers
+
+- [ ] Library Handling
+    - [ ] Faster syncing
+    - [ ] Metadata Validation
+    - [ ] Metadata transformation (trim spaces, escape characters, more)
+    - [ ] Artist handling
+        - [ ] When syncing have a flag to error out on the track/album when a unknown artist is found, so that the user can add the infomation for that artist
+
+- [ ] Graceful Shutdown
+
+- [ ] Jobs
+    - [ ] Clear out cache
+    - [ ] Create new search index
+    - [ ] Library Syncing
+
+- [ ] User Tracking
+    - [ ] Number of plays 
+    - [ ] Favorites
+    - [ ] Year over Year 
+
+- [ ] Server Handling for Admins
+    - [ ] Notifications
+    - [ ] SSE Events
+
+- [ ] Setup Process
+
+- [ ] Docker
+    - [ ] Use nix to build a docker image
+
+- [ ] Better Search
+    - Use [Bleve](https://blevesearch.com)
+
+- [ ] Rename Project
+    - Musicbook (MB)
+    - Tunebook (TB)
+    - Need some ideas
+
+- [ ] Use new logo from dwebble_app
