@@ -2,8 +2,10 @@
 
 ## Rewrite
 
-- [ ] Pyrin fix "Internal Server Errors"
-    - [ ] Print Errors to stderr using logger
+- [x] Pyrin fix "Internal Server Errors"
+    - [x] Print Errors to stderr using logger
+
+- [ ] Better way to log the API Errors
 
 - [ ] Config Handling
 

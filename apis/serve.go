@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -299,6 +300,10 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 func Server(app core.App) (*pyrin.Server, error) {
 	s := pyrin.NewServer(&pyrin.ServerConfig{
 		LogName: dwebble.AppName,
+		ErrorCallback: func(err error) {
+			// TODO(patrik): Handle this better
+			slog.Error("API Error", "err", err);
+		}, 
 		RegisterHandlers: func(router pyrin.Router) {
 			RegisterHandlers(app, router)
 		},
