@@ -1,9 +1,6 @@
 package core
 
 import (
-	"context"
-	"errors"
-	"log/slog"
 	"os"
 
 	"github.com/nanoteck137/dwebble/config"
@@ -61,28 +58,6 @@ func (app *BaseApp) Bootstrap() error {
 		if err != nil {
 			return err
 		}
-	}
-
-	_, err = os.Stat(workDir.SetupFile())
-	if errors.Is(err, os.ErrNotExist) && app.config.Username != "" {
-		slog.Info("Server not setup, creating the initial user")
-
-		ctx := context.Background()
-
-		_, err := app.db.CreateUser(ctx, database.CreateUserParams{
-			Username: app.config.Username,
-			Password: app.config.InitialPassword,
-			Role:     types.RoleSuperUser,
-		})
-		if err != nil {
-			return err
-		}
-
-		f, err := os.Create(workDir.SetupFile())
-		if err != nil {
-			return err
-		}
-		f.Close()
 	}
 
 	return nil

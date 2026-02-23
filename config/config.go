@@ -9,14 +9,22 @@ import (
 	"github.com/spf13/viper"
 )
 
+type ConfigOidcProvider struct {
+	Name         string `mapstructure:"name"`
+	ClientId     string `mapstructure:"client_id"`
+	ClientSecret string `mapstructure:"client_secret"`
+	IssuerUrl    string `mapstructure:"issuer_url"`
+	RedirectUrl  string `mapstructure:"redirect_url"`
+}
+
 type Config struct {
-	RunMigrations   bool   `mapstructure:"run_migrations"`
-	ListenAddr      string `mapstructure:"listen_addr"`
-	DataDir         string `mapstructure:"data_dir"`
-	LibraryDir      string `mapstructure:"library_dir"`
-	Username        string `mapstructure:"username"`
-	InitialPassword string `mapstructure:"initial_password"`
-	JwtSecret       string `mapstructure:"jwt_secret"`
+	RunMigrations bool   `mapstructure:"run_migrations"`
+	ListenAddr    string `mapstructure:"listen_addr"`
+	DataDir       string `mapstructure:"data_dir"`
+	LibraryDir    string `mapstructure:"library_dir"`
+	JwtSecret     string `mapstructure:"jwt_secret"`
+
+	OidcProviders map[string]ConfigOidcProvider `mapstructure:"oidc_providers"`
 }
 
 func (c *Config) WorkDir() types.WorkDir {
@@ -27,9 +35,6 @@ func setDefaults() {
 	viper.SetDefault("run_migrations", "true")
 	viper.SetDefault("listen_addr", ":3000")
 	viper.BindEnv("data_dir")
-	viper.BindEnv("library_dir")
-	viper.BindEnv("username")
-	viper.BindEnv("initial_password")
 	viper.BindEnv("jwt_secret")
 }
 
@@ -48,8 +53,6 @@ func validateConfig(config *Config) {
 	validate(config.ListenAddr == "", "listen_addr needs to be set")
 	validate(config.DataDir == "", "data_dir needs to be set")
 	validate(config.LibraryDir == "", "library_dir needs to be set")
-	validate(config.Username == "", "username needs to be set")
-	validate(config.InitialPassword == "", "initial_password needs to be set")
 	validate(config.JwtSecret == "", "jwt_secret needs to be set")
 
 	if hasError {
@@ -79,24 +82,22 @@ func InitConfig() {
 		slog.Warn("Failed to load config", "err", err)
 	}
 
+	override := viper.GetString("config_override")
+	if override != "" {
+		viper.SetConfigFile(override)
+		viper.MergeInConfig()
+	}
+
 	err = viper.Unmarshal(&LoadedConfig)
 	if err != nil {
 		slog.Error("Failed to unmarshal config: ", err)
 		os.Exit(-1)
 	}
 
-	hide := func(s string) string {
-		var res string
-		for i := 0; i < len(s); i++ {
-			res += "*"
-		}
-
-		return res
-	}
-
 	configCopy := LoadedConfig
-	configCopy.JwtSecret = hide(configCopy.JwtSecret)
-	configCopy.InitialPassword = hide(configCopy.InitialPassword)
+	// configCopy.OidcClientId = "***"
+	// configCopy.OidcClientSecret = "***"
+	// configCopy.JwtSecret = "***"
 
 	slog.Info("Current Config", "config", configCopy)
 
