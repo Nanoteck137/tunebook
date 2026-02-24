@@ -2,17 +2,11 @@
 
 ## Rewrite
 
-- [x] Pyrin fix "Internal Server Errors"
-    - [x] Print Errors to stderr using logger
-
 - [ ] Better way to log the API Errors
 
-- [ ] Config Handling
-
-- [ ] Migration cleanup
-
-- [ ] Auth Rewrite [AuthLab](https://github.com/Nanoteck137/authlab)
+- [x] Auth Rewrite [AuthLab](https://github.com/Nanoteck137/authlab)
     - [ ] Better API Tokens
+    - [ ] Quick Code integration
 - [ ] Server Architecture/Structure
     - [ ] Services
 
@@ -39,9 +33,9 @@
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
 
-- [x] Quick Playlist need fixing
-    - [x] Backend
-    - [x] Frontend
+
+- [ ] Better Search
+    - Use [Bleve](https://blevesearch.com)
 
 - [ ] Media
     - [ ] Better management of media and transcoding
@@ -59,12 +53,11 @@
 - [ ] Library Handling
     - [ ] Faster syncing
     - [ ] Multiple Directories
+    - [ ] Have error count for albums when errors > 5 then stop the library syncing 
     - [ ] Metadata Validation
     - [ ] Metadata transformation (trim spaces, escape characters, more)
     - [ ] Artist handling
         - [ ] When syncing have a flag to error out on the track/album when a unknown artist is found, so that the user can add the infomation for that artist
-
-- [x] Graceful Shutdown
 
 - [ ] Add Compression for Static file routes
     - [ ] SPA Routes
@@ -86,11 +79,12 @@
 
 - [ ] Setup Process
 
+- [ ] Import the old format
+
+- [ ] Migration cleanup
+
 - [ ] Docker
     - [ ] Use nix to build a docker image
-
-- [ ] Better Search
-    - Use [Bleve](https://blevesearch.com)
 
 - [ ] Rename Project
     - Musicbook (MB)
@@ -98,3 +92,14 @@
     - Need some ideas
 
 - [ ] Use new logo from dwebble_app
+
+- [x] Config Handling
+
+- [x] Pyrin fix "Internal Server Errors"
+    - [x] Print Errors to stderr using logger
+
+- [x] Graceful Shutdown
+
+- [x] Quick Playlist need fixing
+    - [x] Backend
+    - [x] Frontend
