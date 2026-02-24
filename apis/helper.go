@@ -101,6 +101,7 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	return nil, InvalidAuth("invalid authorization token")
 }
 
+// TODO(patrik): Move to utils
 func ConvertSqlNullString(value sql.NullString) *string {
 	if value.Valid {
 		return &value.String
@@ -109,6 +110,7 @@ func ConvertSqlNullString(value sql.NullString) *string {
 	return nil
 }
 
+// TODO(patrik): Move to utils
 func ConvertSqlNullInt64(value sql.NullInt64) *int64 {
 	if value.Valid {
 		return &value.Int64
