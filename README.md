@@ -20,13 +20,18 @@
     - [ ] Move away from SvelteKit server and use SvelteKit SPA Mode
         - [x] /login
         - [x] /tracks
-        - [ ] /taglists
+        - [x] /taglists
         - [x] /server
         - [ ] /search
         - [x] /playlists
         - [ ] /artists
         - [ ] /albums
         - [ ] /account
+    - [ ] Add
+        - [ ] Playlist Editing
+        - [ ] Playlist Filtering/Sorting
+        - [ ] Taglist Editing
+        - [ ] Taglist Filtering/Sorting
     - [ ] Finish the design of the pages
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)

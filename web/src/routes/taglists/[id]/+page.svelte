@@ -27,11 +27,11 @@
   </Breadcrumb.Root>
 </div>
 
-{#if data.filterError}
+<!-- {#if data.filterError}
   <p class="text-red-400">{data.filterError}</p>
-{/if}
+{/if} -->
 
-<Button href="/taglists/{data.taglist.id}/edit">Edit Taglist</Button>
+<!-- <Button href="/taglists/{data.taglist.id}/edit">Edit Taglist</Button> -->
 <!--TODO(patrik): Fix this-->
 <!-- <Button
   onclick={async () => {
@@ -52,7 +52,7 @@
   Delete Taglist
 </Button> -->
 
-<form
+<!-- <form
   method="GET"
   onsubmit={() => {
     // TODO(patrik): Temp Fix
@@ -78,9 +78,9 @@
     <Filter />
     Filter Tracks
   </Button>
-</form>
+</form> -->
 
-<div class="h-2"></div>
+<!-- <div class="h-2"></div> -->
 
 <TrackListHeader
   name={data.taglist.name}
