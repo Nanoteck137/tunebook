@@ -24,7 +24,7 @@
         - [x] /server
         - [ ] /search
         - [x] /playlists
-        - [ ] /artists
+        - [x] /artists
         - [x] /albums
         - [ ] /account
     - [ ] Add
@@ -38,9 +38,9 @@
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
 
-- [ ] Quick Playlist need fixing
-    - [ ] Backend
-    - [ ] Frontend
+- [x] Quick Playlist need fixing
+    - [x] Backend
+    - [x] Frontend
 
 - [ ] Media
     - [ ] Better management of media and transcoding
