@@ -35,6 +35,7 @@
         - [ ] On /albums/:id use diffrent colors on odd tracks
         - [ ] On /albums/:id hover highlight tracks
     - [ ] Finish the design of the pages
+    - [ ] Home Page
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
 
@@ -57,12 +58,16 @@
 
 - [ ] Library Handling
     - [ ] Faster syncing
+    - [ ] Multiple Directories
     - [ ] Metadata Validation
     - [ ] Metadata transformation (trim spaces, escape characters, more)
     - [ ] Artist handling
         - [ ] When syncing have a flag to error out on the track/album when a unknown artist is found, so that the user can add the infomation for that artist
 
-- [ ] Graceful Shutdown
+- [x] Graceful Shutdown
+
+- [ ] Add Compression for Static file routes
+    - [ ] SPA Routes
 
 - [ ] Jobs
     - [ ] Auth Cleanup

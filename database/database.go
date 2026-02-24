@@ -49,6 +49,10 @@ func (db *Database) RunMigrateDown() error {
 	return migrations.RunMigrateDown(db.db.DB.DB)
 }
 
+func (db *Database) Close() error {
+	return db.db.Close()
+}
+
 func (db *Database) Begin() (Tx, error) {
 	tx, err := db.db.Begin()
 	if err != nil {

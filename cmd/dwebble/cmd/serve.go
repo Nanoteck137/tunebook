@@ -3,6 +3,8 @@ package cmd
 import (
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/nanoteck137/dwebble/apis"
 	"github.com/nanoteck137/dwebble/config"
@@ -27,10 +29,36 @@ var serveCmd = &cobra.Command{
 			os.Exit(-1)
 		}
 
-		err = e.Start(app.Config().ListenAddr)
+		slog.Info("Starting server...")
+
+		done := make(chan bool, 1)
+
+		// listen for interrupt signal to gracefully shutdown the application
+		go func() {
+			sigch := make(chan os.Signal, 1)
+			signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
+			<-sigch
+
+			done <- true
+		}()
+
+		go func() {
+			err = e.Start(app.Config().ListenAddr)
+			if err != nil {
+				slog.Error("Failed to start server", "err", err)
+				os.Exit(-1)
+			}
+
+			done <- true
+		}()
+
+		<-done
+
+		slog.Info("Stopping server...")
+
+		err = app.Shutdown()
 		if err != nil {
-			slog.Error("Failed to start server", "err", err)
-			os.Exit(-1)
+			slog.Error("Failed to shutdown app", "err", err)
 		}
 	},
 }

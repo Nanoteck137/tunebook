@@ -18,4 +18,5 @@ type App interface {
 	WorkDir() types.WorkDir
 
 	Bootstrap() error
+	Shutdown() error
 }

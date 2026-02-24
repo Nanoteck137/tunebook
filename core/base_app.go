@@ -74,6 +74,15 @@ func (app *BaseApp) Bootstrap() error {
 	return nil
 }
 
+func (app *BaseApp) Shutdown() error {
+	err := app.db.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewBaseApp(config *config.Config) *BaseApp {
 	return &BaseApp{
 		config: config,
