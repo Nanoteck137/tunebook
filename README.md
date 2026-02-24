@@ -19,11 +19,11 @@
 - [ ] Web Frontend
     - [ ] Move away from SvelteKit server and use SvelteKit SPA Mode
         - [x] /login
-        - [ ] /tracks
+        - [x] /tracks
         - [ ] /taglists
         - [ ] /server
         - [ ] /search
-        - [ ] /playlists
+        - [x] /playlists
         - [ ] /artists
         - [ ] /albums
         - [ ] /account

@@ -1,7 +1,8 @@
 import { PUBLIC_API_ADDRESS } from "$env/static/public";
 import { setApiClientAuth } from "$lib";
 import { ApiClient } from "$lib/api/client";
-import type { GetMe } from "$lib/api/types";
+import type { GetMe, Playlist } from "$lib/api/types";
+import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 
 export const prerender = false;
@@ -30,8 +31,35 @@ export const load: LayoutLoad = async ({ url }) => {
     }
   }
 
+  let quickPlaylistIds = [] as string[];
+  let userPlaylists: Playlist[] | null = null;
+
+  if (user) {
+    if (user.quickPlaylist) {
+      const res = await apiClient.getUserQuickPlaylistItemIds();
+      if (!res.success) {
+        // TODO(patrik): Better handling of this error
+        throw error(res.error.code, { message: res.error.message });
+      }
+
+      quickPlaylistIds = res.data.trackIds;
+    }
+
+    {
+      const res = await apiClient.getPlaylists();
+      if (!res.success) {
+        // TODO(patrik): Better handling of this error
+        throw error(res.error.code, { message: res.error.message });
+      }
+
+      userPlaylists = res.data.playlists;
+    }
+  }
+
   return {
     apiClient,
     user,
+    quickPlaylistIds,
+    userPlaylists,
   };
 };

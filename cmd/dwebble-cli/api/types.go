@@ -355,6 +355,8 @@ type GetMe struct {
 	DisplayName string `json:"displayName"`
 	// Name: GetMe.role
 	Role string `json:"role"`
+	// Name: GetMe.quickPlaylist
+	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
 }
 
 // Name: MediaResource
@@ -643,5 +645,11 @@ type UpdateTaglistBody struct {
 	Name *string `json:"name,omitempty"`
 	// Name: UpdateTaglistBody.filter
 	Filter *string `json:"filter,omitempty"`
+}
+
+// Name: UpdateUserSettingsBody
+type UpdateUserSettingsBody struct {
+	// Name: UpdateUserSettingsBody.quickPlaylist
+	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
 }
 

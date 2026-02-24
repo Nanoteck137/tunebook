@@ -19,6 +19,8 @@ type GetMe struct {
 	Email       string `json:"email"`
 	DisplayName string `json:"displayName"`
 	Role        string `json:"role"`
+
+	QuickPlaylist *string `json:"quickPlaylist"`
 }
 
 type AuthInitiate struct {
@@ -377,10 +379,11 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return GetMe{
-					Id:          user.Id,
-					Email:       user.Email,
-					DisplayName: user.DisplayName,
-					Role:        user.Role,
+					Id:            user.Id,
+					Email:         user.Email,
+					DisplayName:   user.DisplayName,
+					Role:          user.Role,
+					QuickPlaylist: ConvertSqlNullString(user.QuickPlaylist),
 				}, nil
 			},
 		},

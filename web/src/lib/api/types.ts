@@ -392,6 +392,8 @@ export const GetMe = z.object({
   "displayName": z.string(),
   // Name: GetMe.role
   "role": z.string(),
+  // Name: GetMe.quickPlaylist
+  "quickPlaylist": z.string().nullable(),
 });
 export type GetMe = z.infer<typeof GetMe>;
 
@@ -709,4 +711,11 @@ export const UpdateTaglistBody = z.object({
   "filter": z.string().nullable().optional(),
 });
 export type UpdateTaglistBody = z.infer<typeof UpdateTaglistBody>;
+
+// Name: UpdateUserSettingsBody
+export const UpdateUserSettingsBody = z.object({
+  // Name: UpdateUserSettingsBody.quickPlaylist
+  "quickPlaylist": z.string().nullable().optional(),
+});
+export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
 

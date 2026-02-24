@@ -1,13 +1,16 @@
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals }) => {
-  const playlists = await locals.apiClient.getPlaylists();
+export const load: PageLoad = async ({ parent }) => {
+  const data = await parent();
+
+  const playlists = await data.apiClient.getPlaylists();
   if (!playlists.success) {
     throw error(playlists.error.code, { message: playlists.error.message });
   }
 
   return {
+    ...data,
     playlists: playlists.data.playlists,
   };
 };

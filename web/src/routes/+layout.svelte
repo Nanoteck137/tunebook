@@ -21,19 +21,14 @@
   import { fade, fly } from "svelte/transition";
   import { Button, buttonVariants } from "@nanoteck137/nano-ui";
   import toast, { Toaster } from "svelte-5-french-toast";
-  import {
-    handleApiError,
-    setApiClient,
-    setApiClientAuth,
-    setApiClientRaw,
-  } from "$lib";
+  import { handleApiError, setApiClientRaw } from "$lib";
   import {
     DummyQueue,
     LocalQueue,
     setMusicManager,
   } from "$lib/music-manager.svelte";
-  import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
   import { goto, invalidateAll } from "$app/navigation";
+  import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
 
   let { children, data } = $props();
@@ -46,11 +41,11 @@
   // });
 
   let musicManager = setMusicManager(apiClient, new DummyQueue());
-  // let quickPlaylist = setQuickPlaylist(
-  //   apiClient,
-  //   data.user?.quickPlaylist ?? "",
-  //   data.quickPlaylistIds,
-  // );
+  let quickPlaylist = setQuickPlaylist(
+    apiClient,
+    data.user?.quickPlaylist ?? "",
+    data.quickPlaylistIds,
+  );
 
   $effect(() => {
     if (!browser) return;
@@ -61,12 +56,10 @@
     }
   });
 
-  /*
   $effect(() => {
     quickPlaylist.playlistId = data.user?.quickPlaylist ?? "";
     quickPlaylist.ids = data.quickPlaylistIds;
   });
-  */
 
   let showSideMenu = $state(false);
 
@@ -106,7 +99,7 @@
     <div class="flex-grow"></div>
 
     <div class="flex items-center gap-2">
-      <!-- {#if data.userPlaylists}
+      {#if data.userPlaylists}
         <QuickPlaylistSelectorModal
           class={buttonVariants({ variant: "ghost", size: "icon" })}
           playlists={data.userPlaylists}
@@ -127,7 +120,7 @@
         >
           <ListVideo />
         </QuickPlaylistSelectorModal>
-      {/if} -->
+      {/if}
 
       <Button href="/search" size="icon" variant="ghost">
         <Search />

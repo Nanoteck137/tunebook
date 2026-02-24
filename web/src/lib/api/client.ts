@@ -228,6 +228,10 @@ export class ApiClient extends BaseApiClient {
   updateTaglist(id: string, body: api.UpdateTaglistBody, options?: ExtraOptions) {
     return this.request(`/api/v1/taglists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
+  
+  updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
+    return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
+  }
 }
 
 export class ClientUrls {
@@ -471,5 +475,9 @@ export class ClientUrls {
   
   updateTaglist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
+  }
+  
+  updateUserSettings() {
+    return createUrl(this.baseUrl, "/api/v1/user/settings")
   }
 }

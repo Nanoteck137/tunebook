@@ -25,15 +25,16 @@ type User struct {
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
+
+	QuickPlaylist sql.NullString `db:"quick_playlist"`
 }
 
-// func (u User) ToUserSettings() UserSettings {
-// 	return UserSettings{
-// 		Id:            u.Id,
-// 		DisplayName:   u.DisplayName,
-// 		QuickPlaylist: u.QuickPlaylist,
-// 	}
-// }
+func (u User) ToUserSettings() UserSettings {
+	return UserSettings{
+		Id:            u.Id,
+		QuickPlaylist: u.QuickPlaylist,
+	}
+}
 
 func UserQuery() *goqu.SelectDataset {
 	query := dialect.From("users").
@@ -47,13 +48,12 @@ func UserQuery() *goqu.SelectDataset {
 			"users.created",
 			"users.updated",
 
-			// "users_settings.display_name",
-			// "users_settings.quick_playlist",
+			"users_settings.quick_playlist",
+		).
+		LeftJoin(
+			goqu.I("users_settings"),
+			goqu.On(goqu.I("users.id").Eq(goqu.I("users_settings.id"))),
 		)
-		// LeftJoin(
-		// 	goqu.I("users_settings"),
-		// 	goqu.On(goqu.I("users.id").Eq(goqu.I("users_settings.id"))),
-		// )
 
 	return query
 }
@@ -63,7 +63,6 @@ func UserSettingsQuery() *goqu.SelectDataset {
 	query := dialect.From("users_settings").
 		Select(
 			"users_settings.id",
-			"users_settings.display_name",
 
 			"users_settings.quick_playlist",
 		)
@@ -197,22 +196,20 @@ func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) err
 	return nil
 }
 
-// func (db DB) UpdateUserSettings(ctx context.Context, settings UserSettings) error {
-// 	query := dialect.Insert("users_settings").
-// 		Rows(goqu.Record{
-// 			"id":             settings.Id,
-// 			"display_name":   settings.DisplayName,
-// 			"quick_playlist": settings.QuickPlaylist,
-// 		}).
-// 		OnConflict(goqu.DoUpdate("id", goqu.Record{
-// 			"display_name":   settings.DisplayName,
-// 			"quick_playlist": settings.QuickPlaylist,
-// 		}))
-//
-// 	_, err := db.db.Exec(ctx, query)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	return nil
-// }
+func (db DB) UpdateUserSettings(ctx context.Context, settings UserSettings) error {
+	query := dialect.Insert("users_settings").
+		Rows(goqu.Record{
+			"id":             settings.Id,
+			"quick_playlist": settings.QuickPlaylist,
+		}).
+		OnConflict(goqu.DoUpdate("id", goqu.Record{
+			"quick_playlist": settings.QuickPlaylist,
+		}))
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

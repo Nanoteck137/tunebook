@@ -558,6 +558,11 @@
           "name": "role",
           "type": "string",
           "omitEmpty": false
+        },
+        {
+          "name": "quickPlaylist",
+          "type": "*string",
+          "omitEmpty": false
         }
       ]
     },
@@ -1285,6 +1290,16 @@
           "omitEmpty": true
         }
       ]
+    },
+    {
+      "name": "UpdateUserSettingsBody",
+      "fields": [
+        {
+          "name": "quickPlaylist",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
     }
   ],
   "endpoints": [
@@ -1702,6 +1717,13 @@
       "method": "PATCH",
       "path": "/api/v1/taglists/:id",
       "body": "UpdateTaglistBody"
+    },
+    {
+      "type": "api",
+      "name": "UpdateUserSettings",
+      "method": "PATCH",
+      "path": "/api/v1/user/settings",
+      "body": "UpdateUserSettingsBody"
     }
   ]
 }

@@ -5,18 +5,29 @@
     DropdownMenu,
     Separator,
   } from "@nanoteck137/nano-ui";
-  import { Check, EllipsisVertical, FileHeart } from "lucide-svelte";
+  import { Check, EllipsisVertical, FileHeart, Plus } from "lucide-svelte";
   import { cn } from "$lib/utils";
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
+  import NewPlaylistModal from "./NewPlaylistModal.svelte";
 
   let { data } = $props();
   const apiClient = getApiClient();
+
+  let openNewPlaylistModal = $state(false);
 </script>
 
 <div class="flex flex-col gap-4">
   <div>
-    <Button href="/playlists/new">New Playlist</Button>
+    <Button
+      variant="ghost"
+      onclick={() => {
+        openNewPlaylistModal = true;
+      }}
+    >
+      <Plus />
+      New Playlist
+    </Button>
   </div>
 
   <div class="flex flex-col gap-2">
@@ -73,3 +84,5 @@
     {/each}
   </div>
 </div>
+
+<NewPlaylistModal bind:open={openNewPlaylistModal} />

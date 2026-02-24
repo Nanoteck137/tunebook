@@ -856,6 +856,22 @@ func (c *Client) UpdateTaglist(id string, body UpdateTaglistBody, options Option
 	return Request[any](data, body)
 }
 
+func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options) (*any, error) {
+	path := "/api/v1/user/settings"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *ClientUrls) AddItemToPlaylist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", id)
 	return c.getUrl(path)
@@ -1148,5 +1164,10 @@ func (c *ClientUrls) SyncLibrary() (*URL, error) {
 
 func (c *ClientUrls) UpdateTaglist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/taglists/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) UpdateUserSettings() (*URL, error) {
+	path := "/api/v1/user/settings"
 	return c.getUrl(path)
 }

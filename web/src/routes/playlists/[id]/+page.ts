@@ -1,15 +1,18 @@
 import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ params, locals, url }) => {
-  const playlist = await locals.apiClient.getPlaylistById(params.id);
+export const load: PageLoad = async ({ parent, params, url }) => {
+  const data = await parent();
+
+  const playlist = await data.apiClient.getPlaylistById(params.id);
   if (!playlist.success) {
     throw error(playlist.error.code, { message: playlist.error.message });
   }
 
+  // TODO(patrik): Change getPagedQueryOptions?
   const query = getPagedQueryOptions(url.searchParams);
-  const items = await locals.apiClient.getPlaylistItems(params.id, {
+  const items = await data.apiClient.getPlaylistItems(params.id, {
     query,
   });
   if (!items.success) {
@@ -17,6 +20,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
   }
 
   return {
+    ...data,
     playlist: playlist.data,
     page: items.data.page,
     items: items.data.items,
