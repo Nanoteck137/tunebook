@@ -1,11 +1,13 @@
 import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals, url, params }) => {
+export const load: PageLoad = async ({ parent, params, url }) => {
+  const data = await parent();
+
   const query = getPagedQueryOptions(url.searchParams);
 
-  const tracks = await locals.apiClient.getTracks({
+  const tracks = await data.apiClient.getTracks({
     query: {
       ...query,
       filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
@@ -18,6 +20,7 @@ export const load: PageServerLoad = async ({ locals, url, params }) => {
   }
 
   return {
+    ...data,
     page: tracks.data.page,
     tracks: tracks.data.tracks,
   };

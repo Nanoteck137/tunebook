@@ -18,7 +18,7 @@
   let { data } = $props();
 </script>
 
-<form method="GET">
+<!-- <form method="GET">
   <div class="flex flex-col gap-2">
     <Input
       type="text"
@@ -48,7 +48,7 @@
   </Button>
 </form>
 
-<div class="h-2"></div>
+<div class="h-2"></div> -->
 
 {#snippet artistItem(artist: Artist)}
   <div class="py-2">

@@ -1,9 +1,11 @@
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals, params }) => {
+export const load: PageLoad = async ({ parent, params }) => {
+  const data = await parent();
+
   // TODO(patrik): Use Promise.all
-  const albums = await locals.apiClient.getAlbums({
+  const albums = await data.apiClient.getAlbums({
     query: {
       filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
       perPage: "5",
@@ -15,7 +17,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     });
   }
 
-  const tracks = await locals.apiClient.getTracks({
+  const tracks = await data.apiClient.getTracks({
     query: {
       filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
       perPage: "5",
@@ -28,6 +30,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   }
 
   return {
+    ...data,
     albums: albums.data.albums,
     trackPage: tracks.data.page,
     tracks: tracks.data.tracks,

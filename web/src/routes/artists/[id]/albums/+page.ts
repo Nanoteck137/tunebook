@@ -1,11 +1,13 @@
 import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals, url, params }) => {
+export const load: PageLoad = async ({ parent, params, url }) => {
+  const data = await parent();
+
   const query = getPagedQueryOptions(url.searchParams);
 
-  const albums = await locals.apiClient.getAlbums({
+  const albums = await data.apiClient.getAlbums({
     query: {
       ...query,
       filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
@@ -16,6 +18,7 @@ export const load: PageServerLoad = async ({ locals, url, params }) => {
   }
 
   return {
+    ...data,
     page: albums.data.page,
     albums: albums.data.albums,
   };
