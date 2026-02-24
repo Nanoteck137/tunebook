@@ -19,8 +19,37 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/quickplaylist", "POST", z.undefined(), z.any(), body, options)
   }
   
-  changePassword(body: api.ChangePasswordBody, options?: ExtraOptions) {
-    return this.request("/api/v1/auth/password", "PATCH", z.undefined(), z.any(), body, options)
+  
+  authClaimQuickConnectCode(body: api.AuthClaimQuickConnectCodeBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/claim", "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  authFinishProvider(body: api.AuthFinishProviderBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/providers/finish", "POST", api.AuthFinishProvider, z.any(), body, options)
+  }
+  
+  authFinishQuickConnect(body: api.AuthFinishQuickConnectBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/finish", "POST", api.AuthFinishQuickConnect, z.any(), body, options)
+  }
+  
+  authGetProviderStatus(body: api.AuthGetProviderStatusBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/provider/status", "POST", api.AuthGetProviderStatus, z.any(), body, options)
+  }
+  
+  authGetProviders(options?: ExtraOptions) {
+    return this.request("/api/v1/auth/providers", "GET", api.GetAuthProviders, z.any(), undefined, options)
+  }
+  
+  authGetQuickConnectStatus(body: api.AuthGetQuickConnectStatusBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/status", "POST", api.AuthGetQuickConnectStatus, z.any(), body, options)
+  }
+  
+  authProviderInitiate(body: api.AuthInitiateBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/providers/initiate", "POST", api.AuthInitiate, z.any(), body, options)
+  }
+  
+  authQuickConnectInitiate(options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/initiate", "POST", api.AuthQuickConnectInitiate, z.any(), undefined, options)
   }
   
   cleanupLibrary(options?: ExtraOptions) {
@@ -191,14 +220,6 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/tracks/search", "GET", api.GetTracks, z.any(), undefined, options)
   }
   
-  signin(body: api.SigninBody, options?: ExtraOptions) {
-    return this.request("/api/v1/auth/signin", "POST", api.Signin, z.any(), body, options)
-  }
-  
-  signup(body: api.SignupBody, options?: ExtraOptions) {
-    return this.request("/api/v1/auth/signup", "POST", api.Signup, z.any(), body, options)
-  }
-  
   
   syncLibrary(body: api.SyncLibraryBody, options?: ExtraOptions) {
     return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), body, options)
@@ -206,10 +227,6 @@ export class ApiClient extends BaseApiClient {
   
   updateTaglist(id: string, body: api.UpdateTaglistBody, options?: ExtraOptions) {
     return this.request(`/api/v1/taglists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
-  updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
-    return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }
 }
 
@@ -228,8 +245,40 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
   }
   
-  changePassword() {
-    return createUrl(this.baseUrl, "/api/v1/auth/password")
+  authCallback() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers/callback")
+  }
+  
+  authClaimQuickConnectCode() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/claim")
+  }
+  
+  authFinishProvider() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers/finish")
+  }
+  
+  authFinishQuickConnect() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/finish")
+  }
+  
+  authGetProviderStatus() {
+    return createUrl(this.baseUrl, "/api/v1/auth/provider/status")
+  }
+  
+  authGetProviders() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers")
+  }
+  
+  authGetQuickConnectStatus() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/status")
+  }
+  
+  authProviderInitiate() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers/initiate")
+  }
+  
+  authQuickConnectInitiate() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/initiate")
   }
   
   cleanupLibrary() {
@@ -412,14 +461,6 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/tracks/search")
   }
   
-  signin() {
-    return createUrl(this.baseUrl, "/api/v1/auth/signin")
-  }
-  
-  signup() {
-    return createUrl(this.baseUrl, "/api/v1/auth/signup")
-  }
-  
   sseHandler() {
     return createUrl(this.baseUrl, "/api/v1/system/library/sse")
   }
@@ -430,9 +471,5 @@ export class ClientUrls {
   
   updateTaglist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
-  }
-  
-  updateUserSettings() {
-    return createUrl(this.baseUrl, "/api/v1/user/settings")
   }
 }

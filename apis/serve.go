@@ -23,6 +23,25 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	g := router.Group("/api/v1")
 	InstallHandlers(app, g)
 
+	g = router.Group("")
+	g.Register(
+		pyrin.NormalHandler{
+			Method:      http.MethodGet,
+			Path:        "/static/*",
+			HandlerFunc: func(c pyrin.Context) error {
+				// TODO(patrik): Fix this
+				f := os.DirFS("./render/static")
+				fs := http.StripPrefix("/static", http.FileServerFS(f))
+
+				fs.ServeHTTP(c.Response(), c.Request())
+
+				return nil
+			},
+		},
+
+		pyrin.SpaHandler(os.DirFS("./result"), "index.html"),
+	)
+
 	g = router.Group("/files")
 	g.Register(
 		pyrin.NormalHandler{

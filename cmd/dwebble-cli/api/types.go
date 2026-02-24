@@ -71,14 +71,104 @@ type Artist struct {
 	Updated int `json:"updated"`
 }
 
-// Name: ChangePasswordBody
-type ChangePasswordBody struct {
-	// Name: ChangePasswordBody.currentPassword
-	CurrentPassword string `json:"currentPassword"`
-	// Name: ChangePasswordBody.newPassword
-	NewPassword string `json:"newPassword"`
-	// Name: ChangePasswordBody.newPasswordConfirm
-	NewPasswordConfirm string `json:"newPasswordConfirm"`
+// Name: AuthClaimQuickConnectCodeBody
+type AuthClaimQuickConnectCodeBody struct {
+	// Name: AuthClaimQuickConnectCodeBody.code
+	Code string `json:"code"`
+}
+
+// Name: AuthFinishProvider
+type AuthFinishProvider struct {
+	// Name: AuthFinishProvider.token
+	Token string `json:"token"`
+}
+
+// Name: AuthFinishProviderBody
+type AuthFinishProviderBody struct {
+	// Name: AuthFinishProviderBody.requestId
+	RequestId string `json:"requestId"`
+	// Name: AuthFinishProviderBody.challenge
+	Challenge string `json:"challenge"`
+}
+
+// Name: AuthFinishQuickConnect
+type AuthFinishQuickConnect struct {
+	// Name: AuthFinishQuickConnect.token
+	Token string `json:"token"`
+}
+
+// Name: AuthFinishQuickConnectBody
+type AuthFinishQuickConnectBody struct {
+	// Name: AuthFinishQuickConnectBody.code
+	Code string `json:"code"`
+	// Name: AuthFinishQuickConnectBody.challenge
+	Challenge string `json:"challenge"`
+}
+
+// Name: AuthGetProviderStatus
+type AuthGetProviderStatus struct {
+	// Name: AuthGetProviderStatus.status
+	Status string `json:"status"`
+}
+
+// Name: AuthGetProviderStatusBody
+type AuthGetProviderStatusBody struct {
+	// Name: AuthGetProviderStatusBody.requestId
+	RequestId string `json:"requestId"`
+	// Name: AuthGetProviderStatusBody.challenge
+	Challenge string `json:"challenge"`
+}
+
+// Name: AuthGetQuickConnectStatus
+type AuthGetQuickConnectStatus struct {
+	// Name: AuthGetQuickConnectStatus.status
+	Status string `json:"status"`
+}
+
+// Name: AuthGetQuickConnectStatusBody
+type AuthGetQuickConnectStatusBody struct {
+	// Name: AuthGetQuickConnectStatusBody.code
+	Code string `json:"code"`
+	// Name: AuthGetQuickConnectStatusBody.challenge
+	Challenge string `json:"challenge"`
+}
+
+// Name: AuthInitiate
+type AuthInitiate struct {
+	// Name: AuthInitiate.requestId
+	RequestId string `json:"requestId"`
+	// Name: AuthInitiate.authUrl
+	AuthUrl string `json:"authUrl"`
+	// Name: AuthInitiate.challenge
+	Challenge string `json:"challenge"`
+	// Name: AuthInitiate.expiresAt
+	ExpiresAt string `json:"expiresAt"`
+}
+
+// Name: AuthInitiateBody
+type AuthInitiateBody struct {
+	// Name: AuthInitiateBody.providerId
+	ProviderId string `json:"providerId"`
+}
+
+// Name: AuthProvider
+type AuthProvider struct {
+	// Name: AuthProvider.id
+	Id string `json:"id"`
+	// Name: AuthProvider.displayName
+	DisplayName string `json:"displayName"`
+}
+
+// Name: AuthQuickConnectInitiate
+type AuthQuickConnectInitiate struct {
+	// Name: AuthQuickConnectInitiate.code
+	Code string `json:"code"`
+	// Name: AuthQuickConnectInitiate.challenge
+	Challenge string `json:"challenge"`
+	// Name: AuthQuickConnectInitiate.authUrl
+	AuthUrl string `json:"authUrl"`
+	// Name: AuthQuickConnectInitiate.expiresAt
+	ExpiresAt string `json:"expiresAt"`
 }
 
 // Name: CreateApiToken
@@ -231,6 +321,12 @@ type GetArtists struct {
 	Artists []Artist `json:"artists"`
 }
 
+// Name: GetAuthProviders
+type GetAuthProviders struct {
+	// Name: GetAuthProviders.providers
+	Providers []AuthProvider `json:"providers"`
+}
+
 // Name: Path
 type Path struct {
 	// Name: Path.name
@@ -253,14 +349,12 @@ type GetLibraryPaths struct {
 type GetMe struct {
 	// Name: GetMe.id
 	Id string `json:"id"`
-	// Name: GetMe.username
-	Username string `json:"username"`
-	// Name: GetMe.role
-	Role string `json:"role"`
+	// Name: GetMe.email
+	Email string `json:"email"`
 	// Name: GetMe.displayName
 	DisplayName string `json:"displayName"`
-	// Name: GetMe.quickPlaylist
-	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
+	// Name: GetMe.role
+	Role string `json:"role"`
 }
 
 // Name: MediaResource
@@ -531,38 +625,6 @@ type RemovePlaylistItemBody struct {
 	TrackId string `json:"trackId"`
 }
 
-// Name: Signin
-type Signin struct {
-	// Name: Signin.token
-	Token string `json:"token"`
-}
-
-// Name: SigninBody
-type SigninBody struct {
-	// Name: SigninBody.username
-	Username string `json:"username"`
-	// Name: SigninBody.password
-	Password string `json:"password"`
-}
-
-// Name: Signup
-type Signup struct {
-	// Name: Signup.id
-	Id string `json:"id"`
-	// Name: Signup.username
-	Username string `json:"username"`
-}
-
-// Name: SignupBody
-type SignupBody struct {
-	// Name: SignupBody.username
-	Username string `json:"username"`
-	// Name: SignupBody.password
-	Password string `json:"password"`
-	// Name: SignupBody.passwordConfirm
-	PasswordConfirm string `json:"passwordConfirm"`
-}
-
 // Name: SyncLibraryBody
 type SyncLibraryBody struct {
 	// Name: SyncLibraryBody.path
@@ -581,13 +643,5 @@ type UpdateTaglistBody struct {
 	Name *string `json:"name,omitempty"`
 	// Name: UpdateTaglistBody.filter
 	Filter *string `json:"filter,omitempty"`
-}
-
-// Name: UpdateUserSettingsBody
-type UpdateUserSettingsBody struct {
-	// Name: UpdateUserSettingsBody.displayName
-	DisplayName *string `json:"displayName,omitempty"`
-	// Name: UpdateUserSettingsBody.quickPlaylist
-	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
 }
 

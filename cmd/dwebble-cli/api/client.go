@@ -34,8 +34,9 @@ func (c *Client) AddToUserQuickPlaylist(body TrackId, options Options) (*any, er
 	return Request[any](data, body)
 }
 
-func (c *Client) ChangePassword(body ChangePasswordBody, options Options) (*any, error) {
-	path := "/api/v1/auth/password"
+
+func (c *Client) AuthClaimQuickConnectCode(body AuthClaimQuickConnectCodeBody, options Options) (*any, error) {
+	path := "/api/v1/auth/quick-connect/claim"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -43,11 +44,123 @@ func (c *Client) ChangePassword(body ChangePasswordBody, options Options) (*any,
 
 	data := RequestData{
 		Url: url,
-		Method: "PATCH",
+		Method: "POST",
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
 	return Request[any](data, body)
+}
+
+func (c *Client) AuthFinishProvider(body AuthFinishProviderBody, options Options) (*AuthFinishProvider, error) {
+	path := "/api/v1/auth/providers/finish"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AuthFinishProvider](data, body)
+}
+
+func (c *Client) AuthFinishQuickConnect(body AuthFinishQuickConnectBody, options Options) (*AuthFinishQuickConnect, error) {
+	path := "/api/v1/auth/quick-connect/finish"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AuthFinishQuickConnect](data, body)
+}
+
+func (c *Client) AuthGetProviderStatus(body AuthGetProviderStatusBody, options Options) (*AuthGetProviderStatus, error) {
+	path := "/api/v1/auth/provider/status"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AuthGetProviderStatus](data, body)
+}
+
+func (c *Client) AuthGetProviders(options Options) (*GetAuthProviders, error) {
+	path := "/api/v1/auth/providers"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetAuthProviders](data, nil)
+}
+
+func (c *Client) AuthGetQuickConnectStatus(body AuthGetQuickConnectStatusBody, options Options) (*AuthGetQuickConnectStatus, error) {
+	path := "/api/v1/auth/quick-connect/status"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AuthGetQuickConnectStatus](data, body)
+}
+
+func (c *Client) AuthProviderInitiate(body AuthInitiateBody, options Options) (*AuthInitiate, error) {
+	path := "/api/v1/auth/providers/initiate"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AuthInitiate](data, body)
+}
+
+func (c *Client) AuthQuickConnectInitiate(options Options) (*AuthQuickConnectInitiate, error) {
+	path := "/api/v1/auth/quick-connect/initiate"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AuthQuickConnectInitiate](data, nil)
 }
 
 func (c *Client) CleanupLibrary(options Options) (*any, error) {
@@ -710,38 +823,6 @@ func (c *Client) SearchTracks(options Options) (*GetTracks, error) {
 	return Request[GetTracks](data, nil)
 }
 
-func (c *Client) Signin(body SigninBody, options Options) (*Signin, error) {
-	path := "/api/v1/auth/signin"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[Signin](data, body)
-}
-
-func (c *Client) Signup(body SignupBody, options Options) (*Signup, error) {
-	path := "/api/v1/auth/signup"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[Signup](data, body)
-}
-
 
 func (c *Client) SyncLibrary(body SyncLibraryBody, options Options) (*any, error) {
 	path := "/api/v1/system/library"
@@ -775,22 +856,6 @@ func (c *Client) UpdateTaglist(id string, body UpdateTaglistBody, options Option
 	return Request[any](data, body)
 }
 
-func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options) (*any, error) {
-	path := "/api/v1/user/settings"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
 func (c *ClientUrls) AddItemToPlaylist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", id)
 	return c.getUrl(path)
@@ -801,8 +866,48 @@ func (c *ClientUrls) AddToUserQuickPlaylist() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) ChangePassword() (*URL, error) {
-	path := "/api/v1/auth/password"
+func (c *ClientUrls) AuthCallback() (*URL, error) {
+	path := "/api/v1/auth/providers/callback"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthClaimQuickConnectCode() (*URL, error) {
+	path := "/api/v1/auth/quick-connect/claim"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthFinishProvider() (*URL, error) {
+	path := "/api/v1/auth/providers/finish"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthFinishQuickConnect() (*URL, error) {
+	path := "/api/v1/auth/quick-connect/finish"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthGetProviderStatus() (*URL, error) {
+	path := "/api/v1/auth/provider/status"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthGetProviders() (*URL, error) {
+	path := "/api/v1/auth/providers"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthGetQuickConnectStatus() (*URL, error) {
+	path := "/api/v1/auth/quick-connect/status"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthProviderInitiate() (*URL, error) {
+	path := "/api/v1/auth/providers/initiate"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AuthQuickConnectInitiate() (*URL, error) {
+	path := "/api/v1/auth/quick-connect/initiate"
 	return c.getUrl(path)
 }
 
@@ -1031,16 +1136,6 @@ func (c *ClientUrls) SearchTracks() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) Signin() (*URL, error) {
-	path := "/api/v1/auth/signin"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) Signup() (*URL, error) {
-	path := "/api/v1/auth/signup"
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) SseHandler() (*URL, error) {
 	path := "/api/v1/system/library/sse"
 	return c.getUrl(path)
@@ -1053,10 +1148,5 @@ func (c *ClientUrls) SyncLibrary() (*URL, error) {
 
 func (c *ClientUrls) UpdateTaglist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/taglists/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) UpdateUserSettings() (*URL, error) {
-	path := "/api/v1/user/settings"
 	return c.getUrl(path)
 }

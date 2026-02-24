@@ -21,32 +21,38 @@
   import { fade, fly } from "svelte/transition";
   import { Button, buttonVariants } from "@nanoteck137/nano-ui";
   import toast, { Toaster } from "svelte-5-french-toast";
-  import { handleApiError, setApiClient, setApiClientAuth } from "$lib";
+  import {
+    handleApiError,
+    setApiClient,
+    setApiClientAuth,
+    setApiClientRaw,
+  } from "$lib";
   import {
     DummyQueue,
     LocalQueue,
     setMusicManager,
   } from "$lib/music-manager.svelte";
   import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
-  import { invalidateAll } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
 
   let { children, data } = $props();
 
-  let apiClient = setApiClient(data.apiAddress, data.userToken);
+  let apiClient = setApiClientRaw(data.apiClient);
 
-  $effect(() => {
-    if (!browser) return;
-    setApiClientAuth(apiClient, data.userToken);
-  });
+  // $effect(() => {
+  //   if (!browser) return;
+  //   setApiClientAuth(apiClient, data.userToken);
+  // });
 
   let musicManager = setMusicManager(apiClient, new DummyQueue());
-  let quickPlaylist = setQuickPlaylist(
-    apiClient,
-    data.user?.quickPlaylist ?? "",
-    data.quickPlaylistIds,
-  );
+  // let quickPlaylist = setQuickPlaylist(
+  //   apiClient,
+  //   data.user?.quickPlaylist ?? "",
+  //   data.quickPlaylistIds,
+  // );
 
+  /*
   $effect(() => {
     if (!browser) return;
 
@@ -60,6 +66,7 @@
     quickPlaylist.playlistId = data.user?.quickPlaylist ?? "";
     quickPlaylist.ids = data.quickPlaylistIds;
   });
+  */
 
   let showSideMenu = $state(false);
 
@@ -99,7 +106,7 @@
     <div class="flex-grow"></div>
 
     <div class="flex items-center gap-2">
-      {#if data.userPlaylists}
+      <!-- {#if data.userPlaylists}
         <QuickPlaylistSelectorModal
           class={buttonVariants({ variant: "ghost", size: "icon" })}
           playlists={data.userPlaylists}
@@ -120,7 +127,7 @@
         >
           <ListVideo />
         </QuickPlaylistSelectorModal>
-      {/if}
+      {/if} -->
 
       <Button href="/search" size="icon" variant="ghost">
         <Search />
@@ -191,7 +198,7 @@
     <div class="flex flex-col gap-2 px-4 py-2">
       {#if data.user}
         <Link
-          title={data.user.username}
+          title={data.user.displayName}
           href="/account"
           icon={User}
           onClick={close}
@@ -201,9 +208,17 @@
           <Link title="Server" href="/server" icon={Server} onClick={close} />
         {/if}
 
-        <form class="w-full" action="/logout" method="POST">
-          <Link title="Logout" icon={LogOut} onClick={close} />
-        </form>
+        <Link
+          title="Logout"
+          icon={LogOut}
+          onClick={() => {
+            localStorage.removeItem("token");
+            invalidateAll();
+            goto("/");
+
+            close();
+          }}
+        />
       {:else}
         <Link title="Login" href="/login" icon={LogIn} onClick={close} />
       {/if}

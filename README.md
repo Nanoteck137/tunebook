@@ -18,7 +18,17 @@
 
 - [ ] Web Frontend
     - [ ] Move away from SvelteKit server and use SvelteKit SPA Mode
+        - [x] /login
+        - [ ] /tracks
+        - [ ] /taglists
+        - [ ] /server
+        - [ ] /search
+        - [ ] /playlists
+        - [ ] /artists
+        - [ ] /albums
+        - [ ] /account
     - [ ] Finish the design of the pages
+    - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
 
 - [ ] Media

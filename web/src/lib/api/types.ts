@@ -77,16 +77,118 @@ export const Artist = z.object({
 });
 export type Artist = z.infer<typeof Artist>;
 
-// Name: ChangePasswordBody
-export const ChangePasswordBody = z.object({
-  // Name: ChangePasswordBody.currentPassword
-  "currentPassword": z.string(),
-  // Name: ChangePasswordBody.newPassword
-  "newPassword": z.string(),
-  // Name: ChangePasswordBody.newPasswordConfirm
-  "newPasswordConfirm": z.string(),
+// Name: AuthClaimQuickConnectCodeBody
+export const AuthClaimQuickConnectCodeBody = z.object({
+  // Name: AuthClaimQuickConnectCodeBody.code
+  "code": z.string(),
 });
-export type ChangePasswordBody = z.infer<typeof ChangePasswordBody>;
+export type AuthClaimQuickConnectCodeBody = z.infer<typeof AuthClaimQuickConnectCodeBody>;
+
+// Name: AuthFinishProvider
+export const AuthFinishProvider = z.object({
+  // Name: AuthFinishProvider.token
+  "token": z.string(),
+});
+export type AuthFinishProvider = z.infer<typeof AuthFinishProvider>;
+
+// Name: AuthFinishProviderBody
+export const AuthFinishProviderBody = z.object({
+  // Name: AuthFinishProviderBody.requestId
+  "requestId": z.string(),
+  // Name: AuthFinishProviderBody.challenge
+  "challenge": z.string(),
+});
+export type AuthFinishProviderBody = z.infer<typeof AuthFinishProviderBody>;
+
+// Name: AuthFinishQuickConnect
+export const AuthFinishQuickConnect = z.object({
+  // Name: AuthFinishQuickConnect.token
+  "token": z.string(),
+});
+export type AuthFinishQuickConnect = z.infer<typeof AuthFinishQuickConnect>;
+
+// Name: AuthFinishQuickConnectBody
+export const AuthFinishQuickConnectBody = z.object({
+  // Name: AuthFinishQuickConnectBody.code
+  "code": z.string(),
+  // Name: AuthFinishQuickConnectBody.challenge
+  "challenge": z.string(),
+});
+export type AuthFinishQuickConnectBody = z.infer<typeof AuthFinishQuickConnectBody>;
+
+// Name: AuthGetProviderStatus
+export const AuthGetProviderStatus = z.object({
+  // Name: AuthGetProviderStatus.status
+  "status": z.string(),
+});
+export type AuthGetProviderStatus = z.infer<typeof AuthGetProviderStatus>;
+
+// Name: AuthGetProviderStatusBody
+export const AuthGetProviderStatusBody = z.object({
+  // Name: AuthGetProviderStatusBody.requestId
+  "requestId": z.string(),
+  // Name: AuthGetProviderStatusBody.challenge
+  "challenge": z.string(),
+});
+export type AuthGetProviderStatusBody = z.infer<typeof AuthGetProviderStatusBody>;
+
+// Name: AuthGetQuickConnectStatus
+export const AuthGetQuickConnectStatus = z.object({
+  // Name: AuthGetQuickConnectStatus.status
+  "status": z.string(),
+});
+export type AuthGetQuickConnectStatus = z.infer<typeof AuthGetQuickConnectStatus>;
+
+// Name: AuthGetQuickConnectStatusBody
+export const AuthGetQuickConnectStatusBody = z.object({
+  // Name: AuthGetQuickConnectStatusBody.code
+  "code": z.string(),
+  // Name: AuthGetQuickConnectStatusBody.challenge
+  "challenge": z.string(),
+});
+export type AuthGetQuickConnectStatusBody = z.infer<typeof AuthGetQuickConnectStatusBody>;
+
+// Name: AuthInitiate
+export const AuthInitiate = z.object({
+  // Name: AuthInitiate.requestId
+  "requestId": z.string(),
+  // Name: AuthInitiate.authUrl
+  "authUrl": z.string(),
+  // Name: AuthInitiate.challenge
+  "challenge": z.string(),
+  // Name: AuthInitiate.expiresAt
+  "expiresAt": z.string(),
+});
+export type AuthInitiate = z.infer<typeof AuthInitiate>;
+
+// Name: AuthInitiateBody
+export const AuthInitiateBody = z.object({
+  // Name: AuthInitiateBody.providerId
+  "providerId": z.string(),
+});
+export type AuthInitiateBody = z.infer<typeof AuthInitiateBody>;
+
+// Name: AuthProvider
+export const AuthProvider = z.object({
+  // Name: AuthProvider.id
+  "id": z.string(),
+  // Name: AuthProvider.displayName
+  "displayName": z.string(),
+});
+export type AuthProvider = z.infer<typeof AuthProvider>;
+
+// Name: AuthQuickConnectInitiate
+export const AuthQuickConnectInitiate = z.object({
+  // Name: AuthQuickConnectInitiate.code
+  "code": z.string(),
+  // Name: AuthQuickConnectInitiate.challenge
+  "challenge": z.string(),
+  // Name: AuthQuickConnectInitiate.authUrl
+  "authUrl": z.string(),
+  // Name: AuthQuickConnectInitiate.expiresAt
+  "expiresAt": z.string(),
+});
+export type AuthQuickConnectInitiate = z.infer<typeof AuthQuickConnectInitiate>;
 
 // Name: CreateApiToken
 export const CreateApiToken = z.object({
@@ -253,6 +355,13 @@ export const GetArtists = z.object({
 });
 export type GetArtists = z.infer<typeof GetArtists>;
 
+// Name: GetAuthProviders
+export const GetAuthProviders = z.object({
+  // Name: GetAuthProviders.providers
+  "providers": z.array(AuthProvider),
+});
+export type GetAuthProviders = z.infer<typeof GetAuthProviders>;
+
 // Name: Path
 export const Path = z.object({
   // Name: Path.name
@@ -277,14 +386,12 @@ export type GetLibraryPaths = z.infer<typeof GetLibraryPaths>;
 export const GetMe = z.object({
   // Name: GetMe.id
   "id": z.string(),
-  // Name: GetMe.username
-  "username": z.string(),
-  // Name: GetMe.role
-  "role": z.string(),
+  // Name: GetMe.email
+  "email": z.string(),
   // Name: GetMe.displayName
   "displayName": z.string(),
-  // Name: GetMe.quickPlaylist
-  "quickPlaylist": z.string().nullable(),
+  // Name: GetMe.role
+  "role": z.string(),
 });
 export type GetMe = z.infer<typeof GetMe>;
 
@@ -580,42 +687,6 @@ export const RemovePlaylistItemBody = z.object({
 });
 export type RemovePlaylistItemBody = z.infer<typeof RemovePlaylistItemBody>;
 
-// Name: Signin
-export const Signin = z.object({
-  // Name: Signin.token
-  "token": z.string(),
-});
-export type Signin = z.infer<typeof Signin>;
-
-// Name: SigninBody
-export const SigninBody = z.object({
-  // Name: SigninBody.username
-  "username": z.string(),
-  // Name: SigninBody.password
-  "password": z.string(),
-});
-export type SigninBody = z.infer<typeof SigninBody>;
-
-// Name: Signup
-export const Signup = z.object({
-  // Name: Signup.id
-  "id": z.string(),
-  // Name: Signup.username
-  "username": z.string(),
-});
-export type Signup = z.infer<typeof Signup>;
-
-// Name: SignupBody
-export const SignupBody = z.object({
-  // Name: SignupBody.username
-  "username": z.string(),
-  // Name: SignupBody.password
-  "password": z.string(),
-  // Name: SignupBody.passwordConfirm
-  "passwordConfirm": z.string(),
-});
-export type SignupBody = z.infer<typeof SignupBody>;
-
 // Name: SyncLibraryBody
 export const SyncLibraryBody = z.object({
   // Name: SyncLibraryBody.path
@@ -638,13 +709,4 @@ export const UpdateTaglistBody = z.object({
   "filter": z.string().nullable().optional(),
 });
 export type UpdateTaglistBody = z.infer<typeof UpdateTaglistBody>;
-
-// Name: UpdateUserSettingsBody
-export const UpdateUserSettingsBody = z.object({
-  // Name: UpdateUserSettingsBody.displayName
-  "displayName": z.string().nullable().optional(),
-  // Name: UpdateUserSettingsBody.quickPlaylist
-  "quickPlaylist": z.string().nullable().optional(),
-});
-export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
 
