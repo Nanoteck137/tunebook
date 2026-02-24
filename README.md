@@ -25,13 +25,15 @@
         - [ ] /search
         - [x] /playlists
         - [ ] /artists
-        - [ ] /albums
+        - [x] /albums
         - [ ] /account
     - [ ] Add
         - [ ] Playlist Editing
         - [ ] Playlist Filtering/Sorting
         - [ ] Taglist Editing
         - [ ] Taglist Filtering/Sorting
+        - [ ] On /albums/:id use diffrent colors on odd tracks
+        - [ ] On /albums/:id hover highlight tracks
     - [ ] Finish the design of the pages
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
