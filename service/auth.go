@@ -13,6 +13,7 @@ import (
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/tools/utils"
+	"github.com/nanoteck137/dwebble/types"
 	"golang.org/x/oauth2"
 )
 
@@ -90,7 +91,7 @@ const (
 // authProviderRequest holds the infomation for a provider auth request
 type authProviderRequest struct {
 	// Unique id of this request
-	id         string
+	id string
 
 	// Id of the provider this request belongs to
 	providerId string
@@ -98,15 +99,15 @@ type authProviderRequest struct {
 	// Status of the request
 	status AuthProviderRequestStatus
 
-	// Challenge code used to check when trying to do something with 
+	// Challenge code used to check when trying to do something with
 	// the request
 	challenge string
 
 	// The generated provider url saved for later use
-	oauth2Url  string
+	oauth2Url string
 
-	// The code the provider sends back inside the callback, this should be 
-	// set when status is completed and then we can generate the user 
+	// The code the provider sends back inside the callback, this should be
+	// set when status is completed and then we can generate the user
 	// token based on the code
 	oauth2Code string
 
@@ -123,7 +124,7 @@ type authProvider struct {
 	initialized bool
 
 	// The id of the provider
-	id          string
+	id string
 
 	// A display name for showing in the frontend
 	displayName string
@@ -132,13 +133,13 @@ type authProvider struct {
 	config config.ConfigOidcProvider
 
 	// The OIDC provider object
-	provider     *oidc.Provider
+	provider *oidc.Provider
 
 	// The OAuth2 config object
 	oauth2Config *oauth2.Config
 
 	// The OIDC token verifier
-	verifier     *oidc.IDTokenVerifier
+	verifier *oidc.IDTokenVerifier
 }
 
 func (p *authProvider) init(ctx context.Context) error {
@@ -657,11 +658,22 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				displayName = oidcClaims.Name
 			}
 
+			// This is used to set the first user to the super user
+			userCount, err := a.db.CountUsers(ctx)
+			if err != nil {
+				return "", err
+			}
+
+			role := types.RoleUser
+			if userCount == 0 {
+				role = types.RoleSuperUser
+			}
+
 			// Create the database entry for the user
 			user, err = a.db.CreateUser(ctx, database.CreateUserParams{
 				Email:       oidcClaims.Email,
 				DisplayName: displayName,
-				Role:        "user",
+				Role:        role,
 			})
 			if err != nil {
 				return "", authErr.Errorf("create user: %w", err)
