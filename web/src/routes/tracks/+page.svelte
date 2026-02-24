@@ -12,7 +12,7 @@
   const musicManager = getMusicManager();
 </script>
 
-<form method="GET">
+<!-- <form method="GET">
   <div class="flex flex-col gap-2">
     <Input
       type="text"
@@ -42,7 +42,7 @@
   </Button>
 </form>
 
-<div class="h-2"></div>
+<div class="h-2"></div> -->
 
 <TrackListHeader
   name="Tracks"
@@ -50,7 +50,8 @@
     await musicManager.queueRequest(
       {
         type: "addFilter",
-        filter: data.filter ?? "",
+        // filter: data.filter ?? "",
+        filter: "",
       },
       { shuffle },
     );
@@ -59,16 +60,17 @@
 
 <Spacer size="md" />
 
+<!-- // userPlaylists={data.userPlaylists}
+  // quickPlaylist={data.user?.quickPlaylist} -->
 <TrackList
   totalTracks={data.page.totalItems}
   tracks={data.tracks}
-  userPlaylists={data.userPlaylists}
-  quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
     await musicManager.queueRequest(
       {
         type: "addFilter",
-        filter: data.filter ?? "",
+        // filter: data.filter ?? "",
+        filter: "",
       },
       { queueIndexToTrackId: trackId },
     );

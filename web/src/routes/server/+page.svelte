@@ -75,9 +75,7 @@
 
   onMount(() => {
     console.log("Mount");
-    const eventSource = new EventSource(
-      data.apiAddress + "/api/v1/system/library/sse",
-    );
+    const eventSource = new EventSource(apiClient.url.sseHandler());
 
     eventSource.onmessage = (e) => {
       const event = Event.parse(JSON.parse(e.data));

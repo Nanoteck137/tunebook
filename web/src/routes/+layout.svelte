@@ -52,7 +52,6 @@
   //   data.quickPlaylistIds,
   // );
 
-  /*
   $effect(() => {
     if (!browser) return;
 
@@ -62,6 +61,7 @@
     }
   });
 
+  /*
   $effect(() => {
     quickPlaylist.playlistId = data.user?.quickPlaylist ?? "";
     quickPlaylist.ids = data.quickPlaylistIds;

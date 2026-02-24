@@ -31,6 +31,10 @@
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
 
+- [ ] Quick Playlist need fixing
+    - [ ] Backend
+    - [ ] Frontend
+
 - [ ] Media
     - [ ] Better management of media and transcoding
     - [ ] More options for transcoding
