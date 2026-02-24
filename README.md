@@ -21,7 +21,7 @@
         - [x] /login
         - [x] /tracks
         - [ ] /taglists
-        - [ ] /server
+        - [x] /server
         - [ ] /search
         - [x] /playlists
         - [ ] /artists
