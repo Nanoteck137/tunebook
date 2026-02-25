@@ -16,6 +16,11 @@ type BaseApp struct {
 	config *config.Config
 
 	authService *service.AuthService
+	searchService *service.SearchService
+}
+
+func (app *BaseApp) SearchService() *service.SearchService {
+	return app.searchService
 }
 
 func (app *BaseApp) AuthService() *service.AuthService {
@@ -70,6 +75,10 @@ func (app *BaseApp) Bootstrap() error {
 	app.authService = service.NewAuthService(app.db, app.config)
 	// TODO(patrik): This should be a worker
 	go app.authService.CleanRoutine()
+
+	app.searchService = service.NewSearchService(app.db, app.config.WorkDir())
+
+	app.searchService.Test()
 
 	return nil
 }

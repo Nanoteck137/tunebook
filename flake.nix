@@ -10,12 +10,9 @@
 
     devtools.url     = "github:nanoteck137/devtools";
     devtools.inputs.nixpkgs.follows = "nixpkgs";
-
-    tagopus.url      = "github:nanoteck137/tagopus/v0.1.1";
-    tagopus.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, tagopus, ... }:
+  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [];
@@ -45,7 +42,7 @@
 
           postFixup = ''
             wrapProgram $out/bin/dwebble --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
-            wrapProgram $out/bin/dwebble-cli --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick tagopus.packages.${system}.default ]}
+            wrapProgram $out/bin/dwebble-cli --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
           '';
         };
 
@@ -89,7 +86,6 @@
             imagemagick
             ffmpeg
 
-            tagopus.packages.${system}.default
             tools.publishVersion
           ];
         };

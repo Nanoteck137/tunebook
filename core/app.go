@@ -14,6 +14,7 @@ type App interface {
 	Config() *config.Config
 
 	AuthService() *service.AuthService
+	SearchService() *service.SearchService
 
 	WorkDir() types.WorkDir
 

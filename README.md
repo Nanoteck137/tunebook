@@ -33,9 +33,11 @@
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
 
+- [ ] Some fields in AuthService can be private
 
 - [ ] Better Search
-    - Use [Bleve](https://blevesearch.com)
+    - Use [meilisearch](https://www.meilisearch.com)
+    - [Bleve](https://blevesearch.com)
 
 - [ ] Media
     - [ ] Better management of media and transcoding

@@ -80,6 +80,7 @@ func (d WorkDir) ExportFile() string {
 	return path.Join(d.String(), "export.json")
 }
 
+// TODO(patrik): Remove
 func (d WorkDir) SetupFile() string {
 	return path.Join(d.String(), "setup")
 }
