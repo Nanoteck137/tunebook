@@ -105,3 +105,15 @@
 - [x] Quick Playlist need fixing
     - [x] Backend
     - [x] Frontend
+
+### How to handle the library
+
+The problem I am having is how to multi-thread the import process because the 
+albums and tracks need to have access to the artists. The problem is that they are created when 
+found inside the album but I don't want to have duplicated artists.
+
+#### Offline Caching / Database
+One way:
+For this I think the best way would to have a offline "caching / database" step 
+and then the library sync read that to determine what to do. 
+Have a program create a custom format that the library code can easily read

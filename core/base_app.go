@@ -15,8 +15,13 @@ type BaseApp struct {
 	db     *database.Database
 	config *config.Config
 
-	authService *service.AuthService
-	searchService *service.SearchService
+	authService    *service.AuthService
+	searchService  *service.SearchService
+	libraryService *service.LibraryService
+}
+
+func (app *BaseApp) LibraryService() *service.LibraryService {
+	return app.libraryService
 }
 
 func (app *BaseApp) SearchService() *service.SearchService {
@@ -79,6 +84,8 @@ func (app *BaseApp) Bootstrap() error {
 	app.searchService = service.NewSearchService(app.db, app.config.WorkDir())
 
 	app.searchService.Test()
+
+	app.libraryService = service.NewLibraryService(app.db)
 
 	return nil
 }
