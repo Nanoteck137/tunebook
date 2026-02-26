@@ -1,13 +1,9 @@
 package service
 
 import (
-	"fmt"
-	"io/fs"
 	"log/slog"
 	"os"
 	"path"
-	"path/filepath"
-	"strings"
 	"sync/atomic"
 
 	"github.com/kr/pretty"
@@ -52,6 +48,22 @@ type Album struct {
 	Metadata Metadata
 }
 
+type ArtistMetadata struct {
+	Name  string   `json:"name" toml:"name"`
+	Cover string   `json:"cover" toml:"cover"`
+	Tags  []string `json:"tags" toml:"tags"`
+
+	Path string `json:"-" toml:"-"`
+}
+
+func (a ArtistMetadata) CoverPath() string {
+	if a.Cover == "" {
+		return ""
+	}
+
+	return path.Join(a.Path, a.Cover)
+}
+
 type LibraryService struct {
 	db     *database.Database
 	config *config.Config
@@ -94,7 +106,25 @@ func readAlbum(p string) (Album, error) {
 	}, nil
 }
 
-func (s *LibraryService) runSync() {
+func readArtistMetadata(p string) (ArtistMetadata, error) {
+	metadataPath := path.Join(p, "artist.toml")
+	data, err := os.ReadFile(metadataPath)
+	if err != nil {
+		return ArtistMetadata{}, err
+	}
+
+	var metadata ArtistMetadata
+	err = toml.Unmarshal(data, &metadata)
+	if err != nil {
+		return ArtistMetadata{}, err
+	}
+
+	metadata.Path = p
+
+	return metadata, nil
+}
+
+func (s *LibraryService) runSync() error {
 	p := s.config.LibraryDir
 
 	// Library Structure:
@@ -105,40 +135,84 @@ func (s *LibraryService) runSync() {
 	//    Track Files
 	//    Album Cover
 
-	err := filepath.WalkDir(p, func(p string, d fs.DirEntry, err error) error {
-		if d == nil {
-			return nil
+	entries, err := os.ReadDir(p)
+	if err != nil {
+		return err
+	}
+
+	var artists []ArtistMetadata
+
+	for _, entry := range entries {
+		p := path.Join(p, entry.Name())
+
+		metadata, err := readArtistMetadata(p)
+		if err != nil {
+			slog.Warn("failed to read artist metadata", "err", err, "path", p)
+			continue
 		}
 
-		if d.IsDir() {
-			return nil
+		artists = append(artists, metadata)
+	}
+
+	pretty.Println(artists)
+
+	for _, artist := range artists {
+		p := artist.Path
+
+		entries, err := os.ReadDir(p)
+		if err != nil {
+			slog.Warn("failed to read dir for artist", "path", p, "err", err)
+			continue
 		}
 
-		name := d.Name()
-
-		if strings.HasPrefix(name, ".") {
-			return nil
-		}
-
-		if name == "album.toml" {
-			fmt.Printf("p: %v\n", p)
-			return nil
-
-			album, err := readAlbum(path.Dir(p))
+		for _, entry := range entries {
+			p := path.Join(p, entry.Name())
+			album, err := readAlbum(p)
 			if err != nil {
-				slog.Error("failed to read album", "path", p, "err", err)
-				return nil
+				slog.Warn("failed to read album", "path", p, "err", err)
+				continue
 			}
 
 			pretty.Println(album)
 		}
-
-		return nil
-	})
-	if err != nil {
-		slog.Error("failed to walk dir", "err", err)
-		return
 	}
+
+	// err := filepath.WalkDir(p, func(p string, d fs.DirEntry, err error) error {
+	// 	if d == nil {
+	// 		return nil
+	// 	}
+	//
+	// 	if d.IsDir() {
+	// 		return nil
+	// 	}
+	//
+	// 	name := d.Name()
+	//
+	// 	if strings.HasPrefix(name, ".") {
+	// 		return nil
+	// 	}
+	//
+	// 	if name == "artists.toml" {
+	// 		artists = append(artists, path.Dir(p))
+	//
+	// 		fmt.Printf("p: %v\n", p)
+	// 		return nil
+	//
+	// 		album, err := readAlbum(path.Dir(p))
+	// 		if err != nil {
+	// 			slog.Error("failed to read album", "path", p, "err", err)
+	// 			return nil
+	// 		}
+	//
+	// 		pretty.Println(album)
+	// 	}
+	//
+	// 	return nil
+	// })
+	// if err != nil {
+	// 	slog.Error("failed to walk dir", "err", err)
+	// 	return
+	// }
 
 	// errors := map[string]error{}
 	// res := make([]Album, 0, len(albums))
@@ -152,6 +226,8 @@ func (s *LibraryService) runSync() {
 	//
 	// 	res = append(res, album)
 	// }
+
+	return nil
 }
 
 func (s *LibraryService) Sync() {
@@ -161,8 +237,11 @@ func (s *LibraryService) Sync() {
 	}
 
 	s.syncRunning.Store(true)
+	defer s.syncRunning.Store(false)
 
-	s.runSync()
-
-	s.syncRunning.Store(false)
+	err := s.runSync()
+	if err != nil {
+		slog.Error("failed to run sync", "err", err)
+		return
+	}
 }
