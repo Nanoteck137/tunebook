@@ -9,6 +9,7 @@
     - [ ] Quick Code integration
 - [ ] Server Architecture/Structure
     - [ ] Services
+        - [ ] Service should have a ping function to check if the service is available
 
 - [ ] Web Frontend
     - [ ] Move away from SvelteKit server and use SvelteKit SPA Mode
@@ -78,6 +79,7 @@
 - [ ] Server Handling for Admins
     - [ ] Notifications
     - [ ] SSE Events
+
 
 - [ ] Setup Process
 

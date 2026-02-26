@@ -85,7 +85,8 @@ func (app *BaseApp) Bootstrap() error {
 
 	app.searchService.Test()
 
-	app.libraryService = service.NewLibraryService(app.db)
+	app.libraryService = service.NewLibraryService(app.db, app.config)
+	app.libraryService.Sync()
 
 	return nil
 }
