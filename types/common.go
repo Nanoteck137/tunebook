@@ -123,6 +123,14 @@ func (d CacheDir) String() string {
 	return string(d)
 }
 
+func (d CacheDir) Artists() string {
+	return path.Join(d.String(), "artists")
+}
+
+func (d CacheDir) Artist(id string) string {
+	return path.Join(d.Artists(), id)
+}
+
 func (d CacheDir) Albums() string {
 	return path.Join(d.String(), "albums")
 }

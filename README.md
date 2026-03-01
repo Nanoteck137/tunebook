@@ -86,6 +86,7 @@
 - [ ] Import the old format
 
 - [ ] Migration cleanup
+- [ ] Use indexes
 
 - [ ] Docker
     - [ ] Use nix to build a docker image

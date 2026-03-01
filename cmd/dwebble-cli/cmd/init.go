@@ -1,15 +1,21 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"mime"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/huh"
 	"github.com/nanoteck137/dwebble/library"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
@@ -70,6 +76,10 @@ func getTrackInfo(p string) (TrackInfo, error) {
 
 var initCmd = &cobra.Command{
 	Use: "init",
+}
+
+var initAlbumCmd = &cobra.Command{
+	Use: "album",
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
 		output, _ := cmd.Flags().GetString("output")
@@ -205,9 +215,139 @@ var initCmd = &cobra.Command{
 	},
 }
 
+func downloadImage(url, dir, name string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to send http request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse media type: %w", err)
+	}
+
+	ext := ""
+	switch mediaType {
+	case "image/png":
+		ext = ".png"
+	case "image/jpeg":
+		ext = ".jpeg"
+	default:
+		return "", fmt.Errorf("unsupported media type: %s", mediaType)
+	}
+
+	p := path.Join(dir, name+ext)
+	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to open output file: %w", err)
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to copy http body to file: %w", err)
+	}
+
+	return p, nil
+}
+
+var initArtistCmd = &cobra.Command{
+	Use: "artist",
+	Run: func(cmd *cobra.Command, args []string) {
+		out, _ := cmd.Flags().GetString("output")
+		dirName, _ := cmd.Flags().GetBool("dir-name")
+
+
+		// TODO(patrik): Add check for artist.toml already exists
+
+		artistName := ""
+		coverUrl := ""
+		tags := ""
+
+		if dirName {
+			stat, _ := os.Stat(out)
+			if stat != nil {
+				artistName = stat.Name()
+			}
+		}
+
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().Title("Artist Name").Validate(func(s string) error {
+					if strings.TrimSpace(s) == "" {
+						return errors.New("cannot be empty")
+					}
+
+					return nil
+				}).Value(&artistName),
+				huh.NewInput().Title("Tags").Value(&tags),
+				huh.NewInput().Title("Cover URL").Value(&coverUrl),
+			),
+		)
+
+		err := form.Run()
+		if err != nil {
+			slog.Error("failed to run form", "err", err)
+			return
+		}
+
+		artistName = strings.TrimSpace(artistName)
+
+		// TODO(patrik): Print out overview
+
+		cover := ""
+
+		if coverUrl != "" {
+			if p, err := downloadImage(coverUrl, out, "cover"); err == nil {
+				cover = p
+			} else {
+				slog.Error("failed to download cover image", "err", err)
+			}
+		}
+
+		tagsArr := []string{}
+
+		split := utils.SplitString(tags)
+		for _, tag := range split {
+			t := strings.TrimSpace(utils.Slug(tag))
+			if t != "" {
+				tagsArr = append(tagsArr, t)
+			}
+		}
+
+		metadata := service.ArtistMetadata{
+			Id:    utils.CreateArtistId(),
+			Slug:  utils.Slug(artistName),
+			Name:  artistName,
+			Cover: path.Base(cover),
+			Tags:  tagsArr,
+		}
+
+		d, err := toml.Marshal(metadata)
+		if err != nil {
+			slog.Error("failed to marshal artist metadata", "err", err)
+			return
+		}
+
+		p := path.Join(out, "artist.toml")
+		err = os.WriteFile(p, d, 0644)
+		if err != nil {
+			slog.Error("failed to write artist metadata", "err", err, "path", p)
+			return
+		}
+	},
+}
+
 func init() {
-	initCmd.Flags().String("dir", ".", "input directory")
-	initCmd.Flags().StringP("output", "o", "album.toml", "write result to file")
+	initAlbumCmd.Flags().String("dir", ".", "input directory")
+	initAlbumCmd.Flags().StringP("output", "o", "album.toml", "write result to file")
+
+	initArtistCmd.Flags().BoolP("dir-name", "d", false, "take the parent directory name")
+	initArtistCmd.Flags().String("output", ".", "output directory")
+
+	initCmd.AddCommand(initAlbumCmd, initArtistCmd)
 
 	rootCmd.AddCommand(initCmd)
 }
