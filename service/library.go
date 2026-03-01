@@ -204,6 +204,29 @@ func readArtistMetadata(p string) (ArtistMetadata, error) {
 	return metadata, nil
 }
 
+func setArtistTags(ctx context.Context, db database.DB, artistId string, tags []string) error {
+	err := db.RemoveAllTagsFromArtist(ctx, artistId)
+	if err != nil {
+		return err
+	}
+
+	for _, tag := range tags {
+		slug := utils.Slug(tag)
+
+		err := db.CreateTag(ctx, slug)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+
+		err = db.AddTagToArtist(ctx, slug, artistId)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) error {
 	p := path.Join(libraryDir, ".library", "artists")
 	file, err := os.Open(p)
@@ -268,6 +291,16 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 			if err != nil {
 				return err
 			}
+		}
+
+		err = setArtistTags(
+			ctx,
+			s.db.DB,
+			entry.Id,
+			entry.Tags,
+		)
+		if err != nil {
+			return err
 		}
 
 		err = s.searchService.UpdateArtist(ctx, entry.Id)
