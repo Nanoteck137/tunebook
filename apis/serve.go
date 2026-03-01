@@ -160,17 +160,109 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 			},
 		},
 		pyrin.NormalHandler{
-			Name: "GetArtistFile",
+			Name: "GetArtistImage",
 			Method: http.MethodGet,
-			Path:   "/artists/:artistId/:file",
+			Path:   "/artists/images/:artistId/:image",
 			HandlerFunc: func(c pyrin.Context) error {
 				artistId := c.Param("artistId")
-				file := c.Param("file")
+				image := c.Param("image")
 
-				p := app.WorkDir().Artist(artistId)
-				f := os.DirFS(p)
+				ext := path.Ext(image)
+				name := strings.TrimRight(image, ext)
 
-				return pyrin.ServeFile(c, f, file)
+				ctx := c.Request().Context()
+
+				artist, err := app.DB().GetArtistById(ctx, artistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return pyrin.NoContentNotFound()
+					}
+
+					return err
+				}
+
+				if !artist.Picture.Valid {
+					// TODO(patrik): Fix
+					return pyrin.ServeFile(c, assets.DefaultImagesFS, "default_artist.png")
+				}
+
+				cacheDir := app.WorkDir().Cache()
+				artistCache := cacheDir.Artist(artist.Id)
+
+				// Make sure that the cache directory is setup
+				dirs := []string{
+					cacheDir.String(),
+					cacheDir.Artists(),
+					artistCache,
+				}
+
+				for _, dir := range dirs {
+					err = os.Mkdir(dir, 0755)
+					if err != nil && !os.IsExist(err) {
+						return err
+					}
+				}
+
+				originalFilename := path.Base(artist.Picture.String)
+				originalFileExt := path.Ext(originalFilename)
+
+				convertImage := func(name string, size int) error {
+					name = name + ext
+					p := path.Join(artistCache, name)
+
+					_, err := os.Stat(p)
+					if err != nil {
+						if os.IsNotExist(err) {
+							err := utils.CreateResizedImage(artist.Picture.String, p, size, size)
+							if err != nil {
+								return err
+							}
+						} else {
+							return err
+						}
+					}
+
+
+					f := os.DirFS(artistCache)
+					return pyrin.ServeFile(c, f, name)
+				}
+
+				switch name {
+				case "original":
+					if originalFileExt == ext {
+						p := path.Dir(artist.Picture.String)
+						f := os.DirFS(p)
+
+						return pyrin.ServeFile(c, f, originalFilename)
+					} else {
+						name := "original" + ext
+						p := path.Join(artistCache, name)
+
+						_, err := os.Stat(p)
+						if err != nil {
+							if os.IsNotExist(err) {
+								err := utils.ConvertImage(artist.Picture.String, p)
+								if err != nil {
+									return err
+								}
+							} else {
+								return err
+							}
+						}
+
+						f := os.DirFS(artistCache)
+						return pyrin.ServeFile(c, f, name)
+					}
+
+				case "128":
+					return convertImage("128", 128)
+				case "256":
+					return convertImage("256", 256)
+				case "512":
+					return convertImage("512", 512)
+				}
+
+				return pyrin.NoContentNotFound()
 			},
 		},
 		pyrin.NormalHandler{

@@ -174,12 +174,13 @@ func ConvertImageURL(c pyrin.Context, albumId string, val sql.NullString, def st
 
 func ConvertArtistPicture(c pyrin.Context, artistId string, val sql.NullString) types.Images {
 	if val.Valid && val.String != "" {
-		first := "/files/artists/" + artistId + "/"
+		originalExt := path.Ext(val.String)
 		return types.Images{
-			Original: ConvertURL(c, first+val.String),
-			Small:    ConvertURL(c, first+"picture-128.png"),
-			Medium:   ConvertURL(c, first+"picture-256.png"),
-			Large:    ConvertURL(c, first+"picture-512.png"),
+			// TODO(patrik): Move to const (cover-128.png, cover-256.png, cover-512.png)
+			Original: ConvertURL(c, "/files/artists/images/"+artistId+"/"+"original"+originalExt),
+			Small:    ConvertURL(c, "/files/artists/images/"+artistId+"/"+"128.png"),
+			Medium:   ConvertURL(c, "/files/artists/images/"+artistId+"/"+"256.png"),
+			Large:    ConvertURL(c, "/files/artists/images/"+artistId+"/"+"512.png"),
 		}
 	}
 
@@ -194,8 +195,7 @@ func ConvertArtistPicture(c pyrin.Context, artistId string, val sql.NullString) 
 
 func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) types.Images {
 	if val.Valid && val.String != "" {
-		coverArt := val.String
-		originalExt := path.Ext(coverArt)
+		originalExt := path.Ext(val.String)
 		return types.Images{
 			// TODO(patrik): Move to const (cover-128.png, cover-256.png, cover-512.png)
 			Original: ConvertURL(c, "/files/albums/images/"+albumId+"/"+"original"+originalExt),
