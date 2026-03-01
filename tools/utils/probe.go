@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -33,6 +34,8 @@ type ProbeResult struct {
 }
 
 func ProbeTrack(filepath string) (ProbeResult, error) {
+	slog.Info("Probing track", "filepath", filepath)
+
 	ctx := context.TODO()
 
 	probe, err := ffprobe.ProbeURL(ctx, filepath)

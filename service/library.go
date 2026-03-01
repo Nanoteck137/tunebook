@@ -63,8 +63,8 @@ func (e AlbumEntry) GetCoverArt() string {
 type TrackEntry struct {
 	Id string `json:"id"`
 
-	TrackFile          string   `json:"trackFile"`
 	Name               string   `json:"name"`
+	TrackFile          string   `json:"trackFile"`
 	Number             int64    `json:"number"`
 	Year               int64    `json:"year"`
 	Tags               []string `json:"tags"`
@@ -73,6 +73,14 @@ type TrackEntry struct {
 	FeaturingArtistIds []string `json:"featuringArtistIds"`
 
 	Path string `json:"path"`
+}
+
+func (e TrackEntry) GetTrackFile() string {
+	if e.TrackFile == "" || e.Path == "" {
+		return ""
+	}
+
+	return path.Join(e.Path, e.TrackFile)
 }
 
 type MetadataGeneral struct {
@@ -210,10 +218,11 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 			return err
 		}
 
-		coverArt := entry.GetCoverArt()
-		if coverArt != "" {
-			coverArt = path.Join(libraryDir, coverArt)
+		if entry.Path != "" {
+			entry.Path = path.Join(libraryDir, entry.Path)
 		}
+
+		coverArt := entry.GetCoverArt()
 
 		dbArtist, err := s.db.GetArtistById(ctx, entry.Id)
 		if err != nil {
@@ -318,10 +327,11 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 			return err
 		}
 
-		coverArt := entry.GetCoverArt()
-		if coverArt != "" {
-			coverArt = path.Join(libraryDir, coverArt)
+		if entry.Path != "" {
+			entry.Path = path.Join(libraryDir, entry.Path)
 		}
+
+		coverArt := entry.GetCoverArt()
 
 		dbAlbum, err := s.db.GetAlbumById(ctx, entry.Id)
 		if err != nil {
@@ -402,6 +412,218 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 	return nil
 }
 
+func setTrackFeaturingArtists(ctx context.Context, db database.DB, trackId string, artistIds []string) error {
+	err := db.RemoveAllTrackFeaturingArtists(ctx, trackId)
+	if err != nil {
+		return err
+	}
+
+	for _, artistId := range artistIds {
+		err = db.AddFeaturingArtistToTrack(ctx, trackId, artistId)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func setTrackTags(ctx context.Context, db database.DB, trackId string, tags []string) error {
+	err := db.RemoveAllTagsFromTrack(ctx, trackId)
+	if err != nil {
+		return err
+	}
+
+	for _, tag := range tags {
+		slug := utils.Slug(tag)
+
+		err := db.CreateTag(ctx, slug)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+
+		err = db.AddTagToTrack(ctx, slug, trackId)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) error {
+	p := path.Join(libraryDir, ".library", "tracks")
+	file, err := os.Open(p)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+
+	for decoder.More() {
+		var entry TrackEntry
+		err := decoder.Decode(&entry)
+		if err != nil {
+			return err
+		}
+
+		if entry.Path != "" {
+			entry.Path = path.Join(libraryDir, entry.Path)
+		}
+
+		trackFile := entry.GetTrackFile()
+
+		stat, err := os.Stat(trackFile)
+		if err != nil {
+			// TODO(patrik): Better error
+			return fmt.Errorf("failed to stat track file (%s): %w", trackFile, err)
+		}
+
+		modifiedTime := stat.ModTime().UnixMilli()
+
+		dbTrack, err := s.db.GetTrackById(ctx, entry.Id)
+		if err != nil {
+			if errors.Is(err, database.ErrItemNotFound) {
+				// Id:           track.Id,
+				// Filename:     track.File,
+				// ModifiedTime: modifiedTime,
+				// MediaType:    probeResult.MediaType,
+				// Name:         track.Name,
+				// OtherName:    sql.NullString{},
+				// AlbumId:      dbAlbum.Id,
+				// ArtistId:     artist,
+				// Duration:     int64(probeResult.Duration),
+				// Number: sql.NullInt64{
+				// 	Int64: track.Number,
+				// 	Valid: track.Number != 0,
+				// },
+				// Year: sql.NullInt64{
+				// 	Int64: track.Year,
+				// 	Valid: track.Year != 0,
+				// },
+
+				probeResult, err := utils.ProbeTrack(trackFile)
+				if err != nil {
+					// TODO(patrik): Better error
+					return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
+				}
+
+				_, err = s.db.CreateTrack(ctx, database.CreateTrackParams{
+					Id:           entry.Id,
+					Filename:     trackFile,
+					ModifiedTime: modifiedTime,
+					MediaType:    probeResult.MediaType,
+					Name:         entry.Name,
+					AlbumId:      entry.AlbumId,
+					ArtistId:     entry.ArtistId,
+					Duration:     int64(probeResult.Duration),
+					Number: sql.NullInt64{
+						Int64: entry.Number,
+						Valid: entry.Number != 0,
+					},
+					Year: sql.NullInt64{
+						Int64: entry.Year,
+						Valid: entry.Year != 0,
+					},
+				})
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			changes := database.TrackChanges{}
+
+			if modifiedTime > dbTrack.ModifiedTime || dbTrack.Filename != trackFile {
+				probeResult, err := utils.ProbeTrack(trackFile)
+				if err != nil {
+					// TODO(patrik): Better error
+					return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
+				}
+
+				dur := int64(probeResult.Duration)
+				changes.Duration = types.Change[int64]{
+					Value:   dur,
+					Changed: dur != dbTrack.Duration,
+				}
+
+				changes.MediaType = types.Change[types.MediaType]{
+					Value:   probeResult.MediaType,
+					Changed: probeResult.MediaType != dbTrack.MediaType,
+				}
+
+				changes.ModifiedTime = types.Change[int64]{
+					Value:   modifiedTime,
+					Changed: modifiedTime != dbTrack.ModifiedTime,
+				}
+			}
+
+			changes.Filename = types.Change[string]{
+				Value:   trackFile,
+				Changed: trackFile != dbTrack.Filename,
+			}
+
+			changes.Name = types.Change[string]{
+				Value:   entry.Name,
+				Changed: entry.Name != dbTrack.Name,
+			}
+
+			changes.AlbumId = types.Change[string]{
+				Value:   entry.AlbumId,
+				Changed: entry.AlbumId != dbTrack.AlbumId,
+			}
+
+			changes.ArtistId = types.Change[string]{
+				Value:   entry.ArtistId,
+				Changed: entry.ArtistId != dbTrack.ArtistId,
+			}
+
+			changes.Number = types.Change[sql.NullInt64]{
+				Value: sql.NullInt64{
+					Int64: entry.Number,
+					Valid: entry.Number != 0,
+				},
+				Changed: entry.Number != dbTrack.Number.Int64,
+			}
+
+			changes.Year = types.Change[sql.NullInt64]{
+				Value: sql.NullInt64{
+					Int64: entry.Year,
+					Valid: entry.Year != 0,
+				},
+				Changed: entry.Year != dbTrack.Year.Int64,
+			}
+
+			err = s.db.UpdateTrack(ctx, dbTrack.Id, changes)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = setTrackFeaturingArtists(
+			ctx,
+			s.db.DB,
+			entry.Id,
+			entry.FeaturingArtistIds,
+		)
+		if err != nil {
+			return err
+		}
+
+		err = setTrackTags(
+			ctx,
+			s.db.DB,
+			entry.Id,
+			entry.Tags,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *LibraryService) runSync() error {
 	p := s.config.LibraryDir
 
@@ -433,6 +655,12 @@ func (s *LibraryService) runSync() error {
 
 	// TODO(patrik): Check for deleted albums
 	err = s.syncAlbums(ctx, p)
+	if err != nil {
+		return err
+	}
+
+	// TODO(patrik): Check for deleted tracks
+	err = s.syncTracks(ctx, p)
 	if err != nil {
 		return err
 	}
