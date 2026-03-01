@@ -138,6 +138,37 @@ func (s *SearchService) configure() error {
 	return nil
 }
 
+func (s *SearchService) UpdateArtist(ctx context.Context, artistId string) error {
+	slog.Info("Search Service: Updating artist", "artistId", artistId)
+
+	dbArtist, err := s.db.GetArtistById(ctx, artistId)
+	if err != nil {
+		return err
+	}
+
+	data := SearchArtist{
+		Id:      dbArtist.Id,
+		Name:    dbArtist.Name,
+		Picture: utils.SqlNullToStringPtr(dbArtist.Picture),
+		Tags:    utils.SplitString(dbArtist.Tags.String),
+	}
+
+	task, err := s.artistIndex.AddDocuments(data, &meilisearch.DocumentOptions{
+		PrimaryKey: meilisearch.StringPtr("id"),
+	})
+	if err != nil {
+		return err
+	}
+
+	// TODO(patrik): Remove
+	err = waitForTask(s.client, task.TaskUID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *SearchService) indexArtists() error {
 	artists, err := s.db.GetAllArtists(context.TODO(), "", "")
 	if err != nil {
@@ -237,35 +268,39 @@ func (s *SearchService) indexTracks() error {
 	return nil
 }
 
-func (s *SearchService) Test() {
+func (s *SearchService) Init() error {
 	err := s.configure()
 	if err != nil {
 		slog.Error("failed to configure", "err", err)
-		return
+		return nil
 	}
 
-	err = s.indexArtists()
-	if err != nil {
-		slog.Error("failed to index artists", "err", err)
-		return
-	}
+	return nil
+}
 
-	err = s.indexAlbums()
-	if err != nil {
-		slog.Error("failed to index albums", "err", err)
-		return
-	}
-
-	err = s.indexTracks()
-	if err != nil {
-		slog.Error("failed to index tracks", "err", err)
-		return
-	}
+func (s *SearchService) Test() {
+	// err = s.indexArtists()
+	// if err != nil {
+	// 	slog.Error("failed to index artists", "err", err)
+	// 	return
+	// }
+	//
+	// err = s.indexAlbums()
+	// if err != nil {
+	// 	slog.Error("failed to index albums", "err", err)
+	// 	return
+	// }
+	//
+	// err = s.indexTracks()
+	// if err != nil {
+	// 	slog.Error("failed to index tracks", "err", err)
+	// 	return
+	// }
 
 	fmt.Println("--------------------- ARTIST ---------------------")
 
 	{
-		searchResult, err := s.artistIndex.Search("sakana", &meilisearch.SearchRequest{
+		searchResult, err := s.artistIndex.Search("ABBA", &meilisearch.SearchRequest{
 			Limit: 5,
 		})
 		if err != nil {

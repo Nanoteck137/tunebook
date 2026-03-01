@@ -82,11 +82,15 @@ func (app *BaseApp) Bootstrap() error {
 	go app.authService.CleanRoutine()
 
 	app.searchService = service.NewSearchService(app.db, app.config.WorkDir())
+	err = app.searchService.Init()
+	if err != nil {
+		return err
+	}
+
+	app.libraryService = service.NewLibraryService(app.db, app.config, app.searchService)
+	app.libraryService.Sync()
 
 	app.searchService.Test()
-
-	app.libraryService = service.NewLibraryService(app.db, app.config)
-	app.libraryService.Sync()
 
 	return nil
 }

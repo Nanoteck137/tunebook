@@ -145,14 +145,17 @@ type LibraryService struct {
 	db     *database.Database
 	config *config.Config
 
+	searchService *SearchService
+
 	syncRunning atomic.Bool
 }
 
-func NewLibraryService(db *database.Database, config *config.Config) *LibraryService {
+func NewLibraryService(db *database.Database, config *config.Config, searchService *SearchService) *LibraryService {
 	return &LibraryService{
-		db:          db,
-		config:      config,
-		syncRunning: atomic.Bool{},
+		db:            db,
+		config:        config,
+		searchService: searchService,
+		syncRunning:   atomic.Bool{},
 	}
 }
 
@@ -265,6 +268,12 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 			if err != nil {
 				return err
 			}
+		}
+
+		err = s.searchService.UpdateArtist(ctx, entry.Id)
+		if err != nil {
+			// TODO(patrik): Better error
+			return err
 		}
 	}
 
