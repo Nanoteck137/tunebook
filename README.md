@@ -40,6 +40,8 @@
     - [ ] Remove old library code from apis/system.go
     - [ ] Old database based search
     - [ ] Migration cleanup
+    - [ ] Rename Artist picture to cover art
+    - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
 
 - [ ] Auth Service
     - [ ] Some fields can be private
@@ -57,8 +59,9 @@
 - [ ] Playlists/Taglists
     - [ ] Taglists renamed to SmartPlaylists
     - [ ] Visibility
-    - [ ] Playlist Tracks should be ordered and then be re-ordered by the user
-    - [ ] Playlist should have cover image
+    - [x] Playlist Ordering
+    - [ ] User ability to re-order playlist items
+    - [x] Playlist should have cover image
         - [ ] Generate the cover image (like Youtube Music)
         - [ ] Custom Covers
 

@@ -208,8 +208,6 @@ export type CreateApiTokenBody = z.infer<typeof CreateApiTokenBody>;
 export const CreatePlaylist = z.object({
   // Name: CreatePlaylist.id
   "id": z.string(),
-  // Name: CreatePlaylist.name
-  "name": z.string(),
 });
 export type CreatePlaylist = z.infer<typeof CreatePlaylist>;
 
@@ -547,6 +545,8 @@ export const GetPlaylistById = z.object({
   "id": z.string(),
   // Name: GetPlaylistById.name
   "name": z.string(),
+  // Name: GetPlaylistById.coverArt
+  "coverArt": Images,
 });
 export type GetPlaylistById = z.infer<typeof GetPlaylistById>;
 
@@ -565,6 +565,8 @@ export const Playlist = z.object({
   "id": z.string(),
   // Name: Playlist.name
   "name": z.string(),
+  // Name: Playlist.coverArt
+  "coverArt": Images,
 });
 export type Playlist = z.infer<typeof Playlist>;
 

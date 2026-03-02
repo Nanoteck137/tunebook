@@ -187,8 +187,6 @@ type CreateApiTokenBody struct {
 type CreatePlaylist struct {
 	// Name: CreatePlaylist.id
 	Id string `json:"id"`
-	// Name: CreatePlaylist.name
-	Name string `json:"name"`
 }
 
 // Name: CreatePlaylistBody
@@ -499,6 +497,8 @@ type GetPlaylistById struct {
 	Id string `json:"id"`
 	// Name: GetPlaylistById.name
 	Name string `json:"name"`
+	// Name: GetPlaylistById.coverArt
+	CoverArt Images `json:"coverArt"`
 }
 
 // Name: GetPlaylistItems
@@ -515,6 +515,8 @@ type Playlist struct {
 	Id string `json:"id"`
 	// Name: Playlist.name
 	Name string `json:"name"`
+	// Name: Playlist.coverArt
+	CoverArt Images `json:"coverArt"`
 }
 
 // Name: GetPlaylists

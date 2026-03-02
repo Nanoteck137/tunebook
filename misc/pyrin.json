@@ -333,11 +333,6 @@
           "name": "id",
           "type": "string",
           "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
         }
       ]
     },
@@ -813,6 +808,11 @@
           "name": "name",
           "type": "string",
           "omitEmpty": false
+        },
+        {
+          "name": "coverArt",
+          "type": "Images",
+          "omitEmpty": false
         }
       ]
     },
@@ -1147,6 +1147,11 @@
         {
           "name": "name",
           "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverArt",
+          "type": "Images",
           "omitEmpty": false
         }
       ]

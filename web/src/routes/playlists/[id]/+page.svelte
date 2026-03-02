@@ -34,6 +34,7 @@
 
 <TrackListHeader
   name={data.playlist.name}
+  image={data.playlist.coverArt.medium}
   onPlay={async (shuffle) => {
     await musicManager.queueRequest(
       { type: "addPlaylist", playlistId: data.playlist.id },

@@ -18,7 +18,16 @@ import (
 type Playlist struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
-	// TODO(patrik): Add all fields
+
+	CoverArt types.Images `json:"coverArt"`
+}
+
+func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
+	return Playlist{
+		Id:       playlist.Id,
+		Name:     playlist.Name,
+		CoverArt: ConvertPlaylistCoverURL(c, playlist.Id, playlist.CoverArt),
+	}
 }
 
 type GetPlaylists struct {
@@ -26,7 +35,7 @@ type GetPlaylists struct {
 }
 
 type CreatePlaylist struct {
-	Playlist
+	Id string `json:"id"`
 }
 
 type CreatePlaylistBody struct {
@@ -99,13 +108,43 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, playlist := range playlists {
-					res.Playlists[i] = Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					}
+					res.Playlists[i] = ConvertDBPlaylist(c, playlist)
 				}
 
 				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetPlaylistById",
+			Path:         "/playlists/:id",
+			Method:       http.MethodGet,
+			ResponseType: GetPlaylistById{},
+			Errors:       []pyrin.ErrorType{ErrTypePlaylistNotFound},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("id")
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PlaylistNotFound()
+					}
+
+					return nil, err
+				}
+
+				if playlist.OwnerId != user.Id {
+					return nil, PlaylistNotFound()
+				}
+
+				return GetPlaylistById{
+					Playlist: ConvertDBPlaylist(c, playlist),
+				}, nil
 			},
 		},
 
@@ -135,10 +174,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return CreatePlaylist{
-					Playlist: Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					},
+					Id: playlist.Id,
 				}, nil
 			},
 		},
@@ -198,10 +234,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return CreatePlaylist{
-					Playlist: Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					},
+					Id: playlist.Id,
 				}, nil
 			},
 		},
@@ -240,42 +273,6 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetPlaylistById",
-			Path:         "/playlists/:id",
-			Method:       http.MethodGet,
-			ResponseType: GetPlaylistById{},
-			Errors:       []pyrin.ErrorType{ErrTypePlaylistNotFound},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("id")
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				return GetPlaylistById{
-					Playlist: Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					},
-				}, nil
 			},
 		},
 

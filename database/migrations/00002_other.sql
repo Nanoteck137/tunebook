@@ -90,7 +90,7 @@ CREATE TABLE tracks_tags (
 CREATE TABLE playlists (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL CHECK(name<>''),
-    picture TEXT,
+    cover_art TEXT,
 
     owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 

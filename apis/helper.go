@@ -213,3 +213,24 @@ func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) t
 		Large:    url,
 	}
 }
+
+func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string, val sql.NullString) types.Images {
+	if val.Valid && val.String != "" {
+		originalExt := path.Ext(val.String)
+		return types.Images{
+			// TODO(patrik): Move to const (cover-128.png, cover-256.png, cover-512.png)
+			Original: ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"original"+originalExt),
+			Small:    ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"128.png"),
+			Medium:   ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"256.png"),
+			Large:    ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"512.png"),
+		}
+	}
+
+	url := ConvertURL(c, "/files/images/"+DefaultAlbumCoverArtName)
+	return types.Images{
+		Original: url,
+		Small:    url,
+		Medium:   url,
+		Large:    url,
+	}
+}

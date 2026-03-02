@@ -13,9 +13,9 @@ import (
 )
 
 type Playlist struct {
-	Id      string         `db:"id"`
-	Name    string         `db:"name"`
-	Picture sql.NullString `db:"picture"`
+	Id       string         `db:"id"`
+	Name     string         `db:"name"`
+	CoverArt sql.NullString `db:"cover_art"`
 
 	OwnerId string `db:"owner_id"`
 
@@ -40,7 +40,7 @@ func PlaylistQuery() *goqu.SelectDataset {
 		Select(
 			"playlists.id",
 			"playlists.name",
-			"playlists.picture",
+			"playlists.cover_art",
 
 			"playlists.owner_id",
 
@@ -154,9 +154,9 @@ func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts
 }
 
 type CreatePlaylistParams struct {
-	Id      string
-	Name    string
-	Picture sql.NullString
+	Id       string
+	Name     string
+	CoverArt sql.NullString
 
 	OwnerId string
 
@@ -181,9 +181,9 @@ func (db DB) CreatePlaylist(ctx context.Context, params CreatePlaylistParams) (P
 
 	query := dialect.Insert("playlists").
 		Rows(goqu.Record{
-			"id":      id,
-			"name":    params.Name,
-			"picture": params.Picture,
+			"id":        id,
+			"name":      params.Name,
+			"cover_art": params.CoverArt,
 
 			"owner_id": params.OwnerId,
 
@@ -193,7 +193,7 @@ func (db DB) CreatePlaylist(ctx context.Context, params CreatePlaylistParams) (P
 		Returning(
 			"playlists.id",
 			"playlists.name",
-			"playlists.picture",
+			"playlists.cover_art",
 
 			"playlists.owner_id",
 
