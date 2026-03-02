@@ -34,11 +34,17 @@
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
 
-- [ ] Some fields in AuthService can be private
+- [ ] Cleanup
+    - [ ] Remove old library code from library/library.go
+    - [ ] Remove old library code from apis/system.go
+    - [ ] Old database based search
+    - [ ] Migration cleanup
 
-- [ ] Better Search
-    - Use [meilisearch](https://www.meilisearch.com)
-    - [Bleve](https://blevesearch.com)
+- [ ] Auth Service
+    - [ ] Some fields can be private
+
+- [ ] Search Service
+    - [ ] Code Cleanup
 
 - [ ] Media
     - [ ] Better management of media and transcoding
@@ -54,13 +60,12 @@
         - [ ] Custom Covers
 
 - [ ] Library Handling
-    - [ ] Faster syncing
-    - [ ] Multiple Directories
-    - [ ] Have error count for albums when errors > 5 then stop the library syncing 
-    - [ ] Metadata Validation
-    - [ ] Metadata transformation (trim spaces, escape characters, more)
-    - [ ] Artist handling
-        - [ ] When syncing have a flag to error out on the track/album when a unknown artist is found, so that the user can add the infomation for that artist
+    - [ ] Multi-threaded syncing
+    - [ ] Time each step
+    - [ ] Report Errors
+    - [ ] Update Cmd
+        - [ ] Metadata Validation
+        - [ ] Metadata transformation (trim spaces, escape characters, more)
 
 - [ ] Add Compression for Static file routes
     - [ ] SPA Routes
@@ -80,12 +85,8 @@
     - [ ] Notifications
     - [ ] SSE Events
 
-
-- [ ] Setup Process
-
 - [ ] Import the old format
 
-- [ ] Migration cleanup
 - [ ] Use indexes
 
 - [ ] Docker
@@ -109,14 +110,6 @@
     - [x] Backend
     - [x] Frontend
 
-### How to handle the library
-
-The problem I am having is how to multi-thread the import process because the 
-albums and tracks need to have access to the artists. The problem is that they are created when 
-found inside the album but I don't want to have duplicated artists.
-
-#### Offline Caching / Database
-One way:
-For this I think the best way would to have a offline "caching / database" step 
-and then the library sync read that to determine what to do. 
-Have a program create a custom format that the library code can easily read
+- [x] Better Search
+    - [x] [meilisearch](https://www.meilisearch.com)
+    - [Bleve](https://blevesearch.com)
