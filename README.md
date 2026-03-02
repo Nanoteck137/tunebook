@@ -17,7 +17,7 @@
         - [x] /tracks
         - [x] /taglists
         - [x] /server
-        - [ ] /search
+        - [x] /search
         - [x] /playlists
         - [x] /artists
         - [x] /albums

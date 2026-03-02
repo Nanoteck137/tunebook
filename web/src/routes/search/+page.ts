@@ -1,24 +1,30 @@
 import type { Album, Artist, Track } from "$lib/api/types";
-import type { BareBoneError } from "$lib/utils";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ request, locals }) => {
-  const url = new URL(request.url);
+type Err = {
+  code: number;
+  message: string;
+  type: string;
+};
+
+export const load: PageLoad = async ({ parent, url }) => {
+  const data = await parent();
+
   const query = url.searchParams.get("query") ?? "";
 
   let artists = [] as Artist[];
-  let artistError: BareBoneError | null = null;
+  let artistError: Err | null = null;
 
   let albums = [] as Album[];
-  let albumError: BareBoneError | null = null;
+  let albumError: Err | null = null;
 
   let tracks = [] as Track[];
-  let trackError: BareBoneError | null = null;
+  let trackError: Err | null = null;
 
   const [artistQuery, albumQuery, trackQuery] = await Promise.all([
-    locals.apiClient.searchArtists({ query: { query } }),
-    locals.apiClient.searchAlbums({ query: { query } }),
-    locals.apiClient.searchTracks({ query: { query } }),
+    data.apiClient.searchArtists({ query: { query } }),
+    data.apiClient.searchAlbums({ query: { query } }),
+    data.apiClient.searchTracks({ query: { query } }),
   ]);
 
   if (!artistQuery.success) {
@@ -40,6 +46,8 @@ export const load: PageServerLoad = async ({ request, locals }) => {
   }
 
   return {
+    ...data,
+
     query,
 
     artistError,

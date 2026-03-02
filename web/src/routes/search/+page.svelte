@@ -4,6 +4,7 @@
   import ArtistListItem from "$lib/components/ArtistListItem.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { Button, Input, Label } from "@nanoteck137/nano-ui";
+  import { onMount } from "svelte";
 
   const { data } = $props();
 
@@ -15,7 +16,12 @@
     });
   }
 
+  let initialValue = $state();
   let value = "";
+
+  onMount(() => {
+    initialValue = data.query;
+  });
 
   let timer: NodeJS.Timeout;
   function onInput(e: Event) {
@@ -58,7 +64,7 @@
         id="query"
         name="query"
         autocomplete="off"
-        value={data.query}
+        value={initialValue}
         oninput={onInput}
       />
     </div>
@@ -115,6 +121,6 @@
     userPlaylists={data.userPlaylists}
     quickPlaylist={data.user?.quickPlaylist}
     onPlay={() => {}}
-    onTrackPlay={() => {}}
   />
+  <!-- onTrackPlay={() => {}} -->
 {/if}
