@@ -67,6 +67,10 @@ type GetAlbumTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
+type SearchAlbums struct {
+	Albums []Album `json:"albums"`
+}
+
 func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -109,18 +113,20 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 			Name:         "SearchAlbums",
 			Path:         "/albums/search",
 			Method:       http.MethodGet,
-			ResponseType: GetAlbums{},
+			ResponseType: SearchAlbums{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
 
 				query := strings.TrimSpace(q.Get("query"))
 
-				albums, err := app.DB().SearchAlbums(query)
+				ctx := c.Request().Context()
+
+				albums, err := app.SearchService().SearchAlbums(ctx, query)
 				if err != nil {
 					return nil, err
 				}
 
-				res := GetAlbums{
+				res := SearchAlbums{
 					Albums: make([]Album, len(albums)),
 				}
 

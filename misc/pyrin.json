@@ -1162,6 +1162,16 @@
       ]
     },
     {
+      "name": "SearchAlbums",
+      "fields": [
+        {
+          "name": "albums",
+          "type": "[]Album",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "SearchTracks",
       "fields": [
         {
@@ -1692,7 +1702,7 @@
       "name": "SearchAlbums",
       "method": "GET",
       "path": "/api/v1/albums/search",
-      "response": "GetAlbums"
+      "response": "SearchAlbums"
     },
     {
       "type": "api",

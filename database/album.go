@@ -189,6 +189,23 @@ func (db DB) GetAlbumByName(ctx context.Context, name string) (Album, error) {
 	return ember.Single[Album](db.db, ctx, query)
 }
 
+func (db DB) GetAlbumsIn(ctx context.Context, in any, sort string) ([]Album, error) {
+	query := AlbumQuery().
+		Where(
+			goqu.I("albums.id").In(in),
+		)
+
+	a := adapter.AlbumResolverAdapter{}
+	resolver := filter.New(&a)
+
+	query, err := applySort(query, resolver, sort)
+	if err != nil {
+		return nil, err
+	}
+
+	return ember.Multiple[Album](db.db, ctx, query)
+}
+
 type CreateAlbumParams struct {
 	Id string
 

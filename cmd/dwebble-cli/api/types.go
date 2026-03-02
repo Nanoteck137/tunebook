@@ -627,6 +627,12 @@ type RemovePlaylistItemBody struct {
 	TrackId string `json:"trackId"`
 }
 
+// Name: SearchAlbums
+type SearchAlbums struct {
+	// Name: SearchAlbums.albums
+	Albums []Album `json:"albums"`
+}
+
 // Name: SearchTracks
 type SearchTracks struct {
 	// Name: SearchTracks.tracks

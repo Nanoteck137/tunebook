@@ -209,7 +209,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   searchAlbums(options?: ExtraOptions) {
-    return this.request("/api/v1/albums/search", "GET", api.GetAlbums, z.any(), undefined, options)
+    return this.request("/api/v1/albums/search", "GET", api.SearchAlbums, z.any(), undefined, options)
   }
   
   searchArtists(options?: ExtraOptions) {

@@ -362,6 +362,51 @@ func (s *SearchService) Init() error {
 	return nil
 }
 
+func (s *SearchService) SearchAlbums(ctx context.Context, query string) ([]database.Album, error) {
+	searchResult, err := s.albumIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
+		Limit: 5,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	hits := make([]SearchAlbum, 0)
+
+	err = searchResult.Hits.DecodeInto(&hits)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]string, len(hits))
+	for i, t := range hits {
+		ids[i] = t.Id
+	}
+
+	mappedAlbums := make(map[string]database.Album, len(hits))
+
+	albums, err := s.db.GetAlbumsIn(ctx, ids, "")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range albums {
+		mappedAlbums[t.Id] = t
+	}
+
+	final := make([]database.Album, 0, len(hits))
+
+	for _, hit := range hits {
+		mapped, exists := mappedAlbums[hit.Id]
+		if !exists {
+			continue
+		}
+
+		final = append(final, mapped)
+	}
+
+	return final, nil
+}
+
 func (s *SearchService) SearchTracks(ctx context.Context, query string) ([]database.Track, error) {
 	searchResult, err := s.trackIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
 		Limit: 5,
