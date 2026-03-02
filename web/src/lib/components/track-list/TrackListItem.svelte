@@ -7,13 +7,15 @@
 
   type Props = {
     showNumber?: boolean;
+    displayOrder?: boolean;
     track: Track;
     children?: Snippet;
 
     onPlayClicked?: () => void;
   };
 
-  const { showNumber, track, children, onPlayClicked }: Props = $props();
+  const { showNumber, displayOrder, track, children, onPlayClicked }: Props =
+    $props();
 </script>
 
 <div class="flex items-center gap-2 py-2 pr-2">
@@ -53,6 +55,9 @@
   <div class="flex flex-grow flex-col">
     <div class="flex items-center gap-1">
       <p class="line-clamp-1 w-fit text-sm font-medium" title={track.name}>
+        {#if displayOrder}
+          {track.number}.
+        {/if}
         {track.name}
       </p>
     </div>

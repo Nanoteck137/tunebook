@@ -63,6 +63,7 @@
 <Spacer size="md" />
 
 <TrackList
+  displayOrder
   totalTracks={data.page.totalItems}
   tracks={data.items}
   userPlaylists={data.userPlaylists}

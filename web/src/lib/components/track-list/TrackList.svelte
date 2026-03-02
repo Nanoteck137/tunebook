@@ -16,6 +16,7 @@
     tracks: Track[];
 
     isAlbumShowcase?: boolean;
+    displayOrder?: boolean;
 
     userPlaylists?: Playlist[] | null;
     quickPlaylist?: string | null;
@@ -27,6 +28,7 @@
     isAlbumShowcase,
     totalTracks,
     tracks,
+    displayOrder,
     userPlaylists,
     quickPlaylist,
     onPlay,
@@ -42,6 +44,7 @@
   {#each tracks as track}
     <TrackListItem
       showNumber={isAlbumShowcase}
+      {displayOrder}
       {track}
       onPlayClicked={() => {
         onPlay(track.id);

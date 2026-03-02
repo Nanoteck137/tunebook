@@ -52,6 +52,8 @@
     - [ ] More options for transcoding
     - [ ] Caching settings
 
+- [ ] Add order/orderNum to API tracks
+
 - [ ] Playlists/Taglists
     - [ ] Taglists renamed to SmartPlaylists
     - [ ] Visibility

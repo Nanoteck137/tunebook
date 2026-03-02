@@ -101,6 +101,7 @@ CREATE TABLE playlists (
 CREATE TABLE playlist_items (
     playlist_id TEXT NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
     track_id TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    order_num INTEGER NOT NULL,
 
     PRIMARY KEY(playlist_id, track_id)
 );

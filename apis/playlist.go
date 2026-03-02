@@ -2,7 +2,9 @@ package apis
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"math/rand"
 	"net/http"
 
 	"github.com/nanoteck137/dwebble/core"
@@ -184,7 +186,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for _, track := range tracks {
-					err = tx.AddItemToPlaylist(ctx, playlist.Id, track.Id)
+					err = tx.AddItemToPlaylist(ctx, playlist.Id, track.Id, 0)
 					if err != nil {
 						return nil, err
 					}
@@ -205,10 +207,10 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:     "DeletePlaylist",
-			Path:     "/playlists/:id",
-			Method:   http.MethodDelete,
-			Errors:   []pyrin.ErrorType{ErrTypePlaylistNotFound},
+			Name:   "DeletePlaylist",
+			Path:   "/playlists/:id",
+			Method: http.MethodDelete,
+			Errors: []pyrin.ErrorType{ErrTypePlaylistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				playlistId := c.Param("id")
 
@@ -320,7 +322,12 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, track := range tracks {
-					res.Items[i] = ConvertDBTrack(c, track)
+					// TODO(patrik): Replace with track order
+					track.Track.Number = sql.NullInt64{
+						Int64: int64(track.Order) + 1,
+						Valid: true,
+					}
+					res.Items[i] = ConvertDBTrack(c, track.Track)
 				}
 
 				return res, nil
@@ -360,7 +367,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				// TODO(patrik): Check for trackId exists?
-				err = app.DB().AddItemToPlaylist(c.Request().Context(), playlist.Id, body.TrackId)
+				err = app.DB().AddItemToPlaylist(c.Request().Context(), playlist.Id, body.TrackId, rand.Int())
 				if err != nil {
 					if errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, PlaylistAlreadyHasTrack()
@@ -416,10 +423,10 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:     "ClearPlaylist",
-			Path:     "/playlists/:id/items/all",
-			Method:   http.MethodDelete,
-			Errors:   []pyrin.ErrorType{ErrTypePlaylistNotFound},
+			Name:   "ClearPlaylist",
+			Path:   "/playlists/:id/items/all",
+			Method: http.MethodDelete,
+			Errors: []pyrin.ErrorType{ErrTypePlaylistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				playlistId := c.Param("id")
 
