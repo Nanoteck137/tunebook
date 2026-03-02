@@ -213,7 +213,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   searchArtists(options?: ExtraOptions) {
-    return this.request("/api/v1/artists/search", "GET", api.GetArtists, z.any(), undefined, options)
+    return this.request("/api/v1/artists/search", "GET", api.SearchArtists, z.any(), undefined, options)
   }
   
   searchTracks(options?: ExtraOptions) {

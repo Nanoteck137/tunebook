@@ -791,7 +791,7 @@ func (c *Client) SearchAlbums(options Options) (*SearchAlbums, error) {
 	return Request[SearchAlbums](data, nil)
 }
 
-func (c *Client) SearchArtists(options Options) (*GetArtists, error) {
+func (c *Client) SearchArtists(options Options) (*SearchArtists, error) {
 	path := "/api/v1/artists/search"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
@@ -804,7 +804,7 @@ func (c *Client) SearchArtists(options Options) (*GetArtists, error) {
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[GetArtists](data, nil)
+	return Request[SearchArtists](data, nil)
 }
 
 func (c *Client) SearchTracks(options Options) (*SearchTracks, error) {

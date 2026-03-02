@@ -160,6 +160,23 @@ func (db DB) GetArtistByName(ctx context.Context, name string) (Artist, error) {
 	return ember.Single[Artist](db.db, ctx, query)
 }
 
+func (db DB) GetArtistsIn(ctx context.Context, in any, sort string) ([]Artist, error) {
+	query := ArtistQuery().
+		Where(
+			goqu.I("artists.id").In(in),
+		)
+
+	a := adapter.ArtistResolverAdapter{}
+	resolver := filter.New(&a)
+
+	query, err := applySort(query, resolver, sort)
+	if err != nil {
+		return nil, err
+	}
+
+	return ember.Multiple[Artist](db.db, ctx, query)
+}
+
 type CreateArtistParams struct {
 	Id   string
 	Slug string

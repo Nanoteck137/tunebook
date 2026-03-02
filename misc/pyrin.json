@@ -1172,6 +1172,16 @@
       ]
     },
     {
+      "name": "SearchArtists",
+      "fields": [
+        {
+          "name": "artists",
+          "type": "[]Artist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "SearchTracks",
       "fields": [
         {
@@ -1709,7 +1719,7 @@
       "name": "SearchArtists",
       "method": "GET",
       "path": "/api/v1/artists/search",
-      "response": "GetArtists"
+      "response": "SearchArtists"
     },
     {
       "type": "api",

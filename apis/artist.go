@@ -53,6 +53,10 @@ type GetArtistAlbumsById struct {
 	Albums []Album `json:"albums"`
 }
 
+type SearchArtists struct {
+	Artists []Artist   `json:"artists"`
+}
+
 func InstallArtistHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -96,19 +100,20 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 			Name:         "SearchArtists",
 			Method:       http.MethodGet,
 			Path:         "/artists/search",
-			ResponseType: GetArtists{},
+			ResponseType: SearchArtists{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
 
 				query := strings.TrimSpace(q.Get("query"))
-				artists, err := app.DB().SearchArtists(query, database.SearchOptions{
-					NumItems: 10,
-				})
+
+				ctx := c.Request().Context()
+
+				artists, err := app.SearchService().SearchArtists(ctx, query)
 				if err != nil {
 					return nil, err
 				}
 
-				res := GetArtists{
+				res := SearchArtists{
 					Artists: make([]Artist, len(artists)),
 				}
 

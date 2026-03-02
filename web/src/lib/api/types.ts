@@ -696,6 +696,13 @@ export const SearchAlbums = z.object({
 });
 export type SearchAlbums = z.infer<typeof SearchAlbums>;
 
+// Name: SearchArtists
+export const SearchArtists = z.object({
+  // Name: SearchArtists.artists
+  "artists": z.array(Artist),
+});
+export type SearchArtists = z.infer<typeof SearchArtists>;
+
 // Name: SearchTracks
 export const SearchTracks = z.object({
   // Name: SearchTracks.tracks

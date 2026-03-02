@@ -362,6 +362,50 @@ func (s *SearchService) Init() error {
 	return nil
 }
 
+func (s *SearchService) SearchArtists(ctx context.Context, query string) ([]database.Artist, error) {
+	searchResult, err := s.artistIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
+		Limit: 5,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	hits := []SearchArtist{}
+	err = searchResult.Hits.DecodeInto(&hits)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]string, len(hits))
+	for i, t := range hits {
+		ids[i] = t.Id
+	}
+
+	mappedArtists := make(map[string]database.Artist, len(hits))
+
+	artists, err := s.db.GetArtistsIn(ctx, ids, "")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range artists {
+		mappedArtists[t.Id] = t
+	}
+
+	final := make([]database.Artist, 0, len(hits))
+
+	for _, hit := range hits {
+		mapped, exists := mappedArtists[hit.Id]
+		if !exists {
+			continue
+		}
+
+		final = append(final, mapped)
+	}
+
+	return final, nil
+}
+
 func (s *SearchService) SearchAlbums(ctx context.Context, query string) ([]database.Album, error) {
 	searchResult, err := s.albumIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
 		Limit: 5,
@@ -370,8 +414,7 @@ func (s *SearchService) SearchAlbums(ctx context.Context, query string) ([]datab
 		return nil, err
 	}
 
-	hits := make([]SearchAlbum, 0)
-
+	hits := []SearchAlbum{}
 	err = searchResult.Hits.DecodeInto(&hits)
 	if err != nil {
 		return nil, err
@@ -415,8 +458,7 @@ func (s *SearchService) SearchTracks(ctx context.Context, query string) ([]datab
 		return nil, err
 	}
 
-	hits := make([]SearchTrack, 0)
-
+	hits := []SearchTrack{}
 	err = searchResult.Hits.DecodeInto(&hits)
 	if err != nil {
 		return nil, err

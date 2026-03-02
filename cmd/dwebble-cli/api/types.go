@@ -633,6 +633,12 @@ type SearchAlbums struct {
 	Albums []Album `json:"albums"`
 }
 
+// Name: SearchArtists
+type SearchArtists struct {
+	// Name: SearchArtists.artists
+	Artists []Artist `json:"artists"`
+}
+
 // Name: SearchTracks
 type SearchTracks struct {
 	// Name: SearchTracks.tracks
