@@ -807,7 +807,7 @@ func (c *Client) SearchArtists(options Options) (*GetArtists, error) {
 	return Request[GetArtists](data, nil)
 }
 
-func (c *Client) SearchTracks(options Options) (*GetTracks, error) {
+func (c *Client) SearchTracks(options Options) (*SearchTracks, error) {
 	path := "/api/v1/tracks/search"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
@@ -820,7 +820,7 @@ func (c *Client) SearchTracks(options Options) (*GetTracks, error) {
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[GetTracks](data, nil)
+	return Request[SearchTracks](data, nil)
 }
 
 
@@ -1007,8 +1007,8 @@ func (c *ClientUrls) GetArtistById(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetArtistFile(artistId string, file string) (*URL, error) {
-	path := Sprintf("/files/artists/%v/%v", artistId, file)
+func (c *ClientUrls) GetArtistImage(artistId string, image string) (*URL, error) {
+	path := Sprintf("/files/artists/images/%v/%v", artistId, image)
 	return c.getUrl(path)
 }
 

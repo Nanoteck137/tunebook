@@ -160,11 +160,95 @@ func (s *SearchService) UpdateArtist(ctx context.Context, artistId string) error
 		return err
 	}
 
+	_ = task
+
 	// TODO(patrik): Remove
-	err = waitForTask(s.client, task.TaskUID)
+	// err = waitForTask(s.client, task.TaskUID)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+func (s *SearchService) UpdateAlbum(ctx context.Context, albumId string) error {
+	slog.Info("Search Service: Updating album", "albumId", albumId)
+
+	dbAlbum, err := s.db.GetAlbumById(ctx, albumId)
 	if err != nil {
 		return err
 	}
+
+	artists := []string{dbAlbum.ArtistName}
+	for _, a := range dbAlbum.FeaturingArtists {
+		artists = append(artists, a.Name)
+	}
+
+	data := SearchAlbum{
+		Id:       dbAlbum.Id,
+		Name:     dbAlbum.Name,
+		CoverArt: utils.SqlNullToStringPtr(dbAlbum.CoverArt),
+		Year:     utils.SqlNullToInt64Ptr(dbAlbum.Year),
+		Artists:  artists,
+		Tags:     utils.SplitString(dbAlbum.Tags.String),
+	}
+
+	task, err := s.albumIndex.AddDocuments(data, &meilisearch.DocumentOptions{
+		PrimaryKey: meilisearch.StringPtr("id"),
+	})
+	if err != nil {
+		return err
+	}
+
+	_ = task
+
+	// TODO(patrik): Remove
+	// err = waitForTask(s.client, task.TaskUID)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+func (s *SearchService) UpdateTrack(ctx context.Context, trackId string) error {
+	slog.Info("Search Service: Updating track", "trackId", trackId)
+
+	dbTrack, err := s.db.GetTrackById(ctx, trackId)
+	if err != nil {
+		return err
+	}
+
+	artists := []string{dbTrack.ArtistName}
+	for _, a := range dbTrack.FeaturingArtists {
+		artists = append(artists, a.Name)
+	}
+
+	data := SearchTrack{
+		Id:       dbTrack.Id,
+		Name:     dbTrack.Name,
+		Duration: dbTrack.Duration,
+		Number:   utils.SqlNullToInt64Ptr(dbTrack.Number),
+		Year:     utils.SqlNullToInt64Ptr(dbTrack.Year),
+		Artists:  artists,
+		Album:    dbTrack.AlbumName,
+		Tags:     utils.SplitString(dbTrack.Tags.String),
+	}
+
+	task, err := s.trackIndex.AddDocuments(data, &meilisearch.DocumentOptions{
+		PrimaryKey: meilisearch.StringPtr("id"),
+	})
+	if err != nil {
+		return err
+	}
+
+	_ = task
+
+	// TODO(patrik): Remove
+	// err = waitForTask(s.client, task.TaskUID)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -278,113 +362,65 @@ func (s *SearchService) Init() error {
 	return nil
 }
 
-func (s *SearchService) Test() {
-	// err = s.indexArtists()
-	// if err != nil {
-	// 	slog.Error("failed to index artists", "err", err)
-	// 	return
-	// }
-	//
-	// err = s.indexAlbums()
-	// if err != nil {
-	// 	slog.Error("failed to index albums", "err", err)
-	// 	return
-	// }
-	//
-	// err = s.indexTracks()
-	// if err != nil {
-	// 	slog.Error("failed to index tracks", "err", err)
-	// 	return
-	// }
-
-	fmt.Println("--------------------- ARTIST ---------------------")
-
-	{
-		searchResult, err := s.artistIndex.Search("ABBA", &meilisearch.SearchRequest{
-			Limit: 5,
-		})
-		if err != nil {
-			slog.Error("failed to search", "err", err)
-			return
-		}
-
-		hits := make([]SearchArtist, 0)
-
-		fmt.Printf("Found %d results\n", len(searchResult.Hits))
-		if err := searchResult.Hits.DecodeInto(&hits); err != nil {
-			slog.Error("failed to decode search results", "err", err)
-			return
-		}
-
-		for _, track := range hits {
-			pretty.Println(track)
-		}
+func (s *SearchService) SearchTracks(ctx context.Context, query string) ([]database.Track, error) {
+	searchResult, err := s.trackIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
+		Limit: 5,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	fmt.Println("--------------------- ALBUM ---------------------")
+	hits := make([]SearchTrack, 0)
 
-	{
-		searchResult, err := s.albumIndex.Search("", &meilisearch.SearchRequest{
-			Limit: 5,
-			Filter: "artists = Slipknot",
-		})
-		if err != nil {
-			slog.Error("failed to search", "err", err)
-			return
-		}
-
-		hits := make([]SearchAlbum, 0)
-
-		fmt.Printf("Found %d results\n", len(searchResult.Hits))
-		if err := searchResult.Hits.DecodeInto(&hits); err != nil {
-			slog.Error("failed to decode search results", "err", err)
-			return
-		}
-
-		for _, track := range hits {
-			pretty.Println(track)
-		}
+	err = searchResult.Hits.DecodeInto(&hits)
+	if err != nil {
+		return nil, err
 	}
 
-	fmt.Println("--------------------- TRACK ---------------------")
-
-	{
-		searchResult, err := s.albumIndex.Search("kaiju", &meilisearch.SearchRequest{
-			Limit: 5,
-		})
-		if err != nil {
-			slog.Error("failed to search", "err", err)
-			return
-		}
-
-		hits := make([]SearchTrack, 0)
-
-		fmt.Printf("Found %d results\n", len(searchResult.Hits))
-		if err := searchResult.Hits.DecodeInto(&hits); err != nil {
-			slog.Error("failed to decode search results", "err", err)
-			return
-		}
-
-		for _, track := range hits {
-			pretty.Println(track)
-		}
+	ids := make([]string, len(hits))
+	for i, t := range hits {
+		ids[i] = t.Id
 	}
+
+	mappedTracks := make(map[string]database.Track, len(hits))
+
+	tracks, err := s.db.GetTracksIn(ctx, ids, "")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range tracks {
+		mappedTracks[t.Id] = t
+	}
+
+	final := make([]database.Track, 0, len(hits))
+
+	for _, hit := range hits {
+		mapped, exists := mappedTracks[hit.Id]
+		if !exists {
+			continue
+		}
+
+		final = append(final, mapped)
+	}
+
+	return final, nil
 }
 
 func createIndex(client meilisearch.ServiceManager, indexUID string) error {
 	fmt.Printf("Creating index '%s'...\n", indexUID)
 
-	task, err := client.DeleteIndex(indexUID)
-	if err != nil {
-		return err
-	}
+	// task, err := client.DeleteIndex(indexUID)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// err = waitForTask(client, task.TaskUID)
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = waitForTask(client, task.TaskUID)
-	if err != nil {
-		return err
-	}
-
-	task, err = client.CreateIndex(&meilisearch.IndexConfig{
+	task, err := client.CreateIndex(&meilisearch.IndexConfig{
 		Uid:        indexUID,
 		PrimaryKey: "id",
 	})

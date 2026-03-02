@@ -90,7 +90,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.libraryService = service.NewLibraryService(app.db, app.config, app.searchService)
 	app.libraryService.Sync()
 
-	app.searchService.Test()
+	// app.searchService.Test()
 
 	return nil
 }

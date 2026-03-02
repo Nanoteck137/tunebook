@@ -449,6 +449,12 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 		if err != nil {
 			return err
 		}
+
+		err = s.searchService.UpdateAlbum(ctx, entry.Id)
+		if err != nil {
+			// TODO(patrik): Better error
+			return err
+		}
 	}
 
 	return nil
@@ -659,6 +665,12 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 			entry.Tags,
 		)
 		if err != nil {
+			return err
+		}
+
+		err = s.searchService.UpdateTrack(ctx, entry.Id)
+		if err != nil {
+			// TODO(patrik): Better error
 			return err
 		}
 	}

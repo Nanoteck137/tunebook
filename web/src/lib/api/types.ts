@@ -689,6 +689,13 @@ export const RemovePlaylistItemBody = z.object({
 });
 export type RemovePlaylistItemBody = z.infer<typeof RemovePlaylistItemBody>;
 
+// Name: SearchTracks
+export const SearchTracks = z.object({
+  // Name: SearchTracks.tracks
+  "tracks": z.array(Track),
+});
+export type SearchTracks = z.infer<typeof SearchTracks>;
+
 // Name: SyncLibraryBody
 export const SyncLibraryBody = z.object({
   // Name: SyncLibraryBody.path

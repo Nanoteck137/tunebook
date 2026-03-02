@@ -1162,6 +1162,16 @@
       ]
     },
     {
+      "name": "SearchTracks",
+      "fields": [
+        {
+          "name": "tracks",
+          "type": "[]Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "SyncLibraryBody",
       "fields": [
         {
@@ -1496,9 +1506,9 @@
     },
     {
       "type": "normal",
-      "name": "GetArtistFile",
+      "name": "GetArtistImage",
       "method": "GET",
-      "path": "/files/artists/:artistId/:file"
+      "path": "/files/artists/images/:artistId/:image"
     },
     {
       "type": "api",
@@ -1696,7 +1706,7 @@
       "name": "SearchTracks",
       "method": "GET",
       "path": "/api/v1/tracks/search",
-      "response": "GetTracks"
+      "response": "SearchTracks"
     },
     {
       "type": "normal",

@@ -100,6 +100,10 @@ func getPageOptions(q url.Values) database.FetchOptions {
 	}
 }
 
+type SearchTracks struct {
+	Tracks []Track `json:"tracks"`
+}
+
 func InstallTrackHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -142,24 +146,26 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 			Name:         "SearchTracks",
 			Method:       http.MethodGet,
 			Path:         "/tracks/search",
-			ResponseType: GetTracks{},
+			ResponseType: SearchTracks{},
 			Errors:       []pyrin.ErrorType{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
 
 				query := strings.TrimSpace(q.Get("query"))
 
-				tracks, err := app.DB().SearchTracks(query)
+				ctx := c.Request().Context()
+
+				tracks, err := app.SearchService().SearchTracks(ctx, query)
 				if err != nil {
 					return nil, err
 				}
 
-				res := GetTracks{
+				res := SearchTracks{
 					Tracks: make([]Track, len(tracks)),
 				}
 
-				for i, track := range tracks {
-					res.Tracks[i] = ConvertDBTrack(c, track)
+				for i, t := range tracks {
+					res.Tracks[i] = ConvertDBTrack(c, t)
 				}
 
 				return res, nil

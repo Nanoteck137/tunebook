@@ -217,7 +217,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   searchTracks(options?: ExtraOptions) {
-    return this.request("/api/v1/tracks/search", "GET", api.GetTracks, z.any(), undefined, options)
+    return this.request("/api/v1/tracks/search", "GET", api.SearchTracks, z.any(), undefined, options)
   }
   
   
@@ -349,8 +349,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/artists/${id}`)
   }
   
-  getArtistFile(artistId: string, file: string) {
-    return createUrl(this.baseUrl, `/files/artists/${artistId}/${file}`)
+  getArtistImage(artistId: string, image: string) {
+    return createUrl(this.baseUrl, `/files/artists/images/${artistId}/${image}`)
   }
   
   getArtists() {
