@@ -607,6 +607,14 @@ type GetTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
+// Name: GetUser
+type GetUser struct {
+	// Name: GetUser.id
+	Id string `json:"id"`
+	// Name: GetUser.displayName
+	DisplayName string `json:"displayName"`
+}
+
 // Name: GetUserQuickPlaylistItemIds
 type GetUserQuickPlaylistItemIds struct {
 	// Name: GetUserQuickPlaylistItemIds.trackIds

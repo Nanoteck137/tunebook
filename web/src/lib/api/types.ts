@@ -666,6 +666,15 @@ export const GetTracks = z.object({
 });
 export type GetTracks = z.infer<typeof GetTracks>;
 
+// Name: GetUser
+export const GetUser = z.object({
+  // Name: GetUser.id
+  "id": z.string(),
+  // Name: GetUser.displayName
+  "displayName": z.string(),
+});
+export type GetUser = z.infer<typeof GetUser>;
+
 // Name: GetUserQuickPlaylistItemIds
 export const GetUserQuickPlaylistItemIds = z.object({
   // Name: GetUserQuickPlaylistItemIds.trackIds

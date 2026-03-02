@@ -987,6 +987,21 @@
       ]
     },
     {
+      "name": "GetUser",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetUserQuickPlaylistItemIds",
       "fields": [
         {
@@ -1673,6 +1688,13 @@
       "method": "GET",
       "path": "/api/v1/tracks",
       "response": "GetTracks"
+    },
+    {
+      "type": "api",
+      "name": "GetUser",
+      "method": "GET",
+      "path": "/api/v1/users/:id",
+      "response": "GetUser"
     },
     {
       "type": "api",

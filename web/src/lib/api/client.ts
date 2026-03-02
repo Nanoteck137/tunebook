@@ -188,6 +188,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/tracks", "GET", api.GetTracks, z.any(), undefined, options)
   }
   
+  getUser(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${id}`, "GET", api.GetUser, z.any(), undefined, options)
+  }
+  
   getUserQuickPlaylistItemIds(options?: ExtraOptions) {
     return this.request("/api/v1/user/quickplaylist", "GET", api.GetUserQuickPlaylistItemIds, z.any(), undefined, options)
   }
@@ -431,6 +435,10 @@ export class ClientUrls {
   
   getTracks() {
     return createUrl(this.baseUrl, "/api/v1/tracks")
+  }
+  
+  getUser(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${id}`)
   }
   
   getUserQuickPlaylistItemIds() {

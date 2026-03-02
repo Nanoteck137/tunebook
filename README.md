@@ -21,7 +21,8 @@
         - [x] /playlists
         - [x] /artists
         - [x] /albums
-        - [ ] /account
+        - [x] /users
+            - [ ] Update Display Name need fixing, both frontend and backend
     - [ ] Add
         - [ ] Playlist Editing
         - [ ] Playlist Filtering/Sorting

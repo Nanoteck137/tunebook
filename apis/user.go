@@ -66,8 +66,39 @@ type GetAllApiTokens struct {
 	Tokens []ApiToken `json:"tokens"`
 }
 
+type GetUser struct {
+	Id          string `json:"id"`
+	DisplayName string `json:"displayName"`
+}
+
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
+		pyrin.ApiHandler{
+			Name:         "GetUser",
+			Method:       http.MethodGet,
+			Path:         "/users/:id",
+			ResponseType: GetUser{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				user, err := app.DB().GetUserById(ctx, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, UserNotFound()
+					}
+
+					return nil, err
+				}
+
+				return GetUser{
+					Id:          user.Id,
+					DisplayName: user.DisplayName,
+				}, nil
+			},
+		},
+
 		pyrin.ApiHandler{
 			Name:     "UpdateUserSettings",
 			Method:   http.MethodPatch,

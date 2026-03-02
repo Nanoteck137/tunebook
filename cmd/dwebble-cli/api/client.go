@@ -695,6 +695,22 @@ func (c *Client) GetTracks(options Options) (*GetTracks, error) {
 	return Request[GetTracks](data, nil)
 }
 
+func (c *Client) GetUser(id string, options Options) (*GetUser, error) {
+	path := Sprintf("/api/v1/users/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetUser](data, nil)
+}
+
 func (c *Client) GetUserQuickPlaylistItemIds(options Options) (*GetUserQuickPlaylistItemIds, error) {
 	path := "/api/v1/user/quickplaylist"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1109,6 +1125,11 @@ func (c *ClientUrls) GetTrackFile(trackId string, file string) (*URL, error) {
 
 func (c *ClientUrls) GetTracks() (*URL, error) {
 	path := "/api/v1/tracks"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetUser(id string) (*URL, error) {
+	path := Sprintf("/api/v1/users/%v", id)
 	return c.getUrl(path)
 }
 
