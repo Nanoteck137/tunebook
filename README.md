@@ -47,7 +47,10 @@
     - [ ] Some fields can be private
 
 - [ ] Search Service
+    - [ ] Add RWLock lock
     - [ ] Code Cleanup
+    - [ ] Add Playlists
+    - [ ] Add Users
 
 - [ ] Media
     - [ ] Better management of media and transcoding
@@ -57,8 +60,7 @@
 - [ ] Add order/orderNum to API tracks
 
 - [ ] Playlists/Taglists
-    - [ ] Taglists renamed to SmartPlaylists
-    - [ ] Visibility
+    - [ ] Taglists renamed to VirtualPlaylist
     - [x] Playlist Ordering
     - [ ] User ability to re-order playlist items
     - [x] Playlist should have cover image
