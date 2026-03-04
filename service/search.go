@@ -8,6 +8,7 @@ import (
 
 	"github.com/kr/pretty"
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
@@ -23,13 +24,11 @@ type SearchService struct {
 	trackIndex  meilisearch.IndexManager
 }
 
-func NewSearchService(db *database.Database, workDir types.WorkDir) *SearchService {
-	apiKey := "dev-key"
-
+func NewSearchService(db *database.Database, config *config.Config) *SearchService {
 	return &SearchService{
 		db:      db,
-		workDir: workDir,
-		client:  meilisearch.New("http://10.28.28.5:7700", meilisearch.WithAPIKey(apiKey)),
+		workDir: config.WorkDir(),
+		client:  meilisearch.New(config.MeilisearchAddress, meilisearch.WithAPIKey(config.MeilisearchApiKey)),
 	}
 }
 

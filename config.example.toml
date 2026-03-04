@@ -5,6 +5,9 @@ data_dir = "/Some/Dir"
 library = "/Some/Dir" # Library Path to the music
 jwt_secret = "" # Example: openssl rand -base64 32
 
+meilisearch_address="<ADDRESS_TO_MEILISEARCH_INSTANCE>"
+meilisearch_api_key="<MEILISEARCH_API_KEY>"
+
 [oidc_providers]
 
 [oidc_providers.<PROVIDER_ID>]

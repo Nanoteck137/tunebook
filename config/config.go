@@ -24,6 +24,9 @@ type Config struct {
 	LibraryDir    string `mapstructure:"library_dir"`
 	JwtSecret     string `mapstructure:"jwt_secret"`
 
+	MeilisearchAddress string `mapstructure:"meilisearch_address"`
+	MeilisearchApiKey string `mapstructure:"meilisearch_api_key"`
+
 	OidcProviders map[string]ConfigOidcProvider `mapstructure:"oidc_providers"`
 }
 
@@ -36,6 +39,9 @@ func setDefaults() {
 	viper.SetDefault("listen_addr", ":3000")
 	viper.BindEnv("data_dir")
 	viper.BindEnv("jwt_secret")
+
+	viper.BindEnv("meilisearch_address")
+	viper.BindEnv("meilisearch_api_key")
 }
 
 func validateConfig(config *Config) {
@@ -54,6 +60,7 @@ func validateConfig(config *Config) {
 	validate(config.DataDir == "", "data_dir needs to be set")
 	validate(config.LibraryDir == "", "library_dir needs to be set")
 	validate(config.JwtSecret == "", "jwt_secret needs to be set")
+	validate(config.MeilisearchAddress == "", "meilisearch_address needs to be set")
 
 	if hasError {
 		slog.Error("Config not valid")

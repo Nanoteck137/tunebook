@@ -81,7 +81,7 @@ func (app *BaseApp) Bootstrap() error {
 	// TODO(patrik): This should be a worker
 	go app.authService.CleanRoutine()
 
-	app.searchService = service.NewSearchService(app.db, app.config.WorkDir())
+	app.searchService = service.NewSearchService(app.db, app.config)
 	err = app.searchService.Init()
 	if err != nil {
 		return err
