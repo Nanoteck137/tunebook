@@ -51,6 +51,7 @@
     - [ ] Code Cleanup
     - [ ] Add Playlists
     - [ ] Add Users
+    - [ ] Batch indexing
 
 - [ ] Better handling of images
 
