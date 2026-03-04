@@ -52,6 +52,8 @@
     - [ ] Add Playlists
     - [ ] Add Users
 
+- [ ] Better handling of images
+
 - [ ] Media
     - [ ] Better management of media and transcoding
     - [ ] More options for transcoding

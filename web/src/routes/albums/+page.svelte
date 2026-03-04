@@ -6,6 +6,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import Image from "$lib/components/Image.svelte";
+  import Filter from "./Filter.svelte";
 
   interface Props {
     data: PageData;
@@ -28,6 +29,8 @@
 
   let form: HTMLFormElement | undefined = $state();
 </script>
+
+<Filter fullFilter={data.filter} />
 
 {#if isRoleAdmin(data.user?.role || "")}
   <Button href="/albums/new">New Album</Button>
