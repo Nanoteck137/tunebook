@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -48,9 +49,26 @@ func ParseAuthHeader(authHeader string) string {
 	return splits[1]
 }
 
+func CreateSquareImage(src, dest string) error {
+	cmd := exec.Command(
+		"magick", src, 
+		"-gravity", "Center", 
+		"-extent", "%[fx:min(w,h)]x%[fx:min(w,h)]", 
+		dest,
+	)
+	// TODO(patrik): Make this configureble
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateResizedImage(src string, dest string, width, height int) error {
 	args := []string{
-		"convert",
 		src,
 		"-resize", fmt.Sprintf("%dx%d^", width, height),
 		"-gravity", "Center",
@@ -59,6 +77,9 @@ func CreateResizedImage(src string, dest string, width, height int) error {
 	}
 
 	cmd := exec.Command("magick", args...)
+	// TODO(patrik): Make this configureble
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
 	err := cmd.Run()
 	if err != nil {
 		return err

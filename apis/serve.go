@@ -26,8 +26,8 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	g = router.Group("")
 	g.Register(
 		pyrin.NormalHandler{
-			Method:      http.MethodGet,
-			Path:        "/static/*",
+			Method: http.MethodGet,
+			Path:   "/static/*",
 			HandlerFunc: func(c pyrin.Context) error {
 				// TODO(patrik): Fix this
 				f := os.DirFS("./render/static")
@@ -45,7 +45,7 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	g = router.Group("/files")
 	g.Register(
 		pyrin.NormalHandler{
-			Name: "GetDefaultImage",
+			Name:   "GetDefaultImage",
 			Method: http.MethodGet,
 			Path:   "/images/default/:image",
 			HandlerFunc: func(c pyrin.Context) error {
@@ -54,7 +54,7 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 			},
 		},
 		pyrin.NormalHandler{
-			Name: "GetAlbumImage",
+			Name:   "GetAlbumImage",
 			Method: http.MethodGet,
 			Path:   "/albums/images/:albumId/:image",
 			HandlerFunc: func(c pyrin.Context) error {
@@ -64,103 +64,25 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 				ext := path.Ext(image)
 				name := strings.TrimRight(image, ext)
 
+				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
+				if !ok {
+					// TODO(patrik): Better error
+					return errors.New("unsupported image ext")
+				}
+
 				ctx := c.Request().Context()
 
-				album, err := app.DB().GetAlbumById(ctx, albumId)
+				p, err := app.ImageService().GetAlbumImage(ctx, albumId, name, imageType)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return pyrin.NoContentNotFound()
-					}
-
 					return err
 				}
 
-				if !album.CoverArt.Valid {
-					// TODO(patrik): Fix
-					return pyrin.ServeFile(c, assets.DefaultImagesFS, "default_album.png")
-				}
-
-				cacheDir := app.WorkDir().Cache()
-				albumCache := cacheDir.Album(album.Id)
-
-				// Make sure that the cache directory is setup
-				dirs := []string{
-					cacheDir.String(),
-					cacheDir.Albums(),
-					albumCache,
-				}
-
-				for _, dir := range dirs {
-					err = os.Mkdir(dir, 0755)
-					if err != nil && !os.IsExist(err) {
-						return err
-					}
-				}
-
-				originalFilename := path.Base(album.CoverArt.String)
-				originalFileExt := path.Ext(originalFilename)
-
-				convertImage := func(name string, size int) error {
-					name = name + ext
-					p := path.Join(albumCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							err := utils.CreateResizedImage(album.CoverArt.String, p, size, size)
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-
-					f := os.DirFS(albumCache)
-					return pyrin.ServeFile(c, f, name)
-				}
-
-				switch name {
-				case "original":
-					if originalFileExt == ext {
-						p := path.Dir(album.CoverArt.String)
-						f := os.DirFS(p)
-
-						return pyrin.ServeFile(c, f, originalFilename)
-					} else {
-						name := "original" + ext
-						p := path.Join(albumCache, name)
-
-						_, err := os.Stat(p)
-						if err != nil {
-							if os.IsNotExist(err) {
-								err := utils.ConvertImage(album.CoverArt.String, p)
-								if err != nil {
-									return err
-								}
-							} else {
-								return err
-							}
-						}
-
-						f := os.DirFS(albumCache)
-						return pyrin.ServeFile(c, f, name)
-					}
-
-				case "128":
-					return convertImage("128", 128)
-				case "256":
-					return convertImage("256", 256)
-				case "512":
-					return convertImage("512", 512)
-				}
-
-				return pyrin.NoContentNotFound()
+				f := os.DirFS(path.Dir(p))
+				return pyrin.ServeFile(c, f, path.Base(p))
 			},
 		},
 		pyrin.NormalHandler{
-			Name: "GetArtistImage",
+			Name:   "GetArtistImage",
 			Method: http.MethodGet,
 			Path:   "/artists/images/:artistId/:image",
 			HandlerFunc: func(c pyrin.Context) error {
@@ -222,7 +144,6 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 						}
 					}
 
-
 					f := os.DirFS(artistCache)
 					return pyrin.ServeFile(c, f, name)
 				}
@@ -266,7 +187,7 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 			},
 		},
 		pyrin.NormalHandler{
-			Name: "GetTrackFile",
+			Name:   "GetTrackFile",
 			Method: http.MethodGet,
 			Path:   "/tracks/:trackId/:file",
 			HandlerFunc: func(c pyrin.Context) error {
@@ -413,8 +334,8 @@ func Server(app core.App) (*pyrin.Server, error) {
 		LogName: dwebble.AppName,
 		ErrorCallback: func(err error) {
 			// TODO(patrik): Handle this better
-			slog.Error("API Error", "err", err);
-		}, 
+			slog.Error("API Error", "err", err)
+		},
 		RegisterHandlers: func(router pyrin.Router) {
 			RegisterHandlers(app, router)
 		},

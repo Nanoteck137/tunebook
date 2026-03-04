@@ -18,6 +18,11 @@ type BaseApp struct {
 	authService    *service.AuthService
 	searchService  *service.SearchService
 	libraryService *service.LibraryService
+	imageService   *service.ImageService
+}
+
+func (app *BaseApp) ImageService() *service.ImageService {
+	return app.imageService
 }
 
 func (app *BaseApp) LibraryService() *service.LibraryService {
@@ -55,7 +60,6 @@ func (app *BaseApp) Bootstrap() error {
 		workDir.Tracks(),
 		workDir.Trash(),
 		workDir.Cache().String(),
-		workDir.Cache().Tracks(),
 	}
 
 	for _, dir := range dirs {
@@ -90,7 +94,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.libraryService = service.NewLibraryService(app.db, app.config, app.searchService)
 	app.libraryService.Sync()
 
-	// app.searchService.Test()
+	app.imageService = service.NewImageService(app.db, app.config.WorkDir())
 
 	return nil
 }

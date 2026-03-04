@@ -16,6 +16,7 @@ type App interface {
 	AuthService() *service.AuthService
 	SearchService() *service.SearchService
 	LibraryService() *service.LibraryService
+	ImageService() *service.ImageService
 
 	WorkDir() types.WorkDir
 
