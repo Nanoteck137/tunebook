@@ -3,26 +3,13 @@
 ## Rewrite
 
 - [ ] Better way to log the API Errors
-
-- [x] Auth Rewrite [AuthLab](https://github.com/Nanoteck137/authlab)
-    - [ ] Better API Tokens
-    - [ ] Quick Code integration
+- [ ] Better API Tokens
+- [ ] Quick Code integration
 - [ ] Server Architecture/Structure
     - [ ] Services
         - [ ] Service should have a ping function to check if the service is available
 
 - [ ] Web Frontend
-    - [ ] Move away from SvelteKit server and use SvelteKit SPA Mode
-        - [x] /login
-        - [x] /tracks
-        - [x] /taglists
-        - [x] /server
-        - [x] /search
-        - [x] /playlists
-        - [x] /artists
-        - [x] /albums
-        - [x] /users
-            - [ ] Update Display Name need fixing, both frontend and backend
     - [ ] Add
         - [ ] Playlist Editing
         - [ ] Playlist Filtering/Sorting
@@ -34,6 +21,7 @@
     - [ ] Home Page
     - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
+    - [ ] Update Display Name need fixing, both frontend and backend on /users
 
 - [ ] Cleanup
     - [ ] Remove old library code from library/library.go
@@ -64,16 +52,15 @@
 
 - [ ] Playlists/Taglists
     - [ ] Taglists renamed to VirtualPlaylist
-    - [x] Playlist Ordering
     - [ ] User ability to re-order playlist items
-    - [x] Playlist should have cover image
-        - [ ] Generate the cover image (like Youtube Music)
-        - [ ] Custom Covers
+    - [ ] Generate the cover image (like Youtube Music)
+    - [ ] Custom Covers
 
 - [ ] Library Handling
     - [ ] Multi-threaded syncing
     - [ ] Time each step
     - [ ] Report Errors
+    - [ ] Maybe clear the cache after sync
     - [ ] Update Cmd
         - [ ] Metadata Validation
         - [ ] Metadata transformation (trim spaces, escape characters, more)
@@ -109,18 +96,3 @@
     - Need some ideas
 
 - [ ] Use new logo from dwebble_app
-
-- [x] Config Handling
-
-- [x] Pyrin fix "Internal Server Errors"
-    - [x] Print Errors to stderr using logger
-
-- [x] Graceful Shutdown
-
-- [x] Quick Playlist need fixing
-    - [x] Backend
-    - [x] Frontend
-
-- [x] Better Search
-    - [x] [meilisearch](https://www.meilisearch.com)
-    - [Bleve](https://blevesearch.com)
