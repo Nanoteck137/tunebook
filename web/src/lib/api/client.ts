@@ -88,6 +88,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/taglists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
+  generatePlaylistImage(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${id}/images/generate`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   getAlbumById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/albums/${id}`, "GET", api.GetAlbumById, z.any(), undefined, options)
   }
@@ -323,6 +327,10 @@ export class ClientUrls {
   
   deleteTaglist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
+  }
+  
+  generatePlaylistImage(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/images/generate`)
   }
   
   getAlbumById(id: string) {

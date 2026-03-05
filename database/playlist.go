@@ -91,6 +91,27 @@ func (db DB) GetPlaylistTracks(ctx context.Context, playlistId string) ([]Ordere
 	return ember.Multiple[OrderedTrack](db.db, ctx, query)
 }
 
+// type PlaylistImage struct {
+//
+// }
+
+func (db DB) GetPlaylistTrackImages(ctx context.Context, playlistId string, numImages int) ([]sql.NullString, error) {
+	tracks := TrackQuery()
+
+	query := dialect.From("playlist_items").
+		Select("tracks.album_cover_art").
+		Join(
+			tracks.As("tracks"),
+			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+		).
+		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
+		GroupBy(goqu.I("tracks.album_id")).
+		Order(goqu.I("playlist_items.order_num").Asc()).
+		Limit(uint(numImages))
+
+	return ember.Multiple[sql.NullString](db.db, ctx, query)
+}
+
 func (db DB) GetNextIndex(ctx context.Context, playlistId string) (int, error) {
 	query := dialect.From("playlist_items").
 		Select("playlist_items.order_num").
@@ -202,6 +223,45 @@ func (db DB) CreatePlaylist(ctx context.Context, params CreatePlaylistParams) (P
 		)
 
 	return ember.Single[Playlist](db.db, ctx, query)
+}
+
+type PlaylistChanges struct {
+	Name types.Change[string]
+
+	OwnerId types.Change[string]
+
+	CoverArt types.Change[sql.NullString]
+
+	Created types.Change[int64]
+}
+
+func (db DB) UpdatePlaylist(ctx context.Context, id string, changes PlaylistChanges) error {
+	record := goqu.Record{}
+
+	addToRecord(record, "name", changes.Name)
+
+	addToRecord(record, "owner_id", changes.OwnerId)
+
+	addToRecord(record, "cover_art", changes.CoverArt)
+
+	addToRecord(record, "created", changes.Created)
+
+	if len(record) == 0 {
+		return nil
+	}
+
+	record["updated"] = time.Now().UnixMilli()
+
+	ds := dialect.Update("playlists").
+		Set(record).
+		Where(goqu.I("playlists.id").Eq(id))
+
+	_, err := db.db.Exec(ctx, ds)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (db DB) AddItemToPlaylist(ctx context.Context, playlistId, trackId string, order int) error {

@@ -58,6 +58,7 @@ func (app *BaseApp) Bootstrap() error {
 		workDir.Artists(),
 		workDir.Albums(),
 		workDir.Tracks(),
+		workDir.Playlists(),
 		workDir.Trash(),
 		workDir.Cache().String(),
 	}

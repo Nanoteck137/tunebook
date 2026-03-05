@@ -6,9 +6,13 @@ import (
 	"errors"
 	"math/rand"
 	"net/http"
+	"os"
+	"path"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
@@ -448,6 +452,98 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.DB().RemoveAllPlaylistItem(ctx, playlist.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "GeneratePlaylistImage",
+			Method: http.MethodPost,
+			Path:   "/playlists/:id/images/generate",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("id")
+
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PlaylistNotFound()
+					}
+
+					return nil, err
+				}
+
+				if playlist.OwnerId != user.Id {
+					return nil, PlaylistNotFound()
+				}
+
+				images, err := app.DB().GetPlaylistTrackImages(ctx, playlist.Id, 4)
+				if err != nil {
+					return nil, err
+				}
+
+				pretty.Println(images)
+
+				imgs := [4]string{
+					"",
+					"",
+					"",
+					"",
+				}
+
+				for i, img := range images {
+					if !img.Valid {
+						continue
+					}
+
+					imgs[i] = img.String
+				}
+
+				workDir := app.WorkDir()
+				playlistDir := workDir.Playlist(playlist.Id)
+
+				dirs := []string{
+					playlistDir,
+				}
+
+				for _, dir := range dirs {
+					err = os.Mkdir(dir, 0755)
+					if err != nil && !errors.Is(err, os.ErrExist) {
+						return nil, err
+					}
+				}
+
+				coverArt := "generated.png"
+				out := path.Join(playlistDir, coverArt)
+				err = utils.GeneratePlaylistCover(imgs, out, 512)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.DB().UpdatePlaylist(ctx, playlist.Id, database.PlaylistChanges{
+					CoverArt: types.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: coverArt,
+							Valid:  coverArt != "",
+						},
+						Changed: coverArt != playlist.CoverArt.String,
+					},
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				err = os.RemoveAll(app.WorkDir().Cache().Playlist(playlist.Id))
 				if err != nil {
 					return nil, err
 				}

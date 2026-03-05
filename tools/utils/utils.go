@@ -88,6 +88,44 @@ func CreateResizedImage(src string, dest string, width, height int) error {
 	return nil
 }
 
+func GeneratePlaylistCover(images [4]string, output string, tileSize int) error {
+	if len(images) == 0 {
+		return fmt.Errorf("at least one image is required")
+	}
+
+	size := fmt.Sprintf("%dx%d", tileSize, tileSize)
+
+	buildTile := func(img string) []string {
+		if img == "" {
+			return []string{"(", "xc:black", "-resize", size, ")"}
+		}
+		return []string{"(", img, "-resize", size + "^", "-gravity", "center", "-extent", size, ")"}
+	}
+
+	args := []string{}
+	for _, img := range images {
+		args = append(args, buildTile(img)...)
+	}
+
+	args = append(args,
+		"(", "-clone", "0-1", "+append", ")",
+		"(", "-clone", "2-3", "+append", ")",
+		"-delete", "0-3",
+		"-append",
+		output,
+	)
+
+	cmd := exec.Command("magick", args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ConvertImage(src string, dest string) error {
 	args := []string{
 		"convert",

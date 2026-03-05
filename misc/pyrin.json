@@ -1498,6 +1498,12 @@
     },
     {
       "type": "api",
+      "name": "GeneratePlaylistImage",
+      "method": "POST",
+      "path": "/api/v1/playlists/:id/images/generate"
+    },
+    {
+      "type": "api",
       "name": "GetAlbumById",
       "method": "GET",
       "path": "/api/v1/albums/:id",

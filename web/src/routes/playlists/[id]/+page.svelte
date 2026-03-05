@@ -7,7 +7,12 @@
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import TrackListHeader from "$lib/components/track-list/TrackListHeader.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte.js";
-  import { Breadcrumb, DropdownMenu, Pagination } from "@nanoteck137/nano-ui";
+  import {
+    Breadcrumb,
+    Button,
+    DropdownMenu,
+    Pagination,
+  } from "@nanoteck137/nano-ui";
   import { Pencil, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
 
@@ -31,6 +36,17 @@
     </Breadcrumb.List>
   </Breadcrumb.Root>
 </div>
+
+<Button
+  onclick={async () => {
+    const res = await apiClient.generatePlaylistImage(data.playlist.id);
+    if (!res.success) {
+      return handleApiError(res.error);
+    }
+  }}
+>
+  Test Generate
+</Button>
 
 <TrackListHeader
   name={data.playlist.name}

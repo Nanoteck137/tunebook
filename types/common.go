@@ -113,6 +113,14 @@ func (d WorkDir) Track(id string) string {
 	return path.Join(d.Tracks(), id)
 }
 
+func (d WorkDir) Playlists() string {
+	return path.Join(d.String(), "playlists")
+}
+
+func (d WorkDir) Playlist(id string) string {
+	return path.Join(d.Playlists(), id)
+}
+
 func (d WorkDir) Cache() CacheDir {
 	return CacheDir(path.Join(d.String(), "cache"))
 }
@@ -145,6 +153,14 @@ func (d CacheDir) Tracks() string {
 
 func (d CacheDir) Track(id string) string {
 	return path.Join(d.Tracks(), id)
+}
+
+func (d CacheDir) Playlists() string {
+	return path.Join(d.String(), "playlists")
+}
+
+func (d CacheDir) Playlist(id string) string {
+	return path.Join(d.Playlists(), id)
 }
 
 type Change[T any] struct {

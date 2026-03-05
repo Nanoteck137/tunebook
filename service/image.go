@@ -172,3 +172,123 @@ func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, i
 
 	return "", errors.New("unknown type")
 }
+
+func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string, imageType ImageType) (string, error) {
+	artist, err := s.db.GetArtistById(ctx, artistId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return "", errors.New("artist not found")
+		}
+
+		return "", err
+	}
+
+	cacheDir := s.workDir.Cache()
+	artistCache := cacheDir.Artist(artist.Id)
+
+	// Make sure that the cache directory is setup
+	dirs := []string{
+		cacheDir.String(),
+		cacheDir.Artists(),
+		artistCache,
+	}
+
+	for _, dir := range dirs {
+		err = os.Mkdir(dir, 0755)
+		if err != nil && !errors.Is(err, os.ErrExist) {
+			return "", err
+		}
+	}
+
+	ext, ok := imageType.ToExt()
+	if !ok {
+		// TODO(patrik): Better error
+		return "", errors.New("unknown image type")
+	}
+
+	input := ""
+
+	if artist.Picture.Valid {
+		input = artist.Picture.String
+	} else {
+		input, err = s.copyDefaultToTemp("default_artist.png")
+		if err != nil {
+			return "", err
+		}
+		defer os.Remove(input)
+	}
+
+	switch typ {
+	case "original":
+		return s.convertSquareImage(input, artistCache, "original_square"+ext)
+	case "128":
+		return s.convertImage(input, artistCache, "128"+ext, 128)
+	case "256":
+		return s.convertImage(input, artistCache, "256"+ext, 256)
+	case "512":
+		return s.convertImage(input, artistCache, "512"+ext, 512)
+	}
+
+	return "", errors.New("unknown type")
+}
+
+func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ string, imageType ImageType) (string, error) {
+	playlist, err := s.db.GetPlaylistById(ctx, playlistId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return "", errors.New("playlist not found")
+		}
+
+		return "", err
+	}
+
+	cacheDir := s.workDir.Cache()
+	playlistCache := cacheDir.Playlist(playlist.Id)
+
+	// Make sure that the cache directory is setup
+	dirs := []string{
+		cacheDir.String(),
+		cacheDir.Playlists(),
+		playlistCache,
+	}
+
+	for _, dir := range dirs {
+		err = os.Mkdir(dir, 0755)
+		if err != nil && !errors.Is(err, os.ErrExist) {
+			return "", err
+		}
+	}
+
+	ext, ok := imageType.ToExt()
+	if !ok {
+		// TODO(patrik): Better error
+		return "", errors.New("unknown image type")
+	}
+
+	input := ""
+
+	if playlist.CoverArt.Valid {
+		playlistDir := s.workDir.Playlist(playlist.Id)
+
+		input = path.Join(playlistDir, playlist.CoverArt.String)
+	} else {
+		input, err = s.copyDefaultToTemp("default_album.png")
+		if err != nil {
+			return "", err
+		}
+		defer os.Remove(input)
+	}
+
+	switch typ {
+	case "original":
+		return s.convertSquareImage(input, playlistCache, "original_square"+ext)
+	case "128":
+		return s.convertImage(input, playlistCache, "128"+ext, 128)
+	case "256":
+		return s.convertImage(input, playlistCache, "256"+ext, 256)
+	case "512":
+		return s.convertImage(input, playlistCache, "512"+ext, 512)
+	}
+
+	return "", errors.New("unknown type")
+}

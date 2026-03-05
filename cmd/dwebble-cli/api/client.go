@@ -307,6 +307,22 @@ func (c *Client) DeleteTaglist(id string, options Options) (*any, error) {
 	return Request[any](data, nil)
 }
 
+func (c *Client) GeneratePlaylistImage(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/playlists/%v/images/generate", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 func (c *Client) GetAlbumById(id string, options Options) (*GetAlbumById, error) {
 	path := Sprintf("/api/v1/albums/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -985,6 +1001,11 @@ func (c *ClientUrls) DeletePlaylist(id string) (*URL, error) {
 
 func (c *ClientUrls) DeleteTaglist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/taglists/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GeneratePlaylistImage(id string) (*URL, error) {
+	path := Sprintf("/api/v1/playlists/%v/images/generate", id)
 	return c.getUrl(path)
 }
 
