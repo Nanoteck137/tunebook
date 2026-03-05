@@ -48,7 +48,6 @@
 
 - [ ] Library Handling
     - [ ] Multi-threaded syncing
-    - [ ] Time each step
     - [ ] Clear the cache after sync
     - [ ] Update Cmd
         - [ ] Metadata Validation

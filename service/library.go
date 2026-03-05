@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"sync/atomic"
+	"time"
 
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
@@ -17,21 +18,6 @@ import (
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 )
-
-var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
-
-type LibrarySyncStateEvent struct {
-	IsRunning bool     `json:"isRunning"`
-	Errors    []string `json:"errors"`
-
-	NumArtists int `json:"numArtists"`
-	NumAlbums  int `json:"numAlbums"`
-	NumTracks  int `json:"numTracks"`
-}
-
-func (e LibrarySyncStateEvent) GetEventType() string {
-	return "library-sync-state"
-}
 
 type ArtistEntry struct {
 	Id string `json:"id"`
@@ -96,6 +82,26 @@ func (e TrackEntry) GetTrackFile() string {
 	return path.Join(e.Path, e.TrackFile)
 }
 
+var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
+
+type LibrarySyncStateEvent struct {
+	IsRunning bool     `json:"isRunning"`
+	Errors    []string `json:"errors"`
+
+	NumArtists int `json:"numArtists"`
+	NumAlbums  int `json:"numAlbums"`
+	NumTracks  int `json:"numTracks"`
+
+	ArtistsSyncDurationMs int64 `json:"artistsSyncDurationMs"`
+	AlbumsSyncDurationMs  int64 `json:"albumsSyncDurationMs"`
+	TracksSyncDurationMs  int64 `json:"tracksSyncDurationMs"`
+	TotalSyncDurationMs   int64 `json:"totalSyncDurationMs"`
+}
+
+func (e LibrarySyncStateEvent) GetEventType() string {
+	return "library-sync-state"
+}
+
 type UpdateFunc func()
 
 type LibraryService struct {
@@ -110,6 +116,11 @@ type LibraryService struct {
 	numArtists int
 	numAlbums  int
 	numTracks  int
+
+	artistsSyncDuration time.Duration
+	albumsSyncDuration  time.Duration
+	tracksSyncDuration  time.Duration
+	totalSyncDuration   time.Duration
 
 	updateFunc UpdateFunc
 }
@@ -143,11 +154,15 @@ func (s *LibraryService) GetSyncStateEvent() LibrarySyncStateEvent {
 	}
 
 	return LibrarySyncStateEvent{
-		IsRunning:  isRunning,
-		Errors:     errors,
-		NumArtists: s.numArtists,
-		NumAlbums:  s.numAlbums,
-		NumTracks:  s.numTracks,
+		IsRunning:           isRunning,
+		Errors:              errors,
+		NumArtists:          s.numArtists,
+		NumAlbums:           s.numAlbums,
+		NumTracks:           s.numTracks,
+		ArtistsSyncDurationMs: s.artistsSyncDuration.Milliseconds(),
+		AlbumsSyncDurationMs:  s.albumsSyncDuration.Milliseconds(),
+		TracksSyncDurationMs:  s.tracksSyncDuration.Milliseconds(),
+		TotalSyncDurationMs:   s.totalSyncDuration.Milliseconds(),
 	}
 }
 
@@ -695,11 +710,19 @@ func (s *LibraryService) runSync() error {
 
 	ctx := context.TODO()
 
+	artistTimer := utils.SimpleTimer{}
+	artistTimer.Start()
+
 	// TODO(patrik): Check for deleted artists
 	err := s.syncArtists(ctx, p)
 	if err != nil {
 		return err
 	}
+
+	artistTimer.Stop()
+
+	albumTimer := utils.SimpleTimer{}
+	albumTimer.Start()
 
 	// TODO(patrik): Check for deleted albums
 	err = s.syncAlbums(ctx, p)
@@ -707,11 +730,23 @@ func (s *LibraryService) runSync() error {
 		return err
 	}
 
+	albumTimer.Stop()
+
+	trackTimer := utils.SimpleTimer{}
+	trackTimer.Start()
+
 	// TODO(patrik): Check for deleted tracks
 	err = s.syncTracks(ctx, p)
 	if err != nil {
 		return err
 	}
+
+	trackTimer.Stop()
+
+	s.artistsSyncDuration = artistTimer.Duration()
+	s.albumsSyncDuration = albumTimer.Duration()
+	s.tracksSyncDuration = trackTimer.Duration()
+	s.totalSyncDuration = s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
 
 	return nil
 }

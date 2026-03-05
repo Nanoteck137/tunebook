@@ -1,6 +1,7 @@
 <script lang="ts">
   import { PUBLIC_COMMIT, PUBLIC_VERSION } from "$env/static/public";
   import { getApiClient, handleApiError } from "$lib";
+  import { formatDuration } from "$lib/utils.js";
   import { Button } from "@nanoteck137/nano-ui";
   import { onDestroy, onMount } from "svelte";
   import { z } from "zod";
@@ -13,6 +14,11 @@
   let numArtists = $state(0);
   let numAlbums = $state(0);
   let numTracks = $state(0);
+
+  let artistSyncTime = $state(0);
+  let albumSyncTime = $state(0);
+  let trackSyncTime = $state(0);
+  let totalSyncTime = $state(0);
 
   const SyncError = z.object({
     type: z.string(),
@@ -82,6 +88,11 @@
     numArtists: z.number(),
     numAlbums: z.number(),
     numTracks: z.number(),
+
+    artistsSyncDurationMs: z.number(),
+    albumsSyncDurationMs: z.number(),
+    tracksSyncDurationMs: z.number(),
+    totalSyncDurationMs: z.number(),
   });
 
   onMount(() => {
@@ -101,6 +112,11 @@
       numArtists = data.numArtists;
       numAlbums = data.numAlbums;
       numTracks = data.numTracks;
+
+      artistSyncTime = data.artistsSyncDurationMs;
+      albumSyncTime = data.albumsSyncDurationMs;
+      trackSyncTime = data.tracksSyncDurationMs;
+      totalSyncTime = data.totalSyncDurationMs;
     });
 
     return () => {
@@ -131,6 +147,13 @@
 <p>Num Artists: {numArtists}</p>
 <p>Num Albums: {numAlbums}</p>
 <p>Num Tracks: {numTracks}</p>
+
+<br />
+
+<p>Artist Sync Time: {formatDuration(artistSyncTime)}</p>
+<p>Album Sync Time: {formatDuration(albumSyncTime)}</p>
+<p>Track Sync Time: {formatDuration(trackSyncTime)}</p>
+<p>Total Sync Time: {formatDuration(totalSyncTime)}</p>
 
 <p>Errors:</p>
 {#each errors as err}

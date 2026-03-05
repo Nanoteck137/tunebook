@@ -11,7 +11,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/service"
@@ -108,23 +107,6 @@ func readToml(p string, data any) error {
 	return nil
 }
 
-type SimpleTimer struct {
-	t time.Time
-
-	lastTime time.Duration
-}
-
-func (s *SimpleTimer) Start() {
-	s.t = time.Now()
-}
-
-func (s *SimpleTimer) Stop() time.Duration {
-	t := time.Now().Sub(s.t)
-	s.lastTime = t
-
-	return t
-}
-
 var updateCmd = &cobra.Command{
 	Use: "update",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -136,9 +118,9 @@ var updateCmd = &cobra.Command{
 
 		numErrorsFound := 0
 
-		overallTimer := SimpleTimer{}
-		dirwalkTimer := SimpleTimer{}
-		validationTimer := SimpleTimer{}
+		overallTimer := utils.SimpleTimer{}
+		dirwalkTimer := utils.SimpleTimer{}
+		validationTimer := utils.SimpleTimer{}
 
 		overallTimer.Start()
 
@@ -436,9 +418,9 @@ var updateCmd = &cobra.Command{
 
 		overallTimer.Stop()
 
-		fmt.Printf("dirwalk: %v\n", dirwalkTimer.lastTime)
-		fmt.Printf("validation: %v\n", validationTimer.lastTime)
-		fmt.Printf("overall: %v\n", overallTimer.lastTime)
+		fmt.Printf("dirwalk: %v\n", dirwalkTimer.Duration())
+		fmt.Printf("validation: %v\n", validationTimer.Duration())
+		fmt.Printf("overall: %v\n", overallTimer.Duration())
 		fmt.Printf("numErrorsFound: %v\n", numErrorsFound)
 	},
 }
