@@ -24,7 +24,6 @@
     - [ ] Update Display Name need fixing, both frontend and backend on /users
 
 - [ ] Cleanup
-    - [ ] Old database based search
     - [ ] Migration cleanup
     - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
 
