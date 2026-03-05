@@ -18,9 +18,9 @@ type Track struct {
 
 	Id string `db:"id"`
 
-	Filename     string          `db:"filename"`
-	ModifiedTime int64           `db:"modified_time"`
-	MediaType    types.MediaType `db:"media_type"`
+	Filename     string            `db:"filename"`
+	ModifiedTime int64             `db:"modified_time"`
+	MediaFormat  types.MediaFormat `db:"media_format"`
 
 	Name      string         `db:"name"`
 	OtherName sql.NullString `db:"other_name"`
@@ -98,7 +98,7 @@ func TrackQuery() *goqu.SelectDataset {
 
 			"tracks.filename",
 			"tracks.modified_time",
-			"tracks.media_type",
+			"tracks.media_format",
 
 			"tracks.name",
 			"tracks.other_name",
@@ -336,11 +336,11 @@ func (db DB) GetTrackByNameAndAlbum(ctx context.Context, name string, albumId st
 }
 
 type CreateTrackParams struct {
-	Id   string
+	Id string
 
 	Filename     string
 	ModifiedTime int64
-	MediaType    types.MediaType
+	MediaFormat  types.MediaFormat
 
 	Name      string
 	OtherName sql.NullString
@@ -375,11 +375,11 @@ func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string,
 	}
 
 	query := dialect.Insert("tracks").Rows(goqu.Record{
-		"id":   id,
+		"id": id,
 
-		"filename":   params.Filename,
+		"filename":      params.Filename,
 		"modified_time": params.ModifiedTime,
-		"media_type": params.MediaType,
+		"media_format":  params.MediaFormat,
 
 		"name":       params.Name,
 		"other_name": params.OtherName,
@@ -400,9 +400,9 @@ func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string,
 }
 
 type TrackChanges struct {
-	Filename  types.Change[string]
+	Filename     types.Change[string]
 	ModifiedTime types.Change[int64]
-	MediaType types.Change[types.MediaType]
+	MediaFormat  types.Change[types.MediaFormat]
 
 	Name      types.Change[string]
 	OtherName types.Change[sql.NullString]
@@ -422,7 +422,7 @@ func (db DB) UpdateTrack(ctx context.Context, id string, changes TrackChanges) e
 
 	addToRecord(record, "filename", changes.Filename)
 	addToRecord(record, "modified_time", changes.ModifiedTime)
-	addToRecord(record, "media_type", changes.MediaType)
+	addToRecord(record, "media_format", changes.MediaFormat)
 
 	addToRecord(record, "name", changes.Name)
 	addToRecord(record, "other_name", changes.OtherName)
@@ -582,10 +582,10 @@ type CreateTrackMediaParams struct {
 	Id      string
 	TrackId string
 
-	Filename   string
-	MediaType  types.MediaType
-	Rank       int
-	IsOriginal bool
+	Filename    string
+	MediaFormat types.MediaFormat
+	Rank        int
+	IsOriginal  bool
 }
 
 func (db DB) CreateTrackMedia(ctx context.Context, params CreateTrackMediaParams) error {
@@ -594,10 +594,10 @@ func (db DB) CreateTrackMedia(ctx context.Context, params CreateTrackMediaParams
 			"id":       params.Id,
 			"track_id": params.TrackId,
 
-			"filename":    params.Filename,
-			"media_type":  params.MediaType,
-			"rank":        params.Rank,
-			"is_original": params.IsOriginal,
+			"filename":     params.Filename,
+			"media_format": params.MediaFormat,
+			"rank":         params.Rank,
+			"is_original":  params.IsOriginal,
 		})
 
 	_, err := db.db.Exec(ctx, query)

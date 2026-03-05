@@ -18,6 +18,7 @@ type App interface {
 	SearchService() *service.SearchService
 	LibraryService() *service.LibraryService
 	ImageService() *service.ImageService
+	MediaService() *service.MediaService
 
 	Broker() *broker.Broker
 

@@ -20,8 +20,13 @@ type BaseApp struct {
 	searchService  *service.SearchService
 	libraryService *service.LibraryService
 	imageService   *service.ImageService
-	
+	mediaService   *service.MediaService
+
 	broker *broker.Broker
+}
+
+func (app *BaseApp) MediaService() *service.MediaService {
+	return app.mediaService
 }
 
 func (app *BaseApp) Broker() *broker.Broker {
@@ -94,15 +99,18 @@ func (app *BaseApp) Bootstrap() error {
 	go app.authService.CleanRoutine()
 
 	app.searchService = service.NewSearchService(app.db, app.config)
+
+	// TODO(patrik): Do this lazily
 	err = app.searchService.Init()
 	if err != nil {
 		return err
 	}
 
 	app.libraryService = service.NewLibraryService(app.db, app.config, app.searchService)
-	// app.libraryService.Sync()
 
 	app.imageService = service.NewImageService(app.db, app.config.WorkDir())
+
+	app.mediaService = service.NewMediaService(app.db, app.config.WorkDir())
 
 	app.broker = broker.NewBroker(func() []broker.Event {
 		return []broker.Event{
@@ -110,6 +118,7 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	})
 
+	// TODO(patrik): Move to worker?
 	go app.broker.Listen()
 
 	app.libraryService.SetUpdateFunc(func() {

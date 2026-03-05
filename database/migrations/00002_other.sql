@@ -39,7 +39,7 @@ CREATE TABLE tracks (
 
     filename TEXT NOT NULL,
     modified_time INT NOT NULL,
-    media_type TEXT NOT NULL,
+    media_format TEXT NOT NULL,
 
     name TEXT NOT NULL CHECK(name<>''),
     other_name TEXT,

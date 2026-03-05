@@ -154,11 +154,11 @@ func (s *LibraryService) GetSyncStateEvent() LibrarySyncStateEvent {
 	}
 
 	return LibrarySyncStateEvent{
-		IsRunning:           isRunning,
-		Errors:              errors,
-		NumArtists:          s.numArtists,
-		NumAlbums:           s.numAlbums,
-		NumTracks:           s.numTracks,
+		IsRunning:             isRunning,
+		Errors:                errors,
+		NumArtists:            s.numArtists,
+		NumAlbums:             s.numAlbums,
+		NumTracks:             s.numTracks,
 		ArtistsSyncDurationMs: s.artistsSyncDuration.Milliseconds(),
 		AlbumsSyncDurationMs:  s.albumsSyncDuration.Milliseconds(),
 		TracksSyncDurationMs:  s.tracksSyncDuration.Milliseconds(),
@@ -536,7 +536,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 				Id:           entry.Id,
 				Filename:     trackFile,
 				ModifiedTime: modifiedTime,
-				MediaType:    probeResult.MediaType,
+				MediaFormat:  probeResult.MediaFormat,
 				Name:         entry.Name,
 				AlbumId:      entry.AlbumId,
 				ArtistId:     entry.ArtistId,
@@ -570,9 +570,9 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 				Changed: dur != dbTrack.Duration,
 			}
 
-			changes.MediaType = types.Change[types.MediaType]{
-				Value:   probeResult.MediaType,
-				Changed: probeResult.MediaType != dbTrack.MediaType,
+			changes.MediaFormat = types.Change[types.MediaFormat]{
+				Value:   probeResult.MediaFormat,
+				Changed: probeResult.MediaFormat != dbTrack.MediaFormat,
 			}
 
 			changes.ModifiedTime = types.Change[int64]{

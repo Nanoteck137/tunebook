@@ -97,10 +97,10 @@ type QueueItem struct {
 }
 
 type QueueTrackItemMediaItem struct {
-	Id         string             `json:"id"`
-	Filename   string             `json:"filename"`
-	MediaType  types.MediaType    `json:"media_type"`
-	IsOriginal ConvertibleBoolean `json:"is_original"`
+	Id          string             `json:"id"`
+	Filename    string             `json:"filename"`
+	MediaFormat types.MediaFormat  `json:"media_format"`
+	IsOriginal  ConvertibleBoolean `json:"is_original"`
 }
 
 type QueueTrackItem struct {
@@ -389,8 +389,8 @@ func NewTrackQuery() *goqu.SelectDataset {
 					"filename",
 					goqu.I("tracks_media.filename"),
 
-					"media_type",
-					goqu.I("tracks_media.media_type"),
+					"media_format",
+					goqu.I("tracks_media.media_format"),
 
 					"is_original",
 					goqu.I("tracks_media.is_original"),

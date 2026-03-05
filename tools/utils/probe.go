@@ -28,9 +28,9 @@ type TrackInfo struct {
 }
 
 type ProbeResult struct {
-	Tags      ffprobe.Tags
-	MediaType types.MediaType
-	Duration  float64
+	Tags        ffprobe.Tags
+	MediaFormat types.MediaFormat
+	Duration    float64
 }
 
 func ProbeTrack(filepath string) (ProbeResult, error) {
@@ -64,25 +64,25 @@ func ProbeTrack(filepath string) (ProbeResult, error) {
 		return ProbeResult{}, err
 	}
 
-	mediaType := types.MediaTypeUnknown
+	mediaType := types.MediaFormatUnknown
 
 	// TODO(patrik): Move to helper
 	// TODO(patrik): Add more types
 	switch probe.Format.FormatName {
 	case "flac":
-		mediaType = types.MediaTypeFlac
+		mediaType = types.MediaFormatFlac
 	case "ogg":
 		switch audioStream.CodecName {
 		case "opus":
-			mediaType = types.MediaTypeOggOpus
+			mediaType = types.MediaFormatOpus
 		case "vorbis":
-			mediaType = types.MediaTypeOggVorbis
+			mediaType = types.MediaFormatVorbis
 		}
 	}
 
 	return ProbeResult{
-		Tags:      tags,
-		MediaType: mediaType,
-		Duration:  duration,
+		Tags:        tags,
+		MediaFormat: mediaType,
+		Duration:    duration,
 	}, nil
 }

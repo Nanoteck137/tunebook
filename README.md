@@ -27,12 +27,16 @@
     - [ ] Migration cleanup
     - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
 
+- [ ] Make Search Service init lazily, same as the auth service
+
 - [ ] Search Service
     - [ ] Add RWLock lock
     - [ ] Code Cleanup
     - [ ] Add Playlists
     - [ ] Add Users
     - [ ] Batch indexing
+
+- [ ] Utils Media Probe: Needs some work to support more media types
 
 - [ ] Media
     - [ ] Better management of media and transcoding

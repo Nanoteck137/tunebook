@@ -2,68 +2,6 @@ package types
 
 import "path"
 
-type MediaType string
-
-const (
-	MediaTypeUnknown   MediaType = "unknown"
-	MediaTypeFlac      MediaType = "flac"
-	MediaTypeOggOpus   MediaType = "ogg-opus"
-	MediaTypeOggVorbis MediaType = "ogg-vorbis"
-	MediaTypeMp3       MediaType = "mp3"
-	MediaTypeAac       MediaType = "aac"
-)
-
-func GetMediaTypeFromExt(ext string) MediaType {
-	switch ext {
-	case ".flac":
-		return MediaTypeFlac
-	case ".opus":
-		return MediaTypeOggOpus
-	case ".ogg":
-		return MediaTypeOggVorbis
-	case ".mp3":
-		return MediaTypeMp3
-	case ".aac":
-		return MediaTypeAac
-	}
-
-	return MediaTypeUnknown
-}
-
-func (m MediaType) ToExt() (string, bool) {
-	switch m {
-	case MediaTypeFlac:
-		return ".flac", true
-	case MediaTypeOggOpus:
-		return ".opus", true
-	case MediaTypeOggVorbis:
-		return ".ogg", true
-	case MediaTypeMp3:
-		return ".mp3", true
-	case MediaTypeAac:
-		return ".aac", true
-	}
-
-	return "", false
-}
-
-func (m MediaType) IsValid() bool {
-	switch m {
-	case MediaTypeFlac:
-		return true
-	case MediaTypeOggOpus:
-		return true
-	case MediaTypeOggVorbis:
-		return true
-	case MediaTypeMp3:
-		return true
-	case MediaTypeAac:
-		return true
-	}
-
-	return false
-}
-
 type Map map[string]any
 
 type WorkDir string
@@ -85,6 +23,7 @@ func (d WorkDir) SetupFile() string {
 	return path.Join(d.String(), "setup")
 }
 
+// TODO(patrik): Remove?
 func (d WorkDir) Trash() string {
 	return path.Join(d.String(), "trash")
 }

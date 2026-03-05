@@ -3,7 +3,6 @@ package apis
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"net/http"
 
@@ -26,8 +25,8 @@ type MediaItem struct {
 
 	CoverArt types.Images `json:"coverArt"`
 
-	MediaType types.MediaType `json:"mediaType"`
-	MediaUrl  string          `json:"mediaUrl"`
+	MediaFormat types.MediaFormat `json:"mediaFormat"`
+	MediaUrl    string            `json:"mediaUrl"`
 }
 
 type GetMedia struct {
@@ -35,7 +34,7 @@ type GetMedia struct {
 }
 
 type GetMediaCommonBody struct {
-	MediaType types.MediaType `json:"mediaType,omitempty"`
+	MediaFormat types.MediaFormat `json:"mediaFormat,omitempty"`
 
 	Shuffle bool   `json:"shuffle,omitempty"`
 	Sort    string `json:"sort,omitempty"`
@@ -73,7 +72,7 @@ type GetMediaFromIdsBody struct {
 	KeepOrder bool     `json:"keepOrder,omitempty"`
 }
 
-func packMediaResult(c pyrin.Context, tracks []database.Track, mediaType types.MediaType, shuffle bool) (GetMedia, error) {
+func packMediaResult(c pyrin.Context, tracks []database.Track, mediaFormat types.MediaFormat, shuffle bool) (GetMedia, error) {
 	if shuffle {
 		rand.Shuffle(len(tracks), func(i, j int) {
 			tracks[i], tracks[j] = tracks[j], tracks[i]
@@ -99,17 +98,20 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, mediaType types.M
 			}
 		}
 
-		mt := mediaType
-		if !mt.IsValid() {
-			mt = track.MediaType
-		}
+		// mt := mediaType
+		// if !mt.IsValid() {
+		// 	mt = track.MediaType
+		// }
 
-		ext := ".unknown"
-		if e, ok := mt.ToExt(); ok {
-			ext = e
-		}
+		// ext := ".unknown"
+		// if e, ok := mt.ToExt(); ok {
+		// 	ext = e
+		// }
 
-		mediaUrl := ConvertURL(c, fmt.Sprintf("/files/tracks/%s/track%s", track.Id, ext))
+		// mediaUrl := ConvertURL(c, fmt.Sprintf("/files/tracks/%s/track%s", track.Id, ext))
+		panic("apis/media.go: FIX ME")
+		mediaUrl := "FIX ME"
+		mediaFormat := types.MediaFormatUnknown
 
 		res.Items[i] = MediaItem{
 			Track: MediaResource{
@@ -121,9 +123,9 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, mediaType types.M
 				Id:   track.AlbumId,
 				Name: track.AlbumName,
 			},
-			CoverArt:  ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
-			MediaType: mediaType,
-			MediaUrl:  mediaUrl,
+			CoverArt:    ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
+			MediaFormat: mediaFormat,
+			MediaUrl:    mediaUrl,
 		}
 	}
 
@@ -173,7 +175,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaType, body.Shuffle)
+				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
 			},
 		},
 
@@ -217,7 +219,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaType, body.Shuffle)
+				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
 			},
 		},
 
@@ -241,7 +243,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaType, body.Shuffle)
+				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
 			},
 		},
 
@@ -277,7 +279,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaType, body.Shuffle)
+				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
 			},
 		},
 
@@ -318,7 +320,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaType, body.Shuffle)
+				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
 			},
 		},
 
@@ -359,7 +361,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				return packMediaResult(c, tracks, body.MediaType, body.Shuffle)
+				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
 			},
 		},
 	)

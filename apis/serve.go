@@ -1,18 +1,16 @@
 package apis
 
 import (
-	"context"
 	"errors"
 	"log/slog"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 
 	"github.com/nanoteck137/dwebble"
 	"github.com/nanoteck137/dwebble/core"
-	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
 )
@@ -39,6 +37,30 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 
 		// TODO(patrik): Fix this
 		pyrin.SpaHandler(os.DirFS("./result"), "index.html"),
+	)
+
+	g = router.Group("/media")
+	g.Register(
+		pyrin.NormalHandler{
+			Name:   "StreamTrack",
+			Method: http.MethodGet,
+			Path:   "/tracks/:trackId/stream",
+			HandlerFunc: func(c pyrin.Context) error {
+				trackId := c.Param("trackId")
+
+				filename, err := app.MediaService().GetTrackStream(trackId, service.MediaStreamOptions{
+					Format:  types.MediaFormatOpus,
+					Bitrate: 128,
+				})
+				if err != nil {
+					// TODO(patrik): Better error handling
+					return err
+				}
+
+				f := os.DirFS(path.Dir(filename))
+				return pyrin.ServeFile(c, f, path.Base(filename))
+			},
+		},
 	)
 
 	g = router.Group("/files")
@@ -125,146 +147,6 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 
 				f := os.DirFS(path.Dir(p))
 				return pyrin.ServeFile(c, f, path.Base(p))
-			},
-		},
-		pyrin.NormalHandler{
-			Name:   "GetTrackFile",
-			Method: http.MethodGet,
-			Path:   "/tracks/:trackId/:file",
-			HandlerFunc: func(c pyrin.Context) error {
-				trackId := c.Param("trackId")
-				file := c.Param("file")
-
-				fileExt := path.Ext(file)
-
-				ctx := context.TODO()
-
-				track, err := app.DB().GetTrackById(ctx, trackId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return pyrin.NoContentNotFound()
-					}
-
-					return err
-				}
-
-				mediaType := types.GetMediaTypeFromExt(fileExt)
-
-				if mediaType == types.MediaTypeUnknown {
-					return pyrin.NoContentNotFound()
-				}
-
-				// Return the original file if the filename matches the
-				// one stored inside the track
-				if track.MediaType == mediaType {
-					d := path.Dir(track.Filename)
-					filename := path.Base(track.Filename)
-
-					f := os.DirFS(d)
-					return pyrin.ServeFile(c, f, filename)
-				}
-
-				// Here we need to start transcoding the original track
-				// media to the requested format
-
-				cacheDir := app.WorkDir().Cache()
-				trackCache := cacheDir.Track(track.Id)
-
-				// Make sure that the cache directory is setup
-				dirs := []string{
-					cacheDir.String(),
-					cacheDir.Tracks(),
-					trackCache,
-				}
-
-				for _, dir := range dirs {
-					err = os.Mkdir(dir, 0755)
-					if err != nil && !os.IsExist(err) {
-						return err
-					}
-				}
-
-				switch mediaType {
-				case types.MediaTypeMp3:
-					name := "track.mp3"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-b:a", "320k", p)
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				case types.MediaTypeOggOpus:
-					name := "track.opus"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-b:a", "96k", p)
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				case types.MediaTypeOggVorbis:
-					name := "track.ogg"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-b:a", "96k", p)
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				case types.MediaTypeAac:
-					name := "track.aac"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-codec:a", "aac", "-vn", "-b:a", "128k", p)
-							cmd.Stderr = os.Stderr
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				}
-
-				return pyrin.NoContentNotFound()
 			},
 		},
 	)
