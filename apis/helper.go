@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"path"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/nanoteck137/dwebble/core"
@@ -124,6 +123,7 @@ const (
 	UNKNOWN_ARTIST_NAME = "UNKNOWN"
 )
 
+// TODO(patrik): Cleanup
 func EnsureUnknownArtistExists(ctx context.Context, db *database.Database, workDir types.WorkDir) error {
 	_, err := db.GetArtistById(ctx, UNKNOWN_ARTIST_ID)
 	if err != nil {
@@ -145,11 +145,6 @@ func EnsureUnknownArtistExists(ctx context.Context, db *database.Database, workD
 	return nil
 }
 
-const (
-	DefaultArtistPictureName = "default/default_artist.png"
-	DefaultAlbumCoverArtName = "default/default_album.png"
-)
-
 func ConvertURL(c pyrin.Context, path string) string {
 	host := c.Request().Host
 
@@ -163,77 +158,39 @@ func ConvertURL(c pyrin.Context, path string) string {
 	return fmt.Sprintf("%s://%s%s", scheme, host, path)
 }
 
-func ConvertImageURL(c pyrin.Context, albumId string, val sql.NullString, def string) string {
-	coverArt := def
-	if val.Valid && val.String != "" {
-		coverArt = val.String
-	}
+const (
+	IMAGE_ORIGINAL = "original.png"
+	IMAGE_SMALL    = "128.png"
+	IMAGE_MEDIUM   = "256.png"
+	IMAGE_LARGE    = "512.png"
+)
 
-	return ConvertURL(c, "/files/albums/images/"+albumId+"/"+coverArt)
-}
-
-// TODO(patrik): Cleanup
 func ConvertArtistCoverURL(c pyrin.Context, artistId string, val sql.NullString) types.Images {
-	if val.Valid && val.String != "" {
-		originalExt := path.Ext(val.String)
-		return types.Images{
-			// TODO(patrik): Move to const (cover-128.png, cover-256.png, cover-512.png)
-			Original: ConvertURL(c, "/files/artists/images/"+artistId+"/"+"original"+originalExt),
-			Small:    ConvertURL(c, "/files/artists/images/"+artistId+"/"+"128.png"),
-			Medium:   ConvertURL(c, "/files/artists/images/"+artistId+"/"+"256.png"),
-			Large:    ConvertURL(c, "/files/artists/images/"+artistId+"/"+"512.png"),
-		}
-	}
-
-	url := ConvertURL(c, "/files/images/"+DefaultArtistPictureName)
+	first := "/files/artists/images/" + artistId + "/"
 	return types.Images{
-		Original: url,
-		Small:    url,
-		Medium:   url,
-		Large:    url,
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
 	}
 }
 
-// TODO(patrik): Cleanup
 func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) types.Images {
-	if val.Valid && val.String != "" {
-		originalExt := path.Ext(val.String)
-		return types.Images{
-			// TODO(patrik): Move to const (cover-128.png, cover-256.png, cover-512.png)
-			Original: ConvertURL(c, "/files/albums/images/"+albumId+"/"+"original"+originalExt),
-			Small:    ConvertURL(c, "/files/albums/images/"+albumId+"/"+"128.png"),
-			Medium:   ConvertURL(c, "/files/albums/images/"+albumId+"/"+"256.png"),
-			Large:    ConvertURL(c, "/files/albums/images/"+albumId+"/"+"512.png"),
-		}
-	}
-
-	url := ConvertURL(c, "/files/images/"+DefaultAlbumCoverArtName)
+	first := "/files/albums/images/" + albumId + "/"
 	return types.Images{
-		Original: url,
-		Small:    url,
-		Medium:   url,
-		Large:    url,
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
 	}
 }
 
-// TODO(patrik): Cleanup
 func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string, val sql.NullString) types.Images {
-	if val.Valid && val.String != "" {
-		originalExt := path.Ext(val.String)
-		return types.Images{
-			// TODO(patrik): Move to const (cover-128.png, cover-256.png, cover-512.png)
-			Original: ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"original"+originalExt),
-			Small:    ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"128.png"),
-			Medium:   ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"256.png"),
-			Large:    ConvertURL(c, "/files/playlists/images/"+playlistId+"/"+"512.png"),
-		}
-	}
-
-	url := ConvertURL(c, "/files/images/"+DefaultAlbumCoverArtName)
+	first := "/files/playlists/images/" + playlistId + "/"
 	return types.Images{
-		Original: url,
-		Small:    url,
-		Medium:   url,
-		Large:    url,
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
 	}
 }

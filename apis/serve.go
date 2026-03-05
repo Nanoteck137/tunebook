@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/assets"
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/types"
@@ -43,15 +42,6 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 
 	g = router.Group("/files")
 	g.Register(
-		pyrin.NormalHandler{
-			Name:   "GetDefaultImage",
-			Method: http.MethodGet,
-			Path:   "/images/default/:image",
-			HandlerFunc: func(c pyrin.Context) error {
-				image := c.Param("image")
-				return pyrin.ServeFile(c, assets.DefaultImagesFS, image)
-			},
-		},
 		pyrin.NormalHandler{
 			Name:   "GetAlbumImage",
 			Method: http.MethodGet,
