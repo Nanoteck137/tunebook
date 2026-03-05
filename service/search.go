@@ -65,7 +65,7 @@ type SearchArtist struct {
 
 	Name string `json:"name"`
 
-	Picture *string `json:"picture"`
+	CoverArt *string `json:"coverArt"`
 
 	Tags []string `json:"tags"`
 }
@@ -148,7 +148,7 @@ func (s *SearchService) UpdateArtist(ctx context.Context, artistId string) error
 	data := SearchArtist{
 		Id:      dbArtist.Id,
 		Name:    dbArtist.Name,
-		Picture: utils.SqlNullToStringPtr(dbArtist.Picture),
+		CoverArt: utils.SqlNullToStringPtr(dbArtist.CoverArt),
 		Tags:    utils.SplitString(dbArtist.Tags.String),
 	}
 
@@ -267,7 +267,7 @@ func (s *SearchService) indexArtists() error {
 		data := SearchArtist{
 			Id:      artist.Id,
 			Name:    artist.Name,
-			Picture: utils.SqlNullToStringPtr(artist.Picture),
+			CoverArt: utils.SqlNullToStringPtr(artist.CoverArt),
 			Tags:    utils.SplitString(artist.Tags.String),
 		}
 

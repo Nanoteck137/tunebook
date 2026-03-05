@@ -28,7 +28,6 @@
     - [ ] Remove old library code from apis/system.go
     - [ ] Old database based search
     - [ ] Migration cleanup
-    - [ ] Rename Artist picture to cover art
     - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
 
 - [ ] Auth Service

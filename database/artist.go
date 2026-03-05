@@ -25,7 +25,7 @@ type Artist struct {
 	Name      string         `db:"name"`
 	OtherName sql.NullString `db:"other_name"`
 
-	Picture sql.NullString `db:"picture"`
+	CoverArt sql.NullString `db:"cover_art"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -55,7 +55,7 @@ func ArtistQuery() *goqu.SelectDataset {
 			"artists.name",
 			"artists.other_name",
 
-			"artists.picture",
+			"artists.cover_art",
 
 			"artists.updated",
 			"artists.created",
@@ -184,7 +184,7 @@ type CreateArtistParams struct {
 	Name      string
 	OtherName sql.NullString
 
-	Picture sql.NullString
+	CoverArt sql.NullString
 
 	Created int64
 	Updated int64
@@ -212,7 +212,7 @@ func (db DB) CreateArtist(ctx context.Context, params CreateArtistParams) (Artis
 		"name":       params.Name,
 		"other_name": params.OtherName,
 
-		"picture": params.Picture,
+		"cover_art": params.CoverArt,
 
 		"created": created,
 		"updated": updated,
@@ -222,7 +222,7 @@ func (db DB) CreateArtist(ctx context.Context, params CreateArtistParams) (Artis
 			"artists.name",
 			"artists.other_name",
 
-			"artists.picture",
+			"artists.cover_art",
 
 			"artists.updated",
 			"artists.created",
@@ -237,7 +237,7 @@ type ArtistChanges struct {
 	Name      types.Change[string]
 
 	OtherName types.Change[sql.NullString]
-	Picture   types.Change[sql.NullString]
+	CoverArt   types.Change[sql.NullString]
 
 	Created types.Change[int64]
 }
@@ -250,7 +250,7 @@ func (db DB) UpdateArtist(ctx context.Context, id string, changes ArtistChanges)
 	addToRecord(record, "name", changes.Name)
 	addToRecord(record, "other_name", changes.OtherName)
 
-	addToRecord(record, "picture", changes.Picture)
+	addToRecord(record, "cover_art", changes.CoverArt)
 
 	addToRecord(record, "created", changes.Created)
 

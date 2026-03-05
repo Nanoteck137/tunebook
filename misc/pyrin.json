@@ -85,7 +85,7 @@
           "omitEmpty": false
         },
         {
-          "name": "picture",
+          "name": "coverArt",
           "type": "Images",
           "omitEmpty": false
         },
@@ -475,7 +475,7 @@
           "omitEmpty": false
         },
         {
-          "name": "picture",
+          "name": "coverArt",
           "type": "Images",
           "omitEmpty": false
         },

@@ -54,7 +54,7 @@
   <div class="py-2">
     <div class="relative flex items-center gap-2 rounded pr-2">
       <a href={`/artists/${artist.id}`}>
-        <Image class="w-14 min-w-14" src={artist.picture.small} alt="cover" />
+        <Image class="w-14 min-w-14" src={artist.coverArt.small} alt="cover" />
       </a>
       <div class="flex flex-grow flex-col">
         <div class="flex items-center gap-1">

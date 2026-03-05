@@ -172,7 +172,8 @@ func ConvertImageURL(c pyrin.Context, albumId string, val sql.NullString, def st
 	return ConvertURL(c, "/files/albums/images/"+albumId+"/"+coverArt)
 }
 
-func ConvertArtistPicture(c pyrin.Context, artistId string, val sql.NullString) types.Images {
+// TODO(patrik): Cleanup
+func ConvertArtistCoverURL(c pyrin.Context, artistId string, val sql.NullString) types.Images {
 	if val.Valid && val.String != "" {
 		originalExt := path.Ext(val.String)
 		return types.Images{
@@ -193,6 +194,7 @@ func ConvertArtistPicture(c pyrin.Context, artistId string, val sql.NullString) 
 	}
 }
 
+// TODO(patrik): Cleanup
 func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) types.Images {
 	if val.Valid && val.String != "" {
 		originalExt := path.Ext(val.String)
@@ -214,6 +216,7 @@ func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) t
 	}
 }
 
+// TODO(patrik): Cleanup
 func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string, val sql.NullString) types.Images {
 	if val.Valid && val.String != "" {
 		originalExt := path.Ext(val.String)

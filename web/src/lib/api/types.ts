@@ -66,8 +66,8 @@ export const Artist = z.object({
   "id": z.string(),
   // Name: Artist.name
   "name": z.string(),
-  // Name: Artist.picture
-  "picture": Images,
+  // Name: Artist.coverArt
+  "coverArt": Images,
   // Name: Artist.tags
   "tags": z.array(z.string()),
   // Name: Artist.created
@@ -333,8 +333,8 @@ export const GetArtistById = z.object({
   "id": z.string(),
   // Name: GetArtistById.name
   "name": z.string(),
-  // Name: GetArtistById.picture
-  "picture": Images,
+  // Name: GetArtistById.coverArt
+  "coverArt": Images,
   // Name: GetArtistById.tags
   "tags": z.array(z.string()),
   // Name: GetArtistById.created

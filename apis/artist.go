@@ -21,7 +21,7 @@ type Artist struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 
-	Picture types.Images `json:"picture"`
+	CoverArt types.Images `json:"coverArt"`
 
 	Tags []string `json:"tags"`
 
@@ -31,12 +31,12 @@ type Artist struct {
 
 func ConvertDBArtist(c pyrin.Context, artist database.Artist) Artist {
 	return Artist{
-		Id: artist.Id,
-		Name: artist.Name,
-		Picture: ConvertArtistPicture(c, artist.Id, artist.Picture),
-		Tags:    utils.SplitString(artist.Tags.String),
-		Created: artist.Created,
-		Updated: artist.Updated,
+		Id:       artist.Id,
+		Name:     artist.Name,
+		CoverArt: ConvertArtistCoverURL(c, artist.Id, artist.CoverArt),
+		Tags:     utils.SplitString(artist.Tags.String),
+		Created:  artist.Created,
+		Updated:  artist.Updated,
 	}
 }
 
@@ -54,7 +54,7 @@ type GetArtistAlbumsById struct {
 }
 
 type SearchArtists struct {
-	Artists []Artist   `json:"artists"`
+	Artists []Artist `json:"artists"`
 }
 
 func InstallArtistHandlers(app core.App, group pyrin.Group) {

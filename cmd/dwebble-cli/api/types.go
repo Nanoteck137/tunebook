@@ -61,8 +61,8 @@ type Artist struct {
 	Id string `json:"id"`
 	// Name: Artist.name
 	Name string `json:"name"`
-	// Name: Artist.picture
-	Picture Images `json:"picture"`
+	// Name: Artist.coverArt
+	CoverArt Images `json:"coverArt"`
 	// Name: Artist.tags
 	Tags []string `json:"tags"`
 	// Name: Artist.created
@@ -301,8 +301,8 @@ type GetArtistById struct {
 	Id string `json:"id"`
 	// Name: GetArtistById.name
 	Name string `json:"name"`
-	// Name: GetArtistById.picture
-	Picture Images `json:"picture"`
+	// Name: GetArtistById.coverArt
+	CoverArt Images `json:"coverArt"`
 	// Name: GetArtistById.tags
 	Tags []string `json:"tags"`
 	// Name: GetArtistById.created

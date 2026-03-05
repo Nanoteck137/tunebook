@@ -38,7 +38,7 @@
 </div>
 
 <div class="flex h-48">
-  <Image class="w-48 min-w-48" src={data.artist.picture.medium} alt="cover" />
+  <Image class="w-48 min-w-48" src={data.artist.coverArt.medium} alt="cover" />
   <div class="w-2"></div>
 
   <div class="flex flex-col">

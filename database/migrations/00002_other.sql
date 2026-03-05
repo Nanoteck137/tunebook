@@ -6,7 +6,7 @@ CREATE TABLE artists (
     name TEXT NOT NULL CHECK(name<>''),
     other_name TEXT,
 
-    picture TEXT,
+    cover_art TEXT,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL

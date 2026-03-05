@@ -301,7 +301,7 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntr
 				Id:   entry.Id,
 				Slug: entry.Slug,
 				Name: entry.Name,
-				Picture: sql.NullString{
+				CoverArt: sql.NullString{
 					String: coverArt,
 					Valid:  coverArt != "",
 				},
@@ -323,12 +323,12 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntr
 			Changed: entry.Slug != dbArtist.Slug,
 		}
 
-		changes.Picture = types.Change[sql.NullString]{
+		changes.CoverArt = types.Change[sql.NullString]{
 			Value: sql.NullString{
 				String: coverArt,
 				Valid:  coverArt != "",
 			},
-			Changed: coverArt != dbArtist.Picture.String,
+			Changed: coverArt != dbArtist.CoverArt.String,
 		}
 
 		err := s.db.UpdateArtist(ctx, dbArtist.Id, changes)

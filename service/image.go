@@ -208,8 +208,8 @@ func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string,
 
 	input := ""
 
-	if artist.Picture.Valid {
-		input = artist.Picture.String
+	if artist.CoverArt.Valid {
+		input = artist.CoverArt.String
 	} else {
 		input, err = s.copyDefaultToTemp("default_artist.png")
 		if err != nil {
