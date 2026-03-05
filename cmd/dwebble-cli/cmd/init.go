@@ -14,9 +14,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/nanoteck137/dwebble/library"
-	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
+	"github.com/nanoteck137/dwebble/types"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
@@ -84,9 +83,7 @@ var initAlbumCmd = &cobra.Command{
 		dir, _ := cmd.Flags().GetString("dir")
 		output, _ := cmd.Flags().GetString("output")
 
-		// TODO(patrik): Features
-
-		metadata := library.Metadata{}
+		metadata := types.AlbumMetadata{}
 
 		extract := true
 
@@ -190,7 +187,7 @@ var initAlbumCmd = &cobra.Command{
 			// TODO(patrik): If artist is empty then use album maybe
 			artists := parseArtist(trackInfo.Artist)
 
-			metadata.Tracks = append(metadata.Tracks, library.MetadataTrack{
+			metadata.Tracks = append(metadata.Tracks, types.AlbumMetadataTrack{
 				Id:      utils.CreateTrackId(),
 				File:    filename,
 				Name:    trackInfo.Name,
@@ -317,7 +314,7 @@ var initArtistCmd = &cobra.Command{
 			}
 		}
 
-		metadata := service.ArtistMetadata{
+		metadata := types.ArtistMetadata{
 			Id:    utils.CreateArtistId(),
 			Slug:  utils.Slug(artistName),
 			Name:  artistName,

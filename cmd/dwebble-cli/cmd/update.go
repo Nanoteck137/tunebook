@@ -16,6 +16,7 @@ import (
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
+	"github.com/nanoteck137/dwebble/types"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
@@ -68,8 +69,8 @@ var updateCmd = &cobra.Command{
 
 		overallTimer.Start()
 
-		var artists []service.ArtistMetadata
-		var albums []service.Metadata
+		var artists []types.ArtistMetadata
+		var albums []types.AlbumMetadata
 
 		dirwalkTimer.Start()
 
@@ -90,7 +91,7 @@ var updateCmd = &cobra.Command{
 
 			switch name {
 			case "artist.toml":
-				var artist service.ArtistMetadata
+				var artist types.ArtistMetadata
 				err := readToml(p, &artist)
 				if err != nil {
 					slog.Warn("failed to read artist", "err", err)
@@ -105,7 +106,7 @@ var updateCmd = &cobra.Command{
 				artist.Path = p
 				artists = append(artists, artist)
 			case "album.toml":
-				var album service.Metadata
+				var album types.AlbumMetadata
 				err := readToml(p, &album)
 				if err != nil {
 					slog.Warn("failed to read album", "err", err)

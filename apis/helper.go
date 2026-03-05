@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/nanoteck137/dwebble/core"
@@ -98,33 +97,6 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	}
 
 	return nil, InvalidAuth("invalid authorization token")
-}
-
-const (
-	UNKNOWN_ARTIST_ID   = "unknown"
-	UNKNOWN_ARTIST_NAME = "UNKNOWN"
-)
-
-// TODO(patrik): Cleanup
-func EnsureUnknownArtistExists(ctx context.Context, db *database.Database, workDir types.WorkDir) error {
-	_, err := db.GetArtistById(ctx, UNKNOWN_ARTIST_ID)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			slog.Info("Creating 'unknown' artist")
-			_, err := db.CreateArtist(ctx, database.CreateArtistParams{
-				Id:   UNKNOWN_ARTIST_ID,
-				Name: UNKNOWN_ARTIST_NAME,
-				Slug: utils.Slug(UNKNOWN_ARTIST_NAME),
-			})
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func ConvertURL(c pyrin.Context, path string) string {

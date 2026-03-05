@@ -325,24 +325,6 @@ type GetAuthProviders struct {
 	Providers []AuthProvider `json:"providers"`
 }
 
-// Name: Path
-type Path struct {
-	// Name: Path.name
-	Name string `json:"name"`
-	// Name: Path.path
-	Path string `json:"path"`
-	// Name: Path.isDir
-	IsDir bool `json:"isDir"`
-	// Name: Path.depth
-	Depth int `json:"depth"`
-}
-
-// Name: GetLibraryPaths
-type GetLibraryPaths struct {
-	// Name: GetLibraryPaths.paths
-	Paths []Path `json:"paths"`
-}
-
 // Name: GetMe
 type GetMe struct {
 	// Name: GetMe.id
@@ -653,12 +635,6 @@ type SearchArtists struct {
 type SearchTracks struct {
 	// Name: SearchTracks.tracks
 	Tracks []Track `json:"tracks"`
-}
-
-// Name: SyncLibraryBody
-type SyncLibraryBody struct {
-	// Name: SyncLibraryBody.path
-	Path string `json:"path"`
 }
 
 // Name: TrackId

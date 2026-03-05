@@ -522,16 +522,6 @@
       ]
     },
     {
-      "name": "GetLibraryPaths",
-      "fields": [
-        {
-          "name": "paths",
-          "type": "[]Path",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "GetMe",
       "fields": [
         {
@@ -1112,31 +1102,6 @@
       ]
     },
     {
-      "name": "Path",
-      "fields": [
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "path",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "isDir",
-          "type": "bool",
-          "omitEmpty": false
-        },
-        {
-          "name": "depth",
-          "type": "int",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "Playlist",
       "fields": [
         {
@@ -1208,16 +1173,6 @@
           "name": "tracks",
           "type": "[]Track",
           "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "SyncLibraryBody",
-      "fields": [
-        {
-          "name": "path",
-          "type": "string",
-          "omitEmpty": true
         }
       ]
     },
@@ -1436,12 +1391,6 @@
     },
     {
       "type": "api",
-      "name": "CleanupLibrary",
-      "method": "POST",
-      "path": "/api/v1/system/library/cleanup"
-    },
-    {
-      "type": "api",
       "name": "ClearPlaylist",
       "method": "DELETE",
       "path": "/api/v1/playlists/:id/items/all"
@@ -1562,19 +1511,6 @@
       "method": "GET",
       "path": "/api/v1/artists",
       "response": "GetArtists"
-    },
-    {
-      "type": "normal",
-      "name": "GetDefaultImage",
-      "method": "GET",
-      "path": "/files/images/default/:image"
-    },
-    {
-      "type": "api",
-      "name": "GetLibraryPaths",
-      "method": "GET",
-      "path": "/api/v1/system/library/paths",
-      "response": "GetLibraryPaths"
     },
     {
       "type": "api",
@@ -1722,12 +1658,6 @@
     },
     {
       "type": "api",
-      "name": "RefillSearch",
-      "method": "POST",
-      "path": "/api/v1/system/search"
-    },
-    {
-      "type": "api",
       "name": "RemoveItemFromUserQuickPlaylist",
       "method": "DELETE",
       "path": "/api/v1/user/quickplaylist",
@@ -1739,12 +1669,6 @@
       "method": "DELETE",
       "path": "/api/v1/playlists/:id/items",
       "body": "RemovePlaylistItemBody"
-    },
-    {
-      "type": "api",
-      "name": "RetrivePaths",
-      "method": "POST",
-      "path": "/api/v1/system/library/paths"
     },
     {
       "type": "api",
@@ -1777,8 +1701,7 @@
       "type": "api",
       "name": "SyncLibrary",
       "method": "POST",
-      "path": "/api/v1/system/library",
-      "body": "SyncLibraryBody"
+      "path": "/api/v1/system/library"
     },
     {
       "type": "api",

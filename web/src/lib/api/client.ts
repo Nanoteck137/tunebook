@@ -52,10 +52,6 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/auth/quick-connect/initiate", "POST", api.AuthQuickConnectInitiate, z.any(), undefined, options)
   }
   
-  cleanupLibrary(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library/cleanup", "POST", z.undefined(), z.any(), undefined, options)
-  }
-  
   clearPlaylist(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${id}/items/all`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
@@ -120,11 +116,6 @@ export class ApiClient extends BaseApiClient {
   
   getArtists(options?: ExtraOptions) {
     return this.request("/api/v1/artists", "GET", api.GetArtists, z.any(), undefined, options)
-  }
-  
-  
-  getLibraryPaths(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library/paths", "GET", api.GetLibraryPaths, z.any(), undefined, options)
   }
   
   getMe(options?: ExtraOptions) {
@@ -201,20 +192,12 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/quickplaylist", "GET", api.GetUserQuickPlaylistItemIds, z.any(), undefined, options)
   }
   
-  refillSearch(options?: ExtraOptions) {
-    return this.request("/api/v1/system/search", "POST", z.undefined(), z.any(), undefined, options)
-  }
-  
   removeItemFromUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
     return this.request("/api/v1/user/quickplaylist", "DELETE", z.undefined(), z.any(), body, options)
   }
   
   removePlaylistItem(id: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${id}/items`, "DELETE", z.undefined(), z.any(), body, options)
-  }
-  
-  retrivePaths(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library/paths", "POST", z.undefined(), z.any(), undefined, options)
   }
   
   searchAlbums(options?: ExtraOptions) {
@@ -230,8 +213,8 @@ export class ApiClient extends BaseApiClient {
   }
   
   
-  syncLibrary(body: api.SyncLibraryBody, options?: ExtraOptions) {
-    return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), body, options)
+  syncLibrary(options?: ExtraOptions) {
+    return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), undefined, options)
   }
   
   updateTaglist(id: string, body: api.UpdateTaglistBody, options?: ExtraOptions) {
@@ -292,10 +275,6 @@ export class ClientUrls {
   
   authQuickConnectInitiate() {
     return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/initiate")
-  }
-  
-  cleanupLibrary() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/cleanup")
   }
   
   clearPlaylist(id: string) {
@@ -368,14 +347,6 @@ export class ClientUrls {
   
   getArtists() {
     return createUrl(this.baseUrl, "/api/v1/artists")
-  }
-  
-  getDefaultImage(image: string) {
-    return createUrl(this.baseUrl, `/files/images/default/${image}`)
-  }
-  
-  getLibraryPaths() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/paths")
   }
   
   getMe() {
@@ -458,20 +429,12 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
   }
   
-  refillSearch() {
-    return createUrl(this.baseUrl, "/api/v1/system/search")
-  }
-  
   removeItemFromUserQuickPlaylist() {
     return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
   }
   
   removePlaylistItem(id: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
-  }
-  
-  retrivePaths() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/paths")
   }
   
   searchAlbums() {

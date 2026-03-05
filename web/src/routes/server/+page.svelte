@@ -8,10 +8,7 @@
   const { data } = $props();
   const apiClient = getApiClient();
 
-  let refillSearch = $state(false);
-
-  let syncState = $state<SyncStateTy>();
-
+  let isSyncing = $state(false);
   let errors = $state<string[]>([]);
   let numArtists = $state(0);
   let numAlbums = $state(0);
@@ -88,7 +85,6 @@
   });
 
   onMount(() => {
-    console.log("Mount");
     const eventSource = new EventSource(apiClient.url.sseHandler());
 
     eventSource.addEventListener("connected", () => {
@@ -100,37 +96,14 @@
 
       console.log("library state", data);
 
+      isSyncing = data.isRunning;
       errors = data.errors;
       numArtists = data.numArtists;
       numAlbums = data.numAlbums;
       numTracks = data.numTracks;
     });
 
-    eventSource.onmessage = (e) => {
-      const event = Event.parse(JSON.parse(e.data));
-      console.log(event);
-
-      switch (event.type) {
-        case "sync-state":
-          syncState = event.data;
-          break;
-        // case "syncing":
-        //   syncing = event.data.syncing;
-        //   break;
-        case "report":
-          console.log("Report", event.data);
-          // const mapped =
-          //   event.data.reports?.map((t) => {
-          //     if (t.fullMessage) return t.fullMessage;
-          //     return t.message;
-          //   }) ?? [];
-          // test = mapped;
-          break;
-      }
-    };
-
     return () => {
-      console.log("Cleanup");
       eventSource.close();
     };
   });
@@ -141,22 +114,7 @@
 <p>Version: {PUBLIC_VERSION}</p>
 <p>Commit: {PUBLIC_COMMIT}</p>
 
-<Button
-  onclick={async () => {
-    refillSearch = true;
-    const res = await apiClient.refillSearch();
-    if (!res.success) {
-      handleApiError(res.error);
-    }
-    refillSearch = false;
-  }}
-  disabled={refillSearch}
->
-  Refill Search
-</Button>
-
-<p>Library Syncing: {syncState?.isSyncing}</p>
-<p>Library Retriving Paths: {syncState?.isRetrivingPaths}</p>
+<p>Library Syncing: {isSyncing}</p>
 
 <Button
   onclick={async () => {
@@ -170,30 +128,6 @@
   Sync Library
 </Button>
 
-<Button
-  onclick={async () => {
-    const res = await apiClient.retrivePaths({});
-    if (!res.success) {
-      handleApiError(res.error);
-      return;
-    }
-  }}
->
-  Retrive Paths
-</Button>
-
-<Button
-  onclick={async () => {
-    const res = await apiClient.cleanupLibrary();
-    if (!res.success) {
-      handleApiError(res.error);
-      return;
-    }
-  }}
->
-  Cleanup Library
-</Button>
-
 <p>Num Artists: {numArtists}</p>
 <p>Num Albums: {numAlbums}</p>
 <p>Num Tracks: {numTracks}</p>
@@ -203,14 +137,14 @@
   <p>Error: {err}</p>
 {/each}
 
-{#if syncState?.report.syncErrors}
+<!-- {#if syncState?.report.syncErrors}
   {#each syncState?.report.syncErrors as err}
     <p class="whitespace-pre font-mono">{err.fullMessage}</p>
     <br />
   {/each}
-{/if}
+{/if} -->
 
-{#if syncState?.paths}
+<!-- {#if syncState?.paths}
   <div class="flex flex-col items-start">
     {#each syncState?.paths as path}
       <button
@@ -228,4 +162,4 @@
       </button>
     {/each}
   </div>
-{/if}
+{/if} -->

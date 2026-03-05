@@ -24,8 +24,6 @@
     - [ ] Update Display Name need fixing, both frontend and backend on /users
 
 - [ ] Cleanup
-    - [ ] Remove old library code from library/library.go
-    - [ ] Remove old library code from apis/system.go
     - [ ] Old database based search
     - [ ] Migration cleanup
     - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
