@@ -11,6 +11,7 @@ import (
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/render"
 	"github.com/nanoteck137/dwebble/service"
+	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/pyrin"
 )
 
@@ -383,7 +384,7 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					Email:         user.Email,
 					DisplayName:   user.DisplayName,
 					Role:          user.Role,
-					QuickPlaylist: ConvertSqlNullString(user.QuickPlaylist),
+					QuickPlaylist: utils.SqlNullToStringPtr(user.QuickPlaylist),
 				}, nil
 			},
 		},

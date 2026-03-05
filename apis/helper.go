@@ -100,24 +100,6 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	return nil, InvalidAuth("invalid authorization token")
 }
 
-// TODO(patrik): Move to utils
-func ConvertSqlNullString(value sql.NullString) *string {
-	if value.Valid {
-		return &value.String
-	}
-
-	return nil
-}
-
-// TODO(patrik): Move to utils
-func ConvertSqlNullInt64(value sql.NullInt64) *int64 {
-	if value.Valid {
-		return &value.Int64
-	}
-
-	return nil
-}
-
 const (
 	UNKNOWN_ARTIST_ID   = "unknown"
 	UNKNOWN_ARTIST_NAME = "UNKNOWN"
