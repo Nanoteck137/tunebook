@@ -17,9 +17,82 @@ import (
 	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
+
+func fixArr(arr []string) []string {
+	seen := map[string]bool{}
+	res := make([]string, 0, len(arr))
+
+	for _, value := range arr {
+		value = anvil.String(value)
+		if value == "" {
+			continue
+		}
+
+		if !seen[value] {
+			seen[value] = true
+			res = append(res, value)
+		}
+	}
+
+	return res
+}
+
+func FixMetadata(metadata *types.AlbumMetadata) error {
+	album := &metadata.Album
+
+	album.Name = anvil.String(album.Name)
+
+	if album.Year == 0 {
+		album.Year = metadata.General.Year
+	}
+
+	if len(album.Artists) == 0 {
+		// TODO(patrik): Instead of this just validate the metadata
+		// and reject it
+		album.Artists = []string{}
+	}
+
+	album.Artists = fixArr(album.Artists)
+
+	album.Tags = append(album.Tags, metadata.General.Tags...)
+	for i, tag := range album.Tags {
+		album.Tags[i] = utils.Slug(strings.TrimSpace(tag))
+	}
+
+	album.Tags = fixArr(album.Tags)
+
+	for i := range metadata.Tracks {
+		t := &metadata.Tracks[i]
+
+		if t.Year == 0 {
+			t.Year = metadata.General.Year
+		}
+
+		t.Name = anvil.String(t.Name)
+
+		t.Tags = append(t.Tags, metadata.General.Tags...)
+		t.Tags = append(t.Tags, metadata.General.TrackTags...)
+		for i, tag := range t.Tags {
+			t.Tags[i] = utils.Slug(strings.TrimSpace(tag))
+		}
+
+		t.Tags = fixArr(t.Tags)
+
+		if len(t.Artists) == 0 {
+			// TODO(patrik): Instead of this just validate the metadata
+			// and reject it
+			t.Artists = []string{}
+		}
+
+		t.Artists = fixArr(t.Artists)
+	}
+
+	return nil
+}
 
 func readToml(p string, data any) error {
 	d, err := os.ReadFile(p)
@@ -271,7 +344,7 @@ var updateCmd = &cobra.Command{
 		for _, album := range albums {
 			var errs []error
 
-			err := service.FixMetadata(&album)
+			err := FixMetadata(&album)
 			if err != nil {
 				slog.Error("failed to fix album")
 				continue

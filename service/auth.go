@@ -240,10 +240,10 @@ type AuthService struct {
 	providers map[string]*authProvider
 
 	// All the provider based requests
-	ProviderRequests map[string]*authProviderRequest
+	providerRequests map[string]*authProviderRequest
 
 	// All the quick connect based requests
-	QuickConnectRequests map[string]*authQuickConnectRequest
+	quickConnectRequests map[string]*authQuickConnectRequest
 }
 
 func NewAuthService(db *database.Database, config *config.Config) *AuthService {
@@ -263,8 +263,8 @@ func NewAuthService(db *database.Database, config *config.Config) *AuthService {
 		db:                   db,
 		jwtSecret:            config.JwtSecret,
 		providers:            providers,
-		ProviderRequests:     make(map[string]*authProviderRequest),
-		QuickConnectRequests: make(map[string]*authQuickConnectRequest),
+		providerRequests:     make(map[string]*authProviderRequest),
+		quickConnectRequests: make(map[string]*authQuickConnectRequest),
 	}
 }
 
@@ -328,13 +328,13 @@ func (a *AuthService) CreateProviderRequest(providerId string) (ProviderRequestR
 	request.oauth2Url = provider.oauth2Config.AuthCodeURL(request.id)
 
 	// Check if the request id is already used
-	_, exists = a.ProviderRequests[id]
+	_, exists = a.providerRequests[id]
 	if exists {
 		return ProviderRequestResult{}, ErrAuthServiceRequestAlreadyExists
 	}
 
 	// Save the request
-	a.ProviderRequests[id] = request
+	a.providerRequests[id] = request
 
 	return ProviderRequestResult{
 		RequestId: request.id,
@@ -387,13 +387,13 @@ func (a *AuthService) CreateQuickConnectRequest() (QuickConnectRequestResult, er
 	defer a.mu.Unlock()
 
 	// Check if the code is already used
-	_, exists := a.QuickConnectRequests[code]
+	_, exists := a.quickConnectRequests[code]
 	if exists {
 		return QuickConnectRequestResult{}, err
 	}
 
 	// Save the request
-	a.QuickConnectRequests[code] = request
+	a.quickConnectRequests[code] = request
 
 	return QuickConnectRequestResult{
 		Code:      request.code,
@@ -410,7 +410,7 @@ func (a *AuthService) CompleteQuickConnectRequest(requestCode, userId string) er
 	defer a.mu.Unlock()
 
 	// Get the request
-	request, exists := a.QuickConnectRequests[requestCode]
+	request, exists := a.quickConnectRequests[requestCode]
 	if !exists {
 		return ErrAuthServiceRequestNotFound
 	}
@@ -440,7 +440,7 @@ func (a *AuthService) CompleteProviderRequest(requestId, code string) error {
 	defer a.mu.Unlock()
 
 	// Get the request
-	request, exists := a.ProviderRequests[requestId]
+	request, exists := a.providerRequests[requestId]
 	if !exists {
 		return ErrAuthServiceRequestNotFound
 	}
@@ -469,7 +469,7 @@ func (a *AuthService) CheckProviderRequestStatus(requestId, challenge string) (A
 	defer a.mu.Unlock()
 
 	// Get the request
-	request, exists := a.ProviderRequests[requestId]
+	request, exists := a.providerRequests[requestId]
 	if !exists {
 		return AuthProviderRequestStatusFailed, ErrAuthServiceRequestNotFound
 	}
@@ -497,7 +497,7 @@ func (a *AuthService) CheckQuickConnectRequestStatus(requestCode, challenge stri
 	defer a.mu.Unlock()
 
 	// Get the request
-	request, exists := a.QuickConnectRequests[requestCode]
+	request, exists := a.quickConnectRequests[requestCode]
 	if !exists {
 		return AuthQuickRequestStatusFailed, ErrAuthServiceRequestNotFound
 	}
@@ -526,7 +526,7 @@ func (a *AuthService) CreateAuthTokenForProvider(requestId, challenge string) (s
 	defer a.mu.Unlock()
 
 	// Get the request
-	request, exists := a.ProviderRequests[requestId]
+	request, exists := a.providerRequests[requestId]
 	if !exists {
 		return "", ErrAuthServiceRequestNotFound
 	}
@@ -597,7 +597,7 @@ func (a *AuthService) CreateAuthTokenForQuickConnect(requestCode, challenge stri
 	defer a.mu.Unlock()
 
 	// Get the request
-	request, exists := a.QuickConnectRequests[requestCode]
+	request, exists := a.quickConnectRequests[requestCode]
 	if !exists {
 		return "", ErrAuthServiceRequestNotFound
 	}
@@ -749,16 +749,16 @@ func (a *AuthService) RemoveUnusedEntries() {
 	now := time.Now()
 
 	// Remove expired provider OAuth2 requests
-	for k, request := range a.ProviderRequests {
+	for k, request := range a.providerRequests {
 		if now.After(request.delete) {
-			delete(a.ProviderRequests, k)
+			delete(a.providerRequests, k)
 		}
 	}
 
 	// Remove expired quick connect requests
-	for k, request := range a.QuickConnectRequests {
+	for k, request := range a.quickConnectRequests {
 		if now.After(request.delete) {
-			delete(a.QuickConnectRequests, k)
+			delete(a.quickConnectRequests, k)
 		}
 	}
 }

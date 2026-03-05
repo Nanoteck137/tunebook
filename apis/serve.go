@@ -37,6 +37,7 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 			},
 		},
 
+		// TODO(patrik): Fix this
 		pyrin.SpaHandler(os.DirFS("./result"), "index.html"),
 	)
 

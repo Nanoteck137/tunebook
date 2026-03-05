@@ -27,9 +27,6 @@
     - [ ] Migration cleanup
     - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
 
-- [ ] Auth Service
-    - [ ] Some fields can be private
-
 - [ ] Search Service
     - [ ] Add RWLock lock
     - [ ] Code Cleanup
@@ -52,13 +49,11 @@
 - [ ] Library Handling
     - [ ] Multi-threaded syncing
     - [ ] Time each step
-    - [ ] Maybe clear the cache after sync
+    - [ ] Clear the cache after sync
     - [ ] Update Cmd
         - [ ] Metadata Validation
         - [ ] Metadata transformation (trim spaces, escape characters, more)
 
-- [ ] Add Compression for Static file routes
-    - [ ] SPA Routes
 
 - [ ] Jobs
     - [ ] Auth Cleanup
@@ -76,7 +71,7 @@
 
 - [ ] Import the old format
 
-- [ ] Use indexes
+- [ ] Use database indexes
 
 - [ ] Docker
     - [ ] Use nix to build a docker image
@@ -87,3 +82,6 @@
     - Need some ideas
 
 - [ ] Use new logo from dwebble_app
+
+- [ ] Add Compression for Static file routes
+    - [ ] SPA Routes
