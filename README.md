@@ -41,8 +41,6 @@
     - [ ] Add Users
     - [ ] Batch indexing
 
-- [ ] Better handling of images
-
 - [ ] Media
     - [ ] Better management of media and transcoding
     - [ ] More options for transcoding
@@ -53,7 +51,6 @@
 - [ ] Playlists/Taglists
     - [ ] Taglists renamed to VirtualPlaylist
     - [ ] User ability to re-order playlist items
-    - [ ] Generate the cover image (like Youtube Music)
     - [ ] Custom Covers
 
 - [ ] Library Handling
