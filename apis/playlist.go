@@ -276,6 +276,16 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				err = os.RemoveAll(app.WorkDir().Playlist(playlist.Id))
+				if err != nil {
+					return nil, err
+				}
+
+				err = os.RemoveAll(app.WorkDir().Cache().Playlist(playlist.Id))
+				if err != nil {
+					return nil, err
+				}
+
 				return nil, nil
 			},
 		},
