@@ -12,6 +12,11 @@
 
   let syncState = $state<SyncStateTy>();
 
+  let errors = $state<string[]>([]);
+  let numArtists = $state(0);
+  let numAlbums = $state(0);
+  let numTracks = $state(0);
+
   const SyncError = z.object({
     type: z.string(),
     message: z.string(),
@@ -73,9 +78,33 @@
     }),
   ]);
 
+  const LibrarySyncStateEvent = z.object({
+    isRunning: z.boolean(),
+    errors: z.array(z.string()),
+
+    numArtists: z.number(),
+    numAlbums: z.number(),
+    numTracks: z.number(),
+  });
+
   onMount(() => {
     console.log("Mount");
     const eventSource = new EventSource(apiClient.url.sseHandler());
+
+    eventSource.addEventListener("connected", () => {
+      console.log("Connected to SSE handler");
+    });
+
+    eventSource.addEventListener("library-sync-state", (e) => {
+      const data = LibrarySyncStateEvent.parse(JSON.parse(e.data));
+
+      console.log("library state", data);
+
+      errors = data.errors;
+      numArtists = data.numArtists;
+      numAlbums = data.numAlbums;
+      numTracks = data.numTracks;
+    });
 
     eventSource.onmessage = (e) => {
       const event = Event.parse(JSON.parse(e.data));
@@ -164,6 +193,15 @@
 >
   Cleanup Library
 </Button>
+
+<p>Num Artists: {numArtists}</p>
+<p>Num Albums: {numAlbums}</p>
+<p>Num Tracks: {numTracks}</p>
+
+<p>Errors:</p>
+{#each errors as err}
+  <p>Error: {err}</p>
+{/each}
 
 {#if syncState?.report.syncErrors}
   {#each syncState?.report.syncErrors as err}

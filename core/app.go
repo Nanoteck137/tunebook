@@ -4,6 +4,7 @@ import (
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/service"
+	"github.com/nanoteck137/dwebble/tools/broker"
 	"github.com/nanoteck137/dwebble/types"
 )
 
@@ -17,6 +18,8 @@ type App interface {
 	SearchService() *service.SearchService
 	LibraryService() *service.LibraryService
 	ImageService() *service.ImageService
+
+	Broker() *broker.Broker
 
 	WorkDir() types.WorkDir
 

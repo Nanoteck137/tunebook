@@ -6,6 +6,7 @@ import (
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/service"
+	"github.com/nanoteck137/dwebble/tools/broker"
 	"github.com/nanoteck137/dwebble/types"
 )
 
@@ -19,6 +20,12 @@ type BaseApp struct {
 	searchService  *service.SearchService
 	libraryService *service.LibraryService
 	imageService   *service.ImageService
+	
+	broker *broker.Broker
+}
+
+func (app *BaseApp) Broker() *broker.Broker {
+	return app.broker
 }
 
 func (app *BaseApp) ImageService() *service.ImageService {
@@ -93,9 +100,21 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	app.libraryService = service.NewLibraryService(app.db, app.config, app.searchService)
-	app.libraryService.Sync()
+	// app.libraryService.Sync()
 
 	app.imageService = service.NewImageService(app.db, app.config.WorkDir())
+
+	app.broker = broker.NewBroker(func() []broker.Event {
+		return []broker.Event{
+			app.libraryService.GetSyncStateEvent(),
+		}
+	})
+
+	go app.broker.Listen()
+
+	app.libraryService.SetUpdateFunc(func() {
+		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
+	})
 
 	return nil
 }

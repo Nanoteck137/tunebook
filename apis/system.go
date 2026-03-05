@@ -3,7 +3,6 @@ package apis
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -536,7 +535,7 @@ func (s *SyncHandler) RetrivePaths(app core.App) {
 			slog.Warn("Already retriving paths")
 			return
 		}
-		
+
 		s.isRetrivingPaths.Store(true)
 		defer s.isRetrivingPaths.Store(false)
 
@@ -957,6 +956,12 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 				//  - Handle Single Album Syncing
 				//  - Handle album modified syncing
 
+				go func() {
+					app.LibraryService().Sync()
+				}()
+
+				return nil, nil
+
 				body, err := pyrin.Body[SyncLibraryBody](c)
 				if err != nil {
 					return nil, err
@@ -1012,56 +1017,66 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		// pyrin.NormalHandler{
+		// 	Name:   "SseHandler",
+		// 	Method: http.MethodGet,
+		// 	Path:   "/system/library/sse",
+		// 	HandlerFunc: func(c pyrin.Context) error {
+		// 		r := c.Request()
+		// 		w := c.Response()
+		//
+		// 		w.Header().Set("Content-Type", "text/event-stream")
+		// 		w.Header().Set("Cache-Control", "no-cache")
+		// 		w.Header().Set("Connection", "keep-alive")
+		//
+		// 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		//
+		// 		rc := http.NewResponseController(w)
+		//
+		// 		eventChan := make(chan EventData)
+		// 		syncHandler.broker.newClients <- eventChan
+		//
+		// 		defer func() {
+		// 			syncHandler.broker.closingClients <- eventChan
+		// 		}()
+		//
+		// 		sendEvent := func(eventData EventData) {
+		// 			fmt.Fprintf(w, "data: ")
+		//
+		// 			event := Event{
+		// 				Type: eventData.GetEventType(),
+		// 				Data: eventData,
+		// 			}
+		//
+		// 			encode := json.NewEncoder(w)
+		// 			encode.Encode(event)
+		//
+		// 			fmt.Fprintf(w, "\n\n")
+		// 			rc.Flush()
+		// 		}
+		//
+		// 		sendEvent(syncHandler.GetStateEvent())
+		//
+		// 		for {
+		// 			select {
+		// 			case <-r.Context().Done():
+		// 				syncHandler.broker.closingClients <- eventChan
+		// 				return nil
+		//
+		// 			case event := <-eventChan:
+		// 				sendEvent(event)
+		// 			}
+		// 		}
+		// 	},
+		// },
+
 		pyrin.NormalHandler{
 			Name:   "SseHandler",
 			Method: http.MethodGet,
-			Path:   "/system/library/sse",
+			Path:   "/system/sse",
 			HandlerFunc: func(c pyrin.Context) error {
-				r := c.Request()
-				w := c.Response()
-
-				w.Header().Set("Content-Type", "text/event-stream")
-				w.Header().Set("Cache-Control", "no-cache")
-				w.Header().Set("Connection", "keep-alive")
-
-				w.Header().Set("Access-Control-Allow-Origin", "*")
-
-				rc := http.NewResponseController(w)
-
-				eventChan := make(chan EventData)
-				syncHandler.broker.newClients <- eventChan
-
-				defer func() {
-					syncHandler.broker.closingClients <- eventChan
-				}()
-
-				sendEvent := func(eventData EventData) {
-					fmt.Fprintf(w, "data: ")
-
-					event := Event{
-						Type: eventData.GetEventType(),
-						Data: eventData,
-					}
-
-					encode := json.NewEncoder(w)
-					encode.Encode(event)
-
-					fmt.Fprintf(w, "\n\n")
-					rc.Flush()
-				}
-
-				sendEvent(syncHandler.GetStateEvent())
-
-				for {
-					select {
-					case <-r.Context().Done():
-						syncHandler.broker.closingClients <- eventChan
-						return nil
-
-					case event := <-eventChan:
-						sendEvent(event)
-					}
-				}
+				app.Broker().ServeHTTP(c.Response(), c.Request())
+				return nil
 			},
 		},
 	)

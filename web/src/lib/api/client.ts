@@ -159,6 +159,7 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
   }
   
+  
   getPlaylistItems(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${id}/items`, "GET", api.GetPlaylistItems, z.any(), undefined, options)
   }
@@ -409,6 +410,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
   }
   
+  getPlaylistImage(playlistId: string, image: string) {
+    return createUrl(this.baseUrl, `/files/playlists/images/${playlistId}/${image}`)
+  }
+  
   getPlaylistItems(id: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
   }
@@ -482,7 +487,7 @@ export class ClientUrls {
   }
   
   sseHandler() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/sse")
+    return createUrl(this.baseUrl, "/api/v1/system/sse")
   }
   
   syncLibrary() {

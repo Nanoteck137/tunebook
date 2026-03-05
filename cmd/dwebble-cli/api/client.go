@@ -582,6 +582,7 @@ func (c *Client) GetPlaylistById(id string, options Options) (*GetPlaylistById, 
 	return Request[GetPlaylistById](data, nil)
 }
 
+
 func (c *Client) GetPlaylistItems(id string, options Options) (*GetPlaylistItems, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1104,6 +1105,11 @@ func (c *ClientUrls) GetPlaylistById(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) GetPlaylistImage(playlistId string, image string) (*URL, error) {
+	path := Sprintf("/files/playlists/images/%v/%v", playlistId, image)
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) GetPlaylistItems(id string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", id)
 	return c.getUrl(path)
@@ -1195,7 +1201,7 @@ func (c *ClientUrls) SearchTracks() (*URL, error) {
 }
 
 func (c *ClientUrls) SseHandler() (*URL, error) {
-	path := "/api/v1/system/library/sse"
+	path := "/api/v1/system/sse"
 	return c.getUrl(path)
 }
 

@@ -56,7 +56,6 @@
 - [ ] Library Handling
     - [ ] Multi-threaded syncing
     - [ ] Time each step
-    - [ ] Report Errors
     - [ ] Maybe clear the cache after sync
     - [ ] Update Cmd
         - [ ] Metadata Validation
@@ -78,7 +77,6 @@
 
 - [ ] Server Handling for Admins
     - [ ] Notifications
-    - [ ] SSE Events
 
 - [ ] Import the old format
 

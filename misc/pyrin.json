@@ -1639,6 +1639,12 @@
       "response": "GetPlaylistById"
     },
     {
+      "type": "normal",
+      "name": "GetPlaylistImage",
+      "method": "GET",
+      "path": "/files/playlists/images/:playlistId/:image"
+    },
+    {
       "type": "api",
       "name": "GetPlaylistItems",
       "method": "GET",
@@ -1765,7 +1771,7 @@
       "type": "normal",
       "name": "SseHandler",
       "method": "GET",
-      "path": "/api/v1/system/library/sse"
+      "path": "/api/v1/system/sse"
     },
     {
       "type": "api",
