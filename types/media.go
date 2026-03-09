@@ -50,6 +50,32 @@ func (m MediaFormat) IsValid() bool {
 	return false
 }
 
+func (m MediaFormat) IsLossless() bool {
+	switch m {
+	case MediaFormatFlac:
+		return true
+	case MediaFormatWav:
+		return true
+	}
+
+	return false
+}
+
+func (m MediaFormat) IsLossy() bool {
+	switch m {
+	case MediaFormatOpus:
+		return true
+	case MediaFormatVorbis:
+		return true
+	case MediaFormatMp3:
+		return true
+	case MediaFormatAac:
+		return true
+	}
+
+	return false
+}
+
 func GetMediaFormatFromExt(ext string) MediaFormat {
 	switch ext {
 	case ".flac":

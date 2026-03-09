@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/nanoteck137/dwebble"
@@ -48,9 +49,24 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 			HandlerFunc: func(c pyrin.Context) error {
 				trackId := c.Param("trackId")
 
+				query := c.Request().URL.Query()
+
+				// mode=raw,smart
+				// device
+				// quality
+				// policy
+				// format
+				// bitrate
+
+				bitrate, _ := strconv.ParseInt(query.Get("bitrate"), 10, 32) 
+
 				filename, err := app.MediaService().GetTrackStream(trackId, service.MediaStreamOptions{
-					Format:  types.MediaFormatOpus,
-					Bitrate: 128,
+					Mode:    service.Mode(query.Get("mode")),
+					Device:  service.Device(query.Get("device")),
+					Policy:  service.Policy(query.Get("policy")),
+					Quality: service.Quality(query.Get("quality")),
+					Format:  types.MediaFormat(query.Get("format")),
+					Bitrate: int(bitrate),
 				})
 				if err != nil {
 					// TODO(patrik): Better error handling
