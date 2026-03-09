@@ -42,6 +42,7 @@
     - [ ] Better management of media and transcoding
     - [ ] More options for transcoding
     - [ ] Caching settings
+    - [ ] Display the transcoding settings on the frontend
 
 - [ ] Add order/orderNum to API tracks
 
