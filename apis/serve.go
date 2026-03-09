@@ -61,7 +61,6 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 				bitrate, _ := strconv.ParseInt(query.Get("bitrate"), 10, 32) 
 
 				filename, err := app.MediaService().GetTrackStream(trackId, service.MediaStreamOptions{
-					Mode:    service.Mode(query.Get("mode")),
 					Device:  service.Device(query.Get("device")),
 					Policy:  service.Policy(query.Get("policy")),
 					Quality: service.Quality(query.Get("quality")),

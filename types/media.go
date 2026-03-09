@@ -25,7 +25,7 @@ func (m MediaFormat) ToExt() (string, bool) {
 	case MediaFormatMp3:
 		return ".mp3", true
 	case MediaFormatAac:
-		return ".aac", true
+		return ".m4a", true
 	}
 
 	return "", false
