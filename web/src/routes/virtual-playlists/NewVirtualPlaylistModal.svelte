@@ -3,14 +3,7 @@
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import {
-    Button,
-    Dialog,
-    Input,
-    Label,
-    Select,
-    Separator,
-  } from "@nanoteck137/nano-ui";
+  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
@@ -19,7 +12,7 @@
 
   const Schema = z.object({
     name: z.string().min(1, "Name cannot be empty"),
-    filter: z.string().min(1, "Filter cannot be empty"),
+    filter: z.string(),
   });
 
   export type Props = {
@@ -45,9 +38,10 @@
       async onUpdate({ form }) {
         if (form.valid) {
           const formData = form.data;
-          const res = await apiClient.createTaglist({
+          const res = await apiClient.createVirtualPlaylist({
             name: formData.name,
             filter: formData.filter,
+            playlistId: "",
           });
           // TODO(patrik): Handle filter errors
           if (!res.success) {
@@ -56,8 +50,8 @@
 
           open = false;
 
-          toast.success("Successfully created new taglist");
-          goto(`/taglists/${res.data.id}`, { invalidateAll: true });
+          toast.success("Successfully created new virtual playlist");
+          goto(`/virtual-playlists/${res.data.id}`, { invalidateAll: true });
         }
       },
     },

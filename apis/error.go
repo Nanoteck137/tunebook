@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	ErrTypeInvalidAuth      pyrin.ErrorType = "INVALID_AUTH"
-	ErrTypeArtistNotFound   pyrin.ErrorType = "ARTIST_NOT_FOUND"
-	ErrTypeAlbumNotFound    pyrin.ErrorType = "ALBUM_NOT_FOUND"
-	ErrTypeTrackNotFound    pyrin.ErrorType = "TRACK_NOT_FOUND"
-	ErrTypeTaglistNotFound  pyrin.ErrorType = "TAGLIST_NOT_FOUND"
-	ErrTypeApiTokenNotFound pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
-	ErrTypeQueueNotFound    pyrin.ErrorType = "QUEUE_NOT_FOUND"
+	ErrTypeInvalidAuth             pyrin.ErrorType = "INVALID_AUTH"
+	ErrTypeArtistNotFound          pyrin.ErrorType = "ARTIST_NOT_FOUND"
+	ErrTypeAlbumNotFound           pyrin.ErrorType = "ALBUM_NOT_FOUND"
+	ErrTypeTrackNotFound           pyrin.ErrorType = "TRACK_NOT_FOUND"
+	ErrTypeVirtualPlaylistNotFound pyrin.ErrorType = "VIRTUAL_PLAYLIST_NOT_FOUND"
+	ErrTypeApiTokenNotFound        pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
+	ErrTypeQueueNotFound           pyrin.ErrorType = "QUEUE_NOT_FOUND"
 
 	ErrTypeInvalidFilter      pyrin.ErrorType = "INVALID_FILTER"
 	ErrTypeInvalidSort        pyrin.ErrorType = "INVALID_SORT"
@@ -57,11 +57,11 @@ func TrackNotFound() *pyrin.Error {
 	}
 }
 
-func TaglistNotFound() *pyrin.Error {
+func VirtualPlaylistNotFound() *pyrin.Error {
 	return &pyrin.Error{
 		Code:    http.StatusNotFound,
-		Type:    ErrTypeTaglistNotFound,
-		Message: "Taglist not found",
+		Type:    ErrTypeVirtualPlaylistNotFound,
+		Message: "Virtual Playlist not found",
 	}
 }
 

@@ -347,7 +347,7 @@
       ]
     },
     {
-      "name": "CreateTaglist",
+      "name": "CreateVirtualPlaylist",
       "fields": [
         {
           "name": "id",
@@ -357,10 +357,15 @@
       ]
     },
     {
-      "name": "CreateTaglistBody",
+      "name": "CreateVirtualPlaylistBody",
       "fields": [
         {
           "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "playlistId",
           "type": "string",
           "omitEmpty": false
         },
@@ -565,7 +570,7 @@
       "name": "GetMediaCommonBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": true
         },
@@ -595,7 +600,7 @@
       "name": "GetMediaFromAlbumBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": true
         },
@@ -625,7 +630,7 @@
       "name": "GetMediaFromArtistBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": true
         },
@@ -655,7 +660,7 @@
       "name": "GetMediaFromFilterBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": true
         },
@@ -690,7 +695,7 @@
       "name": "GetMediaFromIdsBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": true
         },
@@ -730,7 +735,7 @@
       "name": "GetMediaFromPlaylistBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": true
         },
@@ -760,7 +765,7 @@
       "name": "GetMediaFromTaglistBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": true
         },
@@ -837,61 +842,6 @@
         {
           "name": "version",
           "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetTaglistById",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "filter",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "created",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "updated",
-          "type": "int",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetTaglistTracks",
-      "fields": [
-        {
-          "name": "page",
-          "type": "Page",
-          "omitEmpty": false
-        },
-        {
-          "name": "tracks",
-          "type": "[]Track",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetTaglists",
-      "fields": [
-        {
-          "name": "taglists",
-          "type": "[]Taglist",
           "omitEmpty": false
         }
       ]
@@ -1002,6 +952,61 @@
       ]
     },
     {
+      "name": "GetVirtualPlaylistById",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetVirtualPlaylistTracks",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "tracks",
+          "type": "[]Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetVirtualPlaylists",
+      "fields": [
+        {
+          "name": "virtualPlaylists",
+          "type": "[]VirtualPlaylist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Images",
       "fields": [
         {
@@ -1050,7 +1055,7 @@
           "omitEmpty": false
         },
         {
-          "name": "mediaType",
+          "name": "mediaFormat",
           "type": "string",
           "omitEmpty": false
         },
@@ -1177,36 +1182,6 @@
       ]
     },
     {
-      "name": "Taglist",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "filter",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "created",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "updated",
-          "type": "int",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "Track",
       "fields": [
         {
@@ -1282,10 +1257,25 @@
       ]
     },
     {
-      "name": "UpdateTaglistBody",
+      "name": "UpdateUserSettingsBody",
+      "fields": [
+        {
+          "name": "quickPlaylist",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "UpdateVirtualPlaylistBody",
       "fields": [
         {
           "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "playlistId",
           "type": "*string",
           "omitEmpty": true
         },
@@ -1297,12 +1287,32 @@
       ]
     },
     {
-      "name": "UpdateUserSettingsBody",
+      "name": "VirtualPlaylist",
       "fields": [
         {
-          "name": "quickPlaylist",
-          "type": "*string",
-          "omitEmpty": true
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "int",
+          "omitEmpty": false
         }
       ]
     }
@@ -1421,11 +1431,11 @@
     },
     {
       "type": "api",
-      "name": "CreateTaglist",
+      "name": "CreateVirtualPlaylist",
       "method": "POST",
-      "path": "/api/v1/taglists",
-      "response": "CreateTaglist",
-      "body": "CreateTaglistBody"
+      "path": "/api/v1/virtual-playlists",
+      "response": "CreateVirtualPlaylist",
+      "body": "CreateVirtualPlaylistBody"
     },
     {
       "type": "api",
@@ -1441,9 +1451,9 @@
     },
     {
       "type": "api",
-      "name": "DeleteTaglist",
+      "name": "DeleteVirtualPlaylist",
       "method": "DELETE",
-      "path": "/api/v1/taglists/:id"
+      "path": "/api/v1/virtual-playlists/:id"
     },
     {
       "type": "api",
@@ -1561,9 +1571,9 @@
     },
     {
       "type": "api",
-      "name": "GetMediaFromTaglist",
+      "name": "GetMediaFromVirtualPlaylist",
       "method": "POST",
-      "path": "/api/v1/media/taglist/:taglistId",
+      "path": "/api/v1/media/virtual-playlist/:virtualPlaylistId",
       "response": "GetMedia",
       "body": "GetMediaFromTaglistBody"
     },
@@ -1603,37 +1613,10 @@
     },
     {
       "type": "api",
-      "name": "GetTaglistById",
-      "method": "GET",
-      "path": "/api/v1/taglists/:id",
-      "response": "GetTaglistById"
-    },
-    {
-      "type": "api",
-      "name": "GetTaglistTracks",
-      "method": "GET",
-      "path": "/api/v1/taglists/:id/tracks",
-      "response": "GetTaglistTracks"
-    },
-    {
-      "type": "api",
-      "name": "GetTaglists",
-      "method": "GET",
-      "path": "/api/v1/taglists",
-      "response": "GetTaglists"
-    },
-    {
-      "type": "api",
       "name": "GetTrackById",
       "method": "GET",
       "path": "/api/v1/tracks/:id",
       "response": "GetTrackById"
-    },
-    {
-      "type": "normal",
-      "name": "GetTrackFile",
-      "method": "GET",
-      "path": "/files/tracks/:trackId/:file"
     },
     {
       "type": "api",
@@ -1655,6 +1638,27 @@
       "method": "GET",
       "path": "/api/v1/user/quickplaylist",
       "response": "GetUserQuickPlaylistItemIds"
+    },
+    {
+      "type": "api",
+      "name": "GetVirtualPlaylistById",
+      "method": "GET",
+      "path": "/api/v1/virtual-playlists/:id",
+      "response": "GetVirtualPlaylistById"
+    },
+    {
+      "type": "api",
+      "name": "GetVirtualPlaylistTracks",
+      "method": "GET",
+      "path": "/api/v1/virtual-playlists/:id/tracks",
+      "response": "GetVirtualPlaylistTracks"
+    },
+    {
+      "type": "api",
+      "name": "GetVirtualPlaylists",
+      "method": "GET",
+      "path": "/api/v1/virtual-playlists",
+      "response": "GetVirtualPlaylists"
     },
     {
       "type": "api",
@@ -1698,6 +1702,12 @@
       "path": "/api/v1/system/sse"
     },
     {
+      "type": "normal",
+      "name": "StreamTrack",
+      "method": "GET",
+      "path": "/media/tracks/:trackId/stream"
+    },
+    {
       "type": "api",
       "name": "SyncLibrary",
       "method": "POST",
@@ -1705,17 +1715,17 @@
     },
     {
       "type": "api",
-      "name": "UpdateTaglist",
-      "method": "PATCH",
-      "path": "/api/v1/taglists/:id",
-      "body": "UpdateTaglistBody"
-    },
-    {
-      "type": "api",
       "name": "UpdateUserSettings",
       "method": "PATCH",
       "path": "/api/v1/user/settings",
       "body": "UpdateUserSettingsBody"
+    },
+    {
+      "type": "api",
+      "name": "UpdateVirtualPlaylist",
+      "method": "PATCH",
+      "path": "/api/v1/virtual-playlists/:id",
+      "body": "UpdateVirtualPlaylistBody"
     }
   ]
 }

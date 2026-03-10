@@ -180,12 +180,11 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "GetMediaFromTaglist",
+			Name:         "GetMediaFromVirtualPlaylist",
 			Method:       http.MethodPost,
-			Path:         "/media/taglist/:taglistId",
+			Path:         "/media/virtual-playlist/:virtualPlaylistId",
 			ResponseType: GetMedia{},
 			BodyType:     GetMediaFromTaglistBody{},
-			Errors:       []pyrin.ErrorType{ErrTypeTaglistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				taglistId := c.Param("taglistId")
 
@@ -201,25 +200,35 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				taglist, err := app.DB().GetTaglistById(ctx, taglistId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, TaglistNotFound()
-					}
+				_ = user
+				_ = body
+				_ = ctx
+				_ = taglistId
 
-					return nil, err
-				}
+				// TODO(patrik): IMPLEMENT ME
+				// FIXME(patrik): FIXME
+				panic("IMPLEMENT ME")
 
-				if taglist.OwnerId != user.Id {
-					return nil, TaglistNotFound()
-				}
-
-				tracks, err := app.DB().GetAllTracks(ctx, taglist.Filter, "")
-				if err != nil {
-					return nil, err
-				}
-
-				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
+				// taglist, err := app.DB().GetTaglistById(ctx, taglistId)
+				// if err != nil {
+				// 	if errors.Is(err, database.ErrItemNotFound) {
+				// 		return nil, TaglistNotFound()
+				// 	}
+				//
+				// 	return nil, err
+				// }
+				//
+				// if taglist.OwnerId != user.Id {
+				// 	return nil, TaglistNotFound()
+				// }
+				//
+				// tracks, err := app.DB().GetAllTracks(ctx, taglist.Filter, "")
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
+				return nil, nil
 			},
 		},
 

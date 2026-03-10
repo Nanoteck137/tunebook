@@ -22,7 +22,7 @@ type Track struct {
 	ModifiedTime int64             `db:"modified_time"`
 	MediaFormat  types.MediaFormat `db:"media_format"`
 
-	Name      string         `db:"name"`
+	Name string `db:"name"`
 	// TODO(patrik): Remove
 	OtherName sql.NullString `db:"other_name"`
 
@@ -37,12 +37,12 @@ type Track struct {
 	OriginalFilename string `db:"original_filename"`
 	MobileFilename   string `db:"mobile_filename"`
 
-	AlbumName      string         `db:"album_name"`
+	AlbumName string `db:"album_name"`
 	// TODO(patrik): Remove
 	AlbumOtherName sql.NullString `db:"album_other_name"`
 	AlbumCoverArt  sql.NullString `db:"album_cover_art"`
 
-	ArtistName      string         `db:"artist_name"`
+	ArtistName string `db:"artist_name"`
 	// TODO(patrik): Remove
 	ArtistOtherName sql.NullString `db:"artist_other_name"`
 

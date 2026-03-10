@@ -68,8 +68,8 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/playlists/filter", "POST", api.CreatePlaylist, z.any(), body, options)
   }
   
-  createTaglist(body: api.CreateTaglistBody, options?: ExtraOptions) {
-    return this.request("/api/v1/taglists", "POST", api.CreateTaglist, z.any(), body, options)
+  createVirtualPlaylist(body: api.CreateVirtualPlaylistBody, options?: ExtraOptions) {
+    return this.request("/api/v1/virtual-playlists", "POST", api.CreateVirtualPlaylist, z.any(), body, options)
   }
   
   deleteApiToken(id: string, options?: ExtraOptions) {
@@ -80,8 +80,8 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  deleteTaglist(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  deleteVirtualPlaylist(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/virtual-playlists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   generatePlaylistImage(id: string, options?: ExtraOptions) {
@@ -142,8 +142,8 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/playlist/${playlistId}`, "POST", api.GetMedia, z.any(), body, options)
   }
   
-  getMediaFromTaglist(taglistId: string, body: api.GetMediaFromTaglistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/taglist/${taglistId}`, "POST", api.GetMedia, z.any(), body, options)
+  getMediaFromVirtualPlaylist(virtualPlaylistId: string, body: api.GetMediaFromTaglistBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/virtual-playlist/${virtualPlaylistId}`, "POST", api.GetMedia, z.any(), body, options)
   }
   
   getPlaylistById(id: string, options?: ExtraOptions) {
@@ -163,22 +163,9 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
   
-  getTaglistById(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}`, "GET", api.GetTaglistById, z.any(), undefined, options)
-  }
-  
-  getTaglistTracks(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}/tracks`, "GET", api.GetTaglistTracks, z.any(), undefined, options)
-  }
-  
-  getTaglists(options?: ExtraOptions) {
-    return this.request("/api/v1/taglists", "GET", api.GetTaglists, z.any(), undefined, options)
-  }
-  
   getTrackById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/tracks/${id}`, "GET", api.GetTrackById, z.any(), undefined, options)
   }
-  
   
   getTracks(options?: ExtraOptions) {
     return this.request("/api/v1/tracks", "GET", api.GetTracks, z.any(), undefined, options)
@@ -190,6 +177,18 @@ export class ApiClient extends BaseApiClient {
   
   getUserQuickPlaylistItemIds(options?: ExtraOptions) {
     return this.request("/api/v1/user/quickplaylist", "GET", api.GetUserQuickPlaylistItemIds, z.any(), undefined, options)
+  }
+  
+  getVirtualPlaylistById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/virtual-playlists/${id}`, "GET", api.GetVirtualPlaylistById, z.any(), undefined, options)
+  }
+  
+  getVirtualPlaylistTracks(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/virtual-playlists/${id}/tracks`, "GET", api.GetVirtualPlaylistTracks, z.any(), undefined, options)
+  }
+  
+  getVirtualPlaylists(options?: ExtraOptions) {
+    return this.request("/api/v1/virtual-playlists", "GET", api.GetVirtualPlaylists, z.any(), undefined, options)
   }
   
   removeItemFromUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
@@ -213,16 +212,17 @@ export class ApiClient extends BaseApiClient {
   }
   
   
+  
   syncLibrary(options?: ExtraOptions) {
     return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), undefined, options)
   }
   
-  updateTaglist(id: string, body: api.UpdateTaglistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
   updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  updateVirtualPlaylist(id: string, body: api.UpdateVirtualPlaylistBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/virtual-playlists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
 }
 
@@ -293,8 +293,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/playlists/filter")
   }
   
-  createTaglist() {
-    return createUrl(this.baseUrl, "/api/v1/taglists")
+  createVirtualPlaylist() {
+    return createUrl(this.baseUrl, "/api/v1/virtual-playlists")
   }
   
   deleteApiToken(id: string) {
@@ -305,8 +305,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
   }
   
-  deleteTaglist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
+  deleteVirtualPlaylist(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/virtual-playlists/${id}`)
   }
   
   generatePlaylistImage(id: string) {
@@ -373,8 +373,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/playlist/${playlistId}`)
   }
   
-  getMediaFromTaglist(taglistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/taglist/${taglistId}`)
+  getMediaFromVirtualPlaylist(virtualPlaylistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/virtual-playlist/${virtualPlaylistId}`)
   }
   
   getPlaylistById(id: string) {
@@ -397,24 +397,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/system/info")
   }
   
-  getTaglistById(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
-  }
-  
-  getTaglistTracks(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}/tracks`)
-  }
-  
-  getTaglists() {
-    return createUrl(this.baseUrl, "/api/v1/taglists")
-  }
-  
   getTrackById(id: string) {
     return createUrl(this.baseUrl, `/api/v1/tracks/${id}`)
-  }
-  
-  getTrackFile(trackId: string, file: string) {
-    return createUrl(this.baseUrl, `/files/tracks/${trackId}/${file}`)
   }
   
   getTracks() {
@@ -427,6 +411,18 @@ export class ClientUrls {
   
   getUserQuickPlaylistItemIds() {
     return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
+  }
+  
+  getVirtualPlaylistById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/virtual-playlists/${id}`)
+  }
+  
+  getVirtualPlaylistTracks(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/virtual-playlists/${id}/tracks`)
+  }
+  
+  getVirtualPlaylists() {
+    return createUrl(this.baseUrl, "/api/v1/virtual-playlists")
   }
   
   removeItemFromUserQuickPlaylist() {
@@ -453,15 +449,19 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/system/sse")
   }
   
+  streamTrack(trackId: string) {
+    return createUrl(this.baseUrl, `/media/tracks/${trackId}/stream`)
+  }
+  
   syncLibrary() {
     return createUrl(this.baseUrl, "/api/v1/system/library")
   }
   
-  updateTaglist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
-  }
-  
   updateUserSettings() {
     return createUrl(this.baseUrl, "/api/v1/user/settings")
+  }
+  
+  updateVirtualPlaylist(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/virtual-playlists/${id}`)
   }
 }

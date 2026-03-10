@@ -1,27 +1,24 @@
 <script lang="ts">
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { getApiClient, handleApiError } from "$lib";
   import Spacer from "$lib/components/Spacer.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import TrackListHeader from "$lib/components/track-list/TrackListHeader.svelte";
-  import { getMusicManager } from "$lib/music-manager.svelte.js";
-  import { Breadcrumb, Button, Input, Pagination } from "@nanoteck137/nano-ui";
-  import { Filter } from "lucide-svelte";
+  import { Breadcrumb, Pagination } from "@nanoteck137/nano-ui";
 
   const { data } = $props();
-  const musicManager = getMusicManager();
+  // const musicManager = getMusicManager();
 </script>
 
 <div class="py-2">
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/taglists">Taglists</Breadcrumb.Link>
+        <Breadcrumb.Link href="/virtual-playlists">Taglists</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Page>{data.taglist.name}</Breadcrumb.Page>
+        <Breadcrumb.Page>{data.virtualPlaylist.name}</Breadcrumb.Page>
       </Breadcrumb.Item>
     </Breadcrumb.List>
   </Breadcrumb.Root>
@@ -83,15 +80,15 @@
 <!-- <div class="h-2"></div> -->
 
 <TrackListHeader
-  name={data.taglist.name}
-  onPlay={async (shuffle) => {
-    await musicManager.queueRequest(
-      {
-        type: "addTaglist",
-        taglistId: data.taglist.id,
-      },
-      { shuffle },
-    );
+  name={data.virtualPlaylist.name}
+  onPlay={async () => {
+    // await musicManager.queueRequest(
+    //   {
+    //     type: "addTaglist",
+    //     taglistId: data.taglist.id,
+    //   },
+    //   { shuffle },
+    // );
   }}
 />
 
@@ -102,14 +99,14 @@
   tracks={data.tracks}
   userPlaylists={data.userPlaylists}
   quickPlaylist={data.user?.quickPlaylist}
-  onPlay={async (trackId) => {
-    await musicManager.queueRequest(
-      {
-        type: "addTaglist",
-        taglistId: data.taglist.id,
-      },
-      { queueIndexToTrackId: trackId },
-    );
+  onPlay={async () => {
+    // await musicManager.queueRequest(
+    //   {
+    //     type: "addTaglist",
+    //     taglistId: data.taglist.id,
+    //   },
+    //   { queueIndexToTrackId: trackId },
+    // );
   }}
 />
 

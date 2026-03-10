@@ -218,21 +218,23 @@ export const CreatePlaylistBody = z.object({
 });
 export type CreatePlaylistBody = z.infer<typeof CreatePlaylistBody>;
 
-// Name: CreateTaglist
-export const CreateTaglist = z.object({
-  // Name: CreateTaglist.id
+// Name: CreateVirtualPlaylist
+export const CreateVirtualPlaylist = z.object({
+  // Name: CreateVirtualPlaylist.id
   "id": z.string(),
 });
-export type CreateTaglist = z.infer<typeof CreateTaglist>;
+export type CreateVirtualPlaylist = z.infer<typeof CreateVirtualPlaylist>;
 
-// Name: CreateTaglistBody
-export const CreateTaglistBody = z.object({
-  // Name: CreateTaglistBody.name
+// Name: CreateVirtualPlaylistBody
+export const CreateVirtualPlaylistBody = z.object({
+  // Name: CreateVirtualPlaylistBody.name
   "name": z.string(),
-  // Name: CreateTaglistBody.filter
+  // Name: CreateVirtualPlaylistBody.playlistId
+  "playlistId": z.string(),
+  // Name: CreateVirtualPlaylistBody.filter
   "filter": z.string(),
 });
-export type CreateTaglistBody = z.infer<typeof CreateTaglistBody>;
+export type CreateVirtualPlaylistBody = z.infer<typeof CreateVirtualPlaylistBody>;
 
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
@@ -394,8 +396,8 @@ export const MediaItem = z.object({
   "album": MediaResource,
   // Name: MediaItem.coverArt
   "coverArt": Images,
-  // Name: MediaItem.mediaType
-  "mediaType": z.string(),
+  // Name: MediaItem.mediaFormat
+  "mediaFormat": z.string(),
   // Name: MediaItem.mediaUrl
   "mediaUrl": z.string(),
 });
@@ -410,8 +412,8 @@ export type GetMedia = z.infer<typeof GetMedia>;
 
 // Name: GetMediaCommonBody
 export const GetMediaCommonBody = z.object({
-  // Name: GetMediaCommonBody.mediaType
-  "mediaType": z.string().optional(),
+  // Name: GetMediaCommonBody.mediaFormat
+  "mediaFormat": z.string().optional(),
   // Name: GetMediaCommonBody.shuffle
   "shuffle": z.boolean().optional(),
   // Name: GetMediaCommonBody.sort
@@ -425,8 +427,8 @@ export type GetMediaCommonBody = z.infer<typeof GetMediaCommonBody>;
 
 // Name: GetMediaFromAlbumBody
 export const GetMediaFromAlbumBody = z.object({
-  // Name: GetMediaFromAlbumBody.mediaType
-  "mediaType": z.string().optional(),
+  // Name: GetMediaFromAlbumBody.mediaFormat
+  "mediaFormat": z.string().optional(),
   // Name: GetMediaFromAlbumBody.shuffle
   "shuffle": z.boolean().optional(),
   // Name: GetMediaFromAlbumBody.sort
@@ -440,8 +442,8 @@ export type GetMediaFromAlbumBody = z.infer<typeof GetMediaFromAlbumBody>;
 
 // Name: GetMediaFromArtistBody
 export const GetMediaFromArtistBody = z.object({
-  // Name: GetMediaFromArtistBody.mediaType
-  "mediaType": z.string().optional(),
+  // Name: GetMediaFromArtistBody.mediaFormat
+  "mediaFormat": z.string().optional(),
   // Name: GetMediaFromArtistBody.shuffle
   "shuffle": z.boolean().optional(),
   // Name: GetMediaFromArtistBody.sort
@@ -455,8 +457,8 @@ export type GetMediaFromArtistBody = z.infer<typeof GetMediaFromArtistBody>;
 
 // Name: GetMediaFromFilterBody
 export const GetMediaFromFilterBody = z.object({
-  // Name: GetMediaFromFilterBody.mediaType
-  "mediaType": z.string().optional(),
+  // Name: GetMediaFromFilterBody.mediaFormat
+  "mediaFormat": z.string().optional(),
   // Name: GetMediaFromFilterBody.shuffle
   "shuffle": z.boolean().optional(),
   // Name: GetMediaFromFilterBody.sort
@@ -472,8 +474,8 @@ export type GetMediaFromFilterBody = z.infer<typeof GetMediaFromFilterBody>;
 
 // Name: GetMediaFromIdsBody
 export const GetMediaFromIdsBody = z.object({
-  // Name: GetMediaFromIdsBody.mediaType
-  "mediaType": z.string().optional(),
+  // Name: GetMediaFromIdsBody.mediaFormat
+  "mediaFormat": z.string().optional(),
   // Name: GetMediaFromIdsBody.shuffle
   "shuffle": z.boolean().optional(),
   // Name: GetMediaFromIdsBody.sort
@@ -491,8 +493,8 @@ export type GetMediaFromIdsBody = z.infer<typeof GetMediaFromIdsBody>;
 
 // Name: GetMediaFromPlaylistBody
 export const GetMediaFromPlaylistBody = z.object({
-  // Name: GetMediaFromPlaylistBody.mediaType
-  "mediaType": z.string().optional(),
+  // Name: GetMediaFromPlaylistBody.mediaFormat
+  "mediaFormat": z.string().optional(),
   // Name: GetMediaFromPlaylistBody.shuffle
   "shuffle": z.boolean().optional(),
   // Name: GetMediaFromPlaylistBody.sort
@@ -506,8 +508,8 @@ export type GetMediaFromPlaylistBody = z.infer<typeof GetMediaFromPlaylistBody>;
 
 // Name: GetMediaFromTaglistBody
 export const GetMediaFromTaglistBody = z.object({
-  // Name: GetMediaFromTaglistBody.mediaType
-  "mediaType": z.string().optional(),
+  // Name: GetMediaFromTaglistBody.mediaFormat
+  "mediaFormat": z.string().optional(),
   // Name: GetMediaFromTaglistBody.shuffle
   "shuffle": z.boolean().optional(),
   // Name: GetMediaFromTaglistBody.sort
@@ -564,52 +566,6 @@ export const GetSystemInfo = z.object({
 });
 export type GetSystemInfo = z.infer<typeof GetSystemInfo>;
 
-// Name: GetTaglistById
-export const GetTaglistById = z.object({
-  // Name: GetTaglistById.id
-  "id": z.string(),
-  // Name: GetTaglistById.name
-  "name": z.string(),
-  // Name: GetTaglistById.filter
-  "filter": z.string(),
-  // Name: GetTaglistById.created
-  "created": z.number(),
-  // Name: GetTaglistById.updated
-  "updated": z.number(),
-});
-export type GetTaglistById = z.infer<typeof GetTaglistById>;
-
-// Name: GetTaglistTracks
-export const GetTaglistTracks = z.object({
-  // Name: GetTaglistTracks.page
-  "page": Page,
-  // Name: GetTaglistTracks.tracks
-  "tracks": z.array(Track),
-});
-export type GetTaglistTracks = z.infer<typeof GetTaglistTracks>;
-
-// Name: Taglist
-export const Taglist = z.object({
-  // Name: Taglist.id
-  "id": z.string(),
-  // Name: Taglist.name
-  "name": z.string(),
-  // Name: Taglist.filter
-  "filter": z.string(),
-  // Name: Taglist.created
-  "created": z.number(),
-  // Name: Taglist.updated
-  "updated": z.number(),
-});
-export type Taglist = z.infer<typeof Taglist>;
-
-// Name: GetTaglists
-export const GetTaglists = z.object({
-  // Name: GetTaglists.taglists
-  "taglists": z.array(Taglist),
-});
-export type GetTaglists = z.infer<typeof GetTaglists>;
-
 // Name: GetTrackById
 export const GetTrackById = z.object({
   // Name: GetTrackById.id
@@ -664,6 +620,52 @@ export const GetUserQuickPlaylistItemIds = z.object({
 });
 export type GetUserQuickPlaylistItemIds = z.infer<typeof GetUserQuickPlaylistItemIds>;
 
+// Name: GetVirtualPlaylistById
+export const GetVirtualPlaylistById = z.object({
+  // Name: GetVirtualPlaylistById.id
+  "id": z.string(),
+  // Name: GetVirtualPlaylistById.name
+  "name": z.string(),
+  // Name: GetVirtualPlaylistById.filter
+  "filter": z.string(),
+  // Name: GetVirtualPlaylistById.created
+  "created": z.number(),
+  // Name: GetVirtualPlaylistById.updated
+  "updated": z.number(),
+});
+export type GetVirtualPlaylistById = z.infer<typeof GetVirtualPlaylistById>;
+
+// Name: GetVirtualPlaylistTracks
+export const GetVirtualPlaylistTracks = z.object({
+  // Name: GetVirtualPlaylistTracks.page
+  "page": Page,
+  // Name: GetVirtualPlaylistTracks.tracks
+  "tracks": z.array(Track),
+});
+export type GetVirtualPlaylistTracks = z.infer<typeof GetVirtualPlaylistTracks>;
+
+// Name: VirtualPlaylist
+export const VirtualPlaylist = z.object({
+  // Name: VirtualPlaylist.id
+  "id": z.string(),
+  // Name: VirtualPlaylist.name
+  "name": z.string(),
+  // Name: VirtualPlaylist.filter
+  "filter": z.string(),
+  // Name: VirtualPlaylist.created
+  "created": z.number(),
+  // Name: VirtualPlaylist.updated
+  "updated": z.number(),
+});
+export type VirtualPlaylist = z.infer<typeof VirtualPlaylist>;
+
+// Name: GetVirtualPlaylists
+export const GetVirtualPlaylists = z.object({
+  // Name: GetVirtualPlaylists.virtualPlaylists
+  "virtualPlaylists": z.array(VirtualPlaylist),
+});
+export type GetVirtualPlaylists = z.infer<typeof GetVirtualPlaylists>;
+
 // Name: PostPlaylistFilterBody
 export const PostPlaylistFilterBody = z.object({
   // Name: PostPlaylistFilterBody.name
@@ -708,19 +710,21 @@ export const TrackId = z.object({
 });
 export type TrackId = z.infer<typeof TrackId>;
 
-// Name: UpdateTaglistBody
-export const UpdateTaglistBody = z.object({
-  // Name: UpdateTaglistBody.name
-  "name": z.string().nullable().optional(),
-  // Name: UpdateTaglistBody.filter
-  "filter": z.string().nullable().optional(),
-});
-export type UpdateTaglistBody = z.infer<typeof UpdateTaglistBody>;
-
 // Name: UpdateUserSettingsBody
 export const UpdateUserSettingsBody = z.object({
   // Name: UpdateUserSettingsBody.quickPlaylist
   "quickPlaylist": z.string().nullable().optional(),
 });
 export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
+
+// Name: UpdateVirtualPlaylistBody
+export const UpdateVirtualPlaylistBody = z.object({
+  // Name: UpdateVirtualPlaylistBody.name
+  "name": z.string().nullable().optional(),
+  // Name: UpdateVirtualPlaylistBody.playlistId
+  "playlistId": z.string().nullable().optional(),
+  // Name: UpdateVirtualPlaylistBody.filter
+  "filter": z.string().nullable().optional(),
+});
+export type UpdateVirtualPlaylistBody = z.infer<typeof UpdateVirtualPlaylistBody>;
 

@@ -195,17 +195,19 @@ type CreatePlaylistBody struct {
 	Name string `json:"name"`
 }
 
-// Name: CreateTaglist
-type CreateTaglist struct {
-	// Name: CreateTaglist.id
+// Name: CreateVirtualPlaylist
+type CreateVirtualPlaylist struct {
+	// Name: CreateVirtualPlaylist.id
 	Id string `json:"id"`
 }
 
-// Name: CreateTaglistBody
-type CreateTaglistBody struct {
-	// Name: CreateTaglistBody.name
+// Name: CreateVirtualPlaylistBody
+type CreateVirtualPlaylistBody struct {
+	// Name: CreateVirtualPlaylistBody.name
 	Name string `json:"name"`
-	// Name: CreateTaglistBody.filter
+	// Name: CreateVirtualPlaylistBody.playlistId
+	PlaylistId string `json:"playlistId"`
+	// Name: CreateVirtualPlaylistBody.filter
 	Filter string `json:"filter"`
 }
 
@@ -357,8 +359,8 @@ type MediaItem struct {
 	Album MediaResource `json:"album"`
 	// Name: MediaItem.coverArt
 	CoverArt Images `json:"coverArt"`
-	// Name: MediaItem.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: MediaItem.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: MediaItem.mediaUrl
 	MediaUrl string `json:"mediaUrl"`
 }
@@ -371,8 +373,8 @@ type GetMedia struct {
 
 // Name: GetMediaCommonBody
 type GetMediaCommonBody struct {
-	// Name: GetMediaCommonBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaCommonBody.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: GetMediaCommonBody.shuffle
 	Shuffle bool `json:"shuffle"`
 	// Name: GetMediaCommonBody.sort
@@ -385,8 +387,8 @@ type GetMediaCommonBody struct {
 
 // Name: GetMediaFromAlbumBody
 type GetMediaFromAlbumBody struct {
-	// Name: GetMediaFromAlbumBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaFromAlbumBody.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: GetMediaFromAlbumBody.shuffle
 	Shuffle bool `json:"shuffle"`
 	// Name: GetMediaFromAlbumBody.sort
@@ -399,8 +401,8 @@ type GetMediaFromAlbumBody struct {
 
 // Name: GetMediaFromArtistBody
 type GetMediaFromArtistBody struct {
-	// Name: GetMediaFromArtistBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaFromArtistBody.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: GetMediaFromArtistBody.shuffle
 	Shuffle bool `json:"shuffle"`
 	// Name: GetMediaFromArtistBody.sort
@@ -413,8 +415,8 @@ type GetMediaFromArtistBody struct {
 
 // Name: GetMediaFromFilterBody
 type GetMediaFromFilterBody struct {
-	// Name: GetMediaFromFilterBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaFromFilterBody.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: GetMediaFromFilterBody.shuffle
 	Shuffle bool `json:"shuffle"`
 	// Name: GetMediaFromFilterBody.sort
@@ -429,8 +431,8 @@ type GetMediaFromFilterBody struct {
 
 // Name: GetMediaFromIdsBody
 type GetMediaFromIdsBody struct {
-	// Name: GetMediaFromIdsBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaFromIdsBody.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: GetMediaFromIdsBody.shuffle
 	Shuffle bool `json:"shuffle"`
 	// Name: GetMediaFromIdsBody.sort
@@ -447,8 +449,8 @@ type GetMediaFromIdsBody struct {
 
 // Name: GetMediaFromPlaylistBody
 type GetMediaFromPlaylistBody struct {
-	// Name: GetMediaFromPlaylistBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaFromPlaylistBody.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: GetMediaFromPlaylistBody.shuffle
 	Shuffle bool `json:"shuffle"`
 	// Name: GetMediaFromPlaylistBody.sort
@@ -461,8 +463,8 @@ type GetMediaFromPlaylistBody struct {
 
 // Name: GetMediaFromTaglistBody
 type GetMediaFromTaglistBody struct {
-	// Name: GetMediaFromTaglistBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaFromTaglistBody.mediaFormat
+	MediaFormat string `json:"mediaFormat"`
 	// Name: GetMediaFromTaglistBody.shuffle
 	Shuffle bool `json:"shuffle"`
 	// Name: GetMediaFromTaglistBody.sort
@@ -511,48 +513,6 @@ type GetPlaylists struct {
 type GetSystemInfo struct {
 	// Name: GetSystemInfo.version
 	Version string `json:"version"`
-}
-
-// Name: GetTaglistById
-type GetTaglistById struct {
-	// Name: GetTaglistById.id
-	Id string `json:"id"`
-	// Name: GetTaglistById.name
-	Name string `json:"name"`
-	// Name: GetTaglistById.filter
-	Filter string `json:"filter"`
-	// Name: GetTaglistById.created
-	Created int `json:"created"`
-	// Name: GetTaglistById.updated
-	Updated int `json:"updated"`
-}
-
-// Name: GetTaglistTracks
-type GetTaglistTracks struct {
-	// Name: GetTaglistTracks.page
-	Page Page `json:"page"`
-	// Name: GetTaglistTracks.tracks
-	Tracks []Track `json:"tracks"`
-}
-
-// Name: Taglist
-type Taglist struct {
-	// Name: Taglist.id
-	Id string `json:"id"`
-	// Name: Taglist.name
-	Name string `json:"name"`
-	// Name: Taglist.filter
-	Filter string `json:"filter"`
-	// Name: Taglist.created
-	Created int `json:"created"`
-	// Name: Taglist.updated
-	Updated int `json:"updated"`
-}
-
-// Name: GetTaglists
-type GetTaglists struct {
-	// Name: GetTaglists.taglists
-	Taglists []Taglist `json:"taglists"`
 }
 
 // Name: GetTrackById
@@ -605,6 +565,48 @@ type GetUserQuickPlaylistItemIds struct {
 	TrackIds []string `json:"trackIds"`
 }
 
+// Name: GetVirtualPlaylistById
+type GetVirtualPlaylistById struct {
+	// Name: GetVirtualPlaylistById.id
+	Id string `json:"id"`
+	// Name: GetVirtualPlaylistById.name
+	Name string `json:"name"`
+	// Name: GetVirtualPlaylistById.filter
+	Filter string `json:"filter"`
+	// Name: GetVirtualPlaylistById.created
+	Created int `json:"created"`
+	// Name: GetVirtualPlaylistById.updated
+	Updated int `json:"updated"`
+}
+
+// Name: GetVirtualPlaylistTracks
+type GetVirtualPlaylistTracks struct {
+	// Name: GetVirtualPlaylistTracks.page
+	Page Page `json:"page"`
+	// Name: GetVirtualPlaylistTracks.tracks
+	Tracks []Track `json:"tracks"`
+}
+
+// Name: VirtualPlaylist
+type VirtualPlaylist struct {
+	// Name: VirtualPlaylist.id
+	Id string `json:"id"`
+	// Name: VirtualPlaylist.name
+	Name string `json:"name"`
+	// Name: VirtualPlaylist.filter
+	Filter string `json:"filter"`
+	// Name: VirtualPlaylist.created
+	Created int `json:"created"`
+	// Name: VirtualPlaylist.updated
+	Updated int `json:"updated"`
+}
+
+// Name: GetVirtualPlaylists
+type GetVirtualPlaylists struct {
+	// Name: GetVirtualPlaylists.virtualPlaylists
+	VirtualPlaylists []VirtualPlaylist `json:"virtualPlaylists"`
+}
+
 // Name: PostPlaylistFilterBody
 type PostPlaylistFilterBody struct {
 	// Name: PostPlaylistFilterBody.name
@@ -643,17 +645,19 @@ type TrackId struct {
 	TrackId string `json:"trackId"`
 }
 
-// Name: UpdateTaglistBody
-type UpdateTaglistBody struct {
-	// Name: UpdateTaglistBody.name
-	Name *string `json:"name,omitempty"`
-	// Name: UpdateTaglistBody.filter
-	Filter *string `json:"filter,omitempty"`
-}
-
 // Name: UpdateUserSettingsBody
 type UpdateUserSettingsBody struct {
 	// Name: UpdateUserSettingsBody.quickPlaylist
 	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
+}
+
+// Name: UpdateVirtualPlaylistBody
+type UpdateVirtualPlaylistBody struct {
+	// Name: UpdateVirtualPlaylistBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: UpdateVirtualPlaylistBody.playlistId
+	PlaylistId *string `json:"playlistId,omitempty"`
+	// Name: UpdateVirtualPlaylistBody.filter
+	Filter *string `json:"filter,omitempty"`
 }
 

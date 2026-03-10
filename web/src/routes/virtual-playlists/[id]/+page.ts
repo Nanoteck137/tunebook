@@ -5,16 +5,18 @@ import type { PageLoad } from "./$types";
 export const load: PageLoad = async ({ parent, params, url }) => {
   const data = await parent();
 
-  const taglist = await data.apiClient.getTaglistById(params.id);
-  if (!taglist.success) {
-    throw error(taglist.error.code, { message: taglist.error.message });
+  const virtualPlaylist = await data.apiClient.getVirtualPlaylistById(
+    params.id,
+  );
+  if (!virtualPlaylist.success) {
+    throw error(virtualPlaylist.error.code, {
+      message: virtualPlaylist.error.message,
+    });
   }
 
   // TODO(patrik): Fix this
   const query = getPagedQueryOptions(url.searchParams);
-  query["filter"] = taglist.data.filter;
-
-  const tracks = await data.apiClient.getTracks({
+  const tracks = await data.apiClient.getVirtualPlaylistTracks(params.id, {
     query,
   });
   if (!tracks.success) {
@@ -23,7 +25,7 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 
   return {
     ...data,
-    taglist: taglist.data,
+    virtualPlaylist: virtualPlaylist.data,
     page: tracks.data.page,
     tracks: tracks.data.tracks,
   };

@@ -106,13 +106,16 @@ CREATE TABLE playlist_items (
     PRIMARY KEY(playlist_id, track_id)
 );
 
-CREATE TABLE taglists (
+CREATE TABLE virtual_playlists (
     id TEXT PRIMARY KEY,
+
     name TEXT NOT NULL CHECK(name<>''),
 
-    filter TEXT NOT NULL,
-
     owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    playlist_id TEXT REFERENCES playlists(id) ON DELETE CASCADE,
+
+    filter TEXT NOT NULL,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
