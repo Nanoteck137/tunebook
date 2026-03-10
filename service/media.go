@@ -132,8 +132,8 @@ func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Q
 }
 
 type MediaStreamOptions struct {
-	Device  Device
 	Policy  Policy
+	Device  Device
 	Quality Quality
 
 	Format types.MediaFormat
@@ -150,6 +150,18 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		// TODO(patrik): Set constant
 		opts.Quality = QualityMedium
 	}
+
+	log := s.logger.With(
+		slog.String("trackId", trackId),
+		slog.Group("options",
+			slog.String("policy", string(opts.Policy)),
+			slog.String("device", string(opts.Device)),
+			slog.String("quality", string(opts.Quality)),
+			slog.String("format", string(opts.Format)),
+		),
+	)
+
+	log.Info("track stream request")
 
 	ctx := context.Background()
 
@@ -179,6 +191,7 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 
 	switch opts.Policy {
 	case PolicyOriginal:
+		log.Info("track stream request using the original file")
 		return track.Filename, nil
 	case PolicyTranscode:
 		if opts.Format == types.MediaFormatEmpty || !opts.Format.IsValid() {
@@ -209,16 +222,17 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 
 	// NOTE(patrik): At this point we should have a valid format
 	if !format.IsValid() {
-		s.logger.Error("no valid format is selected",
+		log.Error("no valid format is selected",
 			slog.String("format", string(format)),
 		)
 
-		return "", errors.New("media-service: the chosen format is not valid: " + string(format))
+		return "", errors.New("media-service: selected format is not valid: " + string(format))
 	}
 
 	// TODO(patrik): Maybe here we should still "transcode" the media but
 	// just remove the metadata
 	if format == track.MediaFormat {
+		log.Info("track stream request selected format is matching the original track format")
 		return track.Filename, nil
 	}
 
@@ -242,7 +256,7 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 
 	// At this point we should have a valid bitrate
 	if format.IsLossy() && bitrate <= 0 {
-		s.logger.Error("bitrate not set for lossy format (something might be wrong with getBitrateFromQuality())",
+		log.Error("bitrate not set for lossy format (something might be wrong with getBitrateFromQuality())",
 			slog.String("format", string(format)),
 		)
 
@@ -253,7 +267,7 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 	// filename: format-bitrate.ext
 	ext, ok := format.ToExt()
 	if !ok {
-		s.logger.Error("format has no extention",
+		log.Error("format has no extention",
 			slog.String("format", string(format)),
 		)
 
@@ -266,13 +280,9 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 	} else {
 		filename = fmt.Sprintf("transcode-%s-lossless", format) + ext
 	}
-	fmt.Printf("filename: %v\n", filename)
 
 	out := path.Join(trackCache, filename)
 	tmpOut := path.Join(trackCache, "temp-"+filename)
-
-	// TODO(patrik): Transcode to a temporary file first and then move
-	// the file if successful
 
 	transcode := func() error {
 		defer func() {
@@ -280,6 +290,16 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 				os.Remove(tmpOut)
 			}
 		}()
+
+		log.Info("track stream request starting transcoding process",
+			slog.String("input", track.Filename),
+			slog.String("output", out),
+			slog.String("format", string(format)),
+			slog.Int("bitrate", bitrate),
+		)
+
+		timer := utils.SimpleTimer{}
+		timer.Start()
 
 		args := []string{
 			"-i", track.Filename,
@@ -309,11 +329,10 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 
 		args = append(args, tmpOut)
 
-		fmt.Printf("args: %v\n", args)
-
 		cmd := exec.Command("ffmpeg", args...)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
+		// TODO(patrik): Print when error
+		// cmd.Stderr = os.Stderr
+		// cmd.Stdout = os.Stdout
 		err = cmd.Run()
 		if err != nil {
 			return err
@@ -323,6 +342,15 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		if err != nil {
 			return err
 		}
+
+		duration := timer.Stop()
+		log.Info("track stream request transcoding done",
+			slog.String("input", track.Filename),
+			slog.String("output", out),
+			slog.String("format", string(format)),
+			slog.Int("bitrate", bitrate),
+			slog.Duration("duration", duration),
+		)
 
 		return nil
 	}
@@ -337,6 +365,8 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		} else {
 			return "", err
 		}
+	} else {
+		log.Info("track stream request using the cached version")
 	}
 
 	return out, nil
