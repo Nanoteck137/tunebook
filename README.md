@@ -5,9 +5,6 @@
 - [ ] Better way to log the API Errors
 - [ ] Better API Tokens
 - [ ] Quick Code integration
-- [ ] Server Architecture/Structure
-    - [ ] Services
-        - [ ] Service should have a ping function to check if the service is available
 
 - [ ] Web Frontend
     - [ ] Add
@@ -41,7 +38,10 @@
     - [ ] Add Users
     - [ ] Batch indexing
 
+- [ ] Database seperate track metadata data and track media stuff
+
 - [ ] Utils Media Probe: Needs some work to support more media types
+- [ ] Utils Media Probe: Move to media service?
 
 - [ ] Media
     - [x] Better management of media and transcoding
