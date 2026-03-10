@@ -30,6 +30,7 @@
     - [ ] API Route for getTrackStream need to handle errors
     - [ ] Cleanup
     - [ ] Add lock
+    - [ ] Add more logging
 
 - [ ] Search Service
     - [ ] Add RWLock lock
@@ -37,6 +38,7 @@
     - [ ] Add Playlists
     - [ ] Add Users
     - [ ] Batch indexing
+    - [ ] Add more logging
 
 - [ ] Database seperate track metadata data and track media stuff
 
