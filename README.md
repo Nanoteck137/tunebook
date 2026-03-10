@@ -29,6 +29,11 @@
 
 - [ ] Make Search Service init lazily, same as the auth service
 
+- [ ] Media Service
+    - [ ] API Route for getTrackStream need to handle errors
+    - [ ] Cleanup
+    - [ ] Add lock
+
 - [ ] Search Service
     - [ ] Add RWLock lock
     - [ ] Code Cleanup
@@ -39,9 +44,9 @@
 - [ ] Utils Media Probe: Needs some work to support more media types
 
 - [ ] Media
-    - [ ] Better management of media and transcoding
-    - [ ] More options for transcoding
-    - [ ] Caching settings
+    - [x] Better management of media and transcoding
+    - [x] More options for transcoding
+    - [x] Caching settings
     - [ ] Display the transcoding settings on the frontend
 
 - [ ] Add order/orderNum to API tracks
