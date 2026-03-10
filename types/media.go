@@ -4,6 +4,7 @@ type MediaFormat string
 
 const (
 	MediaFormatUnknown MediaFormat = "unknown"
+	MediaFormatEmpty   MediaFormat = ""
 	MediaFormatFlac    MediaFormat = "flac"
 	MediaFormatWav     MediaFormat = "wav"
 	MediaFormatOpus    MediaFormat = "opus"

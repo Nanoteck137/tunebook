@@ -23,6 +23,7 @@ type Track struct {
 	MediaFormat  types.MediaFormat `db:"media_format"`
 
 	Name      string         `db:"name"`
+	// TODO(patrik): Remove
 	OtherName sql.NullString `db:"other_name"`
 
 	AlbumId  string `db:"album_id"`
@@ -32,14 +33,17 @@ type Track struct {
 	Number   sql.NullInt64 `db:"number"`
 	Year     sql.NullInt64 `db:"year"`
 
+	// TODO(patrik): Remove
 	OriginalFilename string `db:"original_filename"`
 	MobileFilename   string `db:"mobile_filename"`
 
 	AlbumName      string         `db:"album_name"`
+	// TODO(patrik): Remove
 	AlbumOtherName sql.NullString `db:"album_other_name"`
 	AlbumCoverArt  sql.NullString `db:"album_cover_art"`
 
 	ArtistName      string         `db:"artist_name"`
+	// TODO(patrik): Remove
 	ArtistOtherName sql.NullString `db:"artist_other_name"`
 
 	Created int64 `db:"created"`

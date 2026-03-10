@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 
 	"github.com/nanoteck137/dwebble"
@@ -58,14 +57,11 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 				// format
 				// bitrate
 
-				bitrate, _ := strconv.ParseInt(query.Get("bitrate"), 10, 32) 
-
 				filename, err := app.MediaService().GetTrackStream(trackId, service.MediaStreamOptions{
 					Device:  service.Device(query.Get("device")),
 					Policy:  service.Policy(query.Get("policy")),
 					Quality: service.Quality(query.Get("quality")),
 					Format:  types.MediaFormat(query.Get("format")),
-					Bitrate: int(bitrate),
 				})
 				if err != nil {
 					// TODO(patrik): Better error handling

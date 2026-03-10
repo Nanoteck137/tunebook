@@ -4,15 +4,31 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path"
+	"slices"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 )
+
+var ErrInternalError = errors.New("internal error")
+
+var (
+	ErrMediaServiceBadRequest     = errors.New("media-service: bad request")
+	ErrMediaServiceTrackNotFound  = errors.New("media-service: track not found")
+	ErrMediaServiceInvalidFormat  = errors.New("media-service: invalid format")
+	ErrMediaServiceInvalidQuality = errors.New("media-service: invalid quality")
+	ErrMediaServiceInvalidPolicy  = errors.New("media-service: invalid policy")
+	ErrMediaServiceBitrateNotSet  = errors.New("media-service: bitrate not set")
+)
+
+func WrapInternalError(err error) error {
+	return fmt.Errorf("%w: %w", ErrInternalError, err)
+}
 
 type Device string
 
@@ -65,49 +81,24 @@ type DeviceSpec struct {
 }
 
 type MediaService struct {
+	logger *slog.Logger
+
 	db      *database.Database
 	workDir types.WorkDir
 }
 
 func NewMediaService(db *database.Database, workDir types.WorkDir) *MediaService {
 	return &MediaService{
+		logger: slog.With(
+			slog.String("service", "media-service"),
+		),
 		db:      db,
 		workDir: workDir,
 	}
 }
 
-type MediaStreamOptions struct {
-	Device  Device
-	Policy  Policy
-	Quality Quality
-
-	Format  types.MediaFormat
-	Bitrate int
-}
-
-func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (string, error) {
-	// TODO(patrik): Add a lock
-
-	ctx := context.Background()
-
-	track, err := s.db.GetTrackById(ctx, trackId)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			// TODO(patrik): Better error
-			return "", errors.New("track not found")
-		}
-
-		return "", err
-	}
-
-	// TODO(patrik): Add checks for the track here
-
-	pretty.Println(opts)
-
-	useOriginal := false
-	format := types.MediaFormatUnknown
-	bitrate := 0
-
+func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Quality) (int, error) {
+	// TODO(patrik): Move this
 	// TODO(patrik): I want to add test for this, test if every format has
 	// quality specs set
 	qualityMapping := map[types.MediaFormat]QualitySpec{
@@ -123,52 +114,78 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		types.MediaFormatAac:    {High: 256, Medium: 192, Low: 96},
 	}
 
+	// TODO(patrik): Check for valid quality
+
+	q, ok := qualityMapping[format]
+	if !ok {
+		// TODO(patrik): Better error
+		// return 0, fmt.Errorf("format '%s' missing from quality mapping", format)
+		return 0, WrapInternalError(errors.New("format not mapped '" + string(format) + "'"))
+	}
+
+	bitrate, ok := q.MapFromQuality(quality)
+	if !ok {
+		return 0, ErrMediaServiceInvalidQuality
+	}
+
+	return bitrate, nil
+}
+
+type MediaStreamOptions struct {
+	Device  Device
+	Policy  Policy
+	Quality Quality
+
+	Format types.MediaFormat
+}
+
+func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (string, error) {
+	// TODO(patrik): Add a lock
+
+	if opts.Policy == PolicyEmpty {
+		opts.Policy = PolicyOriginal
+	}
+
+	if opts.Quality == QualityEmpty {
+		// TODO(patrik): Set constant
+		opts.Quality = QualityMedium
+	}
+
+	ctx := context.Background()
+
+	track, err := s.db.GetTrackById(ctx, trackId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return "", ErrMediaServiceTrackNotFound
+		}
+
+		return "", err
+	}
+
+	// TODO(patrik): Add checks for the track here
+
+	format := types.MediaFormatUnknown
+
 	devices := map[Device]DeviceSpec{
-		DeviceIOS: DeviceSpec{
+		DeviceIOS: {
 			PreferedFormat: types.MediaFormatAac,
 			AllowedFormats: []types.MediaFormat{types.MediaFormatMp3},
 		},
-		DeviceAndroid: DeviceSpec{
+		DeviceAndroid: {
 			PreferedFormat: types.MediaFormatOpus,
 			AllowedFormats: []types.MediaFormat{types.MediaFormatVorbis, types.MediaFormatMp3},
 		},
 	}
 
 	switch opts.Policy {
-	case PolicyEmpty, PolicyOriginal:
-		useOriginal = true
+	case PolicyOriginal:
+		return track.Filename, nil
 	case PolicyTranscode:
-		if !opts.Format.IsValid() {
-			return "", errors.New("invalid format")
+		if opts.Format == types.MediaFormatEmpty || !opts.Format.IsValid() {
+			return "", ErrMediaServiceInvalidFormat
 		}
 
 		format = opts.Format
-
-		if !opts.Format.IsLossless() {
-			if opts.Bitrate > 0 {
-				bitrate = opts.Bitrate
-			} else if opts.Quality != QualityEmpty {
-				// TODO(patrik): Check for valid quality
-
-				quality, ok := qualityMapping[format]
-				if !ok {
-					return "", fmt.Errorf("format '%s' missing from quality mapping", format)
-				}
-
-				bitrate, ok = quality.MapFromQuality(opts.Quality)
-				if !ok {
-					return "", errors.New("invalid quality: " + string(opts.Quality))
-				}
-			} else {
-				quality, ok := qualityMapping[format]
-				if !ok {
-					panic("Format missing qualities")
-				}
-
-				// TODO(patrik): Make constant for default quality
-				bitrate = quality.Medium
-			}
-		}
 	case PolicyLossy:
 		if opts.Device != DeviceEmpty {
 			device, ok := devices[opts.Device]
@@ -176,94 +193,34 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 				return "", errors.New("unknown device: " + string(opts.Device))
 			}
 
-			format = device.PreferedFormat
-
-			for _, allowed := range device.AllowedFormats {
-				if track.MediaFormat == allowed {
-					format = track.MediaFormat
-					break
-				}
-			}
-
-			if opts.Quality != QualityEmpty {
-				// TODO(patrik): Check for valid quality
-
-				quality, ok := qualityMapping[format]
-				if !ok {
-					return "", fmt.Errorf("format '%s' missing from quality mapping", format)
-				}
-
-				bitrate, ok = quality.MapFromQuality(opts.Quality)
-				if !ok {
-					return "", errors.New("invalid quality: " + string(opts.Quality))
-				}
-			} else {
-				quality, ok := qualityMapping[format]
-				if !ok {
-					return "", fmt.Errorf("format '%s' missing from quality mapping", format)
-				}
-
-				// TODO(patrik): Make constant for default quality
-				bitrate = quality.Medium
+			if slices.Contains(device.AllowedFormats, track.MediaFormat) {
+				format = track.MediaFormat
 			}
 		} else if track.MediaFormat.IsLossy() {
 			format = track.MediaFormat
 		} else if opts.Format != "" && opts.Format.IsValid() {
 			format = opts.Format
-
-			if opts.Bitrate > 0 {
-				bitrate = opts.Bitrate
-			} else if opts.Quality != QualityEmpty {
-				// TODO(patrik): Check for valid quality
-
-				quality, ok := qualityMapping[format]
-				if !ok {
-					return "", fmt.Errorf("format '%s' missing from quality mapping", format)
-				}
-
-				bitrate, ok = quality.MapFromQuality(opts.Quality)
-				if !ok {
-					return "", errors.New("invalid quality: " + string(opts.Quality))
-				}
-			} else {
-				quality, ok := qualityMapping[format]
-				if !ok {
-					return "", fmt.Errorf("format '%s' missing from quality mapping", format)
-				}
-
-				// TODO(patrik): Make constant for default quality
-				bitrate = quality.Medium
-			}
 		} else {
 			format = types.MediaFormatOpus
-
-			quality, ok := qualityMapping[format]
-			// TODO(patrik): If this ever happens, there is a bug in the
-			// code, and not user error
-			if !ok {
-				panic("Interal: Format missing qualities")
-			}
-
-			// TODO(patrik): Make constant for default quality
-			bitrate = quality.Medium
 		}
 	default:
-		// TODO(patrik): Fix
-		panic("Unknown policy: " + opts.Policy)
+		return "", ErrMediaServiceInvalidPolicy
 	}
 
-	fmt.Printf("track.MediaFormat: %v\n", track.MediaFormat)
-	fmt.Printf("format: %v\n", format)
-	fmt.Printf("bitrate: %v\n", bitrate)
-	fmt.Printf("useOriginal: %v\n", useOriginal)
+	// NOTE(patrik): At this point we should have a valid format
+	if !format.IsValid() {
+		s.logger.Error("no valid format is selected",
+			slog.String("format", string(format)),
+		)
+
+		return "", errors.New("media-service: the chosen format is not valid: " + string(format))
+	}
 
 	// TODO(patrik): Maybe here we should still "transcode" the media but
 	// just remove the metadata
 	if format == track.MediaFormat {
-		useOriginal = true
+		return track.Filename, nil
 	}
-
-	fmt.Printf("useOriginal (after track check): %v\n", useOriginal)
 
 	cacheDir := s.workDir.Cache()
 	trackCache := cacheDir.Track(track.Id)
@@ -278,19 +235,29 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		return "", err
 	}
 
-	if useOriginal {
-		return track.Filename, nil
+	bitrate, err := s.getBitrateFromQuality(format, opts.Quality)
+	if err != nil {
+		return "", err
 	}
 
+	// At this point we should have a valid bitrate
 	if format.IsLossy() && bitrate <= 0 {
+		s.logger.Error("bitrate not set for lossy format (something might be wrong with getBitrateFromQuality())",
+			slog.String("format", string(format)),
+		)
+
 		// TODO(patrik): Better error
-		return "", errors.New("bitrate not set")
+		return "", errors.New("media-service: bitrate not set for lossy format")
 	}
 
 	// filename: format-bitrate.ext
 	ext, ok := format.ToExt()
 	if !ok {
-		return "", errors.New("unsupported media format: " + string(format))
+		s.logger.Error("format has no extention",
+			slog.String("format", string(format)),
+		)
+
+		return "", errors.New("media-service: format has no extention" + string(format))
 	}
 
 	filename := ""
@@ -302,9 +269,18 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 	fmt.Printf("filename: %v\n", filename)
 
 	out := path.Join(trackCache, filename)
+	tmpOut := path.Join(trackCache, "temp-"+filename)
+
+	// TODO(patrik): Transcode to a temporary file first and then move
+	// the file if successful
 
 	transcode := func() error {
-		// TODO(patrik): Don't map the metadata
+		defer func() {
+			if _, err := os.Stat(tmpOut); err == nil {
+				os.Remove(tmpOut)
+			}
+		}()
+
 		args := []string{
 			"-i", track.Filename,
 			"-map", "0:a:0",
@@ -331,7 +307,7 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 			return errors.New("unsupported media format: " + string(format))
 		}
 
-		args = append(args, out)
+		args = append(args, tmpOut)
 
 		fmt.Printf("args: %v\n", args)
 
@@ -339,6 +315,11 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
 		err = cmd.Run()
+		if err != nil {
+			return err
+		}
+
+		err = os.Rename(tmpOut, out)
 		if err != nil {
 			return err
 		}
