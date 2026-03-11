@@ -103,7 +103,32 @@ CREATE TABLE playlist_items (
     track_id TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
     order_num INTEGER NOT NULL,
 
+    -- TODO(patrik): Add created, updated / added FIELD
+
     PRIMARY KEY(playlist_id, track_id)
+);
+
+CREATE TABLE playlist_filters (
+    id TEXT NOT NULL,
+    playlist_id TEXT NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+
+    name TEXT NOT NULL CHECK(name<>''),
+    filter TEXT NOT NULL,
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
+
+    PRIMARY KEY(id, playlist_id)
+);
+
+-- TODO(patrik): Rename to track_filters?
+CREATE TABLE global_filters (
+    id TEXT NOT NULL,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    filter TEXT NOT NULL,
+
+    PRIMARY KEY(id, user_id)
 );
 
 CREATE TABLE virtual_playlists (

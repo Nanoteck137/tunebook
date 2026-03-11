@@ -12,6 +12,31 @@
       ]
     },
     {
+      "name": "AddPlaylistFilter",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AddPlaylistFilterBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Album",
       "fields": [
         {
@@ -812,6 +837,16 @@
       ]
     },
     {
+      "name": "GetPlaylistFilters",
+      "fields": [
+        {
+          "name": "filters",
+          "type": "[]PlaylistFilter",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetPlaylistItems",
       "fields": [
         {
@@ -1127,6 +1162,31 @@
       ]
     },
     {
+      "name": "PlaylistFilter",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "playlistId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "PostPlaylistFilterBody",
       "fields": [
         {
@@ -1324,6 +1384,14 @@
       "method": "POST",
       "path": "/api/v1/playlists/:id/items",
       "body": "AddItemToPlaylistBody"
+    },
+    {
+      "type": "api",
+      "name": "AddPlaylistFilter",
+      "method": "POST",
+      "path": "/api/v1/playlists/:playlistId/filters",
+      "response": "AddPlaylistFilter",
+      "body": "AddPlaylistFilterBody"
     },
     {
       "type": "api",
@@ -1585,6 +1653,13 @@
       "response": "GetPlaylistById"
     },
     {
+      "type": "api",
+      "name": "GetPlaylistFilters",
+      "method": "GET",
+      "path": "/api/v1/playlists/:playlistId/filters",
+      "response": "GetPlaylistFilters"
+    },
+    {
       "type": "normal",
       "name": "GetPlaylistImage",
       "method": "GET",
@@ -1658,6 +1733,13 @@
       "name": "GetVirtualPlaylists",
       "method": "GET",
       "path": "/api/v1/virtual-playlists",
+      "response": "GetVirtualPlaylists"
+    },
+    {
+      "type": "api",
+      "name": "GetVirtualPlaylistsForPlaylist",
+      "method": "GET",
+      "path": "/api/v1/virtual-playlists/playlists/:playlistId",
       "response": "GetVirtualPlaylists"
     },
     {

@@ -26,6 +26,8 @@ var CreateAlbumId = createIdGenerator(16)
 var CreateTrackId = createIdGenerator(32)
 var CreateTrackMediaId = createIdGenerator(32)
 
+var CreatePlaylistFilterId = createIdGenerator(8)
+
 var CreateVirtualPlaylistId = createIdGenerator(16)
 
 var CreateApiTokenId = createIdGenerator(32)

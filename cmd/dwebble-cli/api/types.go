@@ -7,6 +7,20 @@ type AddItemToPlaylistBody struct {
 	TrackId string `json:"trackId"`
 }
 
+// Name: AddPlaylistFilter
+type AddPlaylistFilter struct {
+	// Name: AddPlaylistFilter.filterId
+	FilterId string `json:"filterId"`
+}
+
+// Name: AddPlaylistFilterBody
+type AddPlaylistFilterBody struct {
+	// Name: AddPlaylistFilterBody.name
+	Name string `json:"name"`
+	// Name: AddPlaylistFilterBody.filter
+	Filter string `json:"filter"`
+}
+
 // Name: Images
 type Images struct {
 	// Name: Images.original
@@ -483,6 +497,24 @@ type GetPlaylistById struct {
 	Name string `json:"name"`
 	// Name: GetPlaylistById.coverArt
 	CoverArt Images `json:"coverArt"`
+}
+
+// Name: PlaylistFilter
+type PlaylistFilter struct {
+	// Name: PlaylistFilter.filterId
+	FilterId string `json:"filterId"`
+	// Name: PlaylistFilter.playlistId
+	PlaylistId string `json:"playlistId"`
+	// Name: PlaylistFilter.name
+	Name string `json:"name"`
+	// Name: PlaylistFilter.filter
+	Filter string `json:"filter"`
+}
+
+// Name: GetPlaylistFilters
+type GetPlaylistFilters struct {
+	// Name: GetPlaylistFilters.filters
+	Filters []PlaylistFilter `json:"filters"`
 }
 
 // Name: GetPlaylistItems

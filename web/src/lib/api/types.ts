@@ -8,6 +8,22 @@ export const AddItemToPlaylistBody = z.object({
 });
 export type AddItemToPlaylistBody = z.infer<typeof AddItemToPlaylistBody>;
 
+// Name: AddPlaylistFilter
+export const AddPlaylistFilter = z.object({
+  // Name: AddPlaylistFilter.filterId
+  "filterId": z.string(),
+});
+export type AddPlaylistFilter = z.infer<typeof AddPlaylistFilter>;
+
+// Name: AddPlaylistFilterBody
+export const AddPlaylistFilterBody = z.object({
+  // Name: AddPlaylistFilterBody.name
+  "name": z.string(),
+  // Name: AddPlaylistFilterBody.filter
+  "filter": z.string(),
+});
+export type AddPlaylistFilterBody = z.infer<typeof AddPlaylistFilterBody>;
+
 // Name: Images
 export const Images = z.object({
   // Name: Images.original
@@ -531,6 +547,26 @@ export const GetPlaylistById = z.object({
   "coverArt": Images,
 });
 export type GetPlaylistById = z.infer<typeof GetPlaylistById>;
+
+// Name: PlaylistFilter
+export const PlaylistFilter = z.object({
+  // Name: PlaylistFilter.filterId
+  "filterId": z.string(),
+  // Name: PlaylistFilter.playlistId
+  "playlistId": z.string(),
+  // Name: PlaylistFilter.name
+  "name": z.string(),
+  // Name: PlaylistFilter.filter
+  "filter": z.string(),
+});
+export type PlaylistFilter = z.infer<typeof PlaylistFilter>;
+
+// Name: GetPlaylistFilters
+export const GetPlaylistFilters = z.object({
+  // Name: GetPlaylistFilters.filters
+  "filters": z.array(PlaylistFilter),
+});
+export type GetPlaylistFilters = z.infer<typeof GetPlaylistFilters>;
 
 // Name: GetPlaylistItems
 export const GetPlaylistItems = z.object({

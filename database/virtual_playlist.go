@@ -109,6 +109,13 @@ func (db DB) GetVirtualPlaylistByUser(ctx context.Context, userId string) ([]Vir
 	return ember.Multiple[VirtualPlaylist](db.db, ctx, query)
 }
 
+func (db DB) GetVirtualPlaylistForPlaylist(ctx context.Context, playlistId string) ([]VirtualPlaylist, error) {
+	query := VirtualPlaylistQuery().
+		Where(goqu.I("virtual_playlists.playlist_id").Eq(playlistId))
+
+	return ember.Multiple[VirtualPlaylist](db.db, ctx, query)
+}
+
 func (db DB) GetVirtualPlaylistById(ctx context.Context, id string) (VirtualPlaylist, error) {
 	query := VirtualPlaylistQuery().
 		Where(goqu.I("virtual_playlists.id").Eq(id))

@@ -2,6 +2,7 @@ package apis
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"go/parser"
 	"net/http"
@@ -84,10 +85,6 @@ func (b UpdateVirtualPlaylistBody) Validate() error {
 }
 
 func TestFilter(filterStr string) error {
-	if filterStr == "" {
-		return nil
-	}
-
 	ast, err := parser.ParseExpr(filterStr)
 	if err != nil {
 		return InvalidFilter(err)
@@ -119,6 +116,45 @@ func InstallVirtualPlaylistHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				virtualPlaylists, err := app.DB().GetVirtualPlaylistByUser(ctx, user.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetVirtualPlaylists{
+					VirtualPlaylists: make([]VirtualPlaylist, len(virtualPlaylists)),
+				}
+
+				for i, virtualPlaylist := range virtualPlaylists {
+					res.VirtualPlaylists[i] = VirtualPlaylist{
+						Id:      virtualPlaylist.Id,
+						Name:    virtualPlaylist.Name,
+						Filter:  virtualPlaylist.Filter,
+						Created: virtualPlaylist.Created,
+						Updated: virtualPlaylist.Updated,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		// TODO(patrik): Remove after adding filters to virtual playlists
+		pyrin.ApiHandler{
+			Name:         "GetVirtualPlaylistsForPlaylist",
+			Path:         "/virtual-playlists/playlists/:playlistId",
+			Method:       http.MethodGet,
+			ResponseType: GetVirtualPlaylists{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("playlistId")
+
+				// user, err := User(app, c)
+				// if err != nil {
+				// 	return nil, err
+				// }
+
+				ctx := c.Request().Context()
+
+				virtualPlaylists, err := app.DB().GetVirtualPlaylistForPlaylist(ctx, playlistId)
 				if err != nil {
 					return nil, err
 				}
@@ -213,12 +249,27 @@ func InstallVirtualPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if virtualPlaylist.PlaylistId.Valid {
-					return nil, nil
+					tracks, err := app.DB().GetPlaylistTracksForVirtualPlaylist(ctx, virtualPlaylist.PlaylistId.String, virtualPlaylist.Filter)
+					if err != nil {
+						return nil, err
+					}
+
+					pretty.Println(tracks)
+
+					res := GetVirtualPlaylistTracks{
+						// TODO(patrik): Fix
+						Page:   types.Page{},
+						Tracks: make([]Track, len(tracks)),
+					}
+
+					for i, track := range tracks {
+						res.Tracks[i] = ConvertDBTrack(c, track)
+					}
+
+					return res, nil
 				} else {
 					opts := getPageOptions(q)
 					opts.Filter = virtualPlaylist.Filter
-
-					pretty.Println(opts)
 
 					tracks, p, err := app.DB().GetPagedTracks(ctx, opts)
 					if err != nil {
@@ -232,8 +283,6 @@ func InstallVirtualPlaylistHandlers(app core.App, group pyrin.Group) {
 
 						return nil, err
 					}
-
-					pretty.Println(tracks)
 
 					res := GetVirtualPlaylistTracks{
 						Page:   p,
@@ -278,6 +327,10 @@ func InstallVirtualPlaylistHandlers(app core.App, group pyrin.Group) {
 					Name:    body.Name,
 					Filter:  body.Filter,
 					OwnerId: user.Id,
+					PlaylistId: sql.NullString{
+						String: body.PlaylistId,
+						Valid:  body.PlaylistId != "",
+					},
 				})
 				if err != nil {
 					return nil, err

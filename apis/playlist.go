@@ -89,6 +89,41 @@ type RemovePlaylistItemBody struct {
 	TrackId string `json:"trackId"`
 }
 
+type PlaylistFilter struct {
+	FilterId   string `json:"filterId"`
+	PlaylistId string `json:"playlistId"`
+
+	Name   string `json:"name"`
+	Filter string `json:"filter"`
+
+	// TODO(patrik): Created, Updated
+}
+
+type GetPlaylistFilters struct {
+	Filters []PlaylistFilter `json:"filters"`
+}
+
+type AddPlaylistFilter struct {
+	FilterId string `json:"filterId"`
+}
+
+type AddPlaylistFilterBody struct {
+	Name   string `json:"name"`
+	Filter string `json:"filter"`
+}
+
+func (b *AddPlaylistFilterBody) Transform() {
+	b.Name = anvil.String(b.Name)
+	b.Filter = anvil.String(b.Filter)
+}
+
+func (b AddPlaylistFilterBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required),
+		validate.Field(&b.Filter, validate.Required),
+	)
+}
+
 func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -106,6 +141,8 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, err
 				}
+
+				pretty.Println(playlists)
 
 				res := GetPlaylists{
 					Playlists: make([]Playlist, len(playlists)),
@@ -321,6 +358,21 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				opts := getPageOptions(q)
+
+				filterId := q.Get("filterId")
+				if filterId != "" {
+					filter, err := app.DB().GetPlaylistFilterById(ctx, filterId, playlist.Id)
+					if err != nil {
+						// TODO(patrik): Handle error
+						return nil, err
+					}
+
+					pretty.Println(filter)
+
+					opts.Filter = filter.Filter
+				}
+
+				pretty.Println(opts)
 
 				tracks, pageInfo, err := app.DB().GetPlaylistTracksPaged(ctx, playlist.Id, opts)
 				if err != nil {
@@ -542,7 +594,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 
 				err = app.DB().UpdatePlaylist(ctx, playlist.Id, database.PlaylistChanges{
 					CoverArt: types.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: coverArt,
 							Valid:  coverArt != "",
 						},
@@ -559,6 +611,95 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetPlaylistFilters",
+			Method:       http.MethodGet,
+			Path:         "/playlists/:playlistId/filters",
+			ResponseType: GetPlaylistFilters{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("playlistId")
+
+				ctx := context.Background()
+
+				// TODO(patrik): Get playlist?
+
+				filters, err := app.DB().GetPlaylistFiltersByPlaylistId(ctx, playlistId)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetPlaylistFilters{
+					Filters: make([]PlaylistFilter, len(filters)),
+				}
+
+				for i, filter := range filters {
+					res.Filters[i] = PlaylistFilter{
+						FilterId:   filter.Id,
+						PlaylistId: filter.PlaylistId,
+						Name:       filter.Name,
+						Filter:     filter.Filter,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "AddPlaylistFilter",
+			Method:       http.MethodPost,
+			Path:         "/playlists/:playlistId/filters",
+			ResponseType: AddPlaylistFilter{},
+			BodyType:     AddPlaylistFilterBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("playlistId")
+
+				body, err := pyrin.Body[AddPlaylistFilterBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PlaylistNotFound()
+					}
+
+					return nil, err
+				}
+
+				if playlist.OwnerId != user.Id {
+					return nil, PlaylistNotFound()
+				}
+
+				err = TestFilter(body.Filter)
+				if err != nil {
+					// TODO(patrik): Better error
+					return nil, err
+				}
+
+				filterId, err := app.DB().CreatePlaylistFilter(ctx, database.CreatePlaylistFilterParams{
+					PlaylistId: playlistId,
+					Name:       body.Name,
+					Filter:     body.Filter,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return AddPlaylistFilter{
+					FilterId: filterId,
+				}, nil
 			},
 		},
 	)

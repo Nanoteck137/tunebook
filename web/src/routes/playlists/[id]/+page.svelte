@@ -15,11 +15,13 @@
   } from "@nanoteck137/nano-ui";
   import { Pencil, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
+  import NewFilterModal from "./NewFilterModal.svelte";
 
   const { data } = $props();
   const musicManager = getMusicManager();
   const apiClient = getApiClient();
 
+  let openFilterModal = $state(false);
   let openConfirmDeleteAlbum = $state(false);
 </script>
 
@@ -46,6 +48,14 @@
   }}
 >
   Test Generate
+</Button>
+
+<Button
+  onclick={async () => {
+    openFilterModal = true;
+  }}
+>
+  New Virtual Playlist
 </Button>
 
 <TrackListHeader
@@ -76,6 +86,20 @@
     </DropdownMenu.Group>
   {/snippet}
 </TrackListHeader>
+
+<Spacer size="md" />
+
+{#each data.filters as filter}
+  <button
+    onclick={() => {
+      const query = $page.url.searchParams;
+      query.set("filterId", filter.filterId);
+      goto("?" + query.toString(), { invalidateAll: true });
+    }}
+  >
+    Filter: {filter.filterId} - {filter.name}
+  </button>
+{/each}
 
 <Spacer size="md" />
 
@@ -135,6 +159,8 @@
     </Pagination.Content>
   {/snippet}
 </Pagination.Root>
+
+<NewFilterModal bind:open={openFilterModal} playlistId={data.playlist.id} />
 
 <ConfirmModal
   bind:open={openConfirmDeleteAlbum}

@@ -54,6 +54,7 @@
 - [ ] Add order/orderNum to API tracks
 
 - [ ] Playlists/Taglists
+    - [ ] Add a total tracks count to the playlist
     - [ ] Taglists renamed to VirtualPlaylist
     - [ ] User ability to re-order playlist items
     - [ ] Custom Covers

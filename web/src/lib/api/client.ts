@@ -15,6 +15,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  addPlaylistFilter(playlistId: string, body: api.AddPlaylistFilterBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/filters`, "POST", api.AddPlaylistFilter, z.any(), body, options)
+  }
+  
   addToUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
     return this.request("/api/v1/user/quickplaylist", "POST", z.undefined(), z.any(), body, options)
   }
@@ -150,6 +154,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
   }
   
+  getPlaylistFilters(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/filters`, "GET", api.GetPlaylistFilters, z.any(), undefined, options)
+  }
+  
   
   getPlaylistItems(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${id}/items`, "GET", api.GetPlaylistItems, z.any(), undefined, options)
@@ -189,6 +197,10 @@ export class ApiClient extends BaseApiClient {
   
   getVirtualPlaylists(options?: ExtraOptions) {
     return this.request("/api/v1/virtual-playlists", "GET", api.GetVirtualPlaylists, z.any(), undefined, options)
+  }
+  
+  getVirtualPlaylistsForPlaylist(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/virtual-playlists/playlists/${playlistId}`, "GET", api.GetVirtualPlaylists, z.any(), undefined, options)
   }
   
   removeItemFromUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
@@ -235,6 +247,10 @@ export class ClientUrls {
   
   addItemToPlaylist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
+  }
+  
+  addPlaylistFilter(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters`)
   }
   
   addToUserQuickPlaylist() {
@@ -381,6 +397,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
   }
   
+  getPlaylistFilters(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters`)
+  }
+  
   getPlaylistImage(playlistId: string, image: string) {
     return createUrl(this.baseUrl, `/files/playlists/images/${playlistId}/${image}`)
   }
@@ -423,6 +443,10 @@ export class ClientUrls {
   
   getVirtualPlaylists() {
     return createUrl(this.baseUrl, "/api/v1/virtual-playlists")
+  }
+  
+  getVirtualPlaylistsForPlaylist(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/virtual-playlists/playlists/${playlistId}`)
   }
   
   removeItemFromUserQuickPlaylist() {

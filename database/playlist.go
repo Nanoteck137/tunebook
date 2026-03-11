@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/dwebble/database/adapter"
+	"github.com/nanoteck137/dwebble/tools/filter"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin/ember"
@@ -91,6 +93,36 @@ func (db DB) GetPlaylistTracks(ctx context.Context, playlistId string) ([]Ordere
 	return ember.Multiple[OrderedTrack](db.db, ctx, query)
 }
 
+func (db DB) GetPlaylistTracksForVirtualPlaylist(ctx context.Context, playlistId, filterStr string) ([]Track, error) {
+	tracks := TrackQuery()
+
+	var err error
+
+	a := adapter.TrackResolverAdapter{}
+	resolver := filter.New(&a)
+
+	tracks, err = applyFilter(tracks, resolver, filterStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// tracks, err = applySort(tracks, resolver, opts.Sort)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	query := dialect.From("playlist_items").
+		Select("tracks.*").
+		Join(
+			tracks.As("tracks"),
+			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+		).
+		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
+		Order(goqu.I("tracks.name").Asc())
+
+	return ember.Multiple[Track](db.db, ctx, query)
+}
+
 // type PlaylistImage struct {
 //
 // }
@@ -133,6 +165,21 @@ func (db DB) GetNextIndex(ctx context.Context, playlistId string) (int, error) {
 func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts FetchOptions) ([]OrderedTrack, types.Page, error) {
 	tracks := TrackQuery()
 
+	var err error
+
+	a := adapter.TrackResolverAdapter{}
+	resolver := filter.New(&a)
+
+	tracks, err = applyFilter(tracks, resolver, opts.Filter)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	tracks, err = applySort(tracks, resolver, opts.Sort)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
 	query := dialect.From("playlist_items").
 		Select("tracks.*", "playlist_items.order_num").
 		Join(
@@ -141,8 +188,6 @@ func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts
 		).
 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
 		Order(goqu.I("playlist_items.order_num").Asc())
-
-	var err error
 
 	countQuery := query.
 		Select(goqu.COUNT("tracks.id"))
