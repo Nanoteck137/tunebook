@@ -94,7 +94,10 @@
     onclick={() => {
       const query = $page.url.searchParams;
       query.set("filterId", filter.filterId);
-      goto("?" + query.toString(), { invalidateAll: true });
+      goto("?" + query.toString(), {
+        invalidateAll: true,
+        replaceState: true,
+      });
     }}
   >
     Filter: {filter.filterId} - {filter.name}
