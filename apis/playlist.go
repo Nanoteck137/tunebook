@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/tools/utils"
@@ -141,8 +140,6 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, err
 				}
-
-				pretty.Println(playlists)
 
 				res := GetPlaylists{
 					Playlists: make([]Playlist, len(playlists)),
@@ -367,12 +364,8 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 						return nil, err
 					}
 
-					pretty.Println(filter)
-
 					opts.Filter = filter.Filter
 				}
-
-				pretty.Println(opts)
 
 				tracks, pageInfo, err := app.DB().GetPlaylistTracksPaged(ctx, playlist.Id, opts)
 				if err != nil {
@@ -553,8 +546,6 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, err
 				}
-
-				pretty.Println(images)
 
 				imgs := [4]string{
 					"",
