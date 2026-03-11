@@ -23,6 +23,8 @@ type Playlist struct {
 	Name string `json:"name"`
 
 	CoverArt types.Images `json:"coverArt"`
+
+	TrackCount int64 `json:"trackCount"`
 }
 
 func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
@@ -30,6 +32,7 @@ func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
 		Id:       playlist.Id,
 		Name:     playlist.Name,
 		CoverArt: ConvertPlaylistCoverURL(c, playlist.Id, playlist.CoverArt),
+		TrackCount: playlist.TrackCount.Int64,
 	}
 }
 

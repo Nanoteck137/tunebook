@@ -497,6 +497,8 @@ type GetPlaylistById struct {
 	Name string `json:"name"`
 	// Name: GetPlaylistById.coverArt
 	CoverArt Images `json:"coverArt"`
+	// Name: GetPlaylistById.trackCount
+	TrackCount int `json:"trackCount"`
 }
 
 // Name: PlaylistFilter
@@ -533,6 +535,8 @@ type Playlist struct {
 	Name string `json:"name"`
 	// Name: Playlist.coverArt
 	CoverArt Images `json:"coverArt"`
+	// Name: Playlist.trackCount
+	TrackCount int `json:"trackCount"`
 }
 
 // Name: GetPlaylists

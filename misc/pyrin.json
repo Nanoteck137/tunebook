@@ -833,6 +833,11 @@
           "name": "coverArt",
           "type": "Images",
           "omitEmpty": false
+        },
+        {
+          "name": "trackCount",
+          "type": "int",
+          "omitEmpty": false
         }
       ]
     },
@@ -1157,6 +1162,11 @@
         {
           "name": "coverArt",
           "type": "Images",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackCount",
+          "type": "int",
           "omitEmpty": false
         }
       ]

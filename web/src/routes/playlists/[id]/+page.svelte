@@ -58,6 +58,8 @@
   New Virtual Playlist
 </Button>
 
+<p>Track Count: {data.playlist.trackCount}</p>
+
 <TrackListHeader
   name={data.playlist.name}
   image={data.playlist.coverArt.medium}

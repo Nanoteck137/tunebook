@@ -23,6 +23,8 @@ type Playlist struct {
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
+
+	TrackCount sql.NullInt64 `db:"track_count"`
 }
 
 type PlaylistItem struct {
@@ -38,6 +40,13 @@ type OrderedTrack struct {
 }
 
 func PlaylistQuery() *goqu.SelectDataset {
+	trackCountQuery := dialect.From("playlist_items").
+		Select(
+			goqu.I("playlist_items.playlist_id").As("id"),
+			goqu.COUNT(goqu.I("playlist_items.track_id")).As("data"),
+		).
+		GroupBy(goqu.I("playlist_items.playlist_id"))
+
 	query := dialect.From("playlists").
 		Select(
 			"playlists.id",
@@ -48,6 +57,12 @@ func PlaylistQuery() *goqu.SelectDataset {
 
 			"playlists.created",
 			"playlists.updated",
+
+			goqu.I("track_count.data").As("track_count"),
+		).
+		LeftJoin(
+			trackCountQuery.As("track_count"),
+			goqu.On(goqu.I("playlists.id").Eq(goqu.I("track_count.id"))),
 		)
 
 	return query

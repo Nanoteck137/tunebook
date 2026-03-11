@@ -545,6 +545,8 @@ export const GetPlaylistById = z.object({
   "name": z.string(),
   // Name: GetPlaylistById.coverArt
   "coverArt": Images,
+  // Name: GetPlaylistById.trackCount
+  "trackCount": z.number(),
 });
 export type GetPlaylistById = z.infer<typeof GetPlaylistById>;
 
@@ -585,6 +587,8 @@ export const Playlist = z.object({
   "name": z.string(),
   // Name: Playlist.coverArt
   "coverArt": Images,
+  // Name: Playlist.trackCount
+  "trackCount": z.number(),
 });
 export type Playlist = z.infer<typeof Playlist>;
 
