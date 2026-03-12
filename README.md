@@ -2,6 +2,32 @@
 
 ## Rewrite
 
+- [ ] Add order/orderNum to API tracks
+
+- [ ] Better API Tokens
+
+- [ ] Jobs
+    - [ ] Auth Cleanup
+    - [ ] Clear out cache
+    - [ ] Create new search index
+    - [ ] Library Syncing
+
+- [ ] User Tracking
+    - [ ] Number of plays 
+    - [ ] Favorites
+    - [ ] Year over Year 
+
+- [ ] Server Handling for Admins
+    - [ ] Notifications
+
+- [ ] Playlists/Taglists
+    - [ ] Global Filters per user
+    - [ ] User ability to re-order playlist items
+    - [ ] Custom Covers
+
+- [ ] Media
+    - [ ] Display the transcoding settings on the frontend
+
 - [ ] Cleanup modal forms 
     - [ ] Errors is hard to see
     - [ ] Handle api errors in a clean way
@@ -47,16 +73,6 @@
     - [ ] Batch indexing
     - [ ] Add more logging
 
-- [ ] Media
-    - [ ] Display the transcoding settings on the frontend
-
-- [ ] Add order/orderNum to API tracks
-
-- [ ] Playlists/Taglists
-    - [ ] Global Filters per user
-    - [ ] User ability to re-order playlist items
-    - [ ] Custom Covers
-
 - [ ] Library Handling
     - [ ] Multi-threaded syncing
     - [ ] Clear the cache after sync
@@ -64,22 +80,6 @@
     - [ ] Update Cmd
         - [ ] Metadata Validation
         - [ ] Metadata transformation (trim spaces, escape characters, more)
-
-- [ ] Better API Tokens
-
-- [ ] Jobs
-    - [ ] Auth Cleanup
-    - [ ] Clear out cache
-    - [ ] Create new search index
-    - [ ] Library Syncing
-
-- [ ] User Tracking
-    - [ ] Number of plays 
-    - [ ] Favorites
-    - [ ] Year over Year 
-
-- [ ] Server Handling for Admins
-    - [ ] Notifications
 
 - [ ] Use database indexes
 
