@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"os"
 
 	"github.com/nanoteck137/dwebble/config"
@@ -124,6 +125,19 @@ func (app *BaseApp) Bootstrap() error {
 	app.libraryService.SetUpdateFunc(func() {
 		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
 	})
+
+	// TODO(patrik): Remove test code
+	playlists, err := app.DB().GetAllPlaylists(context.TODO())
+	if err != nil {
+		return err
+	}
+
+	for _, playlist := range playlists {
+		err = app.DB().DeletePlaylist(context.TODO(), playlist.Id)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

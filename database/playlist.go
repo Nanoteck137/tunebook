@@ -68,6 +68,11 @@ func PlaylistQuery() *goqu.SelectDataset {
 	return query
 }
 
+func (db DB) GetAllPlaylists(ctx context.Context) ([]Playlist, error) {
+	query := PlaylistQuery()
+	return ember.Multiple[Playlist](db.db, ctx, query)
+}
+
 func (db DB) GetPlaylistsByUser(ctx context.Context, userId string) ([]Playlist, error) {
 	query := PlaylistQuery().
 		Where(goqu.I("playlists.owner_id").Eq(userId))
@@ -162,6 +167,7 @@ func (db DB) GetPlaylistTrackImages(ctx context.Context, playlistId string, numI
 func (db DB) GetNextIndex(ctx context.Context, playlistId string) (int, error) {
 	query := dialect.From("playlist_items").
 		Select("playlist_items.order_num").
+		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
 		Order(goqu.I("playlist_items.order_num").Desc()).
 		Limit(1)
 

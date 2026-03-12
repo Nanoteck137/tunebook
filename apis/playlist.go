@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"math/rand"
 	"net/http"
 	"os"
 	"path"
@@ -29,9 +28,9 @@ type Playlist struct {
 
 func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
 	return Playlist{
-		Id:       playlist.Id,
-		Name:     playlist.Name,
-		CoverArt: ConvertPlaylistCoverURL(c, playlist.Id, playlist.CoverArt),
+		Id:         playlist.Id,
+		Name:       playlist.Name,
+		CoverArt:   ConvertPlaylistCoverURL(c, playlist.Id, playlist.CoverArt),
 		TrackCount: playlist.TrackCount.Int64,
 	}
 }
@@ -407,12 +406,14 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				ctx := context.Background()
+
 				body, err := pyrin.Body[AddItemToPlaylistBody](c)
 				if err != nil {
 					return nil, err
 				}
 
-				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
+				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, PlaylistNotFound()
@@ -425,8 +426,21 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, PlaylistNotFound()
 				}
 
-				// TODO(patrik): Check for trackId exists?
-				err = app.DB().AddItemToPlaylist(c.Request().Context(), playlist.Id, body.TrackId, rand.Int())
+				track, err := app.DB().GetTrackById(ctx, body.TrackId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, TrackNotFound()
+					}
+
+					return nil, err
+				}
+
+				index, err := app.DB().GetNextIndex(ctx, playlist.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.DB().AddItemToPlaylist(ctx, playlist.Id, track.Id, index)
 				if err != nil {
 					if errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, PlaylistAlreadyHasTrack()
