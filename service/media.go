@@ -9,10 +9,14 @@ import (
 	"os/exec"
 	"path"
 	"slices"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
+	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 var ErrInternalError = errors.New("internal error")
@@ -102,8 +106,8 @@ func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Q
 	// TODO(patrik): I want to add test for this, test if every format has
 	// quality specs set
 	qualityMapping := map[types.MediaFormat]QualitySpec{
-		types.MediaFormatFlac: {},
-		types.MediaFormatWav:  {},
+		types.MediaFormatFlac:     {},
+		types.MediaFormatPcmS16LE: {},
 		types.MediaFormatOpus: {
 			High:   128,
 			Medium: 96,
@@ -313,7 +317,7 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		switch format {
 		case types.MediaFormatFlac:
 			args = append(args, "-codec:a", "flac", "-compression_level", "5")
-		case types.MediaFormatWav:
+		case types.MediaFormatPcmS16LE:
 			args = append(args, "-codec:a", "pcm_s16le")
 		case types.MediaFormatOpus:
 			args = append(args, "-codec:a", "libopus", "-b:a", fmt.Sprintf("%dk", bitrate), "-vbr", "on", "-compression_level", "10")
@@ -370,4 +374,78 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 	}
 
 	return out, nil
+}
+
+func convertMapKeysToLowercase(m map[string]any) map[string]any {
+	res := make(map[string]any)
+	for k, v := range m {
+		res[strings.ToLower(k)] = v
+	}
+
+	return res
+}
+
+type MediaProbeResult struct {
+	Tags        ffprobe.Tags
+	MediaFormat types.MediaFormat
+	Duration    time.Duration
+}
+
+func (s *MediaService) ProbeMedia(filepath string) (*MediaProbeResult, error) {
+	s.logger.Info("Probing media", "filepath", filepath)
+
+	ctx := context.TODO()
+
+	probe, err := ffprobe.ProbeURL(ctx, filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	var tags ffprobe.Tags
+	hasGlobalTags := probe.Format.FormatName != "ogg"
+
+	audioStream := probe.FirstAudioStream()
+	if audioStream == nil {
+		// TODO(patrik): Better error?
+		return nil, errors.New("contains no audio streams")
+	}
+
+	if hasGlobalTags {
+		tags = probe.Format.TagList
+	} else {
+		tags = audioStream.TagList
+	}
+
+	tags = convertMapKeysToLowercase(tags)
+
+	dur, err := strconv.ParseFloat(audioStream.Duration, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	duration := time.Duration(dur * float64(time.Second))
+
+	mediaFormat := types.MediaFormatUnknown
+	switch audioStream.CodecName {
+	case "flac":
+		mediaFormat = types.MediaFormatFlac
+	case "pcm_s16le":
+		mediaFormat = types.MediaFormatPcmS16LE
+	case "opus":
+		mediaFormat = types.MediaFormatOpus
+	case "vorbis":
+		mediaFormat = types.MediaFormatVorbis
+	case "mp3":
+		mediaFormat = types.MediaFormatMp3
+	case "aac":
+		mediaFormat = types.MediaFormatAac
+	}
+
+	s.logger.Info("Probing result", "filepath", filepath, "format", mediaFormat, "duration", time.Duration(duration))
+
+	return &MediaProbeResult{
+		Tags:        tags,
+		MediaFormat: mediaFormat,
+		Duration:    duration,
+	}, nil
 }

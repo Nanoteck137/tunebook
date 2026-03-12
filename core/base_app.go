@@ -1,9 +1,9 @@
 package core
 
 import (
-	"context"
 	"os"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/service"
@@ -107,11 +107,16 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	app.libraryService = service.NewLibraryService(app.db, app.config, app.searchService)
+	app.mediaService = service.NewMediaService(app.db, app.config.WorkDir())
+
+	app.libraryService = service.NewLibraryService(
+		app.db, 
+		app.config, 
+		app.mediaService, 
+		app.searchService,
+	)
 
 	app.imageService = service.NewImageService(app.db, app.config.WorkDir())
-
-	app.mediaService = service.NewMediaService(app.db, app.config.WorkDir())
 
 	app.broker = broker.NewBroker(func() []broker.Event {
 		return []broker.Event{
@@ -126,18 +131,60 @@ func (app *BaseApp) Bootstrap() error {
 		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
 	})
 
-	// TODO(patrik): Remove test code
-	playlists, err := app.DB().GetAllPlaylists(context.TODO())
+	res, err := app.mediaService.ProbeMedia("../test.opus")
 	if err != nil {
 		return err
 	}
 
-	for _, playlist := range playlists {
-		err = app.DB().DeletePlaylist(context.TODO(), playlist.Id)
-		if err != nil {
-			return err
-		}
+	pretty.Println(res)
+
+	res, err = app.mediaService.ProbeMedia("../test.ogg")
+	if err != nil {
+		return err
 	}
+
+	pretty.Println(res)
+
+	res, err = app.mediaService.ProbeMedia("../test.mp3")
+	if err != nil {
+		return err
+	}
+
+	pretty.Println(res)
+
+	res, err = app.mediaService.ProbeMedia("../test.m4a")
+	if err != nil {
+		return err
+	}
+
+	pretty.Println(res)
+
+	res, err = app.mediaService.ProbeMedia("../test.flac")
+	if err != nil {
+		return err
+	}
+
+	pretty.Println(res)
+
+	res, err = app.mediaService.ProbeMedia("../test.wav")
+	if err != nil {
+		return err
+	}
+
+	pretty.Println(res)
+
+	// TODO(patrik): Remove test code
+	// playlists, err := app.DB().GetAllPlaylists(context.TODO())
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// for _, playlist := range playlists {
+	// 	err = app.DB().DeletePlaylist(context.TODO(), playlist.Id)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }

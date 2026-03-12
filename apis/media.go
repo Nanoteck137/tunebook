@@ -197,6 +197,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		// TODO(patrik): Remove and remove from frontend also
 		// pyrin.ApiHandler{
 		// 	Name:         "GetMediaFromVirtualPlaylist",
 		// 	Method:       http.MethodPost,

@@ -108,6 +108,8 @@ type LibraryService struct {
 	db     *database.Database
 	config *config.Config
 
+	mediaService *MediaService
+
 	searchService *SearchService
 
 	errors      []error
@@ -125,10 +127,16 @@ type LibraryService struct {
 	updateFunc UpdateFunc
 }
 
-func NewLibraryService(db *database.Database, config *config.Config, searchService *SearchService) *LibraryService {
+func NewLibraryService(
+	db *database.Database,
+	config *config.Config,
+	mediaService *MediaService,
+	searchService *SearchService,
+) *LibraryService {
 	return &LibraryService{
 		db:            db,
 		config:        config,
+		mediaService:  mediaService,
 		searchService: searchService,
 		syncRunning:   atomic.Bool{},
 	}
@@ -526,7 +534,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 			// 	Valid: track.Year != 0,
 			// },
 
-			probeResult, err := utils.ProbeTrack(trackFile)
+			probeResult, err := s.mediaService.ProbeMedia(trackFile)
 			if err != nil {
 				// TODO(patrik): Better error
 				return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
@@ -540,7 +548,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 				Name:         entry.Name,
 				AlbumId:      entry.AlbumId,
 				ArtistId:     entry.ArtistId,
-				Duration:     int64(probeResult.Duration),
+				Duration:     int64(probeResult.Duration.Seconds()),
 				Number: sql.NullInt64{
 					Int64: entry.Number,
 					Valid: entry.Number != 0,
@@ -558,13 +566,13 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 		changes := database.TrackChanges{}
 
 		if modifiedTime > dbTrack.ModifiedTime || dbTrack.Filename != trackFile {
-			probeResult, err := utils.ProbeTrack(trackFile)
+			probeResult, err := s.mediaService.ProbeMedia(trackFile)
 			if err != nil {
 				// TODO(patrik): Better error
 				return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
 			}
 
-			dur := int64(probeResult.Duration)
+			dur := int64(probeResult.Duration.Seconds())
 			changes.Duration = types.Change[int64]{
 				Value:   dur,
 				Changed: dur != dbTrack.Duration,

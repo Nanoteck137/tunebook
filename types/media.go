@@ -3,21 +3,21 @@ package types
 type MediaFormat string
 
 const (
-	MediaFormatUnknown MediaFormat = "unknown"
-	MediaFormatEmpty   MediaFormat = ""
-	MediaFormatFlac    MediaFormat = "flac"
-	MediaFormatWav     MediaFormat = "wav"
-	MediaFormatOpus    MediaFormat = "opus"
-	MediaFormatVorbis  MediaFormat = "vorbis"
-	MediaFormatMp3     MediaFormat = "mp3"
-	MediaFormatAac     MediaFormat = "aac"
+	MediaFormatUnknown  MediaFormat = "unknown"
+	MediaFormatEmpty    MediaFormat = ""
+	MediaFormatFlac     MediaFormat = "flac"
+	MediaFormatPcmS16LE MediaFormat = "pcm_s16le"
+	MediaFormatOpus     MediaFormat = "opus"
+	MediaFormatVorbis   MediaFormat = "vorbis"
+	MediaFormatMp3      MediaFormat = "mp3"
+	MediaFormatAac      MediaFormat = "aac"
 )
 
 func (m MediaFormat) ToExt() (string, bool) {
 	switch m {
 	case MediaFormatFlac:
 		return ".flac", true
-	case MediaFormatWav:
+	case MediaFormatPcmS16LE:
 		return ".wav", true
 	case MediaFormatOpus:
 		return ".opus", true
@@ -36,7 +36,7 @@ func (m MediaFormat) IsValid() bool {
 	switch m {
 	case MediaFormatFlac:
 		return true
-	case MediaFormatWav:
+	case MediaFormatPcmS16LE:
 		return true
 	case MediaFormatOpus:
 		return true
@@ -55,7 +55,7 @@ func (m MediaFormat) IsLossless() bool {
 	switch m {
 	case MediaFormatFlac:
 		return true
-	case MediaFormatWav:
+	case MediaFormatPcmS16LE:
 		return true
 	}
 
@@ -75,23 +75,4 @@ func (m MediaFormat) IsLossy() bool {
 	}
 
 	return false
-}
-
-func GetMediaFormatFromExt(ext string) MediaFormat {
-	switch ext {
-	case ".flac":
-		return MediaFormatFlac
-	case ".wav":
-		return MediaFormatWav
-	case ".opus":
-		return MediaFormatOpus
-	case ".ogg":
-		return MediaFormatVorbis
-	case ".mp3":
-		return MediaFormatMp3
-	case ".aac":
-		return MediaFormatAac
-	}
-
-	return MediaFormatUnknown
 }

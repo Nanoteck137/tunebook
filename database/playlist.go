@@ -211,6 +211,7 @@ func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts
 		return nil, types.Page{}, err
 	}
 
+	// TODO(patrik): Fix this, using order for playlist_items
 	tracks, err = applySort(tracks, resolver, opts.Sort)
 	if err != nil {
 		return nil, types.Page{}, err

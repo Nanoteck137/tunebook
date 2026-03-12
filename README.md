@@ -2,9 +2,6 @@
 
 ## Rewrite
 
-- [ ] Utils Media Probe: Needs some work to support more media types
-- [ ] Utils Media Probe: Move to media service?
-
 - [ ] Figure out how to handle logging through out the project
 - [ ] Figure out how to handle service errors
 - [ ] Figure out how to handle service logging
