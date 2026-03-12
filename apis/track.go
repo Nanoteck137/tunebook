@@ -18,6 +18,8 @@ type Track struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 
+	Order *int `json:"order"`
+
 	Duration int64  `json:"duration"`
 	Number   *int64 `json:"number"`
 	Year     *int64 `json:"year"`
@@ -63,6 +65,7 @@ func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
 		Tags:      utils.SplitString(track.Tags.String),
 		Created:   track.Created,
 		Updated:   track.Updated,
+		Order:     track.Order,
 	}
 }
 
@@ -135,6 +138,7 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, track := range tracks {
+					track.Order = utils.IntPtr((i + 1) + (p.Page * p.PerPage))
 					res.Tracks[i] = ConvertDBTrack(c, track)
 				}
 
@@ -164,8 +168,9 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 					Tracks: make([]Track, len(tracks)),
 				}
 
-				for i, t := range tracks {
-					res.Tracks[i] = ConvertDBTrack(c, t)
+				for i, track := range tracks {
+					track.Order = utils.IntPtr(i)
+					res.Tracks[i] = ConvertDBTrack(c, track)
 				}
 
 				return res, nil

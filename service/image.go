@@ -110,7 +110,6 @@ func (s *ImageService) GetImageTypeFromExt(ext string) (ImageType, bool) {
 		return ImageTypeJpeg, true
 	}
 
-	// TODO(patrik): Move error
 	return "", false
 }
 

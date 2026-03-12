@@ -56,7 +56,7 @@
     <div class="flex items-center gap-1">
       <p class="line-clamp-1 w-fit text-sm font-medium" title={track.name}>
         {#if displayOrder}
-          {track.number}.
+          {track.order}.
         {/if}
         {track.name}
       </p>

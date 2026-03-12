@@ -297,6 +297,8 @@ export const Track = z.object({
   "id": z.string(),
   // Name: Track.name
   "name": z.string(),
+  // Name: Track.order
+  "order": z.number().nullable(),
   // Name: Track.duration
   "duration": z.number(),
   // Name: Track.number
@@ -617,6 +619,8 @@ export const GetTrackById = z.object({
   "id": z.string(),
   // Name: GetTrackById.name
   "name": z.string(),
+  // Name: GetTrackById.order
+  "order": z.number().nullable(),
   // Name: GetTrackById.duration
   "duration": z.number(),
   // Name: GetTrackById.number

@@ -3,7 +3,6 @@ package core
 import (
 	"os"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/service"
@@ -130,61 +129,6 @@ func (app *BaseApp) Bootstrap() error {
 	app.libraryService.SetUpdateFunc(func() {
 		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
 	})
-
-	res, err := app.mediaService.ProbeMedia("../test.opus")
-	if err != nil {
-		return err
-	}
-
-	pretty.Println(res)
-
-	res, err = app.mediaService.ProbeMedia("../test.ogg")
-	if err != nil {
-		return err
-	}
-
-	pretty.Println(res)
-
-	res, err = app.mediaService.ProbeMedia("../test.mp3")
-	if err != nil {
-		return err
-	}
-
-	pretty.Println(res)
-
-	res, err = app.mediaService.ProbeMedia("../test.m4a")
-	if err != nil {
-		return err
-	}
-
-	pretty.Println(res)
-
-	res, err = app.mediaService.ProbeMedia("../test.flac")
-	if err != nil {
-		return err
-	}
-
-	pretty.Println(res)
-
-	res, err = app.mediaService.ProbeMedia("../test.wav")
-	if err != nil {
-		return err
-	}
-
-	pretty.Println(res)
-
-	// TODO(patrik): Remove test code
-	// playlists, err := app.DB().GetAllPlaylists(context.TODO())
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// for _, playlist := range playlists {
-	// 	err = app.DB().DeletePlaylist(context.TODO(), playlist.Id)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }

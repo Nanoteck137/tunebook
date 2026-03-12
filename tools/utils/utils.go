@@ -54,11 +54,12 @@ func ParseAuthHeader(authHeader string) string {
 	return splits[1]
 }
 
+// TODO(patrik): Move to ImageService
 func CreateSquareImage(src, dest string) error {
 	cmd := exec.Command(
-		"magick", src, 
-		"-gravity", "Center", 
-		"-extent", "%[fx:min(w,h)]x%[fx:min(w,h)]", 
+		"magick", src,
+		"-gravity", "Center",
+		"-extent", "%[fx:min(w,h)]x%[fx:min(w,h)]",
 		dest,
 	)
 	// TODO(patrik): Make this configureble
@@ -72,6 +73,7 @@ func CreateSquareImage(src, dest string) error {
 	return nil
 }
 
+// TODO(patrik): Move to ImageService
 func CreateResizedImage(src string, dest string, width, height int) error {
 	args := []string{
 		src,
@@ -93,6 +95,7 @@ func CreateResizedImage(src string, dest string, width, height int) error {
 	return nil
 }
 
+// TODO(patrik): Move to ImageService
 func GeneratePlaylistCover(images [4]string, output string, tileSize int) error {
 	if len(images) == 0 {
 		return fmt.Errorf("at least one image is required")
@@ -131,6 +134,7 @@ func GeneratePlaylistCover(images [4]string, output string, tileSize int) error 
 	return nil
 }
 
+// TODO(patrik): Move to ImageService
 func ConvertImage(src string, dest string) error {
 	args := []string{
 		"convert",
@@ -243,6 +247,7 @@ func SqlNullToFloat64Ptr(value sql.NullFloat64) *float64 {
 	return nil
 }
 
+// TODO(patrik): Move to auth service
 const (
 	letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	digits  = "0123456789"
@@ -298,4 +303,48 @@ func CreateDirectories(dirs []string) error {
 	}
 
 	return nil
+}
+
+func StringPtr(val string) *string {
+	return &val
+}
+
+func IntPtr(val int) *int {
+	return &val
+}
+
+func UIntPtr(val uint) *uint {
+	return &val
+}
+
+func Int8Ptr(val int8) *int8 {
+	return &val
+}
+
+func Int16Ptr(val int16) *int16 {
+	return &val
+}
+
+func Int32Ptr(val int32) *int32 {
+	return &val
+}
+
+func Int64Ptr(val int64) *int64 {
+	return &val
+}
+
+func UInt8Ptr(val uint8) *uint8 {
+	return &val
+}
+
+func UInt16Ptr(val uint16) *uint16 {
+	return &val
+}
+
+func UInt32Ptr(val uint32) *uint32 {
+	return &val
+}
+
+func UInt64Ptr(val uint64) *uint64 {
+	return &val
 }

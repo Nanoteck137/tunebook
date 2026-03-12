@@ -488,11 +488,10 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, track := range tracks {
-					// TODO(patrik): Replace with track order
-					track.Track.Number = sql.NullInt64{
-						Int64: int64(track.Order) + 1,
-						Valid: true,
-					}
+					// TODO(patrik): If filterId is set maybe calculate the 
+					// order, same as GetTracks uses 
+					track.Track.Order = utils.IntPtr(track.Order + 1)
+
 					res.Items[i] = ConvertDBTrack(c, track.Track)
 				}
 

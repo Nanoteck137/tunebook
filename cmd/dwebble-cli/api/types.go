@@ -267,6 +267,8 @@ type Track struct {
 	Id string `json:"id"`
 	// Name: Track.name
 	Name string `json:"name"`
+	// Name: Track.order
+	Order *int `json:"order,omitempty"`
 	// Name: Track.duration
 	Duration int `json:"duration"`
 	// Name: Track.number
@@ -561,6 +563,8 @@ type GetTrackById struct {
 	Id string `json:"id"`
 	// Name: GetTrackById.name
 	Name string `json:"name"`
+	// Name: GetTrackById.order
+	Order *int `json:"order,omitempty"`
 	// Name: GetTrackById.duration
 	Duration int `json:"duration"`
 	// Name: GetTrackById.number

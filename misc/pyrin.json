@@ -905,6 +905,11 @@
           "omitEmpty": false
         },
         {
+          "name": "order",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
           "name": "duration",
           "type": "int",
           "omitEmpty": false
@@ -1267,6 +1272,11 @@
         {
           "name": "name",
           "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "order",
+          "type": "*int",
           "omitEmpty": false
         },
         {

@@ -52,6 +52,8 @@ type Track struct {
 	Tags sql.NullString `db:"tags"`
 
 	FeaturingArtists FeaturingArtists `db:"featuring_artists"`
+
+	Order *int
 }
 
 // TODO(patrik): Move

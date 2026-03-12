@@ -190,6 +190,10 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, track := range tracks {
+					if track.Number.Valid {
+						track.Order = utils.IntPtr(int(track.Number.Int64))
+					}
+
 					res.Tracks[i] = ConvertDBTrack(c, track)
 				}
 
