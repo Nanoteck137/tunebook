@@ -473,20 +473,8 @@ type GetMediaFromPlaylistBody struct {
 	Limit int `json:"limit"`
 	// Name: GetMediaFromPlaylistBody.offset
 	Offset int `json:"offset"`
-}
-
-// Name: GetMediaFromTaglistBody
-type GetMediaFromTaglistBody struct {
-	// Name: GetMediaFromTaglistBody.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: GetMediaFromTaglistBody.shuffle
-	Shuffle bool `json:"shuffle"`
-	// Name: GetMediaFromTaglistBody.sort
-	Sort string `json:"sort"`
-	// Name: GetMediaFromTaglistBody.limit
-	Limit int `json:"limit"`
-	// Name: GetMediaFromTaglistBody.offset
-	Offset int `json:"offset"`
+	// Name: GetMediaFromPlaylistBody.filterId
+	FilterId string `json:"filterId"`
 }
 
 // Name: GetPlaylistById

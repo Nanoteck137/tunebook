@@ -783,36 +783,11 @@
           "name": "offset",
           "type": "int",
           "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "GetMediaFromTaglistBody",
-      "fields": [
+        },
         {
-          "name": "mediaFormat",
+          "name": "filterId",
           "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        },
-        {
-          "name": "sort",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "limit",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "omitEmpty": true
+          "omitEmpty": false
         }
       ]
     },
@@ -1646,14 +1621,6 @@
       "path": "/api/v1/media/playlist/:playlistId",
       "response": "GetMedia",
       "body": "GetMediaFromPlaylistBody"
-    },
-    {
-      "type": "api",
-      "name": "GetMediaFromVirtualPlaylist",
-      "method": "POST",
-      "path": "/api/v1/media/virtual-playlist/:virtualPlaylistId",
-      "response": "GetMedia",
-      "body": "GetMediaFromTaglistBody"
     },
     {
       "type": "api",

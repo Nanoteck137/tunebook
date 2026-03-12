@@ -98,8 +98,23 @@ func (db DB) GetPlaylistItems(ctx context.Context, playlistId string) ([]Playlis
 	return ember.Multiple[PlaylistItem](db.db, ctx, query)
 }
 
-func (db DB) GetPlaylistTracks(ctx context.Context, playlistId string) ([]OrderedTrack, error) {
+func (db DB) GetPlaylistTracks(ctx context.Context, playlistId, filterStr string) ([]OrderedTrack, error) {
 	tracks := TrackQuery()
+
+	var err error
+
+	a := adapter.TrackResolverAdapter{}
+	resolver := filter.New(&a)
+
+	tracks, err = applyFilter(tracks, resolver, filterStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// tracks, err = applySort(tracks, resolver, sortStr)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	query := dialect.From("playlist_items").
 		Select("tracks.*", "playlist_items.order_num").

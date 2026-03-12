@@ -519,23 +519,10 @@ export const GetMediaFromPlaylistBody = z.object({
   "limit": z.number().optional(),
   // Name: GetMediaFromPlaylistBody.offset
   "offset": z.number().optional(),
+  // Name: GetMediaFromPlaylistBody.filterId
+  "filterId": z.string(),
 });
 export type GetMediaFromPlaylistBody = z.infer<typeof GetMediaFromPlaylistBody>;
-
-// Name: GetMediaFromTaglistBody
-export const GetMediaFromTaglistBody = z.object({
-  // Name: GetMediaFromTaglistBody.mediaFormat
-  "mediaFormat": z.string().optional(),
-  // Name: GetMediaFromTaglistBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromTaglistBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromTaglistBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromTaglistBody.offset
-  "offset": z.number().optional(),
-});
-export type GetMediaFromTaglistBody = z.infer<typeof GetMediaFromTaglistBody>;
 
 // Name: GetPlaylistById
 export const GetPlaylistById = z.object({

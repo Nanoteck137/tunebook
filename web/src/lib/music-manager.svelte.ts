@@ -50,6 +50,7 @@ export abstract class Queue {
 
   abstract addFromPlaylist(
     playlistId: string,
+    filterId?: string,
     settings?: AddToQueueSettings,
   ): Promise<void>;
 
@@ -138,10 +139,15 @@ export class LocalQueue extends Queue {
   }
 
   // TODO(patrik): Fix every add method to use settings
-  async addFromPlaylist(playlistId: string, settings?: AddToQueueSettings) {
+  async addFromPlaylist(
+    playlistId: string,
+    filterId?: string,
+    settings?: AddToQueueSettings,
+  ) {
     // TODO(patrik): Handle error
     const res = await this.apiClient.getMediaFromPlaylist(playlistId, {
       shuffle: settings?.shuffle,
+      filterId: filterId ?? "",
     });
     if (res.success) {
       if (settings?.front) {
@@ -156,18 +162,17 @@ export class LocalQueue extends Queue {
 
   async addFromTaglist(taglistId: string, settings?: AddToQueueSettings) {
     // TODO(patrik): Handle error
-    const res = await this.apiClient.getMediaFromTaglist(taglistId, {
-      shuffle: settings?.shuffle,
-    });
-    if (res.success) {
-      if (settings?.front) {
-        this.items = [...res.data.items, ...this.items];
-      } else {
-        this.items = [...this.items, ...res.data.items];
-      }
-    }
-
-    this.saveQueue();
+    // const res = await this.apiClient.getMediaFromTaglist(taglistId, {
+    //   shuffle: settings?.shuffle,
+    // });
+    // if (res.success) {
+    //   if (settings?.front) {
+    //     this.items = [...res.data.items, ...this.items];
+    //   } else {
+    //     this.items = [...this.items, ...res.data.items];
+    //   }
+    // }
+    // this.saveQueue();
   }
 
   async addFromFilter(filter: string, settings?: AddToQueueSettings) {
@@ -267,6 +272,7 @@ type QueueRequestOptions = {
 type QueueRequestAddPlaylist = {
   type: "addPlaylist";
   playlistId: string;
+  filterId?: string;
 };
 
 type QueueRequestAddAlbum = {
@@ -338,7 +344,7 @@ export class MusicManager {
 
     switch (request.type) {
       case "addPlaylist": {
-        await this.addFromPlaylist(request.playlistId, {
+        await this.addFromPlaylist(request.playlistId, request.filterId, {
           shuffle: options.shuffle,
           front: options.append === "front",
         });
@@ -391,8 +397,12 @@ export class MusicManager {
     }
   }
 
-  async addFromPlaylist(playlistId: string, settings?: AddToQueueSettings) {
-    await this.queue.addFromPlaylist(playlistId, settings);
+  async addFromPlaylist(
+    playlistId: string,
+    filterId?: string,
+    settings?: AddToQueueSettings,
+  ) {
+    await this.queue.addFromPlaylist(playlistId, filterId, settings);
     this.emitter.emit("onQueueUpdated");
   }
 

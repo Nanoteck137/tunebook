@@ -533,22 +533,6 @@ func (c *Client) GetMediaFromPlaylist(playlistId string, body GetMediaFromPlayli
 	return Request[GetMedia](data, body)
 }
 
-func (c *Client) GetMediaFromVirtualPlaylist(virtualPlaylistId string, body GetMediaFromTaglistBody, options Options) (*GetMedia, error) {
-	path := Sprintf("/api/v1/media/virtual-playlist/%v", virtualPlaylistId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetMedia](data, body)
-}
-
 func (c *Client) GetPlaylistById(id string, options Options) (*GetPlaylistById, error) {
 	path := Sprintf("/api/v1/playlists/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1065,11 +1049,6 @@ func (c *ClientUrls) GetMediaFromIds() (*URL, error) {
 
 func (c *ClientUrls) GetMediaFromPlaylist(playlistId string) (*URL, error) {
 	path := Sprintf("/api/v1/media/playlist/%v", playlistId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetMediaFromVirtualPlaylist(virtualPlaylistId string) (*URL, error) {
-	path := Sprintf("/api/v1/media/virtual-playlist/%v", virtualPlaylistId)
 	return c.getUrl(path)
 }
 

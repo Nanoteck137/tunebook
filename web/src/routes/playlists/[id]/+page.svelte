@@ -64,8 +64,9 @@
   name={data.playlist.name}
   image={data.playlist.coverArt.medium}
   onPlay={async (shuffle) => {
+    const filterId = $page.url.searchParams.get("filterId") ?? "";
     await musicManager.queueRequest(
-      { type: "addPlaylist", playlistId: data.playlist.id },
+      { type: "addPlaylist", playlistId: data.playlist.id, filterId },
       { shuffle },
     );
   }}
