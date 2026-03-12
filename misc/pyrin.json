@@ -822,6 +822,21 @@
       ]
     },
     {
+      "name": "GetMediaSettings",
+      "fields": [
+        {
+          "name": "formats",
+          "type": "[]MediaFormat",
+          "omitEmpty": false
+        },
+        {
+          "name": "deviceSpecs",
+          "type": "[]MediaDeviceSpec",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetPlaylistById",
       "fields": [
         {
@@ -1077,6 +1092,66 @@
         {
           "name": "large",
           "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "MediaDeviceSpec",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "preferedFormat",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "allowedFormats",
+          "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "MediaFormat",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "ext",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "qualityHighBitrate",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "qualityMediumBitrate",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "qualityLowBitrate",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "order",
+          "type": "int",
           "omitEmpty": false
         }
       ]
@@ -1675,6 +1750,13 @@
       "path": "/api/v1/media/playlist/:playlistId",
       "response": "GetMedia",
       "body": "GetMediaFromPlaylistBody"
+    },
+    {
+      "type": "api",
+      "name": "GetMediaSettings",
+      "method": "GET",
+      "path": "/api/v1/media/settings",
+      "response": "GetMediaSettings"
     },
     {
       "type": "api",

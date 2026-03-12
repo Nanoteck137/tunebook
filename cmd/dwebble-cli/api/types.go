@@ -495,6 +495,42 @@ type GetMediaFromPlaylistBody struct {
 	FilterId string `json:"filterId"`
 }
 
+// Name: MediaFormat
+type MediaFormat struct {
+	// Name: MediaFormat.name
+	Name string `json:"name"`
+	// Name: MediaFormat.format
+	Format string `json:"format"`
+	// Name: MediaFormat.ext
+	Ext string `json:"ext"`
+	// Name: MediaFormat.qualityHighBitrate
+	QualityHighBitrate int `json:"qualityHighBitrate"`
+	// Name: MediaFormat.qualityMediumBitrate
+	QualityMediumBitrate int `json:"qualityMediumBitrate"`
+	// Name: MediaFormat.qualityLowBitrate
+	QualityLowBitrate int `json:"qualityLowBitrate"`
+	// Name: MediaFormat.order
+	Order int `json:"order"`
+}
+
+// Name: MediaDeviceSpec
+type MediaDeviceSpec struct {
+	// Name: MediaDeviceSpec.name
+	Name string `json:"name"`
+	// Name: MediaDeviceSpec.preferedFormat
+	PreferedFormat string `json:"preferedFormat"`
+	// Name: MediaDeviceSpec.allowedFormats
+	AllowedFormats []string `json:"allowedFormats"`
+}
+
+// Name: GetMediaSettings
+type GetMediaSettings struct {
+	// Name: GetMediaSettings.formats
+	Formats []MediaFormat `json:"formats"`
+	// Name: GetMediaSettings.deviceSpecs
+	DeviceSpecs []MediaDeviceSpec `json:"deviceSpecs"`
+}
+
 // Name: GetPlaylistById
 type GetPlaylistById struct {
 	// Name: GetPlaylistById.id

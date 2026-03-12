@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"sort"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/types"
@@ -101,9 +103,10 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, mediaFormat types
 			}
 		}
 
-		mediaFormat := types.MediaFormatUnknown
-		if !mediaFormat.IsValid() {
-			mediaFormat = track.MediaFormat
+		// TODO(patrik): This need fixing
+		mf := mediaFormat
+		if !mf.IsValid() {
+			mf = track.MediaFormat
 		}
 
 		mediaUrl := ConvertURL(c, fmt.Sprintf("/media/tracks/%s/stream?policy=original", track.Id))
@@ -119,7 +122,7 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, mediaFormat types
 				Name: track.AlbumName,
 			},
 			CoverArt:    ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
-			MediaFormat: mediaFormat,
+			MediaFormat: mf,
 			MediaUrl:    mediaUrl,
 		}
 	}
@@ -127,8 +130,88 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, mediaFormat types
 	return res, nil
 }
 
+type MediaFormat struct {
+	Name   string `json:"name"`
+	Format string `json:"format"`
+	Ext    string `json:"ext"`
+
+	QualityHighBitrate   int `json:"qualityHighBitrate"`
+	QualityMediumBitrate int `json:"qualityMediumBitrate"`
+	QualityLowBitrate    int `json:"qualityLowBitrate"`
+
+	Order int `json:"order"`
+}
+
+type MediaDeviceSpec struct {
+	Name           string   `json:"name"`
+	PreferedFormat string   `json:"preferedFormat"`
+	AllowedFormats []string `json:"allowedFormats"`
+}
+
+type GetMediaSettings struct {
+	Formats     []MediaFormat     `json:"formats"`
+	DeviceSpecs []MediaDeviceSpec `json:"deviceSpecs"`
+}
+
 func InstallMediaHandlers(app core.App, group pyrin.Group) {
 	group.Register(
+		pyrin.ApiHandler{
+			Name:         "GetMediaSettings",
+			Method:       http.MethodGet,
+			Path:         "/media/settings",
+			ResponseType: GetMediaSettings{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				mediaService := app.MediaService()
+
+				res := GetMediaSettings{
+					Formats:     make([]MediaFormat, 0, len(types.ValidMediaFormats)),
+					DeviceSpecs: make([]MediaDeviceSpec, 0, len(mediaService.DeviceSpecs)),
+				}
+
+				mappings := mediaService.QualityMapping
+
+				// TODO(patrik): Should we handle checking for format?
+
+				for _, format := range types.ValidMediaFormats {
+					// TODO(patrik): Handle exists?
+					quality, _ := mappings[format]
+					info, _ := types.MediaFormatInfos[format]
+
+					res.Formats = append(res.Formats, MediaFormat{
+						Name:                 info.Name,
+						Format:               string(format),
+						Ext:                  info.Ext,
+						QualityHighBitrate:   quality.High,
+						QualityMediumBitrate: quality.Medium,
+						QualityLowBitrate:    quality.Low,
+						Order:                info.Order,
+					})
+				}
+
+				sort.SliceStable(res.Formats, func(i, j int) bool {
+					return res.Formats[i].Order < res.Formats[j].Order
+				})
+
+				for _, spec := range mediaService.DeviceSpecs {
+					r := MediaDeviceSpec{
+						Name:           spec.Name,
+						PreferedFormat: string(spec.PreferedFormat),
+						AllowedFormats: make([]string, len(spec.AllowedFormats)),
+					}
+
+					for i, f := range spec.AllowedFormats {
+						r.AllowedFormats[i] = string(f)
+					}
+
+					res.DeviceSpecs = append(res.DeviceSpecs, r)
+				}
+
+				pretty.Println(res)
+
+				return res, nil
+			},
+		},
+
 		pyrin.ApiHandler{
 			Name:         "GetMediaFromPlaylist",
 			Method:       http.MethodPost,

@@ -13,6 +13,57 @@ const (
 	MediaFormatAac      MediaFormat = "aac"
 )
 
+var ValidMediaFormats = []MediaFormat{
+	MediaFormatFlac,
+	MediaFormatPcmS16LE,
+	MediaFormatOpus,
+	MediaFormatVorbis,
+	MediaFormatMp3,
+	MediaFormatAac,
+}
+
+type MediaInfo struct {
+	Name       string
+	Ext        string
+	IsLossless bool
+	Order      int
+}
+
+var MediaFormatInfos = map[MediaFormat]MediaInfo{
+	MediaFormatFlac: {
+		Name:       "FLAC",
+		Ext:        ".flac",
+		IsLossless: true,
+		Order:      0,
+	},
+	MediaFormatPcmS16LE: {
+		Name:       "PCM-S16-LE",
+		Ext:        ".wav",
+		IsLossless: true,
+		Order:      1,
+	},
+	MediaFormatOpus: {
+		Name:  "Opus",
+		Ext:   ".opus",
+		Order: 2,
+	},
+	MediaFormatVorbis: {
+		Name:  "Vorbis",
+		Ext:   ".ogg",
+		Order: 3,
+	},
+	MediaFormatMp3: {
+		Name:  "MP3",
+		Ext:   ".mp3",
+		Order: 4,
+	},
+	MediaFormatAac: {
+		Name:  "AAC",
+		Ext:   ".m4a",
+		Order: 5,
+	},
+}
+
 func (m MediaFormat) ToExt() (string, bool) {
 	switch m {
 	case MediaFormatFlac:

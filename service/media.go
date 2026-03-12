@@ -80,32 +80,13 @@ func (s QualitySpec) MapFromQuality(q Quality) (int, bool) {
 }
 
 type DeviceSpec struct {
+	Name           string
 	PreferedFormat types.MediaFormat
 	AllowedFormats []types.MediaFormat
 }
 
-type MediaService struct {
-	logger *slog.Logger
-
-	db      *database.Database
-	workDir types.WorkDir
-}
-
-func NewMediaService(db *database.Database, workDir types.WorkDir) *MediaService {
-	return &MediaService{
-		logger: slog.With(
-			slog.String("service", "media-service"),
-		),
-		db:      db,
-		workDir: workDir,
-	}
-}
-
-func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Quality) (int, error) {
-	// TODO(patrik): Move this
-	// TODO(patrik): I want to add test for this, test if every format has
-	// quality specs set
-	qualityMapping := map[types.MediaFormat]QualitySpec{
+func getDefaultQualityMapping() map[types.MediaFormat]QualitySpec {
+	return map[types.MediaFormat]QualitySpec{
 		types.MediaFormatFlac:     {},
 		types.MediaFormatPcmS16LE: {},
 		types.MediaFormatOpus: {
@@ -117,10 +98,52 @@ func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Q
 		types.MediaFormatMp3:    {High: 320, Medium: 192, Low: 128},
 		types.MediaFormatAac:    {High: 256, Medium: 192, Low: 96},
 	}
+}
 
+func getDefaultDeviceSpecs() map[Device]DeviceSpec {
+	return map[Device]DeviceSpec{
+		DeviceIOS: {
+			Name: "IOS",
+			PreferedFormat: types.MediaFormatAac,
+			AllowedFormats: []types.MediaFormat{types.MediaFormatMp3},
+		},
+		DeviceAndroid: {
+			Name: "Android",
+			PreferedFormat: types.MediaFormatOpus,
+			AllowedFormats: []types.MediaFormat{types.MediaFormatVorbis, types.MediaFormatMp3},
+		},
+	}
+}
+
+type MediaService struct {
+	logger *slog.Logger
+
+	db      *database.Database
+	workDir types.WorkDir
+
+	// TODO(patrik): Make this configureble through the config
+	// TODO(patrik): I want to add test for this, test if every format has
+	// quality specs set
+	QualityMapping map[types.MediaFormat]QualitySpec
+	DeviceSpecs    map[Device]DeviceSpec
+}
+
+func NewMediaService(db *database.Database, workDir types.WorkDir) *MediaService {
+	return &MediaService{
+		logger: slog.With(
+			slog.String("service", "media-service"),
+		),
+		db:             db,
+		workDir:        workDir,
+		QualityMapping: getDefaultQualityMapping(),
+		DeviceSpecs:    getDefaultDeviceSpecs(),
+	}
+}
+
+func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Quality) (int, error) {
 	// TODO(patrik): Check for valid quality
 
-	q, ok := qualityMapping[format]
+	q, ok := s.QualityMapping[format]
 	if !ok {
 		// TODO(patrik): Better error
 		// return 0, fmt.Errorf("format '%s' missing from quality mapping", format)
@@ -182,17 +205,6 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 
 	format := types.MediaFormatUnknown
 
-	devices := map[Device]DeviceSpec{
-		DeviceIOS: {
-			PreferedFormat: types.MediaFormatAac,
-			AllowedFormats: []types.MediaFormat{types.MediaFormatMp3},
-		},
-		DeviceAndroid: {
-			PreferedFormat: types.MediaFormatOpus,
-			AllowedFormats: []types.MediaFormat{types.MediaFormatVorbis, types.MediaFormatMp3},
-		},
-	}
-
 	switch opts.Policy {
 	case PolicyOriginal:
 		log.Info("track stream request using the original file")
@@ -205,7 +217,7 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		format = opts.Format
 	case PolicyLossy:
 		if opts.Device != DeviceEmpty {
-			device, ok := devices[opts.Device]
+			device, ok := s.DeviceSpecs[opts.Device]
 			if !ok {
 				return "", errors.New("unknown device: " + string(opts.Device))
 			}

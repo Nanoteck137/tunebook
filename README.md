@@ -2,6 +2,12 @@
 
 ## Rewrite
 
+- [ ] Media
+    - [ ] Fix "packMediaResult"
+
+- [ ] Server Handling for Admins
+    - [ ] Notifications
+
 - [ ] Better API Tokens
 
 - [ ] Jobs
@@ -15,16 +21,10 @@
     - [ ] Favorites
     - [ ] Year over Year 
 
-- [ ] Server Handling for Admins
-    - [ ] Notifications
-
 - [ ] Playlists/Taglists
     - [ ] Global Filters per user
     - [ ] User ability to re-order playlist items
     - [ ] Custom Covers
-
-- [ ] Media
-    - [ ] Display the transcoding settings on the frontend
 
 - [ ] Cleanup modal forms 
     - [ ] Errors is hard to see

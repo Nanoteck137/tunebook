@@ -544,6 +544,45 @@ export const GetMediaFromPlaylistBody = z.object({
 });
 export type GetMediaFromPlaylistBody = z.infer<typeof GetMediaFromPlaylistBody>;
 
+// Name: MediaFormat
+export const MediaFormat = z.object({
+  // Name: MediaFormat.name
+  "name": z.string(),
+  // Name: MediaFormat.format
+  "format": z.string(),
+  // Name: MediaFormat.ext
+  "ext": z.string(),
+  // Name: MediaFormat.qualityHighBitrate
+  "qualityHighBitrate": z.number(),
+  // Name: MediaFormat.qualityMediumBitrate
+  "qualityMediumBitrate": z.number(),
+  // Name: MediaFormat.qualityLowBitrate
+  "qualityLowBitrate": z.number(),
+  // Name: MediaFormat.order
+  "order": z.number(),
+});
+export type MediaFormat = z.infer<typeof MediaFormat>;
+
+// Name: MediaDeviceSpec
+export const MediaDeviceSpec = z.object({
+  // Name: MediaDeviceSpec.name
+  "name": z.string(),
+  // Name: MediaDeviceSpec.preferedFormat
+  "preferedFormat": z.string(),
+  // Name: MediaDeviceSpec.allowedFormats
+  "allowedFormats": z.array(z.string()),
+});
+export type MediaDeviceSpec = z.infer<typeof MediaDeviceSpec>;
+
+// Name: GetMediaSettings
+export const GetMediaSettings = z.object({
+  // Name: GetMediaSettings.formats
+  "formats": z.array(MediaFormat),
+  // Name: GetMediaSettings.deviceSpecs
+  "deviceSpecs": z.array(MediaDeviceSpec),
+});
+export type GetMediaSettings = z.infer<typeof GetMediaSettings>;
+
 // Name: GetPlaylistById
 export const GetPlaylistById = z.object({
   // Name: GetPlaylistById.id

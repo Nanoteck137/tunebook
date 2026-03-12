@@ -154,6 +154,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/playlist/${playlistId}`, "POST", api.GetMedia, z.any(), body, options)
   }
   
+  getMediaSettings(options?: ExtraOptions) {
+    return this.request("/api/v1/media/settings", "GET", api.GetMediaSettings, z.any(), undefined, options)
+  }
+  
   getPlaylistById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${id}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
   }
@@ -399,6 +403,10 @@ export class ClientUrls {
   
   getMediaFromPlaylist(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/media/playlist/${playlistId}`)
+  }
+  
+  getMediaSettings() {
+    return createUrl(this.baseUrl, "/api/v1/media/settings")
   }
   
   getPlaylistById(id: string) {

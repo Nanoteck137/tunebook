@@ -186,3 +186,32 @@
     {/each}
   </div>
 {/if} -->
+
+<div class="h-10"></div>
+
+<p>Media Formats:</p>
+<div class="flex flex-col gap-2">
+  {#each data.mediaSettings.formats as format}
+    <div>
+      <p>Name: {format.name}</p>
+      <p>Format: {format.format}</p>
+      <p>Ext: {format.ext}</p>
+      <p>High: {format.qualityHighBitrate}</p>
+      <p>Medium: {format.qualityMediumBitrate}</p>
+      <p>Low: {format.qualityLowBitrate}</p>
+    </div>
+  {/each}
+</div>
+
+<div class="h-10"></div>
+
+<p>Media Device Specs:</p>
+<div class="flex flex-col gap-2">
+  {#each data.mediaSettings.deviceSpecs as spec}
+    <div>
+      <p>Name: {spec.name}</p>
+      <p>Prefered Format: {spec.preferedFormat}</p>
+      <p>Allowed Formats: {spec.allowedFormats.join(",")}</p>
+    </div>
+  {/each}
+</div>
