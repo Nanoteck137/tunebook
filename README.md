@@ -2,8 +2,6 @@
 
 ## Rewrite
 
-- [ ] Import the old format
-
 - [ ] Fix the media endpoints
     - [ ] Handle new playlist filters
 
