@@ -2,9 +2,6 @@
 
 ## Rewrite
 
-- [ ] Fix the media endpoints
-    - [ ] Handle new playlist filters
-
 - [ ] Utils Media Probe: Needs some work to support more media types
 - [ ] Utils Media Probe: Move to media service?
 
