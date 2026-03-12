@@ -2,8 +2,19 @@
 
 ## Rewrite
 
+- [ ] Import the old format
+
+- [ ] Fix the media endpoints
+    - [ ] Handle new playlist filters
+
+- [ ] Utils Media Probe: Needs some work to support more media types
+- [ ] Utils Media Probe: Move to media service?
+
+- [ ] Figure out how to handle logging through out the project
+- [ ] Figure out how to handle service errors
+- [ ] Figure out how to handle service logging
+
 - [ ] Better way to log the API Errors
-- [ ] Better API Tokens
 - [ ] Quick Code integration
 
 - [ ] Web Frontend
@@ -22,6 +33,7 @@
 
 - [ ] Cleanup
     - [ ] Migration cleanup
+    - [ ] Cleanup database code
     - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
 
 - [ ] Make Search Service init lazily, same as the auth service
@@ -40,11 +52,6 @@
     - [ ] Batch indexing
     - [ ] Add more logging
 
-- [ ] Database seperate track metadata data and track media stuff
-
-- [ ] Utils Media Probe: Needs some work to support more media types
-- [ ] Utils Media Probe: Move to media service?
-
 - [ ] Media
     - [ ] Display the transcoding settings on the frontend
 
@@ -58,10 +65,12 @@
 - [ ] Library Handling
     - [ ] Multi-threaded syncing
     - [ ] Clear the cache after sync
+    - [ ] Cleanup after sync (artists, albums and tracks not existing anymore)
     - [ ] Update Cmd
         - [ ] Metadata Validation
         - [ ] Metadata transformation (trim spaces, escape characters, more)
 
+- [ ] Better API Tokens
 
 - [ ] Jobs
     - [ ] Auth Cleanup
@@ -77,9 +86,9 @@
 - [ ] Server Handling for Admins
     - [ ] Notifications
 
-- [ ] Import the old format
-
 - [ ] Use database indexes
+
+- [ ] Database seperate track metadata data and track media stuff
 
 - [ ] Docker
     - [ ] Use nix to build a docker image
