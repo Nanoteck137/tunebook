@@ -88,6 +88,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/virtual-playlists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
+  editPlaylist(id: string, body: api.EditPlaylistBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
   generatePlaylistImage(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${id}/images/generate`, "POST", z.undefined(), z.any(), undefined, options)
   }
@@ -319,6 +323,10 @@ export class ClientUrls {
   
   deleteVirtualPlaylist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/virtual-playlists/${id}`)
+  }
+  
+  editPlaylist(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
   }
   
   generatePlaylistImage(id: string) {

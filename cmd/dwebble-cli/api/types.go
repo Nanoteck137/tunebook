@@ -225,6 +225,14 @@ type CreateVirtualPlaylistBody struct {
 	Filter string `json:"filter"`
 }
 
+// Name: EditPlaylistBody
+type EditPlaylistBody struct {
+	// Name: EditPlaylistBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: EditPlaylistBody.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+}
+
 // Name: GetAlbumById
 type GetAlbumById struct {
 	// Name: GetAlbumById.id

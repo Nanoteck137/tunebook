@@ -125,6 +125,26 @@ func (b AddPlaylistFilterBody) Validate() error {
 	)
 }
 
+type EditPlaylistBody struct {
+	Name *string `json:"name,omitempty"`
+
+	CoverUrl *string `json:"coverUrl,omitempty"`
+}
+
+func (b *EditPlaylistBody) Transform() {
+	b.Name = anvil.StringPtr(b.Name)
+
+	b.CoverUrl = anvil.StringPtr(b.CoverUrl)
+}
+
+func (b EditPlaylistBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+
+		validate.Field(&b.CoverUrl, validate.Required.When(b.CoverUrl != nil)),
+	)
+}
+
 func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -276,6 +296,73 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				return CreatePlaylist{
 					Id: playlist.Id,
 				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "EditPlaylist",
+			Method:   http.MethodPatch,
+			Path:     "/playlists/:id",
+			BodyType: EditPlaylistBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("id")
+
+				body, err := pyrin.Body[EditPlaylistBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbPlaylist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PlaylistNotFound()
+					}
+
+					return nil, err
+				}
+
+				if dbPlaylist.OwnerId != user.Id {
+					return nil, PlaylistNotFound()
+				}
+
+				changes := database.PlaylistChanges{}
+
+				if body.Name != nil {
+					changes.Name = types.Change[string]{
+						Value:   *body.Name,
+						Changed: *body.Name != dbPlaylist.Name,
+					}
+				}
+
+				// if body.CoverUrl != nil {
+				// 	p, err := utils.DownloadImageHashed(*body.CoverUrl, showDir.Images())
+				// 	if err == nil {
+				// 		n := path.Base(p)
+				// 		changes.CoverFile = database.Change[sql.NullString]{
+				// 			Value: sql.NullString{
+				// 				String: n,
+				// 				Valid:  n != "",
+				// 			},
+				// 			Changed: n != dbShow.CoverFile.String,
+				// 		}
+				// 	} else {
+				// 		app.Logger().Error("failed to download cover image for show", "err", err)
+				// 	}
+				// }
+
+				err = app.DB().UpdatePlaylist(ctx, dbPlaylist.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
 			},
 		},
 

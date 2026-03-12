@@ -252,6 +252,15 @@ export const CreateVirtualPlaylistBody = z.object({
 });
 export type CreateVirtualPlaylistBody = z.infer<typeof CreateVirtualPlaylistBody>;
 
+// Name: EditPlaylistBody
+export const EditPlaylistBody = z.object({
+  // Name: EditPlaylistBody.name
+  "name": z.string().nullable().optional(),
+  // Name: EditPlaylistBody.coverUrl
+  "coverUrl": z.string().nullable().optional(),
+});
+export type EditPlaylistBody = z.infer<typeof EditPlaylistBody>;
+
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
   // Name: GetAlbumById.id

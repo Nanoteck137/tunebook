@@ -16,6 +16,7 @@
   import { Pencil, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
   import NewFilterModal from "./NewFilterModal.svelte";
+  import EditPlaylistModal from "./EditPlaylistModal.svelte";
 
   const { data } = $props();
   const musicManager = getMusicManager();
@@ -23,6 +24,7 @@
 
   let openFilterModal = $state(false);
   let openConfirmDeleteAlbum = $state(false);
+  let openEditPlaylistModal = $state(false);
 </script>
 
 <div class="py-2">
@@ -56,6 +58,14 @@
   }}
 >
   New Virtual Playlist
+</Button>
+
+<Button
+  onclick={async () => {
+    openEditPlaylistModal = true;
+  }}
+>
+  Edit Playlist
 </Button>
 
 <p>Track Count: {data.playlist.trackCount}</p>
@@ -183,4 +193,9 @@
     toast.success("Successfully deleted album");
     goto("/playlists", { invalidateAll: true });
   }}
+/>
+
+<EditPlaylistModal
+  bind:open={openEditPlaylistModal}
+  playlist={data.playlist}
 />

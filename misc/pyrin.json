@@ -402,6 +402,21 @@
       ]
     },
     {
+      "name": "EditPlaylistBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
       "name": "GetAlbumById",
       "fields": [
         {
@@ -1507,6 +1522,13 @@
       "name": "DeleteVirtualPlaylist",
       "method": "DELETE",
       "path": "/api/v1/virtual-playlists/:id"
+    },
+    {
+      "type": "api",
+      "name": "EditPlaylist",
+      "method": "PATCH",
+      "path": "/api/v1/playlists/:id",
+      "body": "EditPlaylistBody"
     },
     {
       "type": "api",
