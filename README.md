@@ -46,19 +46,14 @@
 - [ ] Utils Media Probe: Move to media service?
 
 - [ ] Media
-    - [x] Better management of media and transcoding
-    - [x] More options for transcoding
-    - [x] Caching settings
     - [ ] Display the transcoding settings on the frontend
 
 - [ ] Add order/orderNum to API tracks
 
 - [ ] Playlists/Taglists
-    - [ ] Taglists renamed to VirtualPlaylist
+    - [ ] Global Filters per user
     - [ ] User ability to re-order playlist items
     - [ ] Custom Covers
-    - [ ] Virtual playlists for filtering through a "playlist/all tracks in database"
-    - [ ] If a playlist is set on a "virtual playlist" then add a option to maybe disable that and use all the available tracks or make it possible to apply a virtual playlist to other playlists
 
 - [ ] Library Handling
     - [ ] Multi-threaded syncing
