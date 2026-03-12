@@ -36,6 +36,7 @@
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(zod(Schema)),
     {
+      id: "edit-playlist-modal",
       SPA: true,
       validators: zod(Schema),
       dataType: "json",
@@ -43,7 +44,7 @@
       async onUpdate({ form }) {
         if (form.valid) {
           const formData = form.data;
-          console.log("Update playlist", formData);
+
           const res = await apiClient.editPlaylist(playlist.id, {
             name: formData.name,
           });

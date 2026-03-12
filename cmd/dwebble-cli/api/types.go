@@ -233,6 +233,14 @@ type EditPlaylistBody struct {
 	CoverUrl *string `json:"coverUrl,omitempty"`
 }
 
+// Name: EditPlaylistFilterBody
+type EditPlaylistFilterBody struct {
+	// Name: EditPlaylistFilterBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: EditPlaylistFilterBody.filter
+	Filter *string `json:"filter,omitempty"`
+}
+
 // Name: GetAlbumById
 type GetAlbumById struct {
 	// Name: GetAlbumById.id

@@ -145,6 +145,27 @@ func (b EditPlaylistBody) Validate() error {
 	)
 }
 
+type EditPlaylistFilterBody struct {
+	Name *string `json:"name,omitempty"`
+	Filter *string `json:"filter,omitempty"`
+}
+
+func (b *EditPlaylistFilterBody) Transform() {
+	b.Name = anvil.StringPtr(b.Name)
+	b.Filter = anvil.StringPtr(b.Filter)
+}
+
+func (b EditPlaylistFilterBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+
+		validate.Field(&b.Filter, validate.Required.When(b.Filter != nil), validate.By(func(value any) error {
+			s := *(value.(*string))
+			return TestFilter(s)
+		})),
+	)
+}
+
 func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -795,6 +816,75 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				return AddPlaylistFilter{
 					FilterId: filterId,
 				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "EditPlaylistFilter",
+			Method:   http.MethodPatch,
+			Path:     "/playlists/:playlistId/filters/:filterId",
+			BodyType: EditPlaylistFilterBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("playlistId")
+				filterId := c.Param("filterId")
+
+				body, err := pyrin.Body[EditPlaylistFilterBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbPlaylist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PlaylistNotFound()
+					}
+
+					return nil, err
+				}
+
+				if dbPlaylist.OwnerId != user.Id {
+					return nil, PlaylistNotFound()
+				}
+
+				dbFilter, err := app.DB().GetPlaylistFilterById(ctx, filterId, dbPlaylist.Id)
+				if err != nil {
+					// TODO(patrik): Handle error
+					// if errors.Is(err, database.ErrItemNotFound) {
+					// 	return nil, PlaylistFilter()
+					// }
+
+					return nil, err
+				}
+
+				changes := database.PlaylistFilterChanges{}
+
+				if body.Name != nil {
+					changes.Name = types.Change[string]{
+						Value:   *body.Name,
+						Changed: *body.Name != dbFilter.Name,
+					}
+				}
+
+				if body.Filter != nil {
+					changes.Filter = types.Change[string]{
+						Value:   *body.Filter,
+						Changed: *body.Filter != dbFilter.Filter,
+					}
+				}
+
+				err = app.DB().UpdatePlaylistFilter(ctx, dbFilter.Id, dbPlaylist.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
 			},
 		},
 	)

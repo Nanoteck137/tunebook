@@ -17,6 +17,7 @@
   import toast from "svelte-5-french-toast";
   import NewFilterModal from "./NewFilterModal.svelte";
   import EditPlaylistModal from "./EditPlaylistModal.svelte";
+  import FilterButton from "./FilterButton.svelte";
 
   const { data } = $props();
   const musicManager = getMusicManager();
@@ -103,18 +104,7 @@
 <Spacer size="md" />
 
 {#each data.filters as filter}
-  <button
-    onclick={() => {
-      const query = $page.url.searchParams;
-      query.set("filterId", filter.filterId);
-      goto("?" + query.toString(), {
-        invalidateAll: true,
-        replaceState: true,
-      });
-    }}
-  >
-    Filter: {filter.filterId} - {filter.name}
-  </button>
+  <FilterButton {filter} />
 {/each}
 
 <Spacer size="md" />

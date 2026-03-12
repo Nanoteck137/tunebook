@@ -92,6 +92,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
+  editPlaylistFilter(playlistId: string, filterId: string, body: api.EditPlaylistFilterBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/filters/${filterId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
   generatePlaylistImage(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${id}/images/generate`, "POST", z.undefined(), z.any(), undefined, options)
   }
@@ -327,6 +331,10 @@ export class ClientUrls {
   
   editPlaylist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
+  }
+  
+  editPlaylistFilter(playlistId: string, filterId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters/${filterId}`)
   }
   
   generatePlaylistImage(id: string) {

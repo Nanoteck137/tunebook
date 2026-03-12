@@ -417,6 +417,21 @@
       ]
     },
     {
+      "name": "EditPlaylistFilterBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "filter",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
       "name": "GetAlbumById",
       "fields": [
         {
@@ -1529,6 +1544,13 @@
       "method": "PATCH",
       "path": "/api/v1/playlists/:id",
       "body": "EditPlaylistBody"
+    },
+    {
+      "type": "api",
+      "name": "EditPlaylistFilter",
+      "method": "PATCH",
+      "path": "/api/v1/playlists/:playlistId/filters/:filterId",
+      "body": "EditPlaylistFilterBody"
     },
     {
       "type": "api",

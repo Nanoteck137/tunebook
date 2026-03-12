@@ -261,6 +261,15 @@ export const EditPlaylistBody = z.object({
 });
 export type EditPlaylistBody = z.infer<typeof EditPlaylistBody>;
 
+// Name: EditPlaylistFilterBody
+export const EditPlaylistFilterBody = z.object({
+  // Name: EditPlaylistFilterBody.name
+  "name": z.string().nullable().optional(),
+  // Name: EditPlaylistFilterBody.filter
+  "filter": z.string().nullable().optional(),
+});
+export type EditPlaylistFilterBody = z.infer<typeof EditPlaylistFilterBody>;
+
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
   // Name: GetAlbumById.id

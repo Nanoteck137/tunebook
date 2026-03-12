@@ -9,49 +9,74 @@
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
   import Spinner from "$lib/components/Spinner.svelte";
+  import type { PlaylistFilter } from "$lib/api/types";
 
   const Schema = z.object({
-    name: z.string().min(1, "Name cannot be empty"),
-    filter: z.string().min(1, "Filter cannot be empty"),
+    name: z.string().min(1),
+    filter: z.string().min(1),
   });
 
   export type Props = {
     open: boolean;
-    playlistId: string;
+    playlistFilter: PlaylistFilter;
   };
 
-  let { open = $bindable(), playlistId }: Props = $props();
+  let { open = $bindable(), playlistFilter }: Props = $props();
   const apiClient = getApiClient();
 
   $effect(() => {
     if (open) {
-      reset({});
+      reset({
+        data: {
+          name: playlistFilter.name,
+          filter: playlistFilter.filter,
+        },
+      });
     }
   });
+
+  // TODO(patrik): Move to utils
+  const toFieldError = (val: unknown): [string] | undefined =>
+    typeof val === "string" && val ? [val] : undefined;
 
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(zod(Schema)),
     {
-      id: "new-filter-modal",
       SPA: true,
       validators: zod(Schema),
       dataType: "json",
-      resetForm: true,
-      async onUpdate({ form }) {
+      id: "playlist-filter-modal",
+      async onUpdate({ form, cancel }) {
         if (form.valid) {
           const formData = form.data;
-          const res = await apiClient.addPlaylistFilter(playlistId, {
-            name: formData.name,
-            filter: formData.filter,
-          });
-          // TODO(patrik): Handle filter errors
+
+          const res = await apiClient.editPlaylistFilter(
+            playlistFilter.playlistId,
+            playlistFilter.filterId,
+            {
+              name: formData.name,
+              filter: formData.filter,
+            },
+          );
           if (!res.success) {
+            cancel();
+
+            if (res.error.type === "VALIDATION_ERROR" && res.error.extra) {
+              // TODO(patrik): Figure out a better way to handle errors
+              // for the api client
+              const rec = res.error.extra as Record<string, unknown>;
+              $errors.name = toFieldError(rec["name"]);
+              $errors.filter = toFieldError(rec["filter"]);
+
+              return;
+            }
+
             return handleApiError(res.error);
           }
 
           open = false;
 
-          toast.success("Successfully created new filter");
+          toast.success("Successfully updated playlist filter");
           invalidateAll();
         }
       },
@@ -60,12 +85,12 @@
 </script>
 
 <Dialog.Root bind:open>
-  <Dialog.Content>
+  <Dialog.Content class="max-h-[420px] overflow-y-scroll">
     <Dialog.Header>
-      <Dialog.Title>Create new virtual playlist</Dialog.Title>
+      <Dialog.Title>Edit playlist filter</Dialog.Title>
     </Dialog.Header>
 
-    <form class="flex flex-col gap-4" use:enhance>
+    <form class="flex flex-col gap-4 px-[1px]" use:enhance>
       <FormItem>
         <Label for="name">Name</Label>
         <Input id="name" name="name" type="text" bind:value={$form.name} />
@@ -88,13 +113,14 @@
           variant="outline"
           onclick={() => {
             open = false;
+            reset();
           }}
         >
           Close
         </Button>
 
         <Button type="submit" disabled={$submitting}>
-          Create
+          Save
           {#if $submitting}
             <Spinner />
           {/if}

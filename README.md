@@ -2,6 +2,10 @@
 
 ## Rewrite
 
+- [ ] Cleanup modal forms 
+    - [ ] Errors is hard to see
+    - [ ] Handle api errors in a clean way
+
 - [ ] Figure out how to handle logging through out the project
 - [ ] Figure out how to handle service errors
 - [ ] Figure out how to handle service logging

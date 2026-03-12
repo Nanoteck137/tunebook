@@ -323,6 +323,22 @@ func (c *Client) EditPlaylist(id string, body EditPlaylistBody, options Options)
 	return Request[any](data, body)
 }
 
+func (c *Client) EditPlaylistFilter(playlistId string, filterId string, body EditPlaylistFilterBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/playlists/%v/filters/%v", playlistId, filterId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *Client) GeneratePlaylistImage(id string, options Options) (*any, error) {
 	path := Sprintf("/api/v1/playlists/%v/images/generate", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -990,6 +1006,11 @@ func (c *ClientUrls) DeleteVirtualPlaylist(id string) (*URL, error) {
 
 func (c *ClientUrls) EditPlaylist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditPlaylistFilter(playlistId string, filterId string) (*URL, error) {
+	path := Sprintf("/api/v1/playlists/%v/filters/%v", playlistId, filterId)
 	return c.getUrl(path)
 }
 
