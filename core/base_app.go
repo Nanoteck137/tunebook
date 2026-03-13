@@ -1,6 +1,7 @@
 package core
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/nanoteck137/dwebble/config"
@@ -16,13 +17,18 @@ type BaseApp struct {
 	db     *database.Database
 	config *config.Config
 
-	authService    *service.AuthService
-	searchService  *service.SearchService
-	libraryService *service.LibraryService
-	imageService   *service.ImageService
-	mediaService   *service.MediaService
+	authService         *service.AuthService
+	notificationService *service.NotificationService
+	searchService       *service.SearchService
+	libraryService      *service.LibraryService
+	imageService        *service.ImageService
+	mediaService        *service.MediaService
 
 	broker *broker.Broker
+}
+
+func (app *BaseApp) NotificationService() *service.NotificationService {
+	return app.notificationService
 }
 
 func (app *BaseApp) MediaService() *service.MediaService {
@@ -94,6 +100,13 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
+	app.notificationService = service.NewNotificationService(
+		slog.With(
+			slog.String("service", "notification-service"),
+		),
+		app.config,
+	)
+
 	app.authService = service.NewAuthService(app.db, app.config)
 	// TODO(patrik): This should be a worker
 	go app.authService.CleanRoutine()
@@ -109,9 +122,10 @@ func (app *BaseApp) Bootstrap() error {
 	app.mediaService = service.NewMediaService(app.db, app.config.WorkDir())
 
 	app.libraryService = service.NewLibraryService(
-		app.db, 
-		app.config, 
-		app.mediaService, 
+		app.db,
+		app.config,
+		app.notificationService,
+		app.mediaService,
 		app.searchService,
 	)
 

@@ -14,6 +14,7 @@ type App interface {
 	DB() *database.Database
 	Config() *config.Config
 
+	NotificationService() *service.NotificationService
 	AuthService() *service.AuthService
 	SearchService() *service.SearchService
 	LibraryService() *service.LibraryService

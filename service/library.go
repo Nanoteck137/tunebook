@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/nanoteck137/dwebble"
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/tools/broker"
@@ -108,9 +109,9 @@ type LibraryService struct {
 	db     *database.Database
 	config *config.Config
 
-	mediaService *MediaService
-
-	searchService *SearchService
+	norificationService *NotificationService
+	mediaService        *MediaService
+	searchService       *SearchService
 
 	errors      []error
 	syncRunning atomic.Bool
@@ -130,15 +131,17 @@ type LibraryService struct {
 func NewLibraryService(
 	db *database.Database,
 	config *config.Config,
+	notificationService *NotificationService,
 	mediaService *MediaService,
 	searchService *SearchService,
 ) *LibraryService {
 	return &LibraryService{
-		db:            db,
-		config:        config,
-		mediaService:  mediaService,
-		searchService: searchService,
-		syncRunning:   atomic.Bool{},
+		db:                  db,
+		config:              config,
+		norificationService: notificationService,
+		mediaService:        mediaService,
+		searchService:       searchService,
+		syncRunning:         atomic.Bool{},
 	}
 }
 
@@ -706,8 +709,30 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 func (s *LibraryService) runSync() error {
 	p := s.config.LibraryDir
 
-	slog.Info("Starting library sync...")
-	defer slog.Info("Stopped library sync")
+	slog.Info("starting library sync...")
+	s.norificationService.SendSimple(dwebble.AppName+": "+"Starting library sync", "Starting to sync the library", SimpleNotificationOptions{
+		Tags: []string{utils.Slug(dwebble.AppName), "library", "syncing"},
+	})
+
+	defer func() {
+		slog.Info("stopped library sync")
+
+		message := fmt.Sprintf(
+			"%d Error(s)\nTotal sync time %s",
+			len(s.errors),
+			utils.PrettyDuration(s.totalSyncDuration),
+		)
+
+		tags := []string{utils.Slug(dwebble.AppName), "library", "syncing"}
+
+		if len(s.errors) > 0 {
+			tags = append(tags, "warning")
+		}
+
+		s.norificationService.SendSimple(dwebble.AppName+": "+"Stopped library sync", message, SimpleNotificationOptions{
+			Tags: tags,
+		})
+	}()
 
 	s.errors = []error{}
 	s.numArtists = 0
