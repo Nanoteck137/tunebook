@@ -2,9 +2,6 @@
 
 ## Rewrite
 
-- [ ] Media
-    - [ ] Fix "packMediaResult"
-
 - [ ] Server Handling for Admins
     - [ ] Notifications
 
@@ -78,6 +75,9 @@
     - [ ] Update Cmd
         - [ ] Metadata Validation
         - [ ] Metadata transformation (trim spaces, escape characters, more)
+
+- [ ] Media
+    - [ ] Fix "packMediaResult"
 
 - [ ] Use database indexes
 

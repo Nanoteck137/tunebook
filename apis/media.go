@@ -77,7 +77,10 @@ type GetMediaFromIdsBody struct {
 	KeepOrder bool     `json:"keepOrder,omitempty"`
 }
 
-func packMediaResult(c pyrin.Context, tracks []database.Track, mediaFormat types.MediaFormat, shuffle bool) (GetMedia, error) {
+// TODO(patrik): This might need some fixing, because this only returns the 
+// original track stream so the user of the media api can't choose which 
+// format to use
+func packMediaResult(c pyrin.Context, tracks []database.Track, targetMediaFormat types.MediaFormat, shuffle bool) (GetMedia, error) {
 	if shuffle {
 		rand.Shuffle(len(tracks), func(i, j int) {
 			tracks[i], tracks[j] = tracks[j], tracks[i]
@@ -103,10 +106,9 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, mediaFormat types
 			}
 		}
 
-		// TODO(patrik): This need fixing
-		mf := mediaFormat
-		if !mf.IsValid() {
-			mf = track.MediaFormat
+		mediaFormat := types.MediaFormatUnknown
+		if !track.MediaFormat.IsValid() {
+			mediaFormat = track.MediaFormat
 		}
 
 		mediaUrl := ConvertURL(c, fmt.Sprintf("/media/tracks/%s/stream?policy=original", track.Id))
@@ -122,7 +124,7 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, mediaFormat types
 				Name: track.AlbumName,
 			},
 			CoverArt:    ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
-			MediaFormat: mf,
+			MediaFormat: mediaFormat,
 			MediaUrl:    mediaUrl,
 		}
 	}
