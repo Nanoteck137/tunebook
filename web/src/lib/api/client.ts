@@ -219,6 +219,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}/items`, "DELETE", z.undefined(), z.any(), body, options)
   }
   
+  reorderPlaylistItems(id: string, body: api.ReorderPlaylistItemsBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${id}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   searchAlbums(options?: ExtraOptions) {
     return this.request("/api/v1/albums/search", "GET", api.SearchAlbums, z.any(), undefined, options)
   }
@@ -471,6 +475,10 @@ export class ClientUrls {
   
   removePlaylistItem(id: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
+  }
+  
+  reorderPlaylistItems(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items/reorder`)
   }
   
   searchAlbums() {

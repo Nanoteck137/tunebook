@@ -7,7 +7,6 @@ import (
 	"go/parser"
 	"net/http"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/database/adapter"
@@ -225,7 +224,7 @@ func InstallVirtualPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			ResponseType: GetVirtualPlaylistTracks{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
+				// q := c.Request().URL.Query()
 				virtualPlaylistId := c.Param("id")
 
 				ctx := c.Request().Context()
@@ -248,54 +247,57 @@ func InstallVirtualPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, VirtualPlaylistNotFound()
 				}
 
-				if virtualPlaylist.PlaylistId.Valid {
-					tracks, err := app.DB().GetPlaylistTracksForVirtualPlaylist(ctx, virtualPlaylist.PlaylistId.String, virtualPlaylist.Filter)
-					if err != nil {
-						return nil, err
-					}
+				// FIXME(patrik): FIX THIS?
+				panic("FIX?")
+				// if virtualPlaylist.PlaylistId.Valid {
+				// 	tracks, err := app.DB().GetPlaylistTracksForVirtualPlaylist(ctx, virtualPlaylist.PlaylistId.String, virtualPlaylist.Filter)
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				//
+				// 	pretty.Println(tracks)
+				//
+				// 	res := GetVirtualPlaylistTracks{
+				// 		// TODO(patrik): Fix
+				// 		Page:   types.Page{},
+				// 		Tracks: make([]Track, len(tracks)),
+				// 	}
+				//
+				// 	for i, track := range tracks {
+				// 		res.Tracks[i] = ConvertDBTrack(c, track)
+				// 	}
+				//
+				// 	return res, nil
+				// } else {
+				// 	opts := getPageOptions(q)
+				// 	opts.Filter = virtualPlaylist.Filter
+				//
+				// 	tracks, p, err := app.DB().GetPagedTracks(ctx, opts)
+				// 	if err != nil {
+				// 		if errors.Is(err, database.ErrInvalidFilter) {
+				// 			return nil, InvalidFilter(err)
+				// 		}
+				//
+				// 		if errors.Is(err, database.ErrInvalidSort) {
+				// 			return nil, InvalidSort(err)
+				// 		}
+				//
+				// 		return nil, err
+				// 	}
+				//
+				// 	res := GetVirtualPlaylistTracks{
+				// 		Page:   p,
+				// 		Tracks: make([]Track, len(tracks)),
+				// 	}
+				//
+				// 	for i, track := range tracks {
+				// 		res.Tracks[i] = ConvertDBTrack(c, track)
+				// 	}
+				//
+				// 	return res, nil
+				// }
 
-					pretty.Println(tracks)
-
-					res := GetVirtualPlaylistTracks{
-						// TODO(patrik): Fix
-						Page:   types.Page{},
-						Tracks: make([]Track, len(tracks)),
-					}
-
-					for i, track := range tracks {
-						res.Tracks[i] = ConvertDBTrack(c, track)
-					}
-
-					return res, nil
-				} else {
-					opts := getPageOptions(q)
-					opts.Filter = virtualPlaylist.Filter
-
-					tracks, p, err := app.DB().GetPagedTracks(ctx, opts)
-					if err != nil {
-						if errors.Is(err, database.ErrInvalidFilter) {
-							return nil, InvalidFilter(err)
-						}
-
-						if errors.Is(err, database.ErrInvalidSort) {
-							return nil, InvalidSort(err)
-						}
-
-						return nil, err
-					}
-
-					res := GetVirtualPlaylistTracks{
-						Page:   p,
-						Tracks: make([]Track, len(tracks)),
-					}
-
-					for i, track := range tracks {
-						res.Tracks[i] = ConvertDBTrack(c, track)
-					}
-
-					return res, nil
-				}
-
+				return nil, nil
 			},
 		},
 

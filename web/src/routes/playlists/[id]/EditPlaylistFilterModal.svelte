@@ -42,10 +42,10 @@
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(zod(Schema)),
     {
+      id: "edit-playlist-filter-modal",
       SPA: true,
       validators: zod(Schema),
       dataType: "json",
-      id: "playlist-filter-modal",
       async onUpdate({ form, cancel }) {
         if (form.valid) {
           const formData = form.data;

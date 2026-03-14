@@ -701,6 +701,16 @@ type RemovePlaylistItemBody struct {
 	TrackId string `json:"trackId"`
 }
 
+// Name: ReorderPlaylistItemsBody
+type ReorderPlaylistItemsBody struct {
+	// Name: ReorderPlaylistItemsBody.before
+	Before bool `json:"before"`
+	// Name: ReorderPlaylistItemsBody.anchorTrackId
+	AnchorTrackId string `json:"anchorTrackId"`
+	// Name: ReorderPlaylistItemsBody.trackIds
+	TrackIds []string `json:"trackIds"`
+}
+
 // Name: SearchAlbums
 type SearchAlbums struct {
 	// Name: SearchAlbums.albums

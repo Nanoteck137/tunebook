@@ -1307,6 +1307,26 @@
       ]
     },
     {
+      "name": "ReorderPlaylistItemsBody",
+      "fields": [
+        {
+          "name": "before",
+          "type": "bool",
+          "omitEmpty": false
+        },
+        {
+          "name": "anchorTrackId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackIds",
+          "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "SearchAlbums",
       "fields": [
         {
@@ -1868,6 +1888,13 @@
       "method": "DELETE",
       "path": "/api/v1/playlists/:id/items",
       "body": "RemovePlaylistItemBody"
+    },
+    {
+      "type": "api",
+      "name": "ReorderPlaylistItems",
+      "method": "POST",
+      "path": "/api/v1/playlists/:id/items/reorder",
+      "body": "ReorderPlaylistItemsBody"
     },
     {
       "type": "api",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -146,7 +147,7 @@ func (b EditPlaylistBody) Validate() error {
 }
 
 type EditPlaylistFilterBody struct {
-	Name *string `json:"name,omitempty"`
+	Name   *string `json:"name,omitempty"`
 	Filter *string `json:"filter,omitempty"`
 }
 
@@ -164,6 +165,99 @@ func (b EditPlaylistFilterBody) Validate() error {
 			return TestFilter(s)
 		})),
 	)
+}
+
+func reorderPlaylistItems(ctx context.Context, db *database.Database, playlistId string, trackIds []string, anchorTrackID string) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	current, err := tx.GetPlaylistItems(ctx, playlistId)
+	if err != nil {
+		return err
+	}
+
+	// Index current items by ID for O(1) lookup.
+	index := make(map[string]database.PlaylistItem, len(current))
+	for _, item := range current {
+		index[item.TrackId] = item
+	}
+
+	// Validate that all supplied trackIDs exist in the playlist and resolve them to PlaylistItems.
+	items := make([]database.PlaylistItem, 0, len(trackIds))
+	for _, id := range trackIds {
+		item, ok := index[id]
+		if !ok {
+			return fmt.Errorf("track %q not found in playlist %q", id, playlistId)
+		}
+		items = append(items, item)
+	}
+
+	// Validate that anchorTrackID exists in the playlist (unless it's empty).
+	if anchorTrackID != "" {
+		if _, ok := index[anchorTrackID]; !ok {
+			return fmt.Errorf("anchor track %q not found in playlist %q", anchorTrackID, playlistId)
+		}
+	}
+
+	// Build a set of IDs to move for O(1) lookup.
+	moveSet := make(map[string]bool, len(items))
+	for _, item := range items {
+		moveSet[item.TrackId] = true
+	}
+
+	// Collect all items that are NOT being moved, preserving their order.
+	stationary := make([]database.PlaylistItem, 0, len(current))
+	for _, item := range current {
+		if !moveSet[item.TrackId] {
+			stationary = append(stationary, item)
+		}
+	}
+
+	// Find the insertion index within the stationary slice.
+	// Defaults to 0 so that an empty anchorTrackID prepends the moved items.
+	insertAt := 0
+	if anchorTrackID != "" {
+		for i, item := range stationary {
+			if item.TrackId == anchorTrackID {
+				insertAt = i + 1
+				break
+			}
+		}
+	}
+
+	// Splice: stationary[:insertAt] + items + stationary[insertAt:]
+	spliced := make([]database.PlaylistItem, 0, len(current))
+	spliced = append(spliced, stationary[:insertAt]...)
+	spliced = append(spliced, items...)
+	spliced = append(spliced, stationary[insertAt:]...)
+
+	for i, item := range spliced {
+		err := tx.UpdatePlaylistItem(ctx, item.PlaylistId, item.TrackId, database.PlaylistItemChanges{
+			Order: types.Change[int]{
+				Value:   i,
+				Changed: i != item.Order,
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type ReorderPlaylistItemsBody struct {
+	Before        bool     `json:"before"`
+	AnchorTrackId string   `json:"anchorTrackId"`
+	TrackIds      []string `json:"trackIds"`
 }
 
 func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
@@ -267,56 +361,61 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			ResponseType: CreatePlaylist{},
 			BodyType:     PostPlaylistFilterBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
+				// FIXME(patrik): This needs fixing
+				panic("FIX ME")
 
-				body, err := pyrin.Body[PostPlaylistFilterBody](c)
-				if err != nil {
-					return nil, err
-				}
+				// user, err := User(app, c)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// body, err := pyrin.Body[PostPlaylistFilterBody](c)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// ctx := context.TODO()
+				//
+				// tx, err := app.DB().Begin()
+				// if err != nil {
+				// 	return nil, err
+				// }
+				// defer tx.Rollback()
+				//
+				// playlist, err := tx.CreatePlaylist(ctx, database.CreatePlaylistParams{
+				// 	Name:    body.Name,
+				// 	OwnerId: user.Id,
+				// })
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// tracks, err := tx.GetAllTracks(ctx, body.Filter, "")
+				// if err != nil {
+				// 	if errors.Is(err, database.ErrInvalidFilter) {
+				// 		return nil, InvalidFilter(err)
+				// 	}
+				//
+				// 	return nil, err
+				// }
+				//
+				// for _, track := range tracks {
+				// 	err = tx.AddItemToPlaylist(ctx, playlist.Id, track.Id, 0)
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				// }
+				//
+				// err = tx.Commit()
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// return CreatePlaylist{
+				// 	Id: playlist.Id,
+				// }, nil
 
-				ctx := context.TODO()
-
-				tx, err := app.DB().Begin()
-				if err != nil {
-					return nil, err
-				}
-				defer tx.Rollback()
-
-				playlist, err := tx.CreatePlaylist(ctx, database.CreatePlaylistParams{
-					Name:    body.Name,
-					OwnerId: user.Id,
-				})
-				if err != nil {
-					return nil, err
-				}
-
-				tracks, err := tx.GetAllTracks(ctx, body.Filter, "")
-				if err != nil {
-					if errors.Is(err, database.ErrInvalidFilter) {
-						return nil, InvalidFilter(err)
-					}
-
-					return nil, err
-				}
-
-				for _, track := range tracks {
-					err = tx.AddItemToPlaylist(ctx, playlist.Id, track.Id, 0)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				err = tx.Commit()
-				if err != nil {
-					return nil, err
-				}
-
-				return CreatePlaylist{
-					Id: playlist.Id,
-				}, nil
+				return nil, nil
 			},
 		},
 
@@ -488,8 +587,8 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, track := range tracks {
-					// TODO(patrik): If filterId is set maybe calculate the 
-					// order, same as GetTracks uses 
+					// TODO(patrik): If filterId is set maybe calculate the
+					// order, same as GetTracks uses
 					track.Track.Order = utils.IntPtr(track.Order + 1)
 
 					res.Items[i] = ConvertDBTrack(c, track.Track)
@@ -542,12 +641,16 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				index, err := app.DB().GetNextIndex(ctx, playlist.Id)
+				index, err := app.DB().GetNextPlaylistItemIndex(ctx, playlist.Id)
 				if err != nil {
 					return nil, err
 				}
 
-				err = app.DB().AddItemToPlaylist(ctx, playlist.Id, track.Id, index)
+				err = app.DB().CreatePlaylistItem(ctx, database.CreatePlaylistItemParams{
+					PlaylistId: playlist.Id,
+					TrackId:    track.Id,
+					Order:      index,
+				})
 				if err != nil {
 					if errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, PlaylistAlreadyHasTrack()
@@ -574,45 +677,9 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				ctx := context.Background()
+
 				body, err := pyrin.Body[RemovePlaylistItemBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				// TODO(patrik): Check for trackId exists?
-				err = app.DB().RemovePlaylistItem(c.Request().Context(), playlist.Id, body.TrackId)
-				if err != nil {
-					return nil, err
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:   "ClearPlaylist",
-			Path:   "/playlists/:id/items/all",
-			Method: http.MethodDelete,
-			Errors: []pyrin.ErrorType{ErrTypePlaylistNotFound},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("id")
-
-				ctx := context.TODO()
-
-				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
@@ -630,10 +697,93 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, PlaylistNotFound()
 				}
 
-				err = app.DB().RemoveAllPlaylistItem(ctx, playlist.Id)
+				// TODO(patrik): Check for trackId exists?
+				err = app.DB().DeletePlaylistItem(ctx, playlist.Id, body.TrackId)
 				if err != nil {
 					return nil, err
 				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "ReorderPlaylistItems",
+			Path:     "/playlists/:id/items/reorder",
+			Method:   http.MethodPost,
+			BodyType: ReorderPlaylistItemsBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("id")
+
+				body, err := pyrin.Body[ReorderPlaylistItemsBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PlaylistNotFound()
+					}
+
+					return nil, err
+				}
+
+				if playlist.OwnerId != user.Id {
+					return nil, PlaylistNotFound()
+				}
+
+				err = reorderPlaylistItems(ctx, app.DB(), playlistId, body.TrackIds, body.AnchorTrackId)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "ClearPlaylist",
+			Path:   "/playlists/:id/items/all",
+			Method: http.MethodDelete,
+			Errors: []pyrin.ErrorType{ErrTypePlaylistNotFound},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// FIXME(patrik): FIX THIS
+				panic("FIX ME")
+
+				// playlistId := c.Param("id")
+				//
+				// ctx := context.TODO()
+				//
+				// user, err := User(app, c)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				// if err != nil {
+				// 	if errors.Is(err, database.ErrItemNotFound) {
+				// 		return nil, PlaylistNotFound()
+				// 	}
+				//
+				// 	return nil, err
+				// }
+				//
+				// if playlist.OwnerId != user.Id {
+				// 	return nil, PlaylistNotFound()
+				// }
+				//
+				// err = app.DB().DeletePlaylistItem(ctx, playlist.Id)
+				// if err != nil {
+				// 	return nil, err
+				// }
 
 				return nil, nil
 			},

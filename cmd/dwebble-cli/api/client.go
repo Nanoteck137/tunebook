@@ -822,6 +822,22 @@ func (c *Client) RemovePlaylistItem(id string, body RemovePlaylistItemBody, opti
 	return Request[any](data, body)
 }
 
+func (c *Client) ReorderPlaylistItems(id string, body ReorderPlaylistItemsBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/playlists/%v/items/reorder", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *Client) SearchAlbums(options Options) (*SearchAlbums, error) {
 	path := "/api/v1/albums/search"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1192,6 +1208,11 @@ func (c *ClientUrls) RemoveItemFromUserQuickPlaylist() (*URL, error) {
 
 func (c *ClientUrls) RemovePlaylistItem(id string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ReorderPlaylistItems(id string) (*URL, error) {
+	path := Sprintf("/api/v1/playlists/%v/items/reorder", id)
 	return c.getUrl(path)
 }
 

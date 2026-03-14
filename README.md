@@ -2,8 +2,9 @@
 
 ## Rewrite
 
-- [ ] Server Handling for Admins
-    - [ ] Notifications
+- [ ] Playlists/Taglists
+    - [ ] Global Filters per user
+    - [ ] Custom Covers
 
 - [ ] Better API Tokens
 
@@ -17,11 +18,6 @@
     - [ ] Number of plays 
     - [ ] Favorites
     - [ ] Year over Year 
-
-- [ ] Playlists/Taglists
-    - [ ] Global Filters per user
-    - [ ] User ability to re-order playlist items
-    - [ ] Custom Covers
 
 - [ ] Cleanup modal forms 
     - [ ] Errors is hard to see

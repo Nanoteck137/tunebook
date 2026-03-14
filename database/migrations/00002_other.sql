@@ -101,6 +101,7 @@ CREATE TABLE playlists (
 CREATE TABLE playlist_items (
     playlist_id TEXT NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
     track_id TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+
     order_num INTEGER NOT NULL,
 
     -- TODO(patrik): Add created, updated / added FIELD

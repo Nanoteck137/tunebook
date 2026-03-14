@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/nanoteck137/dwebble/core"
@@ -164,14 +163,18 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				ctx := context.TODO()
 
 				if user.QuickPlaylist.Valid {
-					index, err := app.DB().GetNextIndex(ctx, user.QuickPlaylist.String)
+					index, err := app.DB().GetNextPlaylistItemIndex(ctx, user.QuickPlaylist.String)
 					if err != nil {
 						return nil, err
 					}
 
-					fmt.Printf("index: %v\n", index)
+					// TODO(patrik): Check body.TrackId
 
-					err = app.DB().AddItemToPlaylist(ctx, user.QuickPlaylist.String, body.TrackId, index)
+					err = app.DB().CreatePlaylistItem(ctx, database.CreatePlaylistItemParams{
+						PlaylistId: user.QuickPlaylist.String,
+						TrackId:    body.TrackId,
+						Order:      index,
+					})
 					if err != nil {
 						// TODO(patrik): Handle error
 						return nil, err
@@ -201,7 +204,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				ctx := context.TODO()
 
 				if user.QuickPlaylist.Valid {
-					err := app.DB().RemovePlaylistItem(ctx, user.QuickPlaylist.String, body.TrackId)
+					err := app.DB().DeletePlaylistItem(ctx, user.QuickPlaylist.String, body.TrackId)
 					if err != nil {
 						return nil, err
 					}

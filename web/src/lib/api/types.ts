@@ -770,6 +770,17 @@ export const RemovePlaylistItemBody = z.object({
 });
 export type RemovePlaylistItemBody = z.infer<typeof RemovePlaylistItemBody>;
 
+// Name: ReorderPlaylistItemsBody
+export const ReorderPlaylistItemsBody = z.object({
+  // Name: ReorderPlaylistItemsBody.before
+  "before": z.boolean(),
+  // Name: ReorderPlaylistItemsBody.anchorTrackId
+  "anchorTrackId": z.string(),
+  // Name: ReorderPlaylistItemsBody.trackIds
+  "trackIds": z.array(z.string()),
+});
+export type ReorderPlaylistItemsBody = z.infer<typeof ReorderPlaylistItemsBody>;
+
 // Name: SearchAlbums
 export const SearchAlbums = z.object({
   // Name: SearchAlbums.albums

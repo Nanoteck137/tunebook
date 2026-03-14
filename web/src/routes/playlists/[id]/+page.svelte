@@ -121,6 +121,19 @@
       { queueIndexToTrackId: trackId },
     );
   }}
+  onReorder={async (items, anchor) => {
+    const res = await apiClient.reorderPlaylistItems(data.playlist.id, {
+      before: false,
+      anchorTrackId: anchor ?? "",
+      trackIds: items,
+    });
+    if (!res.success) {
+      return handleApiError(res.error);
+    }
+
+    toast.success("Updated playlist");
+    invalidateAll();
+  }}
 />
 
 <Spacer size="md" />
