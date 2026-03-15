@@ -1,11 +1,15 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"os"
+	"os/exec"
 	"path"
+	"strings"
 
 	"github.com/nanoteck137/dwebble/assets"
 	"github.com/nanoteck137/dwebble/database"
@@ -13,13 +17,25 @@ import (
 	"github.com/nanoteck137/dwebble/types"
 )
 
+var magickImageMapping = map[string]ImageType{
+	"PNG": ImageTypePng,
+	"JPEG": ImageTypeJpeg,
+}
+
 type ImageService struct {
+	logger *slog.Logger
+
 	db      *database.Database
 	workDir types.WorkDir
 }
 
-func NewImageService(db *database.Database, workDir types.WorkDir) *ImageService {
+func NewImageService(
+	logger *slog.Logger,
+	db *database.Database,
+	workDir types.WorkDir,
+) *ImageService {
 	return &ImageService{
+		logger:  logger,
 		db:      db,
 		workDir: workDir,
 	}
@@ -84,11 +100,15 @@ func (s *ImageService) copyDefaultToTemp(filename string) (string, error) {
 	return dest.Name(), nil
 }
 
+// TODO(patrik): Rename to ImageFormat
+// TODO(patrik): Move to types package
 type ImageType string
 
 const (
-	ImageTypePng  ImageType = "png"
-	ImageTypeJpeg ImageType = "jpeg"
+	ImageTypeEmpty   ImageType = ""
+	ImageTypeUnknown ImageType = "unknown"
+	ImageTypePng     ImageType = "png"
+	ImageTypeJpeg    ImageType = "jpeg"
 )
 
 func (t ImageType) ToExt() (string, bool) {
@@ -290,4 +310,45 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 	}
 
 	return "", errors.New("unknown type")
+}
+
+func (s *ImageService) ValidateImage(p string) (ImageType, error) {
+
+	// out, err := exec.Command("magick", "identify", "-ping", "-format", "%m", p).CombinedOutput()
+
+	cmd := exec.Command("magick", "identify", "-ping", "-format", "%m", p)
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	var errOut bytes.Buffer
+	cmd.Stderr = &errOut
+
+	err := cmd.Run()
+	if err != nil {
+		details := strings.TrimSpace(errOut.String())
+
+		s.logger.Error("failed to validate image", 
+			slog.Any("err", err), 
+			slog.String("output", details),
+		)
+
+		var execErr *exec.ExitError
+		if errors.As(err, &execErr) {
+			if !execErr.Success() {
+				return ImageTypeUnknown, nil
+			}
+		}
+
+		return ImageTypeUnknown, err
+	}
+
+	ty := strings.TrimSpace(out.String())
+
+	res, exists := magickImageMapping[ty]
+	if !exists {
+		return ImageTypeUnknown, errors.New("no mapping: " + ty)
+	}
+
+	return res, nil
 }

@@ -100,10 +100,14 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
+	newServiceLogger := func(name string) *slog.Logger {
+		return slog.With(
+			slog.String("service", name),
+		)
+	}
+
 	app.notificationService = service.NewNotificationService(
-		slog.With(
-			slog.String("service", "notification-service"),
-		),
+		newServiceLogger("notification-service"),
 		app.config,
 	)
 
@@ -129,7 +133,11 @@ func (app *BaseApp) Bootstrap() error {
 		app.searchService,
 	)
 
-	app.imageService = service.NewImageService(app.db, app.config.WorkDir())
+	app.imageService = service.NewImageService(
+		newServiceLogger("image-service"),
+		app.db,
+		app.config.WorkDir(),
+	)
 
 	app.broker = broker.NewBroker(func() []broker.Event {
 		return []broker.Event{

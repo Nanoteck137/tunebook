@@ -936,6 +936,22 @@ func (c *Client) UpdateVirtualPlaylist(id string, body UpdateVirtualPlaylistBody
 	return Request[any](data, body)
 }
 
+func (c *Client) UploadPlaylistImage(id string, boundary string, body Reader, options Options) (*any, error) {
+	path := Sprintf("/api/v1/playlists/%v/image", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return RequestForm[any](data, boundary, body)
+}
+
 func (c *ClientUrls) AddItemToPlaylist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", id)
 	return c.getUrl(path)
@@ -1253,5 +1269,10 @@ func (c *ClientUrls) UpdateUserSettings() (*URL, error) {
 
 func (c *ClientUrls) UpdateVirtualPlaylist(id string) (*URL, error) {
 	path := Sprintf("/api/v1/virtual-playlists/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) UploadPlaylistImage(id string) (*URL, error) {
+	path := Sprintf("/api/v1/playlists/%v/image", id)
 	return c.getUrl(path)
 }

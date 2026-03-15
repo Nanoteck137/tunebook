@@ -4,7 +4,8 @@
 
 - [ ] Playlists/Taglists
     - [ ] Global Filters per user
-    - [ ] Custom Covers
+
+- [ ] Quick Code integration
 
 - [ ] Better API Tokens
 
@@ -28,7 +29,6 @@
 - [ ] Figure out how to handle service logging
 
 - [ ] Better way to log the API Errors
-- [ ] Quick Code integration
 
 - [ ] Edit Playlist CoverURL implementation
 

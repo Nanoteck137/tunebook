@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -478,6 +479,126 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				// }
 
 				err = app.DB().UpdatePlaylist(ctx, dbPlaylist.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.FormApiHandler{
+			Name:   "UploadPlaylistImage",
+			Method: http.MethodPost,
+			Path:   "/playlists/:id/image",
+			Spec: pyrin.FormSpec{
+				Files: map[string]pyrin.FormFileSpec{
+					"image": pyrin.FormFileSpec{
+						NumExpected: 1,
+					},
+				},
+			},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				playlistId := c.Param("id")
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbPlaylist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PlaylistNotFound()
+					}
+
+					return nil, err
+				}
+
+				if dbPlaylist.OwnerId != user.Id {
+					return nil, PlaylistNotFound()
+				}
+
+				files, err := pyrin.FormFiles(c, "image")
+				if err != nil {
+					return nil, err
+				}
+
+				file := files[0]
+
+				ext := path.Ext(file.Filename)
+
+				// TODO(patrik): The tmp dir should be inside the work dir
+				tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create temp file: %w", err)
+				}
+				tmpPath := tmp.Name()
+				defer tmp.Close()
+
+				// always clean up temp file if something goes wrong
+				defer func() {
+					_, err := os.Stat(tmpPath)
+					if err == nil {
+						os.Remove(tmpPath)
+					}
+				}()
+
+				srcImage, err := file.Open()
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = io.Copy(tmp, srcImage)
+				if err != nil {
+					return nil, err
+				}
+
+				tmp.Close()
+
+				imageType, err := app.ImageService().ValidateImage(tmpPath)
+				if err != nil {
+					return nil, err
+				}
+
+				workDir := app.WorkDir()
+				playlistDir := workDir.Playlist(dbPlaylist.Id)
+
+				err = utils.CreateDirectories([]string{
+					playlistDir,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				imageExt, ok := imageType.ToExt()
+				if !ok {
+					return nil, errors.New("invalid image type")
+				}
+
+				coverArt := "uploaded"+imageExt
+				output := path.Join(playlistDir, coverArt)
+				err = os.Rename(tmpPath, output)
+				if err != nil {
+					return nil, fmt.Errorf("failed to promote temp file: %w", err)
+				}
+
+				err = app.DB().UpdatePlaylist(ctx, dbPlaylist.Id, database.PlaylistChanges{
+					CoverArt: types.Change[sql.NullString]{
+						Value: sql.NullString{
+							String: coverArt,
+							Valid:  coverArt != "",
+						},
+						Changed: coverArt != dbPlaylist.CoverArt.String,
+					},
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				err = os.RemoveAll(app.WorkDir().Cache().Playlist(dbPlaylist.Id))
 				if err != nil {
 					return nil, err
 				}

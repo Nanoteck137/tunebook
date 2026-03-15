@@ -248,6 +248,10 @@ export class ApiClient extends BaseApiClient {
   updateVirtualPlaylist(id: string, body: api.UpdateVirtualPlaylistBody, options?: ExtraOptions) {
     return this.request(`/api/v1/virtual-playlists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
+  
+  uploadPlaylistImage(id: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/playlists/${id}/image`, "POST", z.undefined(), z.any(), body, options)
+  }
 }
 
 export class ClientUrls {
@@ -511,5 +515,9 @@ export class ClientUrls {
   
   updateVirtualPlaylist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/virtual-playlists/${id}`)
+  }
+  
+  uploadPlaylistImage(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/image`)
   }
 }

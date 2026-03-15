@@ -18,6 +18,7 @@
   import NewFilterModal from "./NewFilterModal.svelte";
   import EditPlaylistModal from "./EditPlaylistModal.svelte";
   import FilterButton from "./FilterButton.svelte";
+  import UploadPlaylistCoverModal from "./UploadPlaylistCoverModal.svelte";
 
   const { data } = $props();
   const musicManager = getMusicManager();
@@ -26,6 +27,7 @@
   let openFilterModal = $state(false);
   let openConfirmDeleteAlbum = $state(false);
   let openEditPlaylistModal = $state(false);
+  let openUploadCoverModal = $state(false);
 </script>
 
 <div class="py-2">
@@ -67,6 +69,14 @@
   }}
 >
   Edit Playlist
+</Button>
+
+<Button
+  onclick={async () => {
+    openUploadCoverModal = true;
+  }}
+>
+  Upload Cover
 </Button>
 
 <p>Track Count: {data.playlist.trackCount}</p>
@@ -201,4 +211,9 @@
 <EditPlaylistModal
   bind:open={openEditPlaylistModal}
   playlist={data.playlist}
+/>
+
+<UploadPlaylistCoverModal
+  bind:open={openUploadCoverModal}
+  playlistId={data.playlist.id}
 />

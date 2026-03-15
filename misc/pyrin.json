@@ -1948,6 +1948,12 @@
       "method": "PATCH",
       "path": "/api/v1/virtual-playlists/:id",
       "body": "UpdateVirtualPlaylistBody"
+    },
+    {
+      "type": "form",
+      "name": "UploadPlaylistImage",
+      "method": "POST",
+      "path": "/api/v1/playlists/:id/image"
     }
   ]
 }
