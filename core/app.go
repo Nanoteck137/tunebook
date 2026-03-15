@@ -15,6 +15,7 @@ type App interface {
 	Config() *config.Config
 
 	NotificationService() *service.NotificationService
+	JobService() *service.JobService
 	AuthService() *service.AuthService
 	SearchService() *service.SearchService
 	LibraryService() *service.LibraryService

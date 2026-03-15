@@ -4,8 +4,6 @@
 
 - [ ] Quick Code integration
 
-- [ ] Better API Tokens
-
 - [ ] Jobs
     - [ ] Auth Cleanup
     - [ ] Clear out cache
@@ -16,6 +14,8 @@
     - [ ] Number of plays 
     - [ ] Favorites
     - [ ] Year over Year 
+
+- [ ] Better API Tokens
 
 - [ ] Cleanup modal forms 
     - [ ] Errors is hard to see

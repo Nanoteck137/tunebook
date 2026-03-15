@@ -768,6 +768,10 @@ func (a *AuthService) CleanRoutine() {
 	ticker := time.NewTicker(30 * time.Minute)
 	for range ticker.C {
 		slog.Info("auth-service: running cleanup")
-		a.RemoveUnusedEntries()
+		a.RunCleanup()
 	}
+}
+
+func (a *AuthService) RunCleanup() {
+	a.RemoveUnusedEntries()
 }

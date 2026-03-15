@@ -1,15 +1,40 @@
 package core
 
 import (
+	"context"
 	"log/slog"
-	"os"
 
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/broker"
+	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 )
+
+const (
+	jobAuthCleanup = "auth-cleanup"
+)
+
+var _ service.Job = (*AuthCleanupJob)(nil)
+
+type AuthCleanupJob struct {
+	authService *service.AuthService
+}
+
+func (j *AuthCleanupJob) Name() string {
+	return jobAuthCleanup
+}
+
+func (j *AuthCleanupJob) Schedule() string {
+	return "@every 30m"
+}
+
+func (j *AuthCleanupJob) Run(ctx context.Context) error {
+	j.authService.RunCleanup()
+	return nil
+}
+
 
 var _ App = (*BaseApp)(nil)
 
@@ -18,6 +43,7 @@ type BaseApp struct {
 	config *config.Config
 
 	authService         *service.AuthService
+	jobService          *service.JobService
 	notificationService *service.NotificationService
 	searchService       *service.SearchService
 	libraryService      *service.LibraryService
@@ -25,6 +51,10 @@ type BaseApp struct {
 	mediaService        *service.MediaService
 
 	broker *broker.Broker
+}
+
+func (app *BaseApp) JobService() *service.JobService {
+	return app.jobService
 }
 
 func (app *BaseApp) NotificationService() *service.NotificationService {
@@ -72,20 +102,16 @@ func (app *BaseApp) Bootstrap() error {
 
 	workDir := app.config.WorkDir()
 
-	dirs := []string{
+	err = utils.CreateDirectories([]string{
 		workDir.Artists(),
 		workDir.Albums(),
 		workDir.Tracks(),
 		workDir.Playlists(),
 		workDir.Trash(),
 		workDir.Cache().String(),
-	}
-
-	for _, dir := range dirs {
-		err = os.Mkdir(dir, 0755)
-		if err != nil && !os.IsExist(err) {
-			return err
-		}
+	})
+	if err != nil {
+		return err
 	}
 
 	app.db, err = database.Open(workDir.DatabaseFile())
@@ -111,9 +137,15 @@ func (app *BaseApp) Bootstrap() error {
 		app.config,
 	)
 
+	app.jobService = service.NewJobService(newServiceLogger("job-service"))
+	err = app.jobService.Init()
+	if err != nil {
+		return err
+	}
+
 	app.authService = service.NewAuthService(app.db, app.config)
 	// TODO(patrik): This should be a worker
-	go app.authService.CleanRoutine()
+	// go app.authService.CleanRoutine()
 
 	app.searchService = service.NewSearchService(app.db, app.config)
 
@@ -145,17 +177,31 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	})
 
-	// TODO(patrik): Move to worker?
-	go app.broker.Listen()
 
 	app.libraryService.SetUpdateFunc(func() {
 		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
 	})
 
+	err = app.jobService.AddJob(&AuthCleanupJob{
+		authService: app.authService,
+	})
+	if err != nil {
+		return err
+	}
+
+	// TODO(patrik): This should not be in bootstrap
+	app.jobService.DisplayJobs()
+	app.jobService.Start()
+
+	// TODO(patrik): This should not be in bootstrap
+	go app.broker.Listen()
+
 	return nil
 }
 
 func (app *BaseApp) Shutdown() error {
+	app.jobService.Stop()
+
 	err := app.db.Close()
 	if err != nil {
 		return err
