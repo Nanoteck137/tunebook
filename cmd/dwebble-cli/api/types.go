@@ -209,6 +209,20 @@ type CreatePlaylistBody struct {
 	Name string `json:"name"`
 }
 
+// Name: CreateTrackFilter
+type CreateTrackFilter struct {
+	// Name: CreateTrackFilter.filterId
+	FilterId string `json:"filterId"`
+}
+
+// Name: CreateTrackFilterBody
+type CreateTrackFilterBody struct {
+	// Name: CreateTrackFilterBody.name
+	Name string `json:"name"`
+	// Name: CreateTrackFilterBody.filter
+	Filter string `json:"filter"`
+}
+
 // Name: CreateVirtualPlaylist
 type CreateVirtualPlaylist struct {
 	// Name: CreateVirtualPlaylist.id
@@ -238,6 +252,14 @@ type EditPlaylistFilterBody struct {
 	// Name: EditPlaylistFilterBody.name
 	Name *string `json:"name,omitempty"`
 	// Name: EditPlaylistFilterBody.filter
+	Filter *string `json:"filter,omitempty"`
+}
+
+// Name: EditTrackFilterBody
+type EditTrackFilterBody struct {
+	// Name: EditTrackFilterBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: EditTrackFilterBody.filter
 	Filter *string `json:"filter,omitempty"`
 }
 
@@ -621,6 +643,24 @@ type GetTrackById struct {
 	Created int `json:"created"`
 	// Name: GetTrackById.updated
 	Updated int `json:"updated"`
+}
+
+// Name: TrackFilter
+type TrackFilter struct {
+	// Name: TrackFilter.filterId
+	FilterId string `json:"filterId"`
+	// Name: TrackFilter.userId
+	UserId string `json:"userId"`
+	// Name: TrackFilter.name
+	Name string `json:"name"`
+	// Name: TrackFilter.filter
+	Filter string `json:"filter"`
+}
+
+// Name: GetTrackFilters
+type GetTrackFilters struct {
+	// Name: GetTrackFilters.filters
+	Filters []TrackFilter `json:"filters"`
 }
 
 // Name: GetTracks

@@ -24,7 +24,7 @@
   const musicManager = getMusicManager();
   const apiClient = getApiClient();
 
-  let openFilterModal = $state(false);
+  let openNewFilterModal = $state(false);
   let openConfirmDeleteAlbum = $state(false);
   let openEditPlaylistModal = $state(false);
   let openUploadCoverModal = $state(false);
@@ -57,7 +57,7 @@
 
 <Button
   onclick={async () => {
-    openFilterModal = true;
+    openNewFilterModal = true;
   }}
 >
   New Virtual Playlist
@@ -189,7 +189,7 @@
   {/snippet}
 </Pagination.Root>
 
-<NewFilterModal bind:open={openFilterModal} playlistId={data.playlist.id} />
+<NewFilterModal bind:open={openNewFilterModal} playlistId={data.playlist.id} />
 
 <ConfirmModal
   bind:open={openConfirmDeleteAlbum}

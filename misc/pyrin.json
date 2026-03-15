@@ -372,6 +372,31 @@
       ]
     },
     {
+      "name": "CreateTrackFilter",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "CreateTrackFilterBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "CreateVirtualPlaylist",
       "fields": [
         {
@@ -418,6 +443,21 @@
     },
     {
       "name": "EditPlaylistFilterBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "filter",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "EditTrackFilterBody",
       "fields": [
         {
           "name": "name",
@@ -977,6 +1017,16 @@
       ]
     },
     {
+      "name": "GetTrackFilters",
+      "fields": [
+        {
+          "name": "filters",
+          "type": "[]TrackFilter",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetTracks",
       "fields": [
         {
@@ -1427,6 +1477,31 @@
       ]
     },
     {
+      "name": "TrackFilter",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "TrackId",
       "fields": [
         {
@@ -1619,6 +1694,14 @@
     },
     {
       "type": "api",
+      "name": "CreateTrackFilter",
+      "method": "POST",
+      "path": "/api/v1/user/tracks/filter",
+      "response": "CreateTrackFilter",
+      "body": "CreateTrackFilterBody"
+    },
+    {
+      "type": "api",
       "name": "CreateVirtualPlaylist",
       "method": "POST",
       "path": "/api/v1/virtual-playlists",
@@ -1639,6 +1722,12 @@
     },
     {
       "type": "api",
+      "name": "DeleteTrackFilter",
+      "method": "DELETE",
+      "path": "/api/v1/user/tracks/filter/:filterId"
+    },
+    {
+      "type": "api",
       "name": "DeleteVirtualPlaylist",
       "method": "DELETE",
       "path": "/api/v1/virtual-playlists/:id"
@@ -1656,6 +1745,13 @@
       "method": "PATCH",
       "path": "/api/v1/playlists/:playlistId/filters/:filterId",
       "body": "EditPlaylistFilterBody"
+    },
+    {
+      "type": "api",
+      "name": "EditTrackFilter",
+      "method": "POST",
+      "path": "/api/v1/user/tracks/filter/:filterId",
+      "body": "EditTrackFilterBody"
     },
     {
       "type": "api",
@@ -1825,6 +1921,13 @@
       "method": "GET",
       "path": "/api/v1/tracks/:id",
       "response": "GetTrackById"
+    },
+    {
+      "type": "api",
+      "name": "GetTrackFilters",
+      "method": "GET",
+      "path": "/api/v1/user/tracks/filter",
+      "response": "GetTrackFilters"
     },
     {
       "type": "api",

@@ -122,12 +122,15 @@ CREATE TABLE playlist_filters (
     PRIMARY KEY(id, playlist_id)
 );
 
--- TODO(patrik): Rename to track_filters?
-CREATE TABLE global_filters (
+CREATE TABLE track_filters (
     id TEXT NOT NULL,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
+    name TEXT NOT NULL CHECK(name<>''),
     filter TEXT NOT NULL,
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     PRIMARY KEY(id, user_id)
 );

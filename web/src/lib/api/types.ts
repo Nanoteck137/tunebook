@@ -234,6 +234,22 @@ export const CreatePlaylistBody = z.object({
 });
 export type CreatePlaylistBody = z.infer<typeof CreatePlaylistBody>;
 
+// Name: CreateTrackFilter
+export const CreateTrackFilter = z.object({
+  // Name: CreateTrackFilter.filterId
+  "filterId": z.string(),
+});
+export type CreateTrackFilter = z.infer<typeof CreateTrackFilter>;
+
+// Name: CreateTrackFilterBody
+export const CreateTrackFilterBody = z.object({
+  // Name: CreateTrackFilterBody.name
+  "name": z.string(),
+  // Name: CreateTrackFilterBody.filter
+  "filter": z.string(),
+});
+export type CreateTrackFilterBody = z.infer<typeof CreateTrackFilterBody>;
+
 // Name: CreateVirtualPlaylist
 export const CreateVirtualPlaylist = z.object({
   // Name: CreateVirtualPlaylist.id
@@ -269,6 +285,15 @@ export const EditPlaylistFilterBody = z.object({
   "filter": z.string().nullable().optional(),
 });
 export type EditPlaylistFilterBody = z.infer<typeof EditPlaylistFilterBody>;
+
+// Name: EditTrackFilterBody
+export const EditTrackFilterBody = z.object({
+  // Name: EditTrackFilterBody.name
+  "name": z.string().nullable().optional(),
+  // Name: EditTrackFilterBody.filter
+  "filter": z.string().nullable().optional(),
+});
+export type EditTrackFilterBody = z.infer<typeof EditTrackFilterBody>;
 
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
@@ -682,6 +707,26 @@ export const GetTrackById = z.object({
   "updated": z.number(),
 });
 export type GetTrackById = z.infer<typeof GetTrackById>;
+
+// Name: TrackFilter
+export const TrackFilter = z.object({
+  // Name: TrackFilter.filterId
+  "filterId": z.string(),
+  // Name: TrackFilter.userId
+  "userId": z.string(),
+  // Name: TrackFilter.name
+  "name": z.string(),
+  // Name: TrackFilter.filter
+  "filter": z.string(),
+});
+export type TrackFilter = z.infer<typeof TrackFilter>;
+
+// Name: GetTrackFilters
+export const GetTrackFilters = z.object({
+  // Name: GetTrackFilters.filters
+  "filters": z.array(TrackFilter),
+});
+export type GetTrackFilters = z.infer<typeof GetTrackFilters>;
 
 // Name: GetTracks
 export const GetTracks = z.object({

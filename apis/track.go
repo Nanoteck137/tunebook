@@ -119,7 +119,26 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 				q := c.Request().URL.Query()
 				opts := getPageOptions(q)
 
-				tracks, p, err := app.DB().GetPagedTracks(c.Request().Context(), opts)
+				ctx := c.Request().Context()
+
+				filterId := q.Get("filterId")
+				if filterId != "" {
+					user, err := User(app, c)
+					if err != nil {
+						// TODO(patrik): Handle error
+						return nil, err
+					}
+
+					dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId, user.Id)
+					if err != nil {
+						// TODO(patrik): Handle error
+						return nil, err
+					}
+
+					opts.Filter = dbFilter.Filter
+				}
+
+				tracks, p, err := app.DB().GetPagedTracks(ctx, opts)
 				if err != nil {
 					if errors.Is(err, database.ErrInvalidFilter) {
 						return nil, InvalidFilter(err)

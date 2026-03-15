@@ -7,10 +7,22 @@
   import { getMusicManager } from "$lib/music-manager.svelte";
   import TrackListHeader from "$lib/components/track-list/TrackListHeader.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
+  import NewFilterModal from "./NewFilterModal.svelte";
+  import FilterButton from "./FilterButton.svelte";
 
   let { data } = $props();
   const musicManager = getMusicManager();
+
+  let openNewFilterModal = $state(false);
 </script>
+
+<Button
+  onclick={() => {
+    openNewFilterModal = true;
+  }}
+>
+  New Filter
+</Button>
 
 <!-- <form method="GET">
   <div class="flex flex-col gap-2">
@@ -57,6 +69,12 @@
     );
   }}
 />
+
+<Spacer size="md" />
+
+{#each data.filters as filter}
+  <FilterButton {filter} />
+{/each}
 
 <Spacer size="md" />
 
@@ -117,3 +135,5 @@
     </Pagination.Content>
   {/snippet}
 </Pagination.Root>
+
+<NewFilterModal bind:open={openNewFilterModal} />

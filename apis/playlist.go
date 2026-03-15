@@ -123,7 +123,38 @@ func (b *AddPlaylistFilterBody) Transform() {
 func (b AddPlaylistFilterBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Name, validate.Required),
-		validate.Field(&b.Filter, validate.Required),
+		validate.Field(&b.Filter, validate.Required, validateFilter),
+	)
+}
+
+type EditPlaylistFilterBody struct {
+	Name   *string `json:"name,omitempty"`
+	Filter *string `json:"filter,omitempty"`
+}
+
+func (b *EditPlaylistFilterBody) Transform() {
+	b.Name = anvil.StringPtr(b.Name)
+	b.Filter = anvil.StringPtr(b.Filter)
+}
+
+// TODO(patrik): Move
+var validateFilter = validate.By(func(value any) error {
+	switch value := value.(type) {
+	case *string:
+		return TestFilter(*value)
+	case string:
+		return TestFilter(value)
+	default:
+		panic(fmt.Sprintf("validateFilter: Unknown type: %T", value))
+	}
+
+})
+
+func (b EditPlaylistFilterBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+
+		validate.Field(&b.Filter, validate.Required.When(b.Filter != nil), validateFilter),
 	)
 }
 
@@ -144,27 +175,6 @@ func (b EditPlaylistBody) Validate() error {
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
 
 		validate.Field(&b.CoverUrl, validate.Required.When(b.CoverUrl != nil)),
-	)
-}
-
-type EditPlaylistFilterBody struct {
-	Name   *string `json:"name,omitempty"`
-	Filter *string `json:"filter,omitempty"`
-}
-
-func (b *EditPlaylistFilterBody) Transform() {
-	b.Name = anvil.StringPtr(b.Name)
-	b.Filter = anvil.StringPtr(b.Filter)
-}
-
-func (b EditPlaylistFilterBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
-
-		validate.Field(&b.Filter, validate.Required.When(b.Filter != nil), validate.By(func(value any) error {
-			s := *(value.(*string))
-			return TestFilter(s)
-		})),
 	)
 }
 
@@ -578,7 +588,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, errors.New("invalid image type")
 				}
 
-				coverArt := "uploaded"+imageExt
+				coverArt := "uploaded" + imageExt
 				output := path.Join(playlistDir, coverArt)
 				err = os.Rename(tmpPath, output)
 				if err != nil {
@@ -1034,6 +1044,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		// TODO(patrik): Rename to CreatePlaylistFilter?
 		pyrin.ApiHandler{
 			Name:         "AddPlaylistFilter",
 			Method:       http.MethodPost,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
@@ -69,6 +70,60 @@ type GetAllApiTokens struct {
 type GetUser struct {
 	Id          string `json:"id"`
 	DisplayName string `json:"displayName"`
+}
+
+type TrackFilter struct {
+	FilterId string `json:"filterId"`
+	UserId   string `json:"userId"`
+
+	Name   string `json:"name"`
+	Filter string `json:"filter"`
+
+	// TODO(patrik): Created, Updated
+}
+
+type GetTrackFilters struct {
+	Filters []TrackFilter `json:"filters"`
+}
+
+type CreateTrackFilter struct {
+	FilterId string `json:"filterId"`
+}
+
+type CreateTrackFilterBody struct {
+	Name   string `json:"name"`
+	Filter string `json:"filter"`
+}
+
+func (b *CreateTrackFilterBody) Transform() {
+	b.Name = anvil.String(b.Name)
+	b.Filter = anvil.String(b.Filter)
+}
+
+func (b CreateTrackFilterBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required),
+		validate.Field(&b.Filter, validate.Required, validateFilter),
+	)
+}
+
+type EditTrackFilterBody struct {
+	Name   *string `json:"name,omitempty"`
+	Filter *string `json:"filter,omitempty"`
+}
+
+func (b *EditTrackFilterBody) Transform() {
+	b.Name = anvil.StringPtr(b.Name)
+	b.Filter = anvil.StringPtr(b.Filter)
+}
+
+func (b EditTrackFilterBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+		// TODO(patrik): Test if we need When on validate filter when
+		// b.Filter is nil
+		validate.Field(&b.Filter, validate.Required.When(b.Filter != nil), validateFilter),
+	)
 }
 
 func InstallUserHandlers(app core.App, group pyrin.Group) {
@@ -344,6 +399,163 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.DB().DeleteApiToken(ctx, tokenId)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetTrackFilters",
+			Method:       http.MethodGet,
+			Path:         "/user/tracks/filter",
+			ResponseType: GetTrackFilters{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				filters, err := app.DB().GetTrackFiltersByUserId(ctx, user.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetTrackFilters{
+					Filters: make([]TrackFilter, len(filters)),
+				}
+
+				for i, filter := range filters {
+					res.Filters[i] = TrackFilter{
+						FilterId: filter.Id,
+						UserId:   filter.UserId,
+						Name:     filter.Name,
+						Filter:   filter.Filter,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "CreateTrackFilter",
+			Method:       http.MethodPost,
+			Path:         "/user/tracks/filter",
+			ResponseType: CreateTrackFilter{},
+			BodyType:     CreateTrackFilterBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[CreateTrackFilterBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				filterId, err := app.DB().CreateTrackFilter(ctx, database.CreateTrackFilterParams{
+					UserId: user.Id,
+					Name:   body.Name,
+					Filter: body.Filter,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return CreateTrackFilter{
+					FilterId: filterId,
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "EditTrackFilter",
+			Method:   http.MethodPost,
+			Path:     "/user/tracks/filter/:filterId",
+			BodyType: EditTrackFilterBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				filterId := c.Param("filterId")
+
+				body, err := pyrin.Body[EditTrackFilterBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId, user.Id)
+				if err != nil {
+					// TODO(patrik): Handle Error
+					// if errors.Is(err, database.ErrItemNotFound) {
+					// 	return nil, error here pls
+					// }
+
+					return nil, err
+				}
+
+				changes := database.TrackFilterChanges{}
+
+				if body.Name != nil {
+					changes.Name = types.Change[string]{
+						Value:   *body.Name,
+						Changed: *body.Name != dbFilter.Name,
+					}
+				}
+
+				if body.Filter != nil {
+					changes.Filter = types.Change[string]{
+						Value:   *body.Filter,
+						Changed: *body.Filter != dbFilter.Filter,
+					}
+				}
+
+				err = app.DB().UpdateTrackFilter(ctx, dbFilter.Id, dbFilter.UserId, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "DeleteTrackFilter",
+			Method: http.MethodDelete,
+			Path:   "/user/tracks/filter/:filterId",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				filterId := c.Param("filterId")
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId, user.Id)
+				if err != nil {
+					// TODO(patrik): Handle Error
+					// if errors.Is(err, database.ErrItemNotFound) {
+					// 	return nil, error here pls
+					// }
+
+					return nil, err
+				}
+
+				err = app.DB().DeleteTrackFilter(ctx, dbFilter.Id, dbFilter.UserId)
 				if err != nil {
 					return nil, err
 				}

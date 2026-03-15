@@ -72,6 +72,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/playlists/filter", "POST", api.CreatePlaylist, z.any(), body, options)
   }
   
+  createTrackFilter(body: api.CreateTrackFilterBody, options?: ExtraOptions) {
+    return this.request("/api/v1/user/tracks/filter", "POST", api.CreateTrackFilter, z.any(), body, options)
+  }
+  
   createVirtualPlaylist(body: api.CreateVirtualPlaylistBody, options?: ExtraOptions) {
     return this.request("/api/v1/virtual-playlists", "POST", api.CreateVirtualPlaylist, z.any(), body, options)
   }
@@ -84,6 +88,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
+  deleteTrackFilter(filterId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/user/tracks/filter/${filterId}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
   deleteVirtualPlaylist(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/virtual-playlists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
@@ -94,6 +102,10 @@ export class ApiClient extends BaseApiClient {
   
   editPlaylistFilter(playlistId: string, filterId: string, body: api.EditPlaylistFilterBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/filters/${filterId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  editTrackFilter(filterId: string, body: api.EditTrackFilterBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/user/tracks/filter/${filterId}`, "POST", z.undefined(), z.any(), body, options)
   }
   
   generatePlaylistImage(id: string, options?: ExtraOptions) {
@@ -181,6 +193,10 @@ export class ApiClient extends BaseApiClient {
   
   getTrackById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/tracks/${id}`, "GET", api.GetTrackById, z.any(), undefined, options)
+  }
+  
+  getTrackFilters(options?: ExtraOptions) {
+    return this.request("/api/v1/user/tracks/filter", "GET", api.GetTrackFilters, z.any(), undefined, options)
   }
   
   getTracks(options?: ExtraOptions) {
@@ -325,6 +341,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/playlists/filter")
   }
   
+  createTrackFilter() {
+    return createUrl(this.baseUrl, "/api/v1/user/tracks/filter")
+  }
+  
   createVirtualPlaylist() {
     return createUrl(this.baseUrl, "/api/v1/virtual-playlists")
   }
@@ -337,6 +357,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
   }
   
+  deleteTrackFilter(filterId: string) {
+    return createUrl(this.baseUrl, `/api/v1/user/tracks/filter/${filterId}`)
+  }
+  
   deleteVirtualPlaylist(id: string) {
     return createUrl(this.baseUrl, `/api/v1/virtual-playlists/${id}`)
   }
@@ -347,6 +371,10 @@ export class ClientUrls {
   
   editPlaylistFilter(playlistId: string, filterId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters/${filterId}`)
+  }
+  
+  editTrackFilter(filterId: string) {
+    return createUrl(this.baseUrl, `/api/v1/user/tracks/filter/${filterId}`)
   }
   
   generatePlaylistImage(id: string) {
@@ -443,6 +471,10 @@ export class ClientUrls {
   
   getTrackById(id: string) {
     return createUrl(this.baseUrl, `/api/v1/tracks/${id}`)
+  }
+  
+  getTrackFilters() {
+    return createUrl(this.baseUrl, "/api/v1/user/tracks/filter")
   }
   
   getTracks() {

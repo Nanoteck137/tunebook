@@ -112,6 +112,7 @@ func (db DB) CreatePlaylist(ctx context.Context, params CreatePlaylistParams) (P
 
 	id := params.Id
 	if id == "" {
+		// TODO(patrik): Change to CreatePlaylistId
 		id = utils.CreateId()
 	}
 
