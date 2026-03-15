@@ -2,9 +2,6 @@
 
 ## Rewrite
 
-- [ ] Playlists/Taglists
-    - [ ] Global Filters per user
-
 - [ ] Quick Code integration
 
 - [ ] Better API Tokens
