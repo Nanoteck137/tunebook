@@ -149,3 +149,5 @@
     Login with {provider.displayName}
   </Button>
 {/each}
+
+<Button href="/login/quick">Login with Quick Code</Button>

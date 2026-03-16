@@ -2,8 +2,6 @@
 
 ## Rewrite
 
-- [ ] Quick Code integration
-
 - [ ] User Tracking
     - [ ] Number of plays 
     - [ ] Favorites
