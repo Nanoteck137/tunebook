@@ -22,6 +22,8 @@ import (
 var CreateId = createIdGenerator(32)
 var CreateSmallId = createIdGenerator(8)
 
+var CreateUserId = createIdGenerator(10)
+
 var CreateArtistId = createIdGenerator(10)
 var CreateAlbumId = createIdGenerator(16)
 var CreateTrackId = createIdGenerator(32)
@@ -33,6 +35,8 @@ var CreateTrackFilterId = createIdGenerator(8)
 var CreateVirtualPlaylistId = createIdGenerator(16)
 
 var CreateApiTokenId = createIdGenerator(32)
+
+var CreateUserListeningEventId = createIdGenerator(32)
 
 func createIdGenerator(length int) func() string {
 	res, err := cuid2.Init(cuid2.WithLength(length))

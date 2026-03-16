@@ -1347,6 +1347,21 @@
       ]
     },
     {
+      "name": "RecordTrackBody",
+      "fields": [
+        {
+          "name": "duration",
+          "type": "float",
+          "omitEmpty": false
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "RemovePlaylistItemBody",
       "fields": [
         {
@@ -1977,6 +1992,13 @@
       "method": "GET",
       "path": "/api/v1/virtual-playlists/playlists/:playlistId",
       "response": "GetVirtualPlaylists"
+    },
+    {
+      "type": "api",
+      "name": "RecordTrack",
+      "method": "POST",
+      "path": "/api/v1/media/record/track/:trackId",
+      "body": "RecordTrackBody"
     },
     {
       "type": "api",

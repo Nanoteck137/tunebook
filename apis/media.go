@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/core"
@@ -77,8 +78,8 @@ type GetMediaFromIdsBody struct {
 	KeepOrder bool     `json:"keepOrder,omitempty"`
 }
 
-// TODO(patrik): This might need some fixing, because this only returns the 
-// original track stream so the user of the media api can't choose which 
+// TODO(patrik): This might need some fixing, because this only returns the
+// original track stream so the user of the media api can't choose which
 // format to use
 func packMediaResult(c pyrin.Context, tracks []database.Track, targetMediaFormat types.MediaFormat, shuffle bool) (GetMedia, error) {
 	if shuffle {
@@ -155,8 +156,57 @@ type GetMediaSettings struct {
 	DeviceSpecs []MediaDeviceSpec `json:"deviceSpecs"`
 }
 
+type RecordTrackBody struct {
+	Duration float32 `json:"duration"`
+	// TODO(patrik): Validate
+	Source   string  `json:"source"`
+}
+
 func InstallMediaHandlers(app core.App, group pyrin.Group) {
 	group.Register(
+		pyrin.ApiHandler{
+			Name:         "RecordTrack",
+			Method:       http.MethodPost,
+			Path:         "/media/record/track/:trackId",
+			ResponseType: nil,
+			BodyType:     RecordTrackBody{},
+			HandlerFunc:  func(c pyrin.Context) (any, error) {
+				trackId := c.Param("trackId")
+
+				body, err := pyrin.Body[RecordTrackBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					// NOTE(patrik): This is expected behavior
+					return nil, nil
+				}
+
+				track, err := app.DB().GetTrackById(ctx, trackId)
+				if err != nil {
+					// TODO(patrik): Handle error
+					return nil, err
+				}
+
+				_, err = app.DB().CreateUserListeningEvent(ctx, database.CreateUserListeningEventParams{
+					UserId:     user.Id,
+					TrackId:    track.Id,
+					ListenedAt: time.Now().UnixMilli(),
+					DurationMs: int64(body.Duration * 1000),
+					Source:     body.Source,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
 		pyrin.ApiHandler{
 			Name:         "GetMediaSettings",
 			Method:       http.MethodGet,

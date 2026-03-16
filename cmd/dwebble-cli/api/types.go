@@ -735,6 +735,14 @@ type PostPlaylistFilterBody struct {
 	Filter string `json:"filter"`
 }
 
+// Name: RecordTrackBody
+type RecordTrackBody struct {
+	// Name: RecordTrackBody.duration
+	Duration float32 `json:"duration"`
+	// Name: RecordTrackBody.source
+	Source string `json:"source"`
+}
+
 // Name: RemovePlaylistItemBody
 type RemovePlaylistItemBody struct {
 	// Name: RemovePlaylistItemBody.trackId

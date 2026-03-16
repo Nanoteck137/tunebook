@@ -9,6 +9,7 @@
     Play,
     SkipBack,
     SkipForward,
+    TestTube,
     Volume2,
     VolumeX,
   } from "lucide-svelte";
@@ -16,8 +17,11 @@
   import Spinner from "$lib/components/Spinner.svelte";
   import type { MediaItem } from "$lib/api/types";
   import Image from "$lib/components/Image.svelte";
+  import { getApiClient, handleApiError } from "$lib";
+  import toast from "svelte-5-french-toast";
 
   const musicManager = getMusicManager();
+  const apiClient = getApiClient();
 
   interface Props {
     loading: boolean;
@@ -38,7 +42,9 @@
     onPause: () => void;
     onNextTrack: () => void;
     onPrevTrack: () => void;
+    // eslint-disable-next-line no-unused-vars
     onSeek: (e: number) => void;
+    // eslint-disable-next-line no-unused-vars
     onVolumeChanged: (e: number) => void;
     onToggleMuted: () => void;
   }
@@ -148,6 +154,25 @@
   <div class="grid h-full grid-cols-footer">
     <div class="flex items-center gap-2">
       <div class="flex items-center gap-2">
+        <button
+          onclick={async () => {
+            console.log(currentTime);
+            if (!mediaItem) return;
+
+            const res = await apiClient.recordTrack(mediaItem.track.id, {
+              source: "unknown",
+              duration: currentTime,
+            });
+            if (!res.success) {
+              return handleApiError(res.error);
+            }
+
+            toast.success("Recorded track");
+          }}
+        >
+          <TestTube size={32} />
+        </button>
+
         <button
           onclick={() => {
             onPrevTrack();

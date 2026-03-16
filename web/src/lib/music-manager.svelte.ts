@@ -46,6 +46,8 @@ export abstract class Queue {
     this.index = index;
   }
 
+  abstract markTrack(position: number): Promise<void>;
+
   abstract clearQueue(): Promise<void>;
 
   abstract addFromPlaylist(
@@ -96,6 +98,22 @@ export class LocalQueue extends Queue {
 
   async initialize() {
     await this.loadQueue();
+  }
+
+  async markTrack(position: number) {
+    const track = this.items.at(this.index);
+    if (!track) return;
+
+    const res = await this.apiClient.recordTrack(track.track.id, {
+      duration: position,
+      source: "unknown",
+    });
+    if (!res.success) {
+      console.error("failed to record track", res.error);
+      return;
+    }
+
+    console.log("marked track");
   }
 
   async clearQueue() {
@@ -160,6 +178,7 @@ export class LocalQueue extends Queue {
     this.saveQueue();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addFromTaglist(taglistId: string, settings?: AddToQueueSettings) {
     // TODO(patrik): Handle error
     // const res = await this.apiClient.getMediaFromTaglist(taglistId, {
@@ -249,6 +268,8 @@ export class DummyQueue extends Queue {
 
   async initialize() {}
 
+  async markTrack() {}
+
   async clearQueue() {}
 
   async addFromPlaylist() {}
@@ -302,11 +323,17 @@ type QueueRequest =
   | QueueRequestAddTaglist
   | QueueRequestAddFilter;
 
+type Player = {
+  getPosition: () => number;
+};
+
 export class MusicManager {
   apiClient: ApiClient;
   queue: Queue;
 
   emitter: Emitter;
+
+  player?: Player;
 
   constructor(apiClient: ApiClient, queue: Queue) {
     this.apiClient = apiClient;
@@ -316,6 +343,14 @@ export class MusicManager {
     this.queue.initialize().then(() => {
       this.emitter.emit("onQueueUpdated");
     });
+  }
+
+  registerPlayer(player: Player) {
+    this.player = player;
+  }
+
+  getPlayerPosition(): number {
+    return this.player?.getPosition() ?? 0;
   }
 
   async clearQueue() {
@@ -432,12 +467,18 @@ export class MusicManager {
   }
 
   async setQueueIndex(index: number) {
+    await this.markTrack();
+
     await this.queue.setQueueIndex(index);
     this.emitter.emit("onQueueUpdated");
   }
 
   emitQueueUpdate() {
     this.emitter.emit("onQueueUpdated");
+  }
+
+  async markTrack() {
+    this.queue.markTrack(this.getPlayerPosition());
   }
 
   async nextTrack() {

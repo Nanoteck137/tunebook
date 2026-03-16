@@ -808,6 +808,15 @@ export const PostPlaylistFilterBody = z.object({
 });
 export type PostPlaylistFilterBody = z.infer<typeof PostPlaylistFilterBody>;
 
+// Name: RecordTrackBody
+export const RecordTrackBody = z.object({
+  // Name: RecordTrackBody.duration
+  "duration": z.number(),
+  // Name: RecordTrackBody.source
+  "source": z.string(),
+});
+export type RecordTrackBody = z.infer<typeof RecordTrackBody>;
+
 // Name: RemovePlaylistItemBody
 export const RemovePlaylistItemBody = z.object({
   // Name: RemovePlaylistItemBody.trackId

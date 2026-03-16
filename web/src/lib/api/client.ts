@@ -227,6 +227,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/virtual-playlists/playlists/${playlistId}`, "GET", api.GetVirtualPlaylists, z.any(), undefined, options)
   }
   
+  recordTrack(trackId: string, body: api.RecordTrackBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/record/track/${trackId}`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   removeItemFromUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
     return this.request("/api/v1/user/quickplaylist", "DELETE", z.undefined(), z.any(), body, options)
   }
@@ -503,6 +507,10 @@ export class ClientUrls {
   
   getVirtualPlaylistsForPlaylist(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/virtual-playlists/playlists/${playlistId}`)
+  }
+  
+  recordTrack(trackId: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/record/track/${trackId}`)
   }
   
   removeItemFromUserQuickPlaylist() {

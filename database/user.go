@@ -123,17 +123,14 @@ type CreateUserParams struct {
 
 // TODO(patrik): Change to return id
 func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, error) {
-	t := time.Now().UnixMilli()
-	created := params.Created
-	updated := params.Updated
-
-	if created == 0 && updated == 0 {
-		created = t
-		updated = t
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
 	}
 
 	if params.Id == "" {
-		params.Id = utils.CreateId()
+		params.Id = utils.CreateUserId()
 	}
 
 	query := dialect.
@@ -145,8 +142,8 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, err
 			"display_name": params.DisplayName,
 			"role":         params.Role,
 
-			"created": created,
-			"updated": updated,
+			"created": params.Created,
+			"updated": params.Updated,
 		}).
 		// TODO(patrik): Fix this
 		Returning(

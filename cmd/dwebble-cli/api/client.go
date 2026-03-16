@@ -854,6 +854,22 @@ func (c *Client) GetVirtualPlaylistsForPlaylist(playlistId string, options Optio
 	return Request[GetVirtualPlaylists](data, nil)
 }
 
+func (c *Client) RecordTrack(trackId string, body RecordTrackBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/record/track/%v", trackId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *Client) RemoveItemFromUserQuickPlaylist(body TrackId, options Options) (*any, error) {
 	path := "/api/v1/user/quickplaylist"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1298,6 +1314,11 @@ func (c *ClientUrls) GetVirtualPlaylists() (*URL, error) {
 
 func (c *ClientUrls) GetVirtualPlaylistsForPlaylist(playlistId string) (*URL, error) {
 	path := Sprintf("/api/v1/virtual-playlists/playlists/%v", playlistId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RecordTrack(trackId string) (*URL, error) {
+	path := Sprintf("/api/v1/media/record/track/%v", trackId)
 	return c.getUrl(path)
 }
 

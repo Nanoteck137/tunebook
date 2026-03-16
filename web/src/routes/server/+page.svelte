@@ -4,7 +4,7 @@
   import { formatDuration } from "$lib/utils.js";
   import { Button } from "@nanoteck137/nano-ui";
   import { Play } from "lucide-svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
   import toast from "svelte-5-french-toast";
   import { z } from "zod";
 

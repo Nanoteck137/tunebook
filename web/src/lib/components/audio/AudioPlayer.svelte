@@ -5,7 +5,6 @@
   import { getMusicManager } from "$lib/music-manager.svelte";
   import { browser } from "$app/environment";
   import type { MediaItem } from "$lib/api/types";
-  import toast from "svelte-5-french-toast";
 
   const musicManager = getMusicManager();
 
@@ -104,9 +103,8 @@
       // console.log("load");
     });
 
-    audio.addEventListener("ended", () => {
-      musicManager.nextTrack();
-      musicManager.requestPlay();
+    audio.addEventListener("ended", async () => {
+      await musicManager.nextTrack();
     });
 
     musicManager.emitter.on("requestPlay", () => {
@@ -193,11 +191,9 @@
     }}
     onNextTrack={() => {
       musicManager.nextTrack();
-      audio.play();
     }}
     onPrevTrack={() => {
       musicManager.previousTrack();
-      audio.play();
     }}
     onSeek={(e) => {
       audio.currentTime = e;
@@ -240,11 +236,9 @@
     }}
     onNextTrack={() => {
       musicManager.nextTrack();
-      audio.play();
     }}
     onPrevTrack={() => {
       musicManager.previousTrack();
-      audio.play();
     }}
     onSeek={(e) => {
       audio.currentTime = e;
