@@ -968,22 +968,6 @@ func (c *Client) SearchTracks(options Options) (*SearchTracks, error) {
 
 
 
-func (c *Client) SyncLibrary(options Options) (*any, error) {
-	path := "/api/v1/system/library"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
 func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options) (*any, error) {
 	path := "/api/v1/user/settings"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1359,11 +1343,6 @@ func (c *ClientUrls) SseHandler() (*URL, error) {
 
 func (c *ClientUrls) StreamTrack(trackId string) (*URL, error) {
 	path := Sprintf("/media/tracks/%v/stream", trackId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) SyncLibrary() (*URL, error) {
-	path := "/api/v1/system/library"
 	return c.getUrl(path)
 }
 

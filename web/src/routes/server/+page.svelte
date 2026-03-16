@@ -11,7 +11,6 @@
   const { data } = $props();
   const apiClient = getApiClient();
 
-  let isSyncing = $state(false);
   let errors = $state<string[]>([]);
   let numArtists = $state(0);
   let numAlbums = $state(0);
@@ -22,69 +21,7 @@
   let trackSyncTime = $state(0);
   let totalSyncTime = $state(0);
 
-  const SyncError = z.object({
-    type: z.string(),
-    message: z.string(),
-    fullMessage: z.string().optional(),
-  });
-
-  const MissingAlbum = z.object({
-    id: z.string(),
-    name: z.string(),
-    artistName: z.string(),
-  });
-
-  const MissingTrack = z.object({
-    id: z.string(),
-    name: z.string(),
-    albumName: z.string(),
-    artistName: z.string(),
-  });
-
-  const SyncState = z.object({
-    isSyncing: z.boolean(),
-    isRetrivingPaths: z.boolean(),
-
-    paths: z.array(
-      z.object({
-        name: z.string(),
-        path: z.string(),
-        isDir: z.boolean(),
-        depth: z.number(),
-      }),
-    ),
-
-    report: z.object({
-      syncErrors: z.array(SyncError).nullable(),
-      missingAlbums: z.array(MissingAlbum).nullable(),
-      missingTracks: z.array(MissingTrack).nullable(),
-    }),
-  });
-  type SyncStateTy = z.infer<typeof SyncState>;
-
-  const Event = z.discriminatedUnion("type", [
-    z.object({
-      type: z.literal("sync-state"),
-      data: SyncState,
-    }),
-    z.object({
-      type: z.literal("syncing"),
-      data: z.object({
-        syncing: z.boolean(),
-      }),
-    }),
-    z.object({
-      type: z.literal("report"),
-      data: z.object({
-        syncErrors: z.array(SyncError).nullable(),
-        missingAlbums: z.array(MissingAlbum).nullable(),
-        missingTracks: z.array(MissingTrack).nullable(),
-      }),
-    }),
-  ]);
-
   const LibrarySyncStateEvent = z.object({
-    isRunning: z.boolean(),
     errors: z.array(z.string()),
 
     numArtists: z.number(),
@@ -121,7 +58,6 @@
 
       console.log("library state", data);
 
-      isSyncing = data.isRunning;
       errors = data.errors;
       numArtists = data.numArtists;
       numAlbums = data.numAlbums;
@@ -183,20 +119,6 @@
     {/if}
   </div>
 {/each}
-
-<p>Library Syncing: {isSyncing}</p>
-
-<Button
-  onclick={async () => {
-    const res = await apiClient.syncLibrary({});
-    if (!res.success) {
-      handleApiError(res.error);
-      return;
-    }
-  }}
->
-  Sync Library
-</Button>
 
 <p>Num Artists: {numArtists}</p>
 <p>Num Albums: {numAlbums}</p>

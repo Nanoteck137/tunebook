@@ -5,8 +5,8 @@
 - [ ] Quick Code integration
 
 - [ ] Jobs
-    - [ ] Create new search index
-    - [ ] Library Syncing
+    - [ ] Search Indexing
+    - [ ] Cleanup Library
 
 - [ ] User Tracking
     - [ ] Number of plays 

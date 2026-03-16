@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -741,8 +740,8 @@ func (a *AuthService) SignUserToken(userId string) (string, error) {
 	return tokenString, nil
 }
 
-// RemoveUnusedEntries performs cleanup on expired auth requests
-func (a *AuthService) RemoveUnusedEntries() {
+// Performs cleanup on expired auth requests
+func (a *AuthService) Cleanup() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -761,17 +760,4 @@ func (a *AuthService) RemoveUnusedEntries() {
 			delete(a.quickConnectRequests, k)
 		}
 	}
-}
-
-// TODO(patrik): This should be a worker that the app creates when initializing
-func (a *AuthService) CleanRoutine() {
-	ticker := time.NewTicker(30 * time.Minute)
-	for range ticker.C {
-		slog.Info("auth-service: running cleanup")
-		a.RunCleanup()
-	}
-}
-
-func (a *AuthService) RunCleanup() {
-	a.RemoveUnusedEntries()
 }

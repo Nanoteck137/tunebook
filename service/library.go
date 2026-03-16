@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"os"
 	"path"
-	"sync/atomic"
 	"time"
 
 	"github.com/nanoteck137/dwebble"
@@ -86,7 +85,6 @@ func (e TrackEntry) GetTrackFile() string {
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
 
 type LibrarySyncStateEvent struct {
-	IsRunning bool     `json:"isRunning"`
 	Errors    []string `json:"errors"`
 
 	NumArtists int `json:"numArtists"`
@@ -114,7 +112,6 @@ type LibraryService struct {
 	searchService       *SearchService
 
 	errors      []error
-	syncRunning atomic.Bool
 
 	numArtists int
 	numAlbums  int
@@ -141,7 +138,6 @@ func NewLibraryService(
 		norificationService: notificationService,
 		mediaService:        mediaService,
 		searchService:       searchService,
-		syncRunning:         atomic.Bool{},
 	}
 }
 
@@ -158,14 +154,11 @@ func (s *LibraryService) update() {
 func (s *LibraryService) GetSyncStateEvent() LibrarySyncStateEvent {
 	errors := make([]string, len(s.errors))
 
-	isRunning := s.syncRunning.Load()
-
 	for i, err := range s.errors {
 		errors[i] = err.Error()
 	}
 
 	return LibrarySyncStateEvent{
-		IsRunning:             isRunning,
 		Errors:                errors,
 		NumArtists:            s.numArtists,
 		NumAlbums:             s.numAlbums,
@@ -706,9 +699,10 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 	return nil
 }
 
-func (s *LibraryService) runSync() error {
+func (s *LibraryService) Sync() error {
 	p := s.config.LibraryDir
 
+	// TODO(patrik): Replace with s.logger
 	slog.Info("starting library sync...")
 	s.norificationService.SendSimple(dwebble.AppName+": "+"Starting library sync", "Starting to sync the library", SimpleNotificationOptions{
 		Tags: []string{utils.Slug(dwebble.AppName), "library", "syncing"},
@@ -782,23 +776,4 @@ func (s *LibraryService) runSync() error {
 	s.totalSyncDuration = s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
 
 	return nil
-}
-
-func (s *LibraryService) Sync() {
-	if s.syncRunning.Load() {
-		slog.Error("library syncing already running")
-		return
-	}
-
-	s.syncRunning.Store(true)
-	defer func() {
-		s.syncRunning.Store(false)
-		s.update()
-	}()
-
-	err := s.runSync()
-	if err != nil {
-		slog.Error("failed to run sync", "err", err)
-		return
-	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
@@ -17,6 +16,7 @@ import (
 const (
 	jobAuthCleanup  = "auth-cleanup"
 	jobCacheCleanup = "cache-cleanup"
+	jobLibrarySync  = "library-sync"
 )
 
 var _ service.Job = (*AuthCleanupJob)(nil)
@@ -34,8 +34,7 @@ func (j *AuthCleanupJob) Schedule() string {
 }
 
 func (j *AuthCleanupJob) Run(ctx context.Context) error {
-	time.Sleep(4 * time.Second)
-	j.authService.RunCleanup()
+	j.authService.Cleanup()
 	return nil
 }
 
@@ -68,6 +67,25 @@ func (j *CacheCleanupJob) Run(ctx context.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+var _ service.Job = (*LibrarySyncJob)(nil)
+
+type LibrarySyncJob struct {
+	libraryService *service.LibraryService
+}
+
+func (j *LibrarySyncJob) Name() string {
+	return jobLibrarySync
+}
+
+func (j *LibrarySyncJob) Schedule() string {
+	return ""
+}
+
+func (j *LibrarySyncJob) Run(ctx context.Context) error {
+	j.libraryService.Sync()
 	return nil
 }
 
@@ -235,14 +253,19 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
+	err = app.jobService.AddJob(&LibrarySyncJob{
+		libraryService: app.libraryService,
+	})
+	if err != nil {
+		return err
+	}
+
 	// TODO(patrik): This should not be in bootstrap
 	app.jobService.DisplayJobs()
 	app.jobService.Start()
 
 	// TODO(patrik): This should not be in bootstrap
 	go app.broker.Listen()
-
-	app.jobService.RunJob(context.Background(), jobAuthCleanup)
 
 	return nil
 }

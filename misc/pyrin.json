@@ -2040,12 +2040,6 @@
     },
     {
       "type": "api",
-      "name": "SyncLibrary",
-      "method": "POST",
-      "path": "/api/v1/system/library"
-    },
-    {
-      "type": "api",
       "name": "UpdateUserSettings",
       "method": "PATCH",
       "path": "/api/v1/user/settings",

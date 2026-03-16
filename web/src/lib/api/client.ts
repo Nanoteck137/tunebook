@@ -257,10 +257,6 @@ export class ApiClient extends BaseApiClient {
   
   
   
-  syncLibrary(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), undefined, options)
-  }
-  
   updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }
@@ -543,10 +539,6 @@ export class ClientUrls {
   
   streamTrack(trackId: string) {
     return createUrl(this.baseUrl, `/media/tracks/${trackId}/stream`)
-  }
-  
-  syncLibrary() {
-    return createUrl(this.baseUrl, "/api/v1/system/library")
   }
   
   updateUserSettings() {
