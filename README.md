@@ -4,14 +4,14 @@
 
 - [ ] Quick Code integration
 
-- [ ] Jobs
-    - [ ] Search Indexing
-    - [ ] Cleanup Library
-
 - [ ] User Tracking
     - [ ] Number of plays 
     - [ ] Favorites
     - [ ] Year over Year 
+
+- [ ] Jobs
+    - [ ] Search Indexing
+    - [ ] Cleanup Library
 
 - [ ] Better API Tokens
 
@@ -59,10 +59,15 @@
     - [ ] Batch indexing
     - [ ] Add more logging
 
-- [ ] Library Handling
+- [ ] Job Service
+    - [ ] Add lock
+
+- [ ] Library Service
     - [ ] Multi-threaded syncing
     - [ ] Clear the cache after sync
     - [ ] Cleanup after sync (artists, albums and tracks not existing anymore)
+
+- [ ] Library Handling
     - [ ] Update Cmd
         - [ ] Metadata Validation
         - [ ] Metadata transformation (trim spaces, escape characters, more)
