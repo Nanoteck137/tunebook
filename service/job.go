@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"sort"
+	"time"
 
+	"github.com/maruel/natural"
+	"github.com/nanoteck137/dwebble/tools/broker"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/robfig/cron/v3"
 )
-
-type JobFunc func(ctx context.Context) error
 
 type Job interface {
 	Name() string
@@ -17,29 +19,46 @@ type Job interface {
 	Run(ctx context.Context) error
 }
 
+var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
+
+type JobSyncStateEventJob struct {
+	Name      string `json:"name"`
+	IsRunning bool   `json:"isRunning"`
+}
+
+type JobSyncStateEvent struct {
+	Jobs []JobSyncStateEventJob `json:"jobs"`
+}
+
+func (e JobSyncStateEvent) GetEventType() string {
+	return "job-sync-state"
+}
+
 type jobEntry struct {
 	job     Job
 	entryId *cron.EntryID
 
-	// success
-	// lastRun   *time.Time
-	// lastError error
+	isRunning bool
 
-	runner JobFunc
+	lastRunSuccess bool
+	lastRunTime    *time.Duration
+	lastRunError   error
 }
 
 type JobService struct {
 	logger *slog.Logger
 
 	cron *cron.Cron
-	jobs map[string]jobEntry
+	jobs map[string]*jobEntry
+
+	updateFunc UpdateFunc
 }
 
 func NewJobService(logger *slog.Logger) *JobService {
 	return &JobService{
 		logger: logger,
 		cron:   cron.New(),
-		jobs:   map[string]jobEntry{},
+		jobs:   map[string]*jobEntry{},
 	}
 }
 
@@ -47,6 +66,37 @@ func (s *JobService) Init() error {
 	s.logger.Info("initializing job service")
 
 	return nil
+}
+
+func (s *JobService) GetSyncStateEvent() JobSyncStateEvent {
+	// TODO(patrik): Lock
+
+	res := JobSyncStateEvent{
+		Jobs: []JobSyncStateEventJob{},
+	}
+
+	for _, job := range s.jobs {
+		res.Jobs = append(res.Jobs, JobSyncStateEventJob{
+			Name:      job.job.Name(),
+			IsRunning: job.isRunning,
+		})
+	}
+
+	sort.SliceStable(res.Jobs, func(i, j int) bool {
+		return natural.Less(res.Jobs[i].Name, res.Jobs[j].Name)
+	})
+
+	return res
+}
+
+func (s *JobService) SetUpdateFunc(f UpdateFunc) {
+	s.updateFunc = f
+}
+
+func (s *JobService) update() {
+	if s.updateFunc != nil {
+		s.updateFunc()
+	}
 }
 
 func (s *JobService) AddJob(job Job) error {
@@ -76,7 +126,7 @@ func (s *JobService) AddJob(job Job) error {
 		entryId = &id
 	}
 
-	s.jobs[job.Name()] = jobEntry{
+	s.jobs[job.Name()] = &jobEntry{
 		job:     job,
 		entryId: entryId,
 	}
@@ -90,7 +140,10 @@ func (s *JobService) AddJob(job Job) error {
 
 func (s *JobService) DisplayJobs() {
 	for _, job := range s.jobs {
-		s.logger.Info("registered job", "name", job.job.Name(), "schedule", job.job.Schedule())
+		s.logger.Info("registered job",
+			"name", job.job.Name(),
+			"schedule", job.job.Schedule(),
+		)
 	}
 }
 
@@ -102,18 +155,26 @@ func (s *JobService) Stop() {
 	s.cron.Start()
 }
 
-func (s *JobService) getJobEntry(name string) (jobEntry, bool) {
-	// TODO(patrik): Add lock
-	res, exists := s.jobs[name]
-
-	return res, exists
-}
-
 func (s *JobService) RunJob(ctx context.Context, name string) {
-	entry, exists := s.getJobEntry(name)
+	// TODO(patrik): Add lock
+	entry, exists := s.jobs[name]
 	if !exists {
 		s.logger.Error("no job with name", "name", name)
+		return
 	}
+
+	if entry.isRunning {
+		s.logger.Error("job already running", "name", name)
+		return
+	}
+
+	entry.isRunning = true
+	s.update()
+
+	defer func() {
+		entry.isRunning = false
+		s.update()
+	}()
 
 	s.logger.Info("running job", "job", entry.job.Name())
 
@@ -121,12 +182,17 @@ func (s *JobService) RunJob(ctx context.Context, name string) {
 	timer.Start()
 
 	err := entry.job.Run(ctx)
-	if err != nil {
-		s.logger.Error("job returned error", "err", err, "job", name)
-		return
-	}
 
 	dur := timer.Stop()
+	entry.lastRunTime = &dur
 
-	s.logger.Info("job was successfully", "job", entry.job.Name(), "duration", dur)
+	if err != nil {
+		s.logger.Error("job returned error", "err", err, "job", name, "duration", dur)
+		entry.lastRunError = err
+		entry.lastRunSuccess = false
+	} else {
+		s.logger.Info("job was successfully", "job", name, "duration", dur)
+		entry.lastRunError = nil
+		entry.lastRunSuccess = true
+	}
 }

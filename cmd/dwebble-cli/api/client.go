@@ -902,6 +902,22 @@ func (c *Client) ReorderPlaylistItems(id string, body ReorderPlaylistItemsBody, 
 	return Request[any](data, body)
 }
 
+func (c *Client) RunJob(jobName string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/system/job/%v", jobName)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 func (c *Client) SearchAlbums(options Options) (*SearchAlbums, error) {
 	path := "/api/v1/albums/search"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1313,6 +1329,11 @@ func (c *ClientUrls) RemovePlaylistItem(id string) (*URL, error) {
 
 func (c *ClientUrls) ReorderPlaylistItems(id string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items/reorder", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RunJob(jobName string) (*URL, error) {
+	path := Sprintf("/api/v1/system/job/%v", jobName)
 	return c.getUrl(path)
 }
 

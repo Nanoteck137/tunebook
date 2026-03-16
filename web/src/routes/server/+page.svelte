@@ -3,7 +3,9 @@
   import { getApiClient, handleApiError } from "$lib";
   import { formatDuration } from "$lib/utils.js";
   import { Button } from "@nanoteck137/nano-ui";
+  import { Play } from "lucide-svelte";
   import { onDestroy, onMount } from "svelte";
+  import toast from "svelte-5-french-toast";
   import { z } from "zod";
 
   const { data } = $props();
@@ -95,6 +97,18 @@
     totalSyncDurationMs: z.number(),
   });
 
+  const JobSyncStateEventJob = z.object({
+    name: z.string(),
+    isRunning: z.boolean(),
+  });
+  type JobSyncStateEventJobTy = z.infer<typeof JobSyncStateEventJob>;
+
+  const JobSyncStateEvent = z.object({
+    jobs: z.array(JobSyncStateEventJob),
+  });
+
+  let jobs = $state<JobSyncStateEventJobTy[]>([]);
+
   onMount(() => {
     const eventSource = new EventSource(apiClient.url.sseHandler());
 
@@ -119,6 +133,24 @@
       totalSyncTime = data.totalSyncDurationMs;
     });
 
+    eventSource.addEventListener("job-sync-state", (e) => {
+      const data = JobSyncStateEvent.parse(JSON.parse(e.data));
+
+      console.log("jobs state", data);
+      jobs = data.jobs;
+
+      // isSyncing = data.isRunning;
+      // errors = data.errors;
+      // numArtists = data.numArtists;
+      // numAlbums = data.numAlbums;
+      // numTracks = data.numTracks;
+
+      // artistSyncTime = data.artistsSyncDurationMs;
+      // albumSyncTime = data.albumsSyncDurationMs;
+      // trackSyncTime = data.tracksSyncDurationMs;
+      // totalSyncTime = data.totalSyncDurationMs;
+    });
+
     return () => {
       eventSource.close();
     };
@@ -129,6 +161,28 @@
 
 <p>Version: {PUBLIC_VERSION}</p>
 <p>Commit: {PUBLIC_COMMIT}</p>
+
+{#each jobs as job}
+  <div class="flex items-center gap-2">
+    <p>{job.name} - Running: {job.isRunning}</p>
+    {#if !job.isRunning}
+      <Button
+        variant="ghost"
+        size="icon"
+        onclick={async () => {
+          const res = await apiClient.runJob(job.name);
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          toast.success("Dispatched job");
+        }}
+      >
+        <Play />
+      </Button>
+    {/if}
+  </div>
+{/each}
 
 <p>Library Syncing: {isSyncing}</p>
 

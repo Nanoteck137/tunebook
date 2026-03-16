@@ -239,6 +239,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${id}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  runJob(jobName: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/system/job/${jobName}`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   searchAlbums(options?: ExtraOptions) {
     return this.request("/api/v1/albums/search", "GET", api.SearchAlbums, z.any(), undefined, options)
   }
@@ -515,6 +519,10 @@ export class ClientUrls {
   
   reorderPlaylistItems(id: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items/reorder`)
+  }
+  
+  runJob(jobName: string) {
+    return createUrl(this.baseUrl, `/api/v1/system/job/${jobName}`)
   }
   
   searchAlbums() {

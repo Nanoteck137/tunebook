@@ -2001,6 +2001,12 @@
     },
     {
       "type": "api",
+      "name": "RunJob",
+      "method": "POST",
+      "path": "/api/v1/system/job/:jobName"
+    },
+    {
+      "type": "api",
       "name": "SearchAlbums",
       "method": "GET",
       "path": "/api/v1/albums/search",

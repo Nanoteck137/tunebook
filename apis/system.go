@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/nanoteck137/dwebble"
@@ -23,6 +24,21 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 				return GetSystemInfo{
 					Version: dwebble.Version,
 				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "RunJob",
+			Method:       http.MethodPost,
+			Path:         "/system/job/:jobName",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				jobName := c.Param("jobName")
+
+				go func() {
+					app.JobService().RunJob(context.Background(), jobName)
+				}()
+
+				return nil, nil
 			},
 		},
 

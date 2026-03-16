@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"log/slog"
+	"os"
+	"time"
 
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
@@ -13,7 +15,8 @@ import (
 )
 
 const (
-	jobAuthCleanup = "auth-cleanup"
+	jobAuthCleanup  = "auth-cleanup"
+	jobCacheCleanup = "cache-cleanup"
 )
 
 var _ service.Job = (*AuthCleanupJob)(nil)
@@ -31,10 +34,42 @@ func (j *AuthCleanupJob) Schedule() string {
 }
 
 func (j *AuthCleanupJob) Run(ctx context.Context) error {
+	time.Sleep(4 * time.Second)
 	j.authService.RunCleanup()
 	return nil
 }
 
+var _ service.Job = (*CacheCleanupJob)(nil)
+
+type CacheCleanupJob struct {
+	workDir types.WorkDir
+}
+
+func (j *CacheCleanupJob) Name() string {
+	return jobCacheCleanup
+}
+
+func (j *CacheCleanupJob) Schedule() string {
+	return ""
+}
+
+func (j *CacheCleanupJob) Run(ctx context.Context) error {
+	cacheDir := j.workDir.Cache()
+
+	err := os.RemoveAll(cacheDir.String())
+	if err != nil {
+		return err
+	}
+
+	err = utils.CreateDirectories([]string{
+		cacheDir.String(),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 var _ App = (*BaseApp)(nil)
 
@@ -174,16 +209,27 @@ func (app *BaseApp) Bootstrap() error {
 	app.broker = broker.NewBroker(func() []broker.Event {
 		return []broker.Event{
 			app.libraryService.GetSyncStateEvent(),
+			app.jobService.GetSyncStateEvent(),
 		}
 	})
-
 
 	app.libraryService.SetUpdateFunc(func() {
 		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
 	})
 
+	app.jobService.SetUpdateFunc(func() {
+		app.broker.EmitEvent(app.jobService.GetSyncStateEvent())
+	})
+
 	err = app.jobService.AddJob(&AuthCleanupJob{
 		authService: app.authService,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = app.jobService.AddJob(&CacheCleanupJob{
+		workDir: workDir,
 	})
 	if err != nil {
 		return err
@@ -195,6 +241,8 @@ func (app *BaseApp) Bootstrap() error {
 
 	// TODO(patrik): This should not be in bootstrap
 	go app.broker.Listen()
+
+	app.jobService.RunJob(context.Background(), jobAuthCleanup)
 
 	return nil
 }

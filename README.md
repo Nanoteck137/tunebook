@@ -5,8 +5,6 @@
 - [ ] Quick Code integration
 
 - [ ] Jobs
-    - [ ] Auth Cleanup
-    - [ ] Clear out cache
     - [ ] Create new search index
     - [ ] Library Syncing
 
