@@ -33,7 +33,6 @@
         - [ ] On /albums/:id use diffrent colors on odd tracks
     - [ ] Finish the design of the pages
     - [ ] Home Page
-    - [ ] Add Quick Code login UI
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
     - [ ] Update Display Name need fixing, both frontend and backend on /users
 
