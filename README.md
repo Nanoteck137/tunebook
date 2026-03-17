@@ -2,6 +2,8 @@
 
 ## Rewrite
 
+- [ ] Add color to playlist
+
 - [ ] User Tracking
     - [ ] Number of plays 
     - [ ] Favorites
@@ -29,7 +31,6 @@
     - [ ] Add
         - [ ] Playlist Filtering/Sorting
         - [ ] On /albums/:id use diffrent colors on odd tracks
-        - [ ] On /albums/:id hover highlight tracks
     - [ ] Finish the design of the pages
     - [ ] Home Page
     - [ ] Add Quick Code login UI
