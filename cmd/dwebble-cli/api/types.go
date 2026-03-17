@@ -263,6 +263,12 @@ type EditTrackFilterBody struct {
 	Filter *string `json:"filter,omitempty"`
 }
 
+// Name: EditUserBody
+type EditUserBody struct {
+	// Name: EditUserBody.displayName
+	DisplayName *string `json:"displayName,omitempty"`
+}
+
 // Name: GetAlbumById
 type GetAlbumById struct {
 	// Name: GetAlbumById.id

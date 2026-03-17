@@ -295,6 +295,13 @@ export const EditTrackFilterBody = z.object({
 });
 export type EditTrackFilterBody = z.infer<typeof EditTrackFilterBody>;
 
+// Name: EditUserBody
+export const EditUserBody = z.object({
+  // Name: EditUserBody.displayName
+  "displayName": z.string().nullable().optional(),
+});
+export type EditUserBody = z.infer<typeof EditUserBody>;
+
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
   // Name: GetAlbumById.id

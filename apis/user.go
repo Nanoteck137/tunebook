@@ -126,8 +126,58 @@ func (b EditTrackFilterBody) Validate() error {
 	)
 }
 
+type EditUserBody struct {
+	DisplayName *string `json:"displayName,omitempty"`
+}
+
+func (b *EditUserBody) Transform() {
+	b.DisplayName = anvil.StringPtr(b.DisplayName)
+}
+
+func (b EditUserBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.DisplayName, validate.Required.When(b.DisplayName != nil)),
+	)
+}
+
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
+		pyrin.ApiHandler{
+			Name:     "EditUser",
+			Method:   http.MethodPatch,
+			Path:     "/user",
+			BodyType: EditUserBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[EditUserBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				changes := database.UserChanges{}
+
+				if body.DisplayName != nil {
+					changes.DisplayName = types.Change[string]{
+						Value:   *body.DisplayName,
+						Changed: *body.DisplayName != user.DisplayName,
+					}
+				}
+
+				err = app.DB().UpdateUser(ctx, user.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
 		pyrin.ApiHandler{
 			Name:         "GetUser",
 			Method:       http.MethodGet,
@@ -478,7 +528,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:     "EditTrackFilter",
-			Method:   http.MethodPost,
+			Method:   http.MethodPatch,
 			Path:     "/user/tracks/filter/:filterId",
 			BodyType: EditTrackFilterBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {

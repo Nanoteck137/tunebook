@@ -105,7 +105,11 @@ export class ApiClient extends BaseApiClient {
   }
   
   editTrackFilter(filterId: string, body: api.EditTrackFilterBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/user/tracks/filter/${filterId}`, "POST", z.undefined(), z.any(), body, options)
+    return this.request(`/api/v1/user/tracks/filter/${filterId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  editUser(body: api.EditUserBody, options?: ExtraOptions) {
+    return this.request("/api/v1/user", "PATCH", z.undefined(), z.any(), body, options)
   }
   
   generatePlaylistImage(id: string, options?: ExtraOptions) {
@@ -379,6 +383,10 @@ export class ClientUrls {
   
   editTrackFilter(filterId: string) {
     return createUrl(this.baseUrl, `/api/v1/user/tracks/filter/${filterId}`)
+  }
+  
+  editUser() {
+    return createUrl(this.baseUrl, "/api/v1/user")
   }
   
   generatePlaylistImage(id: string) {

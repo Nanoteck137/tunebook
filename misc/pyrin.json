@@ -472,6 +472,16 @@
       ]
     },
     {
+      "name": "EditUserBody",
+      "fields": [
+        {
+          "name": "displayName",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
       "name": "GetAlbumById",
       "fields": [
         {
@@ -1764,9 +1774,16 @@
     {
       "type": "api",
       "name": "EditTrackFilter",
-      "method": "POST",
+      "method": "PATCH",
       "path": "/api/v1/user/tracks/filter/:filterId",
       "body": "EditTrackFilterBody"
+    },
+    {
+      "type": "api",
+      "name": "EditUser",
+      "method": "PATCH",
+      "path": "/api/v1/user",
+      "body": "EditUserBody"
     },
     {
       "type": "api",

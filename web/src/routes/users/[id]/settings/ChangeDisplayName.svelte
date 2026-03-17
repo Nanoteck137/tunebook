@@ -24,7 +24,7 @@
     async onUpdate({ form }) {
       if (form.valid) {
         const formData = form.data;
-        const res = await apiClient.updateUserSettings({
+        const res = await apiClient.editUser({
           displayName: formData.displayName,
         });
         if (!res.success) {

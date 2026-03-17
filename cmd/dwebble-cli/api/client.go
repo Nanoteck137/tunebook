@@ -380,7 +380,23 @@ func (c *Client) EditTrackFilter(filterId string, body EditTrackFilterBody, opti
 
 	data := RequestData{
 		Url: url,
-		Method: "POST",
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditUser(body EditUserBody, options Options) (*any, error) {
+	path := "/api/v1/user"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
@@ -1154,6 +1170,11 @@ func (c *ClientUrls) EditPlaylistFilter(playlistId string, filterId string) (*UR
 
 func (c *ClientUrls) EditTrackFilter(filterId string) (*URL, error) {
 	path := Sprintf("/api/v1/user/tracks/filter/%v", filterId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditUser() (*URL, error) {
+	path := "/api/v1/user"
 	return c.getUrl(path)
 }
 

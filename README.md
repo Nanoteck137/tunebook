@@ -17,7 +17,6 @@
 - [ ] Frontend: Feature: Design: Playlist Filtering/Sorting
 - [ ] Frontend: Fix: Album track count
 - [ ] Frontend: Cleanup: Remove virtual playlists
-- [ ] Frontend: Fix: Update Display Name need fixing
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: Form errors is hard to see
 - [ ] Frontend: Fix: Handle api errors in a clean way
@@ -25,7 +24,6 @@
 - [ ] Backend: API: Fix Media api
 
 - [ ] Backend: Feature: User Profile Pictures
-- [ ] Backend: Feature: Edit users "Display Name"
 
 - [ ] Backend: Feature: User Tracking
 - [ ] Backend: Feature: Favorites
