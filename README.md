@@ -2,6 +2,9 @@
 
 ## Rewrite
 
+- [ ] CLI: Update Cmd: Metadata Validation
+- [ ] CLI: Update Cmd: Metadata transformation (trim spaces, escape characters, more)
+
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
 - [ ] Frontend: Design: Re-design the album items on /albums
@@ -21,9 +24,10 @@
 - [ ] Frontend: Fix: Form errors is hard to see
 - [ ] Frontend: Fix: Handle api errors in a clean way
 
-- [ ] Backend: API: Add sub-dirs for images for workDir
-
-- [ ] Backend: API: Fix Media api
+- [ ] Backend: Fix: When uploading images, we need to clear the cache of the item
+- [ ] Backend: Fix: Add sub-dirs for images for workDir
+- [ ] Backend: API: Fix: Media api
+- [ ] Backend: API: Fix: Media "packMediaResult"
 
 - [ ] Backend: Feature: User Tracking
 - [ ] Backend: Feature: Favorites
@@ -32,32 +36,29 @@
 - [ ] Backend: Feature: Search indexing job
 - [ ] Backend: Feature: Library cleanup job
 
-- [ ] Backend: Figure out how to handle logging through out the project
-- [ ] Backend: Figure out how to handle service errors
-- [ ] Backend: Figure out how to handle service logging
-
-- [ ] Backend: API: Better way to log the API Errors
-
-- [ ] Backend: API: Feature: Edit Playlist CoverURL implementation
-
+- [ ] Backend: Cleanup: Figure out how to handle logging through out the project
+- [ ] Backend: Cleanup: Figure out how to handle service errors
+- [ ] Backend: Cleanup: Figure out how to handle service logging
+- [ ] Backend: Cleanup: API: Better way to log the API Errors
 - [ ] Backend: Cleanup: Remove virtual playlist
-
 - [ ] Backend: Cleanup: Cleanup user picture code
-
-- [ ] Backend: Database: Cleanup: Database Migration files
-- [ ] Backend: Database: Cleanup: Database code
-- [ ] Backend: API: Cleanup: Go through all API structures and add all the fields (i.e created, updated, more)
+- [ ] Backend: Cleanup: Database: Database Migration files
+- [ ] Backend: Cleanup: Database: Database code
+- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
+- [ ] Backend: Cleanup: Search Service: Code Cleanup
+- [ ] Backend: Cleanup: Media Service: Code Cleanup
+- [ ] Backend: Cleanup: Job Service: Code Cleanup
+- [ ] Backend: Cleanup: Library Service: Code Cleanup
+- [ ] Backend: Cleanup: Auth Service: Code Cleanup
 
 - [ ] Backend: Search Service: init lazily, same as the auth service
 - [ ] Backend: Search Service: RWLock lock
-- [ ] Backend: Search Service: Code Cleanup
 - [ ] Backend: Search Service: Add Playlists
 - [ ] Backend: Search Service: Add Users
 - [ ] Backend: Search Service: Batch indexing
 - [ ] Backend: Search Service: Add more logging
 
 - [ ] Backend: Media Service: API Route for getTrackStream need to handle errors
-- [ ] Backend: Media Service: Code Cleanup
 - [ ] Backend: Media Service: Locking
 - [ ] Backend: Media Service: Logging
 
@@ -67,14 +68,7 @@
 - [ ] Backend: Library Service: Clear the cache after sync
 - [ ] Backend: Library Service: Cleanup after sync (artists, albums and tracks not existing anymore)
 
-- [ ] CLI: Update Cmd: Metadata Validation
-- [ ] CLI: Update Cmd: Metadata transformation (trim spaces, escape characters, more)
-
-- [ ] Backend: API: Fix Media "packMediaResult"
-
 - [ ] Backend: Database: Use database indexes
-
-- [ ] Backend: Database seperate track metadata data and track media stuff
 
 - [ ] General: Use nix to build a docker image
 
