@@ -22,7 +22,8 @@ const config = {
         footer: "2fr 230px",
       },
       colors: {
-        hover: "hsl(var(--hover) / <alpha-value>)",
+        "off-background1": "hsl(var(--off-background-1) / <alpha-value>)",
+        "off-background2": "hsl(var(--off-background-2) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",

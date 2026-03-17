@@ -5,6 +5,7 @@
 @layer base {
   :root {
     --hover: 0 0% 90%;
+    --odd: 0 0% 95%;
 
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -38,7 +39,8 @@
   }
 
   .dark {
-    --hover: 240 10% 10%;
+    --off-background-1: 240 10% 10%;
+    --off-background-2: 240 10% 6%;
 
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;

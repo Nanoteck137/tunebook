@@ -2,10 +2,12 @@
   import type { Track } from "$lib/api/types";
   import ArtistList from "$lib/components/ArtistList.svelte";
   import Image from "$lib/components/Image.svelte";
+  import { cn } from "$lib/utils";
   import { Play } from "lucide-svelte";
   import type { Snippet } from "svelte";
 
   type Props = {
+    class?: string;
     showNumber?: boolean;
     displayOrder?: boolean;
     track: Track;
@@ -14,11 +16,19 @@
     onPlayClicked?: () => void;
   };
 
-  const { showNumber, displayOrder, track, children, onPlayClicked }: Props =
-    $props();
+  const {
+    class: className,
+    showNumber,
+    displayOrder,
+    track,
+    children,
+    onPlayClicked,
+  }: Props = $props();
 </script>
 
-<div class="flex items-center gap-2 p-2 hover:bg-hover">
+<div
+  class={cn("flex items-center gap-2 p-2 hover:bg-off-background1", className)}
+>
   <div class="group relative">
     {#if showNumber}
       <div

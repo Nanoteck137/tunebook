@@ -81,107 +81,112 @@
     </div>
   {/if}
 
-  {#each tracks as track}
-    <TrackListItem
-      showNumber={isAlbumShowcase}
-      {displayOrder}
-      {track}
-      onPlayClicked={() => {
-        onPlay(track.id);
-      }}
-    >
-      {#if selectedTracks.length > 0}
-        <Button
-          class="rounded-full"
-          variant="ghost"
-          size="icon-lg"
-          onclick={() => {
-            onReorder?.(selectedTracks, track.id);
-            selectedTracks = [];
+  <div class="flex flex-col">
+    {#each tracks as track}
+      <div class="group">
+        <TrackListItem
+          class="group-even:bg-off-background2 group-even:hover:bg-off-background1"
+          showNumber={isAlbumShowcase}
+          {displayOrder}
+          {track}
+          onPlayClicked={() => {
+            onPlay(track.id);
           }}
         >
-          <ChevronDown />
-        </Button>
+          {#if selectedTracks.length > 0}
+            <Button
+              class="rounded-full"
+              variant="ghost"
+              size="icon-lg"
+              onclick={() => {
+                onReorder?.(selectedTracks, track.id);
+                selectedTracks = [];
+              }}
+            >
+              <ChevronDown />
+            </Button>
 
-        <div class="flex h-11 w-11 items-center justify-center">
-          <Checkbox
-            class=""
-            checked={selectedTracks.includes(track.id)}
-            controlledChecked={true}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                selectedTracks.push(track.id);
-              } else {
-                selectedTracks = selectedTracks.filter(
-                  (id) => track.id !== id,
-                );
-              }
-            }}
-          />
-        </div>
-      {/if}
-
-      {#if selectedTracks.length <= 0}
-        <QuickAddButton show={!!quickPlaylist} trackId={track.id} />
-
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger
-            class={cn(
-              buttonVariants({ variant: "ghost", size: "icon-lg" }),
-              "rounded-full",
-            )}
-          >
-            <EllipsisVertical />
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content align="end">
-            <DropdownMenu.Group>
-              <DropdownMenu.Item
-                onSelect={() => {
-                  selectedTracks.push(track.id);
+            <div class="flex h-11 w-11 items-center justify-center">
+              <Checkbox
+                class=""
+                checked={selectedTracks.includes(track.id)}
+                controlledChecked={true}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    selectedTracks.push(track.id);
+                  } else {
+                    selectedTracks = selectedTracks.filter(
+                      (id) => track.id !== id,
+                    );
+                  }
                 }}
+              />
+            </div>
+          {/if}
+
+          {#if selectedTracks.length <= 0}
+            <QuickAddButton show={!!quickPlaylist} trackId={track.id} />
+
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger
+                class={cn(
+                  buttonVariants({ variant: "ghost", size: "icon-lg" }),
+                  "rounded-full",
+                )}
               >
-                Select track
-              </DropdownMenu.Item>
+                <EllipsisVertical />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content align="end">
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item
+                    onSelect={() => {
+                      selectedTracks.push(track.id);
+                    }}
+                  >
+                    Select track
+                  </DropdownMenu.Item>
 
-              <DropdownMenu.Item
-                onSelect={() => {
-                  goto(`/artists/${track.artists[0].id}`);
-                }}
-              >
-                <Users />
-                Go to Artist
-              </DropdownMenu.Item>
-              {#if !isAlbumShowcase}
-                <DropdownMenu.Item
-                  onSelect={() => {
-                    goto(`/albums/${track.albumId}`);
-                  }}
-                >
-                  <DiscAlbum />
-                  Go to Album
-                </DropdownMenu.Item>
-              {/if}
-              <DropdownMenu.Item
-                onSelect={async () => {
-                  if (!userPlaylists) return;
+                  <DropdownMenu.Item
+                    onSelect={() => {
+                      goto(`/artists/${track.artists[0].id}`);
+                    }}
+                  >
+                    <Users />
+                    Go to Artist
+                  </DropdownMenu.Item>
+                  {#if !isAlbumShowcase}
+                    <DropdownMenu.Item
+                      onSelect={() => {
+                        goto(`/albums/${track.albumId}`);
+                      }}
+                    >
+                      <DiscAlbum />
+                      Go to Album
+                    </DropdownMenu.Item>
+                  {/if}
+                  <DropdownMenu.Item
+                    onSelect={async () => {
+                      if (!userPlaylists) return;
 
-                  // await openAddToPlaylist({
-                  //   playlists: userPlaylists,
-                  //   track,
-                  // });
+                      // await openAddToPlaylist({
+                      //   playlists: userPlaylists,
+                      //   track,
+                      // });
 
-                  await invalidateAll();
-                }}
-              >
-                <ListPlus />
-                Save to Playlist
-              </DropdownMenu.Item>
-            </DropdownMenu.Group>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
-      {/if}
-    </TrackListItem>
+                      await invalidateAll();
+                    }}
+                  >
+                    <ListPlus />
+                    Save to Playlist
+                  </DropdownMenu.Item>
+                </DropdownMenu.Group>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          {/if}
+        </TrackListItem>
 
-    <Separator />
-  {/each}
+        <Separator />
+      </div>
+    {/each}
+  </div>
 </div>

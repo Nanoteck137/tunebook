@@ -30,7 +30,6 @@
 - [ ] Web Frontend
     - [ ] Add
         - [ ] Playlist Filtering/Sorting
-        - [ ] On /albums/:id use diffrent colors on odd tracks
     - [ ] Finish the design of the pages
     - [ ] Home Page
     - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
