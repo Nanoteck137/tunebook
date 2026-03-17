@@ -85,7 +85,6 @@
     {#each tracks as track}
       <div class="group">
         <TrackListItem
-          class="group-even:bg-off-background2 group-even:hover:bg-off-background1"
           showNumber={isAlbumShowcase}
           {displayOrder}
           {track}

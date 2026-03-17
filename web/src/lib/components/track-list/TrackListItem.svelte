@@ -27,19 +27,24 @@
 </script>
 
 <div
-  class={cn("flex items-center gap-2 p-2 hover:bg-off-background1", className)}
+  class={cn(
+    "group flex items-center gap-2 p-2 hover:bg-off-background1 group-even:bg-off-background2 group-even:hover:bg-off-background1 has-[[data-state='open']]:bg-off-background1 group-even:has-[[data-state='open']]:bg-off-background1",
+    className,
+  )}
 >
-  <div class="group relative">
+  <div class="relative">
     {#if showNumber}
       <div
         class="group flex min-h-10 min-w-10 flex-col items-end justify-center"
       >
-        <p class=" text-right text-sm font-medium group-hover:hidden">
+        <p
+          class=" text-right text-sm font-medium group-hover:hidden group-has-[[data-state='open']]:block"
+        >
           {track.number}.
         </p>
         {#if onPlayClicked}
           <button
-            class={`hidden group-hover:block`}
+            class={`hidden group-hover:block group-has-[[data-state='open']]:!hidden`}
             onclick={() => {
               onPlayClicked?.();
             }}
@@ -52,7 +57,7 @@
       <Image class="w-14 min-w-14" src={track.coverArt.small} alt="cover" />
       {#if onPlayClicked}
         <button
-          class={`absolute bottom-0 left-0 right-0 top-0 hidden items-center justify-center rounded border bg-black/80 group-hover:flex`}
+          class={`absolute bottom-0 left-0 right-0 top-0 hidden items-center justify-center rounded border bg-black/80 group-hover:flex group-has-[[data-state='open']]:!hidden`}
           onclick={() => {
             onPlayClicked?.();
           }}
