@@ -2,89 +2,82 @@
 
 ## Rewrite
 
-- [ ] Add color to playlist
+- [ ] Frontend: Design: Re-design the header, add profile picture + drop down
+- [ ] Frontend: Design: Re-design the player UI
+- [ ] Frontend: Design: Re-design the album items on /albums
+- [ ] Frontend: Design: Re-design /server
+- [ ] Frontend: Design: Re-design /users/:id
+- [ ] Frontend: Feature: Lazy load the quick playlist menu
+- [ ] Frontend: Feature: Add showPlaylistModal
+- [ ] Frontend: Design: Home Page
+- [ ] Frontend: Design: Re-design the track list component
+- [ ] Frontend: Feature: Design: Album filtering
+- [ ] Frontend: Feature: Design: Artist filtering
+- [ ] Frontend: Feature: Design: Track filtering
+- [ ] Frontend: Feature: Design: Playlist Filtering/Sorting
+- [ ] Frontend: Fix: Album track count
+- [ ] Frontend: Remove virtual playlists
+- [ ] Frontend: Fix: Update Display Name need fixing
+- [ ] Frontend: Cleanup: Modal forms 
+- [ ] Frontend: Fix: Form errors is hard to see
+- [ ] Frontend: Fix: Handle api errors in a clean way
 
-- [ ] User Tracking
-    - [ ] Number of plays 
-    - [ ] Favorites
-    - [ ] Year over Year 
+- [ ] Backend: Feature: Edit users "Display Name"
 
-- [ ] Jobs
-    - [ ] Search Indexing
-    - [ ] Cleanup Library
+- [ ] Backend: Feature: User Tracking
+- [ ] Backend: Feature: Favorites
+- [ ] Backend: Feature: Year over year
 
-- [ ] Better API Tokens
+- [ ] Backend: Feature: Search indexing job
+- [ ] Backend: Feature: Library cleanup job
 
-- [ ] Cleanup modal forms 
-    - [ ] Errors is hard to see
-    - [ ] Handle api errors in a clean way
+- [ ] Backend: Figure out how to handle logging through out the project
+- [ ] Backend: Figure out how to handle service errors
+- [ ] Backend: Figure out how to handle service logging
 
-- [ ] Figure out how to handle logging through out the project
-- [ ] Figure out how to handle service errors
-- [ ] Figure out how to handle service logging
+- [ ] Backend: API: Better way to log the API Errors
 
-- [ ] Better way to log the API Errors
+- [ ] Backend: API: Feature: Edit Playlist CoverURL implementation
 
-- [ ] Edit Playlist CoverURL implementation
+- [ ] Backend: Database: Cleanup: Database Migration files
+- [ ] Backend: Database: Cleanup: Database code
+- [ ] Backend: API: Cleanup: Go through all API structures and add all the fields (i.e created, updated, more)
 
-- [ ] Web Frontend
-    - [ ] Add
-        - [ ] Playlist Filtering/Sorting
-    - [ ] Finish the design of the pages
-    - [ ] Home Page
-    - [ ] Better handling of filters, like [Watchbook](https://github.com/Nanoteck137/watchbook)
-    - [ ] Update Display Name need fixing, both frontend and backend on /users
+- [ ] Backend: Search Service: init lazily, same as the auth service
+- [ ] Backend: Search Service: RWLock lock
+- [ ] Backend: Search Service: Code Cleanup
+- [ ] Backend: Search Service: Add Playlists
+- [ ] Backend: Search Service: Add Users
+- [ ] Backend: Search Service: Batch indexing
+- [ ] Backend: Search Service: Add more logging
 
-- [ ] Cleanup
-    - [ ] Migration cleanup
-    - [ ] Cleanup database code
-    - [ ] Go through all API structures and add all the fields (i.e created, updated, more)
+- [ ] Backend: Media Service: API Route for getTrackStream need to handle errors
+- [ ] Backend: Media Service: Code Cleanup
+- [ ] Backend: Media Service: Locking
+- [ ] Backend: Media Service: Logging
 
-- [ ] Make Search Service init lazily, same as the auth service
+- [ ] Backend: Job Service: Locking
 
-- [ ] Media Service
-    - [ ] API Route for getTrackStream need to handle errors
-    - [ ] Cleanup
-    - [ ] Add lock
-    - [ ] Add more logging
+- [ ] Backend: Library Service: Multi-threaded syncing
+- [ ] Backend: Library Service: Clear the cache after sync
+- [ ] Backend: Library Service: Cleanup after sync (artists, albums and tracks not existing anymore)
 
-- [ ] Search Service
-    - [ ] Add RWLock lock
-    - [ ] Code Cleanup
-    - [ ] Add Playlists
-    - [ ] Add Users
-    - [ ] Batch indexing
-    - [ ] Add more logging
+- [ ] CLI: Update Cmd: Metadata Validation
+- [ ] CLI: Update Cmd: Metadata transformation (trim spaces, escape characters, more)
 
-- [ ] Job Service
-    - [ ] Add lock
+- [ ] Backend: API: Fix Media "packMediaResult"
 
-- [ ] Library Service
-    - [ ] Multi-threaded syncing
-    - [ ] Clear the cache after sync
-    - [ ] Cleanup after sync (artists, albums and tracks not existing anymore)
+- [ ] Backend: Database: Use database indexes
 
-- [ ] Library Handling
-    - [ ] Update Cmd
-        - [ ] Metadata Validation
-        - [ ] Metadata transformation (trim spaces, escape characters, more)
+- [ ] Backend: Database seperate track metadata data and track media stuff
 
-- [ ] Media
-    - [ ] Fix "packMediaResult"
+- [ ] General: Use nix to build a docker image
 
-- [ ] Use database indexes
-
-- [ ] Database seperate track metadata data and track media stuff
-
-- [ ] Docker
-    - [ ] Use nix to build a docker image
-
-- [ ] Rename Project
+- [ ] General: Rename Project
     - Musicbook (MB)
     - Tunebook (TB)
     - Need some ideas
 
-- [ ] Use new logo from dwebble_app
+- [ ] General: Use new logo from dwebble_app
 
-- [ ] Add Compression for Static file routes
-    - [ ] SPA Routes
+- [ ] Backend: API: Add Compression for Static file routes (SPA Routes)
