@@ -655,6 +655,11 @@
           "omitEmpty": false
         },
         {
+          "name": "picture",
+          "type": "Images",
+          "omitEmpty": false
+        },
+        {
           "name": "quickPlaylist",
           "type": "*string",
           "omitEmpty": false
@@ -1062,6 +1067,11 @@
         {
           "name": "displayName",
           "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "picture",
+          "type": "Images",
           "omitEmpty": false
         }
       ]
@@ -1974,6 +1984,12 @@
       "method": "GET",
       "path": "/api/v1/users/:id",
       "response": "GetUser"
+    },
+    {
+      "type": "normal",
+      "name": "GetUserImage",
+      "method": "GET",
+      "path": "/files/users/images/:userId/:image"
     },
     {
       "type": "api",

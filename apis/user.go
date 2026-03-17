@@ -68,8 +68,9 @@ type GetAllApiTokens struct {
 }
 
 type GetUser struct {
-	Id          string `json:"id"`
-	DisplayName string `json:"displayName"`
+	Id          string       `json:"id"`
+	DisplayName string       `json:"displayName"`
+	Picture     types.Images `json:"picture"`
 }
 
 type TrackFilter struct {
@@ -200,6 +201,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				return GetUser{
 					Id:          user.Id,
 					DisplayName: user.DisplayName,
+					Picture:     ConvertUserPictureURL(c, user.Id, user.Picture),
 				}, nil
 			},
 		},

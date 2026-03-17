@@ -119,6 +119,7 @@ const (
 	IMAGE_LARGE    = "512.png"
 )
 
+// TODO(patrik): Cleanup, remove val
 func ConvertArtistCoverURL(c pyrin.Context, artistId string, val sql.NullString) types.Images {
 	first := "/files/artists/images/" + artistId + "/"
 	return types.Images{
@@ -129,6 +130,7 @@ func ConvertArtistCoverURL(c pyrin.Context, artistId string, val sql.NullString)
 	}
 }
 
+// TODO(patrik): Cleanup, remove val
 func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) types.Images {
 	first := "/files/albums/images/" + albumId + "/"
 	return types.Images{
@@ -139,8 +141,20 @@ func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) t
 	}
 }
 
+// TODO(patrik): Cleanup, remove val
 func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string, val sql.NullString) types.Images {
 	first := "/files/playlists/images/" + playlistId + "/"
+	return types.Images{
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
+	}
+}
+
+// TODO(patrik): Cleanup, remove val
+func ConvertUserPictureURL(c pyrin.Context, userId string, val sql.NullString) types.Images {
+	first := "/files/users/images/" + userId + "/"
 	return types.Images{
 		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
 		Small:    ConvertURL(c, first+IMAGE_SMALL),

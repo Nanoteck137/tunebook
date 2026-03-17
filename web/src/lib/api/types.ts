@@ -440,6 +440,8 @@ export const GetMe = z.object({
   "displayName": z.string(),
   // Name: GetMe.role
   "role": z.string(),
+  // Name: GetMe.picture
+  "picture": Images,
   // Name: GetMe.quickPlaylist
   "quickPlaylist": z.string().nullable(),
 });
@@ -750,6 +752,8 @@ export const GetUser = z.object({
   "id": z.string(),
   // Name: GetUser.displayName
   "displayName": z.string(),
+  // Name: GetUser.picture
+  "picture": Images,
 });
 export type GetUser = z.infer<typeof GetUser>;
 

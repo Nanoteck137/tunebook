@@ -21,9 +21,9 @@
 - [ ] Frontend: Fix: Form errors is hard to see
 - [ ] Frontend: Fix: Handle api errors in a clean way
 
-- [ ] Backend: API: Fix Media api
+- [ ] Backend: API: Add sub-dirs for images for workDir
 
-- [ ] Backend: Feature: User Profile Pictures
+- [ ] Backend: API: Fix Media api
 
 - [ ] Backend: Feature: User Tracking
 - [ ] Backend: Feature: Favorites
@@ -41,6 +41,8 @@
 - [ ] Backend: API: Feature: Edit Playlist CoverURL implementation
 
 - [ ] Backend: Cleanup: Remove virtual playlist
+
+- [ ] Backend: Cleanup: Cleanup user picture code
 
 - [ ] Backend: Database: Cleanup: Database Migration files
 - [ ] Backend: Database: Cleanup: Database code

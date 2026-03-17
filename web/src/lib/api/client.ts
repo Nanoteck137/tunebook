@@ -211,6 +211,7 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/${id}`, "GET", api.GetUser, z.any(), undefined, options)
   }
   
+  
   getUserQuickPlaylistItemIds(options?: ExtraOptions) {
     return this.request("/api/v1/user/quickplaylist", "GET", api.GetUserQuickPlaylistItemIds, z.any(), undefined, options)
   }
@@ -495,6 +496,10 @@ export class ClientUrls {
   
   getUser(id: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${id}`)
+  }
+  
+  getUserImage(userId: string, image: string) {
+    return createUrl(this.baseUrl, `/files/users/images/${userId}/${image}`)
   }
   
   getUserQuickPlaylistItemIds() {

@@ -397,6 +397,8 @@ type GetMe struct {
 	DisplayName string `json:"displayName"`
 	// Name: GetMe.role
 	Role string `json:"role"`
+	// Name: GetMe.picture
+	Picture Images `json:"picture"`
 	// Name: GetMe.quickPlaylist
 	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
 }
@@ -683,6 +685,8 @@ type GetUser struct {
 	Id string `json:"id"`
 	// Name: GetUser.displayName
 	DisplayName string `json:"displayName"`
+	// Name: GetUser.picture
+	Picture Images `json:"picture"`
 }
 
 // Name: GetUserQuickPlaylistItemIds

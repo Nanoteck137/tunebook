@@ -60,6 +60,14 @@ func (d WorkDir) Playlist(id string) string {
 	return path.Join(d.Playlists(), id)
 }
 
+func (d WorkDir) Users() string {
+	return path.Join(d.String(), "users")
+}
+
+func (d WorkDir) User(id string) string {
+	return path.Join(d.Users(), id)
+}
+
 func (d WorkDir) Cache() CacheDir {
 	return CacheDir(path.Join(d.String(), "cache"))
 }
@@ -100,6 +108,14 @@ func (d CacheDir) Playlists() string {
 
 func (d CacheDir) Playlist(id string) string {
 	return path.Join(d.Playlists(), id)
+}
+
+func (d CacheDir) Users() string {
+	return path.Join(d.String(), "users")
+}
+
+func (d CacheDir) User(id string) string {
+	return path.Join(d.Users(), id)
 }
 
 type Change[T any] struct {

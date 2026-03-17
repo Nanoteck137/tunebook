@@ -156,6 +156,7 @@ func (app *BaseApp) Bootstrap() error {
 	workDir := app.config.WorkDir()
 
 	err = utils.CreateDirectories([]string{
+		workDir.Users(),
 		workDir.Artists(),
 		workDir.Albums(),
 		workDir.Tracks(),
@@ -196,7 +197,13 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	app.authService = service.NewAuthService(app.db, app.config)
+	app.imageService = service.NewImageService(
+		newServiceLogger("image-service"),
+		app.db,
+		app.config.WorkDir(),
+	)
+
+	app.authService = service.NewAuthService(app.imageService, app.db, app.config)
 	// TODO(patrik): This should be a worker
 	// go app.authService.CleanRoutine()
 
@@ -216,12 +223,6 @@ func (app *BaseApp) Bootstrap() error {
 		app.notificationService,
 		app.mediaService,
 		app.searchService,
-	)
-
-	app.imageService = service.NewImageService(
-		newServiceLogger("image-service"),
-		app.db,
-		app.config.WorkDir(),
 	)
 
 	app.broker = broker.NewBroker(func() []broker.Event {

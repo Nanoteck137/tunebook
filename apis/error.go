@@ -107,7 +107,7 @@ func UserAlreadyExists() *pyrin.Error {
 
 func UserNotFound() *pyrin.Error {
 	return &pyrin.Error{
-		Code:    http.StatusUnauthorized,
+		Code:    http.StatusNotFound,
 		Type:    ErrTypeUserNotFound,
 		Message: "User not found",
 	}

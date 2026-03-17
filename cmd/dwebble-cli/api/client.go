@@ -790,6 +790,7 @@ func (c *Client) GetUser(id string, options Options) (*GetUser, error) {
 	return Request[GetUser](data, nil)
 }
 
+
 func (c *Client) GetUserQuickPlaylistItemIds(options Options) (*GetUserQuickPlaylistItemIds, error) {
 	path := "/api/v1/user/quickplaylist"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1310,6 +1311,11 @@ func (c *ClientUrls) GetTracks() (*URL, error) {
 
 func (c *ClientUrls) GetUser(id string) (*URL, error) {
 	path := Sprintf("/api/v1/users/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetUserImage(userId string, image string) (*URL, error) {
+	path := Sprintf("/files/users/images/%v/%v", userId, image)
 	return c.getUrl(path)
 }
 

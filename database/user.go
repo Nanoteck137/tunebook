@@ -23,6 +23,8 @@ type User struct {
 	DisplayName string `db:"display_name"`
 	Role        string `db:"role"`
 
+	Picture sql.NullString `db:"picture"`
+
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
@@ -44,6 +46,8 @@ func UserQuery() *goqu.SelectDataset {
 
 			"users.display_name",
 			"users.role",
+
+			"users.picture",
 
 			"users.created",
 			"users.updated",
@@ -117,6 +121,8 @@ type CreateUserParams struct {
 	DisplayName string
 	Role        string
 
+	Picture sql.NullString
+
 	Created int64
 	Updated int64
 }
@@ -142,6 +148,8 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, err
 			"display_name": params.DisplayName,
 			"role":         params.Role,
 
+			"picture": params.Picture,
+
 			"created": params.Created,
 			"updated": params.Updated,
 		}).
@@ -152,6 +160,8 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, err
 
 			"users.display_name",
 			"users.role",
+
+			"users.picture",
 
 			"users.created",
 			"users.updated",
@@ -164,6 +174,8 @@ type UserChanges struct {
 	DisplayName types.Change[string]
 	Role        types.Change[string]
 
+	Picture types.Change[sql.NullString]
+
 	Created types.Change[int64]
 }
 
@@ -172,6 +184,8 @@ func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) err
 
 	addToRecord(record, "display_name", changes.DisplayName)
 	addToRecord(record, "role", changes.Role)
+
+	addToRecord(record, "picture", changes.Picture)
 
 	addToRecord(record, "created", changes.Created)
 

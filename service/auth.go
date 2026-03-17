@@ -2,8 +2,14 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"io"
+	"mime"
+	"net/http"
+	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -229,6 +235,8 @@ type AuthService struct {
 	// The lock for the service, needs to be claimed when modifing request data
 	mu sync.Mutex
 
+	imageService *ImageService
+
 	// Reference to the database
 	db *database.Database
 
@@ -245,7 +253,7 @@ type AuthService struct {
 	quickConnectRequests map[string]*authQuickConnectRequest
 }
 
-func NewAuthService(db *database.Database, config *config.Config) *AuthService {
+func NewAuthService(imageService *ImageService, db *database.Database, config *config.Config) *AuthService {
 	providers := make(map[string]*authProvider, len(config.OidcProviders))
 
 	for id, providerConfig := range config.OidcProviders {
@@ -259,6 +267,7 @@ func NewAuthService(db *database.Database, config *config.Config) *AuthService {
 	}
 
 	return &AuthService{
+		imageService:         imageService,
 		db:                   db,
 		jwtSecret:            config.JwtSecret,
 		providers:            providers,
@@ -677,6 +686,103 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 			if err != nil {
 				return "", authErr.Errorf("create user: %w", err)
 			}
+
+			// TODO(patrik): Cleanup, move to utils
+			getImageExtFromContentType := func(contentType string) (string, error) {
+				mediaType, _, err := mime.ParseMediaType(contentType)
+				if err != nil {
+					return "", fmt.Errorf("failed to parse content type: %w", err)
+				}
+
+				// TODO(patrik): Add support for more exts
+				switch mediaType {
+				case "image/png":
+					return ".png", nil
+				case "image/jpeg":
+					return ".jpeg", nil
+				default:
+					return "", fmt.Errorf("unsupported media type: %s", mediaType)
+				}
+			}
+
+			if oidcClaims.Picture != "" {
+				resp, err := http.Get(oidcClaims.Picture)
+				if err != nil {
+					return "", err
+				}
+				defer resp.Body.Close()
+
+				contentType := resp.Header.Get("Content-Type")
+				ext, err := getImageExtFromContentType(contentType)
+				if err != nil {
+					return "", err
+				}
+
+				// TODO(patrik): The tmp dir should be inside the work dir
+				tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+				if err != nil {
+					return "", fmt.Errorf("failed to create temp file: %w", err)
+				}
+				tmpPath := tmp.Name()
+				defer tmp.Close()
+
+				// always clean up temp file if something goes wrong
+				defer func() {
+					_, err := os.Stat(tmpPath)
+					if err == nil {
+						os.Remove(tmpPath)
+					}
+				}()
+
+				_, err = io.Copy(tmp, resp.Body)
+				if err != nil {
+					return "", err
+				}
+
+				tmp.Close()
+
+				imageType, err := a.imageService.ValidateImage(tmpPath)
+				if err != nil {
+					return "", err
+				}
+
+				// TODO(patrik): I hate this
+				workDir := a.imageService.workDir
+				userDir := workDir.User(user.Id)
+
+				err = utils.CreateDirectories([]string{
+					userDir,
+				})
+				if err != nil {
+					return "", err
+				}
+
+				imageExt, ok := imageType.ToExt()
+				if !ok {
+					return "", errors.New("invalid image type")
+				}
+
+				picture := "uploaded" + imageExt
+				output := path.Join(userDir, picture)
+				err = os.Rename(tmpPath, output)
+				if err != nil {
+					return "", fmt.Errorf("failed to promote temp file: %w", err)
+				}
+
+				err = a.db.UpdateUser(ctx, user.Id, database.UserChanges{
+					Picture:     types.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: picture,
+							Valid:  picture != "",
+						},
+						Changed: true,
+					},
+				})
+				if err != nil {
+					return "", fmt.Errorf("failed to update user picture: %w", err)
+				}
+			}
+
 
 			return user.Id, nil
 		} else {

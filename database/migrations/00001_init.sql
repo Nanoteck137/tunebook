@@ -6,6 +6,8 @@ CREATE TABLE users (
     display_name TEXT NOT NULL,
     role TEXT NOT NULL,
 
+    picture TEXT,
+
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
 );

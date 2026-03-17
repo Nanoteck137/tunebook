@@ -12,6 +12,7 @@ import (
 	"github.com/nanoteck137/dwebble/render"
 	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
+	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
 )
 
@@ -20,6 +21,8 @@ type GetMe struct {
 	Email       string `json:"email"`
 	DisplayName string `json:"displayName"`
 	Role        string `json:"role"`
+
+	Picture types.Images `json:"picture"`
 
 	QuickPlaylist *string `json:"quickPlaylist"`
 }
@@ -384,6 +387,7 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					Email:         user.Email,
 					DisplayName:   user.DisplayName,
 					Role:          user.Role,
+					Picture:       ConvertUserPictureURL(c, user.Id, user.Picture),
 					QuickPlaylist: utils.SqlNullToStringPtr(user.QuickPlaylist),
 				}, nil
 			},

@@ -312,6 +312,67 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 	return "", errors.New("unknown type")
 }
 
+func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, imageType ImageType) (string, error) {
+	user, err := s.db.GetUserById(ctx, userId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return "", errors.New("user not found")
+		}
+
+		return "", err
+	}
+
+	cacheDir := s.workDir.Cache()
+	userCache := cacheDir.User(user.Id)
+
+	// Make sure that the cache directory is setup
+	dirs := []string{
+		cacheDir.String(),
+		cacheDir.Users(),
+		userCache,
+	}
+
+	for _, dir := range dirs {
+		err = os.Mkdir(dir, 0755)
+		if err != nil && !errors.Is(err, os.ErrExist) {
+			return "", err
+		}
+	}
+
+	ext, ok := imageType.ToExt()
+	if !ok {
+		// TODO(patrik): Better error
+		return "", errors.New("unknown image type")
+	}
+
+	input := ""
+
+	if user.Picture.Valid {
+		dir := s.workDir.User(user.Id)
+		input = path.Join(dir, user.Picture.String)
+	} else {
+		// TODO(patrik): Create a default user picture
+		input, err = s.copyDefaultToTemp("default_album.png")
+		if err != nil {
+			return "", err
+		}
+		defer os.Remove(input)
+	}
+
+	switch typ {
+	case "original":
+		return s.convertSquareImage(input, userCache, "original_square"+ext)
+	case "128":
+		return s.convertImage(input, userCache, "128"+ext, 128)
+	case "256":
+		return s.convertImage(input, userCache, "256"+ext, 256)
+	case "512":
+		return s.convertImage(input, userCache, "512"+ext, 512)
+	}
+
+	return "", errors.New("unknown type")
+}
+
 func (s *ImageService) ValidateImage(p string) (ImageType, error) {
 
 	// out, err := exec.Command("magick", "identify", "-ping", "-format", "%m", p).CombinedOutput()
