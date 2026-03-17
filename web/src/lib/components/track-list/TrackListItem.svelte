@@ -18,7 +18,7 @@
     $props();
 </script>
 
-<div class="flex items-center gap-2 py-2 pr-2">
+<div class="flex items-center gap-2 p-2 hover:bg-hover">
   <div class="group relative">
     {#if showNumber}
       <div

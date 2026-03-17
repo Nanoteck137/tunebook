@@ -34,6 +34,7 @@
 
     const win = window.open(authUrl, "auth_window", "width=500,height=600");
 
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     return new Promise((resolve, reject) => {
       const expiresAtDate = new Date(expiresAt);
       console.log("Request Expires At", expiresAtDate);
