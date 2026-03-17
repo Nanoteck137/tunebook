@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
 	"path"
@@ -472,21 +473,97 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				// if body.CoverUrl != nil {
-				// 	p, err := utils.DownloadImageHashed(*body.CoverUrl, showDir.Images())
-				// 	if err == nil {
-				// 		n := path.Base(p)
-				// 		changes.CoverFile = database.Change[sql.NullString]{
-				// 			Value: sql.NullString{
-				// 				String: n,
-				// 				Valid:  n != "",
-				// 			},
-				// 			Changed: n != dbShow.CoverFile.String,
-				// 		}
-				// 	} else {
-				// 		app.Logger().Error("failed to download cover image for show", "err", err)
-				// 	}
-				// }
+				if body.CoverUrl != nil {
+					url := *body.CoverUrl
+
+					// TODO(patrik): Cleanup, move to utils
+					getImageExtFromContentType := func(contentType string) (string, error) {
+						mediaType, _, err := mime.ParseMediaType(contentType)
+						if err != nil {
+							return "", fmt.Errorf("failed to parse content type: %w", err)
+						}
+
+						// TODO(patrik): Add support for more exts
+						switch mediaType {
+						case "image/png":
+							return ".png", nil
+						case "image/jpeg":
+							return ".jpeg", nil
+						default:
+							return "", fmt.Errorf("unsupported media type: %s", mediaType)
+						}
+					}
+
+					resp, err := http.Get(url)
+					if err != nil {
+						return "", err
+					}
+					defer resp.Body.Close()
+
+					contentType := resp.Header.Get("Content-Type")
+					ext, err := getImageExtFromContentType(contentType)
+					if err != nil {
+						return "", err
+					}
+
+					// TODO(patrik): The tmp dir should be inside the work dir
+					tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+					if err != nil {
+						return "", fmt.Errorf("failed to create temp file: %w", err)
+					}
+					tmpPath := tmp.Name()
+					defer tmp.Close()
+
+					// always clean up temp file if something goes wrong
+					defer func() {
+						_, err := os.Stat(tmpPath)
+						if err == nil {
+							os.Remove(tmpPath)
+						}
+					}()
+
+					_, err = io.Copy(tmp, resp.Body)
+					if err != nil {
+						return "", err
+					}
+
+					tmp.Close()
+
+					imageType, err := app.ImageService().ValidateImage(tmpPath)
+					if err != nil {
+						return "", err
+					}
+
+					// TODO(patrik): I hate this
+					playlistDir := app.WorkDir().Playlist(dbPlaylist.Id)
+
+					err = utils.CreateDirectories([]string{
+						playlistDir,
+					})
+					if err != nil {
+						return "", err
+					}
+
+					imageExt, ok := imageType.ToExt()
+					if !ok {
+						return "", errors.New("invalid image type")
+					}
+
+					cover := "downloaded" + imageExt
+					output := path.Join(playlistDir, cover)
+					err = os.Rename(tmpPath, output)
+					if err != nil {
+						return "", fmt.Errorf("failed to promote temp file: %w", err)
+					}
+
+					changes.CoverArt = types.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: cover,
+							Valid:  cover != "",
+						},
+						Changed: cover != dbPlaylist.CoverArt.String,
+					}
+				}
 
 				err = app.DB().UpdatePlaylist(ctx, dbPlaylist.Id, changes)
 				if err != nil {

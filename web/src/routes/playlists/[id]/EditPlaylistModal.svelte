@@ -13,6 +13,7 @@
 
   const Schema = z.object({
     name: z.string().min(1),
+    coverUrl: z.string().min(1),
   });
 
   export type Props = {
@@ -47,6 +48,7 @@
 
           const res = await apiClient.editPlaylist(playlist.id, {
             name: formData.name,
+            coverUrl: formData.coverUrl !== "" ? formData.coverUrl : null,
           });
           if (!res.success) {
             return handleApiError(res.error);
@@ -73,6 +75,17 @@
         <Label for="name">Name</Label>
         <Input id="name" name="name" type="text" bind:value={$form.name} />
         <Errors errors={$errors.name} />
+      </FormItem>
+
+      <FormItem>
+        <Label for="coverUrl">Cover URL</Label>
+        <Input
+          id="coverUrl"
+          name="coverUrl"
+          type="text"
+          bind:value={$form.coverUrl}
+        />
+        <Errors errors={$errors.coverUrl} />
       </FormItem>
 
       <Dialog.Footer class="gap-2 sm:gap-0">
