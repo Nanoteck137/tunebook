@@ -50,6 +50,7 @@
 - [ ] Backend: Cleanup: Job Service: Code Cleanup
 - [ ] Backend: Cleanup: Library Service: Code Cleanup
 - [ ] Backend: Cleanup: Auth Service: Code Cleanup
+- [ ] Backend: Cleanup: CLI: Code Cleanup
 
 - [ ] Backend: Search Service: init lazily, same as the auth service
 - [ ] Backend: Search Service: RWLock lock
