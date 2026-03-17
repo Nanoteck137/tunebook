@@ -16,12 +16,15 @@
 - [ ] Frontend: Feature: Design: Track filtering
 - [ ] Frontend: Feature: Design: Playlist Filtering/Sorting
 - [ ] Frontend: Fix: Album track count
-- [ ] Frontend: Remove virtual playlists
+- [ ] Frontend: Cleanup: Remove virtual playlists
 - [ ] Frontend: Fix: Update Display Name need fixing
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: Form errors is hard to see
 - [ ] Frontend: Fix: Handle api errors in a clean way
 
+- [ ] Backend: API: Fix Media api
+
+- [ ] Backend: Feature: User Profile Pictures
 - [ ] Backend: Feature: Edit users "Display Name"
 
 - [ ] Backend: Feature: User Tracking
@@ -38,6 +41,8 @@
 - [ ] Backend: API: Better way to log the API Errors
 
 - [ ] Backend: API: Feature: Edit Playlist CoverURL implementation
+
+- [ ] Backend: Cleanup: Remove virtual playlist
 
 - [ ] Backend: Database: Cleanup: Database Migration files
 - [ ] Backend: Database: Cleanup: Database code
