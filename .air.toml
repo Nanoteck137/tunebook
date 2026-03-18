@@ -8,7 +8,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/dwebble"
-  cmd = "go build -o ./tmp/dwebble cmd/dwebble/main.go"
+  cmd = "go build -o ./tmp/dwebble ./cmd/dwebble"
   delay = 1000
   entrypoint = ["./tmp/dwebble", "serve"]
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "web", "work"]
