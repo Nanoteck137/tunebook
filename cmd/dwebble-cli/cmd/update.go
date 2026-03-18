@@ -112,6 +112,22 @@ func readToml(p string, data any) error {
 	return nil
 }
 
+func readJson[T any](p string) (T, error) {
+	var res T
+
+	d, err := os.ReadFile(p)
+	if err != nil {
+		return res, fmt.Errorf("failed to read: %w", err)
+	}
+
+	err = json.Unmarshal(d, &res)
+	if err != nil {
+		return res, fmt.Errorf("failed to unmarshal: %w", err)
+	}
+
+	return res, nil
+}
+
 type Report struct {
 	File      string
 	Err       error
@@ -156,6 +172,36 @@ func (r *Reporter) AddWarning(file string, err error) {
 	r.NumWarnings++
 }
 
+type Library struct {}
+
+func ReadLibrary(dir string) (Library, string, error) {
+	const libraryFilename = "library.json"
+
+	var res Library
+
+	res, err := readJson[Library](filepath.Join(dir, libraryFilename))
+	if err == nil {
+		return res, dir, nil
+	}
+
+
+	if errors.Is(err, os.ErrNotExist) {
+		p, err := FindFile(dir, libraryFilename)
+		if err != nil {
+			return Library{}, "", err
+		}
+
+		res, err := readJson[Library](p)
+		if err != nil {
+			return Library{}, "", err
+		}
+
+		return res, filepath.Dir(p), nil
+	}
+
+	return Library{}, "", err
+}
+
 // TODO(patrik): Move to utils
 func FindFile(dir, filename string) (string, error) {
 	dir, err := filepath.Abs(dir)
@@ -183,13 +229,13 @@ var updateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
 
-		p, err := FindFile(dir, "library.json")
+		p, dir, err := ReadLibrary(dir)
 		if err != nil {
 			slog.Error("failed to find library.json", "err", err)
 			return
 		}
 
-		dir = filepath.Dir(p)
+		_ = p
 
 		overallTimer := utils.SimpleTimer{}
 		dirwalkTimer := utils.SimpleTimer{}

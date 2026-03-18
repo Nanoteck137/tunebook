@@ -2,8 +2,6 @@
 
 ## Rewrite
 
-- [ ] Backend: Fix: Replace path with filepath
-
 - [ ] CLI: Feature: Update Cmd: Use library.json
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
 - [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
