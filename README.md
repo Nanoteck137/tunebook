@@ -2,11 +2,10 @@
 
 ## Rewrite
 
-Backend: Fix: Hide Config some fields
+- [ ] Backend: Fix: Rename WorkDir to DataDir
+- [ ] Backend: Fix: Hide Config some fields
 
-- [ ] CLI: Fix: Fix the dwebble migrate commands
-- [ ] CLI: Fix: Add some reminders to migrate commands
-- [ ] CLI: Fix: Disable completion
+- [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish 
 
 - [ ] CLI: Feature: Update Cmd: Use library.json
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
@@ -15,6 +14,10 @@ Backend: Fix: Hide Config some fields
 - [ ] CLI: Cleanup: Code Cleanup
 - [ ] CLI: Cleanup: Cleanup init commands
 - [ ] CLI: Cleanup: Remove Huh code 
+
+- [ ] CLI: Fix: Fix the dwebble migrate commands
+- [ ] CLI: Fix: Add some reminders to migrate commands
+- [ ] CLI: Fix: Disable completion
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI

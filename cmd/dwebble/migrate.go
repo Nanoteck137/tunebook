@@ -4,8 +4,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/nanoteck137/dwebble/config"
-	"github.com/nanoteck137/dwebble/core"
 	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
 )
@@ -17,42 +15,42 @@ var migrateCmd = &cobra.Command{
 var upCmd = &cobra.Command{
 	Use: "up",
 	Run: func(cmd *cobra.Command, args []string) {
-		conf := config.LoadedConfig
-		conf.RunMigrations = false
-		app := core.NewBaseApp(&conf)
-
-		err := app.Bootstrap()
-		if err != nil {
-			slog.Error("failed to bootstrap app", "err", err)
-			os.Exit(1)
-		}
-
-		err = app.DB().RunMigrateUp()
-		if err != nil {
-			slog.Error("failed to run migrate up", "err", err)
-			os.Exit(1)
-		}
+		// conf := config.LoadedConfig
+		// conf.RunMigrations = false
+		// app := core.NewBaseApp(&conf)
+		//
+		// err := app.Bootstrap()
+		// if err != nil {
+		// 	slog.Error("failed to bootstrap app", "err", err)
+		// 	os.Exit(1)
+		// }
+		//
+		// err = app.DB().RunMigrateUp()
+		// if err != nil {
+		// 	slog.Error("failed to run migrate up", "err", err)
+		// 	os.Exit(1)
+		// }
 	},
 }
 
 var downCmd = &cobra.Command{
 	Use: "down",
 	Run: func(cmd *cobra.Command, args []string) {
-		conf := config.LoadedConfig
-		conf.RunMigrations = false
-		app := core.NewBaseApp(&conf)
-
-		err := app.Bootstrap()
-		if err != nil {
-			slog.Error("failed to bootstrap app", "err", err)
-			os.Exit(1)
-		}
-
-		err = app.DB().RunMigrateDown()
-		if err != nil {
-			slog.Error("failed to run migrate down", "err", err)
-			os.Exit(1)
-		}
+		// conf := config.LoadedConfig
+		// conf.RunMigrations = false
+		// app := core.NewBaseApp(&conf)
+		//
+		// err := app.Bootstrap()
+		// if err != nil {
+		// 	slog.Error("failed to bootstrap app", "err", err)
+		// 	os.Exit(1)
+		// }
+		//
+		// err = app.DB().RunMigrateDown()
+		// if err != nil {
+		// 	slog.Error("failed to run migrate down", "err", err)
+		// 	os.Exit(1)
+		// }
 	},
 }
 

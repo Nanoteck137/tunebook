@@ -14,10 +14,19 @@ import (
 
 var serveCmd = &cobra.Command{
 	Use: "serve",
+	Short: "Run the api server",
 	Run: func(cmd *cobra.Command, args []string) {
-		app := core.NewBaseApp(&config.LoadedConfig)
+		cfgFile, _ := cmd.Flags().GetString("config")
 
-		err := app.Bootstrap()
+		config, err := config.Load(cfgFile)
+		if err != nil {
+			slog.Error("failed to load config", "err", err)
+			os.Exit(1)
+		}
+
+		app := core.NewBaseApp(config)
+
+		err = app.Bootstrap()
 		if err != nil {
 			slog.Error("failed to bootstrap app", "err", err)
 			os.Exit(1)

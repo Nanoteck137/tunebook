@@ -4,13 +4,15 @@ import (
 	"os"
 
 	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/config"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
 	Use:     dwebble.AppName,
 	Version: dwebble.Version,
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
+	},
 }
 
 func Execute() {
@@ -23,7 +25,5 @@ func Execute() {
 func init() {
 	rootCmd.SetVersionTemplate(dwebble.VersionTemplate(dwebble.AppName))
 
-	cobra.OnInitialize(config.InitConfig)
-
-	rootCmd.PersistentFlags().StringVarP(&config.ConfigFile, "config", "c", "", "Config File")
+	rootCmd.PersistentFlags().StringP("config", "c", "", "Config File")
 }
