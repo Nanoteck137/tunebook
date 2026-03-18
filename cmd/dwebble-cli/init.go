@@ -164,8 +164,8 @@ var initAlbumCmd = &cobra.Command{
 		// TODO(patrik): Discard hidden files (starts with .)
 		entries, err := os.ReadDir(dir)
 		if err != nil {
-			slog.Error("Failed to read dir", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to read dir", "err", err)
+			os.Exit(1)
 		}
 
 		var tracks []string
@@ -198,8 +198,8 @@ var initAlbumCmd = &cobra.Command{
 
 		probe, err := ProbeMedia(p)
 		if err != nil {
-			slog.Error("Failed to probe track", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to probe track", "err", err)
+			os.Exit(1)
 		}
 
 		isSingle := len(tracks) == 1
@@ -246,8 +246,8 @@ var initAlbumCmd = &cobra.Command{
 
 			trackInfo, err := getTrackInfo(p)
 			if err != nil {
-				slog.Error("Failed to get track info", "err", err)
-				os.Exit(-1)
+				slog.Error("failed to get track info", "err", err)
+				os.Exit(1)
 			}
 
 			if trackInfo.Name == "" {
@@ -274,14 +274,14 @@ var initAlbumCmd = &cobra.Command{
 
 		data, err := toml.Marshal(&metadata)
 		if err != nil {
-			slog.Error("Failed to marshal metadata", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to marshal metadata", "err", err)
+			os.Exit(1)
 		}
 
 		err = os.WriteFile(output, data, 0644)
 		if err != nil {
-			slog.Error("Failed to write output", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to write output", "err", err)
+			os.Exit(1)
 		}
 	},
 }

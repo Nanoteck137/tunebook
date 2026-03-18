@@ -26,13 +26,13 @@ var genCmd = &cobra.Command{
 		serverDef, err := spark.CreateServerDef(&router, nameFilter)
 		if err != nil {
 			slog.Error("failed to create server def", "err", err)
-			os.Exit(-1)
+			os.Exit(1)
 		}
 
 		err = serverDef.SaveToFile("misc/pyrin.json")
 		if err != nil {
 			slog.Error("failed save server def", "err", err)
-			os.Exit(-1)
+			os.Exit(1)
 		}
 
 		slog.Info("Wrote 'misc/pyrin.json'")
@@ -40,7 +40,7 @@ var genCmd = &cobra.Command{
 		resolver, err := spark.CreateResolverFromServerDef(&serverDef)
 		if err != nil {
 			slog.Error("failed to create resolver", "err", err)
-			os.Exit(-1)
+			os.Exit(1)
 		}
 
 		{
@@ -49,7 +49,7 @@ var genCmd = &cobra.Command{
 			err = gen.Generate(&serverDef, resolver, "web/src/lib/api")
 			if err != nil {
 				slog.Error("failed to generate typescript client", "err", err)
-				os.Exit(-1)
+				os.Exit(1)
 			}
 		}
 
@@ -59,7 +59,7 @@ var genCmd = &cobra.Command{
 			err = gen.Generate(&serverDef, resolver, "cmd/dwebble-cli/api")
 			if err != nil {
 				slog.Error("failed to generate golang client", "err", err)
-				os.Exit(-1)
+				os.Exit(1)
 			}
 		}
 	},
@@ -72,7 +72,6 @@ func init() {
 func main() {
 	err := rootCmd.Execute()
 	if err != nil {
-		slog.Error("Failed to execute", "err", err)
-		os.Exit(-1)
+		os.Exit(1)
 	}
 }

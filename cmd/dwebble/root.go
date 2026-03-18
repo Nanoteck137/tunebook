@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log/slog"
 	"os"
 
 	"github.com/nanoteck137/dwebble"
@@ -15,9 +14,9 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		slog.Error("Failed to run root command", "err", err)
-		os.Exit(-1)
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
 	}
 }
 

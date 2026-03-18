@@ -19,17 +19,17 @@ var serveCmd = &cobra.Command{
 
 		err := app.Bootstrap()
 		if err != nil {
-			slog.Error("Failed to bootstrap app", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to bootstrap app", "err", err)
+			os.Exit(1)
 		}
 
 		e, err := apis.Server(app)
 		if err != nil {
-			slog.Error("Failed to create server", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to create server", "err", err)
+			os.Exit(1)
 		}
 
-		slog.Info("Starting server...")
+		slog.Info("starting server")
 
 		done := make(chan bool, 1)
 
@@ -45,8 +45,8 @@ var serveCmd = &cobra.Command{
 		go func() {
 			err = e.Start(app.Config().ListenAddr)
 			if err != nil {
-				slog.Error("Failed to start server", "err", err)
-				os.Exit(-1)
+				slog.Error("failed to start server", "err", err)
+				os.Exit(1)
 			}
 
 			done <- true
@@ -54,11 +54,12 @@ var serveCmd = &cobra.Command{
 
 		<-done
 
-		slog.Info("Stopping server...")
+		slog.Info("stopping server")
 
 		err = app.Shutdown()
 		if err != nil {
-			slog.Error("Failed to shutdown app", "err", err)
+			slog.Error("failed to shutdown app", "err", err)
+			os.Exit(1)
 		}
 	},
 }

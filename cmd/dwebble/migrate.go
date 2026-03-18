@@ -23,14 +23,14 @@ var upCmd = &cobra.Command{
 
 		err := app.Bootstrap()
 		if err != nil {
-			slog.Error("Failed to bootstrap app", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to bootstrap app", "err", err)
+			os.Exit(1)
 		}
 
 		err = app.DB().RunMigrateUp()
 		if err != nil {
-			slog.Error("Failed to run migrate up", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to run migrate up", "err", err)
+			os.Exit(1)
 		}
 	},
 }
@@ -44,14 +44,14 @@ var downCmd = &cobra.Command{
 
 		err := app.Bootstrap()
 		if err != nil {
-			slog.Error("Failed to bootstrap app", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to bootstrap app", "err", err)
+			os.Exit(1)
 		}
 
 		err = app.DB().RunMigrateDown()
 		if err != nil {
-			slog.Error("Failed to run migrate down", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to run migrate down", "err", err)
+			os.Exit(1)
 		}
 	},
 }
@@ -65,8 +65,8 @@ var createCmd = &cobra.Command{
 
 		err := goose.Create(nil, "./migrations", name, "sql")
 		if err != nil {
-			slog.Error("Failed to create migration", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to create migration", "err", err)
+			os.Exit(1)
 		}
 	},
 }
@@ -77,8 +77,8 @@ var fixCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := goose.Fix("./migrations")
 		if err != nil {
-			slog.Error("Failed to fix migrations", "err", err)
-			os.Exit(-1)
+			slog.Error("failed to fix migrations", "err", err)
+			os.Exit(1)
 		}
 	},
 }

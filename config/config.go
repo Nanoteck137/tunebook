@@ -63,8 +63,8 @@ func validateConfig(config *Config) {
 	validate(config.MeilisearchAddress == "", "meilisearch_address needs to be set")
 
 	if hasError {
-		slog.Error("Config not valid")
-		os.Exit(-1)
+		slog.Error("config not valid")
+		os.Exit(1)
 	}
 }
 
@@ -97,8 +97,8 @@ func InitConfig() {
 
 	err = viper.Unmarshal(&LoadedConfig)
 	if err != nil {
-		slog.Error("Failed to unmarshal config: ", err)
-		os.Exit(-1)
+		slog.Error("failed to unmarshal config: ", err)
+		os.Exit(1)
 	}
 
 	configCopy := LoadedConfig
