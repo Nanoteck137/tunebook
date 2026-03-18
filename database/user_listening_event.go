@@ -65,14 +65,14 @@ func (db DB) CreateUserListeningEvent(ctx context.Context, params CreateUserList
 	}
 
 	query := dialect.Insert("user_listening_events").Rows(goqu.Record{
-		"id":          params.Id,
+		"id": params.Id,
 
-		"user_id": params.UserId,
+		"user_id":  params.UserId,
 		"track_id": params.TrackId,
 
 		"listened_at": params.ListenedAt,
 		"duration_ms": params.DurationMs,
-		"source": params.Source,
+		"source":      params.Source,
 	}).
 		Returning("id")
 
