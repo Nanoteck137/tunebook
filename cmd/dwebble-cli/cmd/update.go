@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"maps"
 	"os"
-	"path"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -26,7 +25,7 @@ import (
 )
 
 func validateImage(p string) error {
-	ext := path.Ext(p)
+	ext := filepath.Ext(p)
 	if !utils.IsValidImageExt(ext) {
 		return errors.New("image not valid file extention: " + ext)
 	}
@@ -238,7 +237,7 @@ var updateCmd = &cobra.Command{
 					return nil
 				}
 
-				p, err := filepath.Rel(dir, path.Dir(p))
+				p, err := filepath.Rel(dir, filepath.Dir(p))
 				if err != nil {
 					return err
 				}
@@ -253,7 +252,7 @@ var updateCmd = &cobra.Command{
 					return nil
 				}
 
-				p, err := filepath.Rel(dir, path.Dir(p))
+				p, err := filepath.Rel(dir, filepath.Dir(p))
 				if err != nil {
 					return err
 				}
@@ -278,7 +277,7 @@ var updateCmd = &cobra.Command{
 
 		validationTimer.Start()
 
-		libraryPath := path.Join(dir, ".library")
+		libraryPath := filepath.Join(dir, ".library")
 
 		err = os.Mkdir(libraryPath, 0755)
 		if err != nil && !errors.Is(err, os.ErrExist) {
@@ -286,9 +285,9 @@ var updateCmd = &cobra.Command{
 			return
 		}
 
-		artistsLibraryPath := path.Join(libraryPath, "artists")
-		albumsLibraryPath := path.Join(libraryPath, "albums")
-		tracksLibraryPath := path.Join(libraryPath, "tracks")
+		artistsLibraryPath := filepath.Join(libraryPath, "artists")
+		albumsLibraryPath := filepath.Join(libraryPath, "albums")
+		tracksLibraryPath := filepath.Join(libraryPath, "tracks")
 
 		libArtists, err := os.OpenFile(artistsLibraryPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
@@ -331,7 +330,7 @@ var updateCmd = &cobra.Command{
 		}
 
 		for _, artist := range artists {
-			file := path.Join(artist.Path, artistMetadataFilename)
+			file := filepath.Join(artist.Path, artistMetadataFilename)
 
 			transformArtistMetadata(&artist)
 
@@ -353,7 +352,7 @@ var updateCmd = &cobra.Command{
 			}
 
 			if artist.Cover != "" {
-				p := path.Join(dir, artist.Path, artist.Cover)
+				p := filepath.Join(dir, artist.Path, artist.Cover)
 
 				err := validateImage(p)
 				if err != nil {
@@ -436,7 +435,7 @@ var updateCmd = &cobra.Command{
 		}
 
 		for _, album := range albums {
-			file := path.Join(album.Path, albumMetadataFilename)
+			file := filepath.Join(album.Path, albumMetadataFilename)
 
 			transformAlbumMetadata(&album)
 
@@ -453,7 +452,7 @@ var updateCmd = &cobra.Command{
 			}
 
 			if album.General.Cover != "" {
-				p := path.Join(dir, album.Path, album.General.Cover)
+				p := filepath.Join(dir, album.Path, album.General.Cover)
 				err := validateImage(p)
 				if err != nil {
 					reporter.AddError(file, fmt.Errorf("album.cover: invalid cover art: %w", err))
