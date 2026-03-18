@@ -14,6 +14,8 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 - [ ] Backend: Fix: Rename WorkDir to DataDir
 - [ ] Backend: Fix: Hide Config some fields
 
+- [ ] Backend: Fix: SPA Web handling
+
 - [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish 
 
 - [ ] CLI: Feature: Update Cmd: Use library.json
@@ -26,7 +28,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 - [ ] CLI: Fix: Fix the dwebble migrate commands
 - [ ] CLI: Fix: Add some reminders to migrate commands
-- [ ] CLI: Fix: Disable completion
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
