@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
 )
@@ -164,6 +167,31 @@ type RecordTrackBody struct {
 
 func InstallMediaHandlers(app core.App, group pyrin.Group) {
 	group.Register(
+		pyrin.NormalHandler{
+			Name:   "StreamTrack",
+			Method: http.MethodGet,
+			Path:   "/media/stream/tracks/:trackId",
+			HandlerFunc: func(c pyrin.Context) error {
+				trackId := c.Param("trackId")
+
+				query := c.Request().URL.Query()
+
+				filename, err := app.MediaService().GetTrackStream(trackId, service.MediaStreamOptions{
+					Device:  service.Device(query.Get("device")),
+					Policy:  service.Policy(query.Get("policy")),
+					Quality: service.Quality(query.Get("quality")),
+					Format:  types.MediaFormat(query.Get("format")),
+				})
+				if err != nil {
+					// TODO(patrik): Better error handling
+					return err
+				}
+
+				f := os.DirFS(filepath.Dir(filename))
+				return pyrin.ServeFile(c, f, filepath.Base(filename))
+			},
+		},
+
 		pyrin.ApiHandler{
 			Name:         "RecordTrack",
 			Method:       http.MethodPost,

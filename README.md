@@ -1,5 +1,14 @@
 # dwebble
 
+```bash
+# Useful command to find every TODO in the project, and then use gF in 
+# nvim to goto them
+rg --no-heading -in "TODO"
+
+# No preview text
+rg --no-heading -in "TODO" | cut -d: -f1,2
+```
+
 ## Rewrite
 
 - [ ] Backend: Fix: Rename WorkDir to DataDir
