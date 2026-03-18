@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/huh"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/pelletier/go-toml/v2"
@@ -333,72 +333,27 @@ func downloadImage(url, dir, name string) (string, error) {
 var initArtistCmd = &cobra.Command{
 	Use: "artist",
 	Run: func(cmd *cobra.Command, args []string) {
-		out, _ := cmd.Flags().GetString("output")
-		dirName, _ := cmd.Flags().GetBool("dir-name")
+		dir, _ := cmd.Flags().GetString("dir")
+
+		absDir, err := filepath.Abs(dir)
+		if err != nil {
+			slog.Error("failed to get the absolute path of directory", "err", err, "path", dir)
+			os.Exit(1)
+		}
 
 		// TODO(patrik): Add check for artist.toml already exists
 
-		artistName := ""
-		coverUrl := ""
-		tags := ""
+		// TODO(patrik): Add flag to download cover image
 
-		if dirName {
-			stat, _ := os.Stat(out)
-			if stat != nil {
-				artistName = stat.Name()
-			}
-		}
-
-		form := huh.NewForm(
-			huh.NewGroup(
-				huh.NewInput().Title("Artist Name").Validate(func(s string) error {
-					if strings.TrimSpace(s) == "" {
-						return errors.New("cannot be empty")
-					}
-
-					return nil
-				}).Value(&artistName),
-				huh.NewInput().Title("Tags").Value(&tags),
-				huh.NewInput().Title("Cover URL").Value(&coverUrl),
-			),
-		)
-
-		err := form.Run()
-		if err != nil {
-			slog.Error("failed to run form", "err", err)
-			return
-		}
-
+		artistName := filepath.Base(absDir)
 		artistName = strings.TrimSpace(artistName)
-
-		// TODO(patrik): Print out overview
-
-		cover := ""
-
-		if coverUrl != "" {
-			if p, err := downloadImage(coverUrl, out, "cover"); err == nil {
-				cover = p
-			} else {
-				slog.Error("failed to download cover image", "err", err)
-			}
-		}
-
-		tagsArr := []string{}
-
-		split := utils.SplitString(tags)
-		for _, tag := range split {
-			t := strings.TrimSpace(utils.Slug(tag))
-			if t != "" {
-				tagsArr = append(tagsArr, t)
-			}
-		}
 
 		metadata := types.ArtistMetadata{
 			Id:         utils.CreateArtistId(),
 			SearchName: utils.Slug(artistName),
 			Name:       artistName,
-			Cover:      path.Base(cover),
-			Tags:       tagsArr,
+			Cover:      "",
+			Tags:       []string{},
 		}
 
 		d, err := toml.Marshal(metadata)
@@ -407,7 +362,8 @@ var initArtistCmd = &cobra.Command{
 			return
 		}
 
-		p := path.Join(out, "artist.toml")
+		// TODO(patrik): Move to constant
+		p := path.Join(dir, "artist.toml")
 		err = os.WriteFile(p, d, 0644)
 		if err != nil {
 			slog.Error("failed to write artist metadata", "err", err, "path", p)
@@ -420,8 +376,8 @@ func init() {
 	initAlbumCmd.Flags().String("dir", ".", "input directory")
 	initAlbumCmd.Flags().StringP("output", "o", "album.toml", "write result to file")
 
-	initArtistCmd.Flags().BoolP("dir-name", "d", false, "take the parent directory name")
-	initArtistCmd.Flags().String("output", ".", "output directory")
+	initArtistCmd.Flags().String("dir", ".", "input directory")
+	initArtistCmd.Flags().StringP("output", "o", "artist.toml", "write result to file")
 
 	initCmd.AddCommand(initAlbumCmd, initArtistCmd)
 
