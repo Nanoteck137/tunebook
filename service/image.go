@@ -111,6 +111,17 @@ const (
 	ImageTypeJpeg    ImageType = "jpeg"
 )
 
+func (t ImageType) IsValid() bool {
+	switch t {
+	case ImageTypePng:
+		return true
+	case ImageTypeJpeg:
+		return true
+	}
+
+	return false
+}
+
 func (t ImageType) ToExt() (string, bool) {
 	switch t {
 	case ImageTypePng:
