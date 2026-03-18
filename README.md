@@ -20,6 +20,7 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 - [ ] CLI: Feature: Update Cmd: Use library.json
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
+- [ ] CLI: Feature: Init Cmd: Better logging
 - [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
 - [ ] CLI: Feature: Add download cover command
 - [ ] CLI: Cleanup: Code Cleanup
