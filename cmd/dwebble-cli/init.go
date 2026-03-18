@@ -161,7 +161,6 @@ var initAlbumCmd = &cobra.Command{
 
 		extract := true
 
-		// TODO(patrik): Discard hidden files (starts with .)
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			slog.Error("failed to read dir", "err", err)
@@ -176,7 +175,14 @@ var initAlbumCmd = &cobra.Command{
 				continue
 			}
 
-			p := path.Join(dir, e.Name())
+			name := e.Name()
+
+			// Skip files starting wtih .
+			if strings.HasPrefix(e.Name(), ".") {
+				continue
+			}
+
+			p := path.Join(dir, name)
 
 			ext := path.Ext(p)
 
