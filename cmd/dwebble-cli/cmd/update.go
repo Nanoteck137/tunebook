@@ -157,12 +157,40 @@ func (r *Reporter) AddWarning(file string, err error) {
 	r.NumWarnings++
 }
 
+// TODO(patrik): Move to utils
+func FindFile(dir, filename string) (string, error) {
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		p := filepath.Join(dir, filename)
+		if _, err := os.Stat(p); err == nil {
+			return p, nil
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", fmt.Errorf("%s not found in any parent directory", filename)
+		}
+
+		dir = parent
+	}
+}
+
 var updateCmd = &cobra.Command{
 	Use: "update",
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
 
-		// TODO(patrik): Check for a special library file to make sure
+		p, err := FindFile(dir, "library.json")
+		if err != nil {
+			slog.Error("failed to find library.json", "err", err)
+			return
+		}
+
+		dir = filepath.Dir(p)
 
 		overallTimer := utils.SimpleTimer{}
 		dirwalkTimer := utils.SimpleTimer{}
@@ -186,7 +214,7 @@ var updateCmd = &cobra.Command{
 
 		fmt.Println("Starting dir walk...")
 
-		err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		err = filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 			if d == nil {
 				return nil
 			}

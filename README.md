@@ -2,8 +2,10 @@
 
 ## Rewrite
 
-- [ ] CLI: Feature: Update Cmd: Add library.json to the root of the library
-- [ ] CLI: Feature: Update Cmd: Add recursive find of library
+- [ ] Backend: Fix: Replace path with filepath
+
+- [ ] CLI: Feature: Update Cmd: Use library.json
+- [ ] CLI: Feature: Init Cmd: Add init library cmd
 - [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
 - [ ] CLI: Feature: Add download cover command
 - [ ] CLI: Cleanup: Code Cleanup
