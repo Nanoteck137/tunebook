@@ -4,6 +4,11 @@
 
 - [ ] CLI: Feature: Update Cmd: Add library.json to the root of the library
 - [ ] CLI: Feature: Update Cmd: Add recursive find of library
+- [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
+- [ ] CLI: Feature: Add download cover command
+- [ ] CLI: Cleanup: Code Cleanup
+- [ ] CLI: Cleanup: Cleanup init commands
+- [ ] CLI: Cleanup: Remove Huh code 
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
