@@ -334,25 +334,40 @@ var initArtistCmd = &cobra.Command{
 	Use: "artist",
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
-
-		absDir, err := filepath.Abs(dir)
-		if err != nil {
-			slog.Error("failed to get the absolute path of directory", "err", err, "path", dir)
-			os.Exit(1)
-		}
+		artistName, _ := cmd.Flags().GetString("artist-name")
+		coverUrl, _ := cmd.Flags().GetString("cover-url")
 
 		// TODO(patrik): Add check for artist.toml already exists
 
-		// TODO(patrik): Add flag to download cover image
+		if artistName == "" {
+			absDir, err := filepath.Abs(dir)
+			if err != nil {
+				slog.Error("failed to get the absolute path of directory", "err", err, "path", dir)
+				os.Exit(1)
+			}
 
-		artistName := filepath.Base(absDir)
+			artistName = filepath.Base(absDir)
+		}
+
 		artistName = strings.TrimSpace(artistName)
+
+		cover := ""
+
+		if coverUrl != "" {
+			// TODO(patrik): I want a better setup to download images,
+			// where we also validate the images using magick
+			if p, err := downloadImage(coverUrl, dir, "cover"); err == nil {
+				cover = p
+			} else {
+				slog.Error("failed to download cover image", "err", err)
+			}
+		}
 
 		metadata := types.ArtistMetadata{
 			Id:         utils.CreateArtistId(),
 			SearchName: utils.Slug(artistName),
 			Name:       artistName,
-			Cover:      "",
+			Cover:      cover,
 			Tags:       []string{},
 		}
 
@@ -373,11 +388,12 @@ var initArtistCmd = &cobra.Command{
 }
 
 func init() {
-	initAlbumCmd.Flags().String("dir", ".", "input directory")
+	initAlbumCmd.Flags().String("dir", ".", "directory to use")
 	initAlbumCmd.Flags().StringP("output", "o", "album.toml", "write result to file")
 
-	initArtistCmd.Flags().String("dir", ".", "input directory")
-	initArtistCmd.Flags().StringP("output", "o", "artist.toml", "write result to file")
+	initArtistCmd.Flags().String("dir", ".", "directory to use")
+	initArtistCmd.Flags().String("artist-name", "", "set the artist name (when empty it uses the directory name)")
+	initArtistCmd.Flags().String("cover-url", "", "url to image for downloading")
 
 	initCmd.AddCommand(initAlbumCmd, initArtistCmd)
 
