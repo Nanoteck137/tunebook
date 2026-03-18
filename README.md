@@ -2,6 +2,11 @@
 
 ## Rewrite
 
+- [ ] CLI: Fix: Fix the dwebble migrate commands
+- [ ] CLI: Fix: Add some reminders to migrate commands
+- [ ] CLI: Fix: Change all os.Exit(-1) to os.Exit(1)
+- [ ] CLI: Fix: Disable completion
+
 - [ ] CLI: Feature: Update Cmd: Use library.json
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
 - [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
