@@ -115,7 +115,6 @@ func ProbeMedia(filepath string) (*ProbeResult, error) {
 	}, nil
 }
 
-
 type TrackInfo struct {
 	Name   string
 	Artist string
@@ -331,7 +330,6 @@ var initArtistCmd = &cobra.Command{
 		out, _ := cmd.Flags().GetString("output")
 		dirName, _ := cmd.Flags().GetBool("dir-name")
 
-
 		// TODO(patrik): Add check for artist.toml already exists
 
 		artistName := ""
@@ -390,11 +388,11 @@ var initArtistCmd = &cobra.Command{
 		}
 
 		metadata := types.ArtistMetadata{
-			Id:    utils.CreateArtistId(),
-			Slug:  utils.Slug(artistName),
-			Name:  artistName,
-			Cover: path.Base(cover),
-			Tags:  tagsArr,
+			Id:         utils.CreateArtistId(),
+			SearchName: utils.Slug(artistName),
+			Name:       artistName,
+			Cover:      path.Base(cover),
+			Tags:       tagsArr,
 		}
 
 		d, err := toml.Marshal(metadata)

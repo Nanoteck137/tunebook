@@ -22,10 +22,11 @@ import (
 type ArtistEntry struct {
 	Id string `json:"id"`
 
-	Name     string   `json:"name"`
-	Slug     string   `json:"slug"`
-	CoverArt string   `json:"coverArt"`
-	Tags     []string `json:"tags"`
+	Name string `json:"name"`
+	// TODO(patrik): Should this be here?
+	SearchName string   `json:"searchName"`
+	CoverArt   string   `json:"coverArt"`
+	Tags       []string `json:"tags"`
 
 	Path string `json:"path"`
 }
@@ -85,7 +86,7 @@ func (e TrackEntry) GetTrackFile() string {
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
 
 type LibrarySyncStateEvent struct {
-	Errors    []string `json:"errors"`
+	Errors []string `json:"errors"`
 
 	NumArtists int `json:"numArtists"`
 	NumAlbums  int `json:"numAlbums"`
@@ -111,7 +112,7 @@ type LibraryService struct {
 	mediaService        *MediaService
 	searchService       *SearchService
 
-	errors      []error
+	errors []error
 
 	numArtists int
 	numAlbums  int
@@ -210,7 +211,7 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntr
 		if errors.Is(err, database.ErrItemNotFound) {
 			_, err = s.db.CreateArtist(ctx, database.CreateArtistParams{
 				Id:   entry.Id,
-				Slug: entry.Slug,
+				Slug: entry.SearchName,
 				Name: entry.Name,
 				CoverArt: sql.NullString{
 					String: coverArt,
@@ -230,8 +231,8 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntr
 		}
 
 		changes.Slug = types.Change[string]{
-			Value:   entry.Slug,
-			Changed: entry.Slug != dbArtist.Slug,
+			Value:   entry.SearchName,
+			Changed: entry.SearchName != dbArtist.Slug,
 		}
 
 		changes.CoverArt = types.Change[sql.NullString]{

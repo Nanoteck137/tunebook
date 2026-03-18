@@ -2,8 +2,8 @@
 
 ## Rewrite
 
-- [ ] CLI: Update Cmd: Metadata Validation
-- [ ] CLI: Update Cmd: Metadata transformation (trim spaces, escape characters, more)
+- [ ] CLI: Feature: Update Cmd: Add library.json to the root of the library
+- [ ] CLI: Feature: Update Cmd: Add recursive find of library
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
@@ -28,6 +28,8 @@
 - [ ] Backend: Fix: Add sub-dirs for images for workDir
 - [ ] Backend: API: Fix: Media api
 - [ ] Backend: API: Fix: Media "packMediaResult"
+
+- [ ] Backend: Database: Rename artists.slug to search_name
 
 - [ ] Backend: Feature: User Tracking
 - [ ] Backend: Feature: Favorites

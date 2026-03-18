@@ -37,10 +37,10 @@ type AlbumMetadata struct {
 type ArtistMetadata struct {
 	Id string `json:"id" toml:"id"`
 
-	Slug  string   `json:"slug" toml:"slug"`
-	Name  string   `json:"name" toml:"name"`
-	Cover string   `json:"cover" toml:"cover"`
-	Tags  []string `json:"tags" toml:"tags"`
+	SearchName string   `json:"searchName" toml:"searchName"`
+	Name       string   `json:"name" toml:"name"`
+	Cover      string   `json:"cover" toml:"cover"`
+	Tags       []string `json:"tags" toml:"tags"`
 
 	Path string `json:"-" toml:"-"`
 }

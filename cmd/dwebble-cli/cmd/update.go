@@ -7,12 +7,16 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 
 	"github.com/kr/pretty"
+	"github.com/maruel/natural"
 	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
@@ -21,7 +25,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func fixArr(arr []string) []string {
+func validateImage(p string) error {
+	ext := path.Ext(p)
+	if !utils.IsValidImageExt(ext) {
+		return errors.New("image not valid file extention: " + ext)
+	}
+
+	return nil
+}
+
+func dedupStringArr(arr []string) []string {
 	seen := map[string]bool{}
 	res := make([]string, 0, len(arr))
 
@@ -40,7 +53,22 @@ func fixArr(arr []string) []string {
 	return res
 }
 
-func FixMetadata(metadata *types.AlbumMetadata) error {
+func transformTagsArr(tags []string) []string {
+	for i, tag := range tags {
+		tags[i] = utils.Slug(strings.TrimSpace(tag))
+	}
+
+	return dedupStringArr(tags)
+}
+
+func transformArtistMetadata(metadata *types.ArtistMetadata) {
+	metadata.Name = anvil.String(metadata.Name)
+	metadata.SearchName = utils.Slug(metadata.SearchName)
+
+	metadata.Tags = transformTagsArr(metadata.Tags)
+}
+
+func transformAlbumMetadata(metadata *types.AlbumMetadata) {
 	album := &metadata.Album
 
 	album.Name = anvil.String(album.Name)
@@ -49,20 +77,10 @@ func FixMetadata(metadata *types.AlbumMetadata) error {
 		album.Year = metadata.General.Year
 	}
 
-	if len(album.Artists) == 0 {
-		// TODO(patrik): Instead of this just validate the metadata
-		// and reject it
-		album.Artists = []string{}
-	}
-
-	album.Artists = fixArr(album.Artists)
+	album.Artists = dedupStringArr(album.Artists)
 
 	album.Tags = append(album.Tags, metadata.General.Tags...)
-	for i, tag := range album.Tags {
-		album.Tags[i] = utils.Slug(strings.TrimSpace(tag))
-	}
-
-	album.Tags = fixArr(album.Tags)
+	album.Tags = transformTagsArr(album.Tags)
 
 	for i := range metadata.Tracks {
 		t := &metadata.Tracks[i]
@@ -75,22 +93,10 @@ func FixMetadata(metadata *types.AlbumMetadata) error {
 
 		t.Tags = append(t.Tags, metadata.General.Tags...)
 		t.Tags = append(t.Tags, metadata.General.TrackTags...)
-		for i, tag := range t.Tags {
-			t.Tags[i] = utils.Slug(strings.TrimSpace(tag))
-		}
+		t.Tags = transformTagsArr(t.Tags)
 
-		t.Tags = fixArr(t.Tags)
-
-		if len(t.Artists) == 0 {
-			// TODO(patrik): Instead of this just validate the metadata
-			// and reject it
-			t.Artists = []string{}
-		}
-
-		t.Artists = fixArr(t.Artists)
+		t.Artists = dedupStringArr(t.Artists)
 	}
-
-	return nil
 }
 
 func readToml(p string, data any) error {
@@ -107,16 +113,56 @@ func readToml(p string, data any) error {
 	return nil
 }
 
+type Report struct {
+	File      string
+	Err       error
+	IsWarning bool
+}
+
+type Reporter struct {
+	Errors      map[string][]Report
+	NumErrors   int
+	NumWarnings int
+}
+
+func (r *Reporter) AddReport(report Report) {
+	file := report.File
+
+	errs, exists := r.Errors[file]
+	if !exists {
+		r.Errors[file] = []Report{report}
+	} else {
+		errs = append(errs, report)
+		r.Errors[file] = errs
+	}
+}
+
+func (r *Reporter) AddError(file string, err error) {
+	r.AddReport(Report{
+		File:      file,
+		Err:       err,
+		IsWarning: false,
+	})
+
+	r.NumErrors++
+}
+
+func (r *Reporter) AddWarning(file string, err error) {
+	r.AddReport(Report{
+		File:      file,
+		Err:       err,
+		IsWarning: true,
+	})
+
+	r.NumWarnings++
+}
+
 var updateCmd = &cobra.Command{
 	Use: "update",
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
 
-		fmt.Printf("dir: %v\n", dir)
-
 		// TODO(patrik): Check for a special library file to make sure
-
-		numErrorsFound := 0
 
 		overallTimer := utils.SimpleTimer{}
 		dirwalkTimer := utils.SimpleTimer{}
@@ -128,6 +174,17 @@ var updateCmd = &cobra.Command{
 		var albums []types.AlbumMetadata
 
 		dirwalkTimer.Start()
+
+		reporter := Reporter{
+			Errors:      map[string][]Report{},
+			NumErrors:   0,
+			NumWarnings: 0,
+		}
+
+		const artistMetadataFilename = "artist.toml"
+		const albumMetadataFilename = "album.toml"
+
+		fmt.Println("Starting dir walk...")
 
 		err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 			if d == nil {
@@ -145,11 +202,11 @@ var updateCmd = &cobra.Command{
 			}
 
 			switch name {
-			case "artist.toml":
+			case artistMetadataFilename:
 				var artist types.ArtistMetadata
 				err := readToml(p, &artist)
 				if err != nil {
-					slog.Warn("failed to read artist", "err", err)
+					reporter.AddWarning(p, fmt.Errorf("failed to read artist: %w", err))
 					return nil
 				}
 
@@ -160,11 +217,11 @@ var updateCmd = &cobra.Command{
 
 				artist.Path = p
 				artists = append(artists, artist)
-			case "album.toml":
+			case albumMetadataFilename:
 				var album types.AlbumMetadata
 				err := readToml(p, &album)
 				if err != nil {
-					slog.Warn("failed to read album", "err", err)
+					reporter.AddWarning(p, fmt.Errorf("failed to read album: %w", err))
 					return nil
 				}
 
@@ -186,12 +243,12 @@ var updateCmd = &cobra.Command{
 
 		dirwalkTimer.Stop()
 
-		pretty.Println(artists)
-		// pretty.Println(albums)
+		fmt.Println("Dir walk done", dirwalkTimer.Duration())
+		fmt.Printf("Found %d artists\n", len(artists))
+		fmt.Printf("Found %d albums\n", len(albums))
+		fmt.Println()
 
 		validationTimer.Start()
-
-		// TODO(patrik): Validate the artists
 
 		libraryPath := path.Join(dir, ".library")
 
@@ -237,33 +294,71 @@ var updateCmd = &cobra.Command{
 				return err
 			}
 
-			w.Write(([]byte)("\n"))
+			_, err = w.Write(([]byte)("\n"))
+			if err != nil {
+				return err
+			}
 
 			return nil
 		}
 
 		for _, artist := range artists {
-			err := writeEntry(libArtists, service.ArtistEntry{
-				Id:       artist.Id,
-				Name:     artist.Name,
-				Slug:     artist.Slug,
-				CoverArt: artist.Cover,
-				Tags:     artist.Tags,
-				Path:     artist.Path,
-			})
-			if err != nil {
-				slog.Error("failed to write artist", "err", err)
-				return
+			file := path.Join(artist.Path, artistMetadataFilename)
+
+			transformArtistMetadata(&artist)
+
+			valid := true
+
+			if artist.Id == "" {
+				reporter.AddError(file, errors.New("id: missing id"))
+				valid = false
+			}
+
+			if artist.Name == "" {
+				reporter.AddError(file, errors.New("name: missing name"))
+				valid = false
+			}
+
+			if artist.SearchName == "" {
+				reporter.AddError(file, errors.New("searchName: missing search name"))
+				valid = false
+			}
+
+			if artist.Cover != "" {
+				p := path.Join(dir, artist.Path, artist.Cover)
+
+				err := validateImage(p)
+				if err != nil {
+					reporter.AddError(file, fmt.Errorf("cover: invalid cover art: %w", err))
+					valid = false
+				}
+			}
+
+			if len(artist.Tags) <= 0 {
+				reporter.AddWarning(file, errors.New("tags: missing tags"))
+			}
+
+			if valid {
+				err := writeEntry(libArtists, service.ArtistEntry{
+					Id:         artist.Id,
+					Name:       artist.Name,
+					SearchName: artist.SearchName,
+					CoverArt:   artist.Cover,
+					Tags:       artist.Tags,
+					Path:       artist.Path,
+				})
+				if err != nil {
+					slog.Error("failed to write artist", "err", err)
+					return
+				}
 			}
 		}
 
 		artistMap := map[string]string{}
 		for _, artist := range artists {
 			// TODO(patrik): HERE we can check for duplicated artists name
-			artistMap[artist.Slug] = artist.Id
+			artistMap[artist.SearchName] = artist.Id
 		}
-
-		pretty.Println(artistMap)
 
 		checkForArtist := func(name string) (string, bool) {
 			id, exists := artistMap[utils.Slug(name)]
@@ -279,67 +374,75 @@ var updateCmd = &cobra.Command{
 			FeaturingArtistIds []string
 		}
 
-		type Report struct {
-			errors []error
-		}
-
-		resolveArtists := func(artists []string) (ResolvedArtists, *Report) {
-			if len(artists) > 0 {
-				artistId := ""
-				featuringArtistIds := []string{}
-				errors := []error{}
-
-				if id, ok := checkForArtist(artists[0]); ok {
-					artistId = id
-				} else {
-					errors = append(errors, fmt.Errorf("missing artist: '%s'", artists[0]))
-				}
-
-				for _, artist := range artists[1:] {
-					if id, ok := checkForArtist(artist); ok {
-						featuringArtistIds = append(featuringArtistIds, id)
-					} else {
-						errors = append(errors, fmt.Errorf("missing artist: '%s'", artist))
-						// continue
-					}
-				}
-
-				if len(errors) > 0 {
-					return ResolvedArtists{}, &Report{
-						errors: errors,
-					}
-				}
-
-				return ResolvedArtists{
-					ArtistId:           artistId,
-					FeaturingArtistIds: featuringArtistIds,
-				}, nil
+		resolveArtists := func(file string, prefix string, artists []string) (ResolvedArtists, bool) {
+			if len(artists) <= 0 {
+				reporter.AddError(file, errors.New(prefix+": no artists"))
+				return ResolvedArtists{}, false
 			}
-
-			return ResolvedArtists{}, &Report{
-				errors: []error{
-					errors.New("missing artists"),
-				},
-			}
-		}
-
-		for _, album := range albums {
-			var errs []error
-
-			err := FixMetadata(&album)
-			if err != nil {
-				slog.Error("failed to fix album")
-				continue
-			}
-
-			// TODO(patrik): Validate the metadata
 
 			valid := true
 
-			artists, report := resolveArtists(album.Album.Artists)
-			if report != nil {
-				errs = append(errs, report.errors...)
-				// pretty.Println(report.errors)
+			artistId := ""
+			featuringArtistIds := []string{}
+
+			if id, ok := checkForArtist(artists[0]); ok {
+				artistId = id
+			} else {
+				reporter.AddError(file, fmt.Errorf("%s: missing artist: '%s'", prefix, artists[0]))
+				valid = false
+			}
+
+			for _, artist := range artists[1:] {
+				if id, ok := checkForArtist(artist); ok {
+					featuringArtistIds = append(featuringArtistIds, id)
+				} else {
+					reporter.AddError(file, fmt.Errorf("%s: missing artist: '%s'", prefix, artist))
+					valid = false
+				}
+			}
+
+			return ResolvedArtists{
+				ArtistId:           artistId,
+				FeaturingArtistIds: featuringArtistIds,
+			}, valid
+		}
+
+		for _, album := range albums {
+			file := path.Join(album.Path, albumMetadataFilename)
+
+			transformAlbumMetadata(&album)
+
+			valid := true
+
+			if album.Album.Id == "" {
+				reporter.AddError(file, errors.New("album.id: missing id"))
+				valid = false
+			}
+
+			if album.Album.Name == "" {
+				reporter.AddError(file, errors.New("album.name: missing name"))
+				valid = false
+			}
+
+			if album.General.Cover != "" {
+				p := path.Join(dir, album.Path, album.General.Cover)
+				err := validateImage(p)
+				if err != nil {
+					reporter.AddError(file, fmt.Errorf("album.cover: invalid cover art: %w", err))
+					valid = false
+				}
+			}
+
+			if album.Album.Year == 0 {
+				reporter.AddWarning(file, errors.New("album.year: year not set"))
+			}
+
+			if len(album.Album.Tags) == 0 {
+				reporter.AddWarning(file, errors.New("album.tags: tags not set"))
+			}
+
+			artists, ok := resolveArtists(file, "album.artists", album.Album.Artists)
+			if !ok {
 				valid = false
 			}
 
@@ -363,16 +466,48 @@ var updateCmd = &cobra.Command{
 			}
 
 			for i, track := range album.Tracks {
-				// TODO(patrik): Validate the tracks
-
 				trackValid := true
 
-				artists, report := resolveArtists(track.Artists)
-				if report != nil {
-					for _, err := range report.errors {
-						errs = append(errs, fmt.Errorf("tracks[%d]: %w", i, err))
-					}
-					// pretty.Println(report.errors)
+				prefix := fmt.Sprintf("album.tracks[%d]", i)
+
+				if track.Id == "" {
+					reporter.AddError(file, errors.New(prefix+".id"+": missing id"))
+					trackValid = false
+				}
+
+				if track.File == "" {
+					reporter.AddError(file, errors.New(prefix+".file"+": missing file"))
+					trackValid = false
+				}
+
+				if track.Name == "" {
+					reporter.AddError(file, errors.New(prefix+".name"+": missing name"))
+					trackValid = false
+				}
+
+				// TODO(patrik): Should we have this check?
+				if track.Number == 0 {
+					reporter.AddWarning(file, errors.New(prefix+".number"+": missing number"))
+				}
+
+				if track.Number < 0 {
+					reporter.AddWarning(file, errors.New(prefix+".number"+": should be positive"))
+				}
+
+				if track.Year == 0 {
+					reporter.AddWarning(file, errors.New(prefix+".year"+": missing year"))
+				}
+
+				if track.Year < 0 {
+					reporter.AddWarning(file, errors.New(prefix+".year"+": should be positive"))
+				}
+
+				if len(track.Tags) <= 0 {
+					reporter.AddWarning(file, errors.New(prefix+".tags"+": missing tags"))
+				}
+
+				artists, ok := resolveArtists(file, prefix+".artists", track.Artists)
+				if !ok {
 					trackValid = false
 				}
 
@@ -399,29 +534,40 @@ var updateCmd = &cobra.Command{
 					}
 				}
 			}
-
-			// pretty.Println(albumEntry)
-
-			if !valid {
-				fmt.Printf("%s: IS NOT VALID\n", album.Path)
-				for _, err := range errs {
-					fmt.Printf("  - %v\n", err)
-				}
-
-				numErrorsFound += len(errs)
-			} else {
-				fmt.Printf("%s: IS VALID\n", album.Path)
-			}
 		}
 
 		validationTimer.Stop()
+
+		keys := slices.Collect(maps.Keys(reporter.Errors))
+		sort.SliceStable(keys, func(i, j int) bool {
+			return natural.Less(keys[i], keys[j])
+		})
+
+		for _, file := range keys {
+			reports := reporter.Errors[file]
+			fmt.Fprintln(os.Stderr, file)
+
+			for _, report := range reports {
+				t := "error"
+				if report.IsWarning {
+					t = "warn"
+				}
+
+				fmt.Fprintf(os.Stderr, " - %s: %s\n", t, report.Err.Error())
+			}
+
+			fmt.Fprintln(os.Stderr)
+		}
 
 		overallTimer.Stop()
 
 		fmt.Printf("dirwalk: %v\n", dirwalkTimer.Duration())
 		fmt.Printf("validation: %v\n", validationTimer.Duration())
 		fmt.Printf("overall: %v\n", overallTimer.Duration())
-		fmt.Printf("numErrorsFound: %v\n", numErrorsFound)
+
+		fmt.Printf("total: %v\n", (reporter.NumErrors + reporter.NumWarnings))
+		fmt.Printf("numErrors: %v\n", reporter.NumErrors)
+		fmt.Printf("numWarning: %v\n", reporter.NumWarnings)
 	},
 }
 
