@@ -12,7 +12,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 ## Rewrite
 
 - [ ] Backend: Fix: Rename WorkDir to DataDir
-- [ ] Backend: Fix: Hide Config some fields
 
 - [ ] Backend: Fix: SPA Web handling
 
@@ -22,10 +21,8 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
 - [ ] CLI: Feature: Init Cmd: Better logging
 - [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
-- [ ] CLI: Feature: Add download cover command
 - [ ] CLI: Cleanup: Code Cleanup
 - [ ] CLI: Cleanup: Cleanup init commands
-- [ ] CLI: Cleanup: Remove Huh code 
 
 - [ ] CLI: Fix: Fix the dwebble migrate commands
 - [ ] CLI: Fix: Add some reminders to migrate commands
