@@ -157,9 +157,6 @@ func (app *BaseApp) Bootstrap() error {
 
 	err = utils.CreateDirectories([]string{
 		dataDir.Users(),
-		dataDir.Artists(),
-		dataDir.Albums(),
-		dataDir.Tracks(),
 		dataDir.Playlists(),
 		dataDir.Cache().String(),
 	})

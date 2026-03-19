@@ -45,7 +45,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 - [ ] Frontend: Fix: Handle api errors in a clean way
 
 - [ ] Backend: Fix: When uploading images, we need to clear the cache of the item
-- [ ] Backend: Fix: Add sub-dirs for images for workDir
 - [ ] Backend: API: Fix: Media api
 - [ ] Backend: API: Fix: Media "packMediaResult"
 
