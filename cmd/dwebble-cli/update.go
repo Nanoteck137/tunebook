@@ -79,41 +79,6 @@ var updateCmd = &cobra.Command{
 			slog.Error("failed to processed library to disk", "err", err)
 			os.Exit(1)
 		}
-
-		// err := library.RunUpdate(dir)
-		// if err != nil {
-		// 	slog.Error("failed to run update", "err", err)
-		// 	os.Exit(1)
-		// }
-	},
-}
-
-var testCmd = &cobra.Command{
-	Use:  "test <PATH>",
-	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		f, err := os.Open(args[0])
-		if err != nil {
-			slog.Error("failed to open file", "err", err, "path", args[0])
-			return
-		}
-
-		decoder := json.NewDecoder(f)
-
-		for decoder.More() {
-			fmt.Printf("decoder.More(): %v\n", decoder.More())
-
-			var res service.ArtistEntry
-			err = decoder.Decode(&res)
-			if err != nil {
-				slog.Error("error decode", "err", err)
-				return
-			}
-
-			pretty.Println(res)
-
-			fmt.Printf("decoder.More(): %v\n", decoder.More())
-		}
 	},
 }
 
@@ -121,5 +86,5 @@ func init() {
 	updateCmd.Flags().StringP("dir", "d", ".", "The directory to update")
 	updateCmd.MarkFlagDirname("dir")
 
-	rootCmd.AddCommand(updateCmd, testCmd)
+	rootCmd.AddCommand(updateCmd)
 }
