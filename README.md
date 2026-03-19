@@ -11,8 +11,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 ## Rewrite
 
-- [ ] Backend: Fix: Rename WorkDir to DataDir
-
 - [ ] Backend: Fix: SPA Web handling
 
 - [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish 

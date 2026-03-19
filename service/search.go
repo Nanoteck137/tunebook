@@ -16,7 +16,7 @@ import (
 
 type SearchService struct {
 	db      *database.Database
-	workDir types.WorkDir
+	dataDir types.DataDir
 
 	client      meilisearch.ServiceManager
 	artistIndex meilisearch.IndexManager
@@ -24,11 +24,14 @@ type SearchService struct {
 	trackIndex  meilisearch.IndexManager
 }
 
-func NewSearchService(db *database.Database, config *config.Config) *SearchService {
+func NewSearchService(db *database.Database, dataDir types.DataDir, config *config.Config) *SearchService {
 	return &SearchService{
 		db:      db,
-		workDir: config.WorkDir(),
-		client:  meilisearch.New(config.MeilisearchAddress, meilisearch.WithAPIKey(config.MeilisearchApiKey)),
+		dataDir: dataDir,
+		client:  meilisearch.New(
+			config.MeilisearchAddress, 
+			meilisearch.WithAPIKey(config.MeilisearchApiKey),
+		),
 	}
 }
 
@@ -146,10 +149,10 @@ func (s *SearchService) UpdateArtist(ctx context.Context, artistId string) error
 	}
 
 	data := SearchArtist{
-		Id:      dbArtist.Id,
-		Name:    dbArtist.Name,
+		Id:       dbArtist.Id,
+		Name:     dbArtist.Name,
 		CoverArt: utils.SqlNullToStringPtr(dbArtist.CoverArt),
-		Tags:    utils.SplitString(dbArtist.Tags.String),
+		Tags:     utils.SplitString(dbArtist.Tags.String),
 	}
 
 	task, err := s.artistIndex.AddDocuments(data, &meilisearch.DocumentOptions{
@@ -265,10 +268,10 @@ func (s *SearchService) indexArtists() error {
 		// }
 
 		data := SearchArtist{
-			Id:      artist.Id,
-			Name:    artist.Name,
+			Id:       artist.Id,
+			Name:     artist.Name,
 			CoverArt: utils.SqlNullToStringPtr(artist.CoverArt),
-			Tags:    utils.SplitString(artist.Tags.String),
+			Tags:     utils.SplitString(artist.Tags.String),
 		}
 
 		_, err := s.artistIndex.AddDocuments(data, &meilisearch.DocumentOptions{

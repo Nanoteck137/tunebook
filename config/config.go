@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/validate"
 	"github.com/spf13/viper"
 )
@@ -52,10 +51,6 @@ func (c Config) Validate() error {
 
 		validate.Field(&c.OidcProviders, validate.Required, validate.Length(1, 0)),
 	)
-}
-
-func (c *Config) WorkDir() types.WorkDir {
-	return types.WorkDir(c.DataDir)
 }
 
 func Load(cfgFile string) (*Config, error) {

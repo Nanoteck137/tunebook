@@ -41,7 +41,7 @@ func (j *AuthCleanupJob) Run(ctx context.Context) error {
 var _ service.Job = (*CacheCleanupJob)(nil)
 
 type CacheCleanupJob struct {
-	workDir types.WorkDir
+	dataDir types.DataDir
 }
 
 func (j *CacheCleanupJob) Name() string {
@@ -53,7 +53,7 @@ func (j *CacheCleanupJob) Schedule() string {
 }
 
 func (j *CacheCleanupJob) Run(ctx context.Context) error {
-	cacheDir := j.workDir.Cache()
+	cacheDir := j.dataDir.Cache()
 
 	err := os.RemoveAll(cacheDir.String())
 	if err != nil {
@@ -146,29 +146,28 @@ func (app *BaseApp) Config() *config.Config {
 	return app.config
 }
 
-func (app *BaseApp) WorkDir() types.WorkDir {
-	return app.config.WorkDir()
+func (app *BaseApp) DataDir() types.DataDir {
+	return types.DataDir(app.config.DataDir)
 }
 
 func (app *BaseApp) Bootstrap() error {
 	var err error
 
-	workDir := app.config.WorkDir()
+	dataDir := types.DataDir(app.config.DataDir)
 
 	err = utils.CreateDirectories([]string{
-		workDir.Users(),
-		workDir.Artists(),
-		workDir.Albums(),
-		workDir.Tracks(),
-		workDir.Playlists(),
-		workDir.Trash(),
-		workDir.Cache().String(),
+		dataDir.Users(),
+		dataDir.Artists(),
+		dataDir.Albums(),
+		dataDir.Tracks(),
+		dataDir.Playlists(),
+		dataDir.Cache().String(),
 	})
 	if err != nil {
 		return err
 	}
 
-	app.db, err = database.Open(workDir.DatabaseFile())
+	app.db, err = database.Open(dataDir.DatabaseFile())
 	if err != nil {
 		return err
 	}
@@ -200,14 +199,14 @@ func (app *BaseApp) Bootstrap() error {
 	app.imageService = service.NewImageService(
 		newServiceLogger("image-service"),
 		app.db,
-		app.config.WorkDir(),
+		dataDir,
 	)
 
 	app.authService = service.NewAuthService(app.imageService, app.db, app.config)
 	// TODO(patrik): This should be a worker
 	// go app.authService.CleanRoutine()
 
-	app.searchService = service.NewSearchService(app.db, app.config)
+	app.searchService = service.NewSearchService(app.db, dataDir, app.config)
 
 	// TODO(patrik): Do this lazily
 	err = app.searchService.Init()
@@ -215,7 +214,7 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	app.mediaService = service.NewMediaService(app.db, app.config.WorkDir())
+	app.mediaService = service.NewMediaService(app.db, dataDir)
 
 	app.libraryService = service.NewLibraryService(
 		app.db,
@@ -248,7 +247,7 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	err = app.jobService.AddJob(&CacheCleanupJob{
-		workDir: workDir,
+		dataDir: dataDir,
 	})
 	if err != nil {
 		return err

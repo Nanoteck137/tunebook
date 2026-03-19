@@ -535,7 +535,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					}
 
 					// TODO(patrik): I hate this
-					playlistDir := app.WorkDir().Playlist(dbPlaylist.Id)
+					playlistDir := app.DataDir().Playlist(dbPlaylist.Id)
 
 					err = utils.CreateDirectories([]string{
 						playlistDir,
@@ -650,8 +650,8 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				workDir := app.WorkDir()
-				playlistDir := workDir.Playlist(dbPlaylist.Id)
+				dataDir := app.DataDir()
+				playlistDir := dataDir.Playlist(dbPlaylist.Id)
 
 				err = utils.CreateDirectories([]string{
 					playlistDir,
@@ -685,7 +685,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = os.RemoveAll(app.WorkDir().Cache().Playlist(dbPlaylist.Id))
+				err = os.RemoveAll(app.DataDir().Cache().Playlist(dbPlaylist.Id))
 				if err != nil {
 					return nil, err
 				}
@@ -727,12 +727,12 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = os.RemoveAll(app.WorkDir().Playlist(playlist.Id))
+				err = os.RemoveAll(app.DataDir().Playlist(playlist.Id))
 				if err != nil {
 					return nil, err
 				}
 
-				err = os.RemoveAll(app.WorkDir().Cache().Playlist(playlist.Id))
+				err = os.RemoveAll(app.DataDir().Cache().Playlist(playlist.Id))
 				if err != nil {
 					return nil, err
 				}
@@ -1044,8 +1044,8 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					imgs[i] = img.String
 				}
 
-				workDir := app.WorkDir()
-				playlistDir := workDir.Playlist(playlist.Id)
+				dataDir := app.DataDir()
+				playlistDir := dataDir.Playlist(playlist.Id)
 
 				dirs := []string{
 					playlistDir,
@@ -1078,7 +1078,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = os.RemoveAll(app.WorkDir().Cache().Playlist(playlist.Id))
+				err = os.RemoveAll(app.DataDir().Cache().Playlist(playlist.Id))
 				if err != nil {
 					return nil, err
 				}

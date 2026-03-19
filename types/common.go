@@ -4,71 +4,61 @@ import "path"
 
 type Map map[string]any
 
-type WorkDir string
+type DataDir string
 
-func (d WorkDir) String() string {
+func (d DataDir) String() string {
 	return string(d)
 }
 
-func (d WorkDir) DatabaseFile() string {
+func (d DataDir) DatabaseFile() string {
 	return path.Join(d.String(), "data.db")
 }
 
-func (d WorkDir) ExportFile() string {
+func (d DataDir) ExportFile() string {
 	return path.Join(d.String(), "export.json")
 }
 
-// TODO(patrik): Remove
-func (d WorkDir) SetupFile() string {
-	return path.Join(d.String(), "setup")
-}
-
-// TODO(patrik): Remove?
-func (d WorkDir) Trash() string {
-	return path.Join(d.String(), "trash")
-}
-
-func (d WorkDir) Artists() string {
+func (d DataDir) Artists() string {
 	return path.Join(d.String(), "artists")
 }
 
-func (d WorkDir) Artist(id string) string {
+func (d DataDir) Artist(id string) string {
 	return path.Join(d.Artists(), id)
 }
 
-func (d WorkDir) Albums() string {
+func (d DataDir) Albums() string {
 	return path.Join(d.String(), "albums")
 }
 
-func (d WorkDir) Album(id string) string {
+func (d DataDir) Album(id string) string {
 	return path.Join(d.Albums(), id)
 }
 
-func (d WorkDir) Tracks() string {
+func (d DataDir) Tracks() string {
 	return path.Join(d.String(), "tracks")
 }
 
-func (d WorkDir) Track(id string) string {
+func (d DataDir) Track(id string) string {
 	return path.Join(d.Tracks(), id)
 }
 
-func (d WorkDir) Playlists() string {
+func (d DataDir) Playlists() string {
 	return path.Join(d.String(), "playlists")
 }
 
-func (d WorkDir) Playlist(id string) string {
+func (d DataDir) Playlist(id string) string {
 	return path.Join(d.Playlists(), id)
 }
 
-func (d WorkDir) Users() string {
+func (d DataDir) Users() string {
 	return path.Join(d.String(), "users")
 }
 
-func (d WorkDir) User(id string) string {
+func (d DataDir) User(id string) string {
 	return path.Join(d.Users(), id)
 }
 
-func (d WorkDir) Cache() CacheDir {
+func (d DataDir) Cache() CacheDir {
 	return CacheDir(path.Join(d.String(), "cache"))
 }
 

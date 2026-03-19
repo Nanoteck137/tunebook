@@ -119,7 +119,7 @@ type MediaService struct {
 	logger *slog.Logger
 
 	db      *database.Database
-	workDir types.WorkDir
+	dataDir types.DataDir
 
 	// TODO(patrik): Make this configureble through the config
 	// TODO(patrik): I want to add test for this, test if every format has
@@ -128,13 +128,14 @@ type MediaService struct {
 	DeviceSpecs    map[Device]DeviceSpec
 }
 
-func NewMediaService(db *database.Database, workDir types.WorkDir) *MediaService {
+func NewMediaService(db *database.Database, dataDir types.DataDir) *MediaService {
 	return &MediaService{
+		// TODO(patrik): Add to function params
 		logger: slog.With(
 			slog.String("service", "media-service"),
 		),
 		db:             db,
-		workDir:        workDir,
+		dataDir:        dataDir,
 		QualityMapping: getDefaultQualityMapping(),
 		DeviceSpecs:    getDefaultDeviceSpecs(),
 	}
@@ -252,7 +253,7 @@ func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (
 		return track.Filename, nil
 	}
 
-	cacheDir := s.workDir.Cache()
+	cacheDir := s.dataDir.Cache()
 	trackCache := cacheDir.Track(track.Id)
 
 	// Make sure that the cache directory is setup

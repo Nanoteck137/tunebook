@@ -747,8 +747,8 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				}
 
 				// TODO(patrik): I hate this
-				workDir := a.imageService.workDir
-				userDir := workDir.User(user.Id)
+				dataDir := a.imageService.dataDir
+				userDir := dataDir.User(user.Id)
 
 				err = utils.CreateDirectories([]string{
 					userDir,

@@ -14,6 +14,8 @@ type App interface {
 	DB() *database.Database
 	Config() *config.Config
 
+	DataDir() types.DataDir
+
 	NotificationService() *service.NotificationService
 	JobService() *service.JobService
 	AuthService() *service.AuthService
@@ -23,8 +25,6 @@ type App interface {
 	MediaService() *service.MediaService
 
 	Broker() *broker.Broker
-
-	WorkDir() types.WorkDir
 
 	Bootstrap() error
 	Shutdown() error

@@ -26,18 +26,18 @@ type ImageService struct {
 	logger *slog.Logger
 
 	db      *database.Database
-	workDir types.WorkDir
+	dataDir types.DataDir
 }
 
 func NewImageService(
 	logger *slog.Logger,
 	db *database.Database,
-	workDir types.WorkDir,
+	dataDir types.DataDir,
 ) *ImageService {
 	return &ImageService{
 		logger:  logger,
 		db:      db,
-		workDir: workDir,
+		dataDir: dataDir,
 	}
 }
 
@@ -154,7 +154,7 @@ func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, i
 		return "", err
 	}
 
-	cacheDir := s.workDir.Cache()
+	cacheDir := s.dataDir.Cache()
 	albumCache := cacheDir.Album(album.Id)
 
 	// Make sure that the cache directory is setup
@@ -213,7 +213,7 @@ func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string,
 		return "", err
 	}
 
-	cacheDir := s.workDir.Cache()
+	cacheDir := s.dataDir.Cache()
 	artistCache := cacheDir.Artist(artist.Id)
 
 	// Make sure that the cache directory is setup
@@ -272,7 +272,7 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 		return "", err
 	}
 
-	cacheDir := s.workDir.Cache()
+	cacheDir := s.dataDir.Cache()
 	playlistCache := cacheDir.Playlist(playlist.Id)
 
 	// Make sure that the cache directory is setup
@@ -298,7 +298,7 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 	input := ""
 
 	if playlist.CoverArt.Valid {
-		playlistDir := s.workDir.Playlist(playlist.Id)
+		playlistDir := s.dataDir.Playlist(playlist.Id)
 
 		input = path.Join(playlistDir, playlist.CoverArt.String)
 	} else {
@@ -333,7 +333,7 @@ func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, ima
 		return "", err
 	}
 
-	cacheDir := s.workDir.Cache()
+	cacheDir := s.dataDir.Cache()
 	userCache := cacheDir.User(user.Id)
 
 	// Make sure that the cache directory is setup
@@ -359,7 +359,7 @@ func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, ima
 	input := ""
 
 	if user.Picture.Valid {
-		dir := s.workDir.User(user.Id)
+		dir := s.dataDir.User(user.Id)
 		input = path.Join(dir, user.Picture.String)
 	} else {
 		// TODO(patrik): Create a default user picture
