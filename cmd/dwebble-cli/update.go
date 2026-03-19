@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -10,10 +9,8 @@ import (
 	"sort"
 
 	"github.com/fatih/color"
-	"github.com/kr/pretty"
 	"github.com/maruel/natural"
 	"github.com/nanoteck137/dwebble/library"
-	"github.com/nanoteck137/dwebble/service"
 	"github.com/spf13/cobra"
 )
 
@@ -27,8 +24,6 @@ var updateCmd = &cobra.Command{
 			slog.Error("failed to find library", "err", err)
 			os.Exit(1)
 		}
-
-		pretty.Println(metadata)
 
 		lib, err := library.FetchLibrary(&metadata, library.FetchLibraryOpts{
 			OnlyArtists: false,

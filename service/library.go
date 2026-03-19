@@ -19,6 +19,7 @@ import (
 	"github.com/nanoteck137/dwebble/types"
 )
 
+// TODO(patrik): Move to types or library package
 type ArtistEntry struct {
 	Id string `json:"id"`
 
@@ -39,6 +40,7 @@ func (e ArtistEntry) GetCoverArt() string {
 	return path.Join(e.Path, e.CoverArt)
 }
 
+// TODO(patrik): Move to types or library package
 type AlbumEntry struct {
 	Id string `json:"id"`
 
@@ -60,6 +62,7 @@ func (e AlbumEntry) GetCoverArt() string {
 	return path.Join(e.Path, e.CoverArt)
 }
 
+// TODO(patrik): Move to types or library package
 type TrackEntry struct {
 	Id string `json:"id"`
 
@@ -531,7 +534,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 			// 	Valid: track.Year != 0,
 			// },
 
-			probeResult, err := s.mediaService.ProbeMedia(trackFile)
+			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
 				// TODO(patrik): Better error
 				return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
@@ -563,7 +566,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 		changes := database.TrackChanges{}
 
 		if modifiedTime > dbTrack.ModifiedTime || dbTrack.Filename != trackFile {
-			probeResult, err := s.mediaService.ProbeMedia(trackFile)
+			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
 				// TODO(patrik): Better error
 				return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
