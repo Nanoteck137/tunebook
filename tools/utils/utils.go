@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/nrednav/cuid2"
+	"github.com/pelletier/go-toml/v2"
 )
 
 var CreateId = createIdGenerator(32)
@@ -366,4 +368,37 @@ func PrettyDuration(d time.Duration) string {
     default:
         return d.Truncate(time.Second).String()      // "2h35m42s"
     }
+}
+
+
+func ReadToml[T any](p string) (T, error) {
+	var res T
+
+	d, err := os.ReadFile(p)
+	if err != nil {
+		return res, fmt.Errorf("read file: %w", err)
+	}
+
+	err = toml.Unmarshal(d, &res)
+	if err != nil {
+		return res, fmt.Errorf("unmarshal: %w", err)
+	}
+
+	return res, nil
+}
+
+func ReadJson[T any](p string) (T, error) {
+	var res T
+
+	d, err := os.ReadFile(p)
+	if err != nil {
+		return res, fmt.Errorf("read file: %w", err)
+	}
+
+	err = json.Unmarshal(d, &res)
+	if err != nil {
+		return res, fmt.Errorf("unmarshal: %w", err)
+	}
+
+	return res, nil
 }

@@ -13,7 +13,7 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 - [ ] Backend: Fix: SPA Web handling
 
-- [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish 
+- [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish
 
 - [ ] CLI: Feature: Update Cmd: Use library.json
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
