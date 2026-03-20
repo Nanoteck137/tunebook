@@ -22,7 +22,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 
   return {
     ...data,
-    album: album.data,
+    album: album.data.album,
     tracks: tracks.data.tracks,
   };
 };

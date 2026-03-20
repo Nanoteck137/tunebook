@@ -455,43 +455,8 @@
       "name": "GetAlbumById",
       "fields": [
         {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "year",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "coverArt",
-          "type": "Images",
-          "omitEmpty": false
-        },
-        {
-          "name": "artists",
-          "type": "[]ArtistInfo",
-          "omitEmpty": false
-        },
-        {
-          "name": "tags",
-          "type": "[]string",
-          "omitEmpty": false
-        },
-        {
-          "name": "created",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "updated",
-          "type": "int",
+          "name": "album",
+          "type": "Album",
           "omitEmpty": false
         }
       ]

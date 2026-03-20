@@ -286,22 +286,8 @@ export type EditUserBody = z.infer<typeof EditUserBody>;
 
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
-  // Name: GetAlbumById.id
-  "id": z.string(),
-  // Name: GetAlbumById.name
-  "name": z.string(),
-  // Name: GetAlbumById.year
-  "year": z.number().nullable(),
-  // Name: GetAlbumById.coverArt
-  "coverArt": Images,
-  // Name: GetAlbumById.artists
-  "artists": z.array(ArtistInfo),
-  // Name: GetAlbumById.tags
-  "tags": z.array(z.string()),
-  // Name: GetAlbumById.created
-  "created": z.number(),
-  // Name: GetAlbumById.updated
-  "updated": z.number(),
+  // Name: GetAlbumById.album
+  "album": Album,
 });
 export type GetAlbumById = z.infer<typeof GetAlbumById>;
 

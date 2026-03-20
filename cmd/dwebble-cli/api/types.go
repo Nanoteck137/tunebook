@@ -255,22 +255,8 @@ type EditUserBody struct {
 
 // Name: GetAlbumById
 type GetAlbumById struct {
-	// Name: GetAlbumById.id
-	Id string `json:"id"`
-	// Name: GetAlbumById.name
-	Name string `json:"name"`
-	// Name: GetAlbumById.year
-	Year *int `json:"year,omitempty"`
-	// Name: GetAlbumById.coverArt
-	CoverArt Images `json:"coverArt"`
-	// Name: GetAlbumById.artists
-	Artists []ArtistInfo `json:"artists"`
-	// Name: GetAlbumById.tags
-	Tags []string `json:"tags"`
-	// Name: GetAlbumById.created
-	Created int `json:"created"`
-	// Name: GetAlbumById.updated
-	Updated int `json:"updated"`
+	// Name: GetAlbumById.album
+	Album Album `json:"album"`
 }
 
 // Name: Track

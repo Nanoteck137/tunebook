@@ -60,7 +60,7 @@ type GetAlbums struct {
 }
 
 type GetAlbumById struct {
-	Album
+	Album Album `json:"album"`
 }
 
 type GetAlbumTracks struct {
