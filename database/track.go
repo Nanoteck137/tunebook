@@ -208,45 +208,31 @@ func (db DB) GetAllTracks(ctx context.Context, filterStr, sortStr string) ([]Tra
 	return ember.Multiple[Track](db.db, ctx, query)
 }
 
-func (db DB) GetPagedTracks(ctx context.Context, opts FetchOptions) ([]Track, types.Page, error) {
+type GetTracksParams struct {
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (db DB) GetTracks(
+	ctx context.Context, 
+	params GetTracksParams,
+) ([]Track, types.Page, error) {
 	query := TrackQuery()
 
 	var err error
 
 	a := adapter.TrackResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err = applyFilter(query, resolver, opts.Filter)
+	query, err = applyFilterParams(params.Filter, &a, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	query, err = applySort(query, resolver, opts.Sort)
+	page, err := buildPage(ctx, db.db, params.Page, query, "tracks.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	countQuery := query.
-		Select(goqu.COUNT("tracks.id"))
-
-	if opts.PerPage > 0 {
-		query = query.
-			Limit(uint(opts.PerPage)).
-			Offset(uint(opts.Page * opts.PerPage))
-	}
-
-	totalItems, err := ember.Single[int](db.db, ctx, countQuery)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	totalPages := utils.TotalPages(opts.PerPage, totalItems)
-	page := types.Page{
-		Page:       opts.Page,
-		PerPage:    opts.PerPage,
-		TotalItems: totalItems,
-		TotalPages: totalPages,
-	}
+	query = applyPageParams(params.Page, query)
 
 	items, err := ember.Multiple[Track](db.db, ctx, query)
 	if err != nil {

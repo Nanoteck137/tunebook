@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
@@ -107,6 +107,25 @@ type SearchTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
+func handleTrackServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrTrackServiceTrackNotFound):
+		return TrackNotFound()
+	}
+
+	var invalidFilter *service.InvalidFilterError
+	if errors.As(err, &invalidFilter) {
+		return InvalidFilter(errors.New(invalidFilter.Message))
+	}
+
+	var invalidSort *service.InvalidSortError
+	if errors.As(err, &invalidSort) {
+		return InvalidSort(errors.New(invalidSort.Message))
+	}
+
+	return err
+}
+
 func InstallTrackHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -114,41 +133,32 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			Path:         "/tracks",
 			ResponseType: GetTracks{},
-			Errors:       []pyrin.ErrorType{ErrTypeInvalidFilter, ErrTypeInvalidSort},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
-				opts := getPageOptions(q)
 
 				ctx := c.Request().Context()
 
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				userId := ""
 				filterId := q.Get("filterId")
-				if filterId != "" {
-					user, err := User(app, c)
-					if err != nil {
-						// TODO(patrik): Handle error
-						return nil, err
-					}
 
-					dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId, user.Id)
-					if err != nil {
-						// TODO(patrik): Handle error
-						return nil, err
-					}
-
-					opts.Filter = dbFilter.Filter
+				if user, err := User(app, c); err == nil {
+					userId = user.Id
 				}
 
-				tracks, p, err := app.DB().GetPagedTracks(ctx, opts)
+				tracks, p, err := app.TrackService().GetTracks(
+					ctx,
+					service.GetTracksParams{
+						Page:     pageParams,
+						Filter:   filterParams,
+						UserId:   userId,
+						FilterId: filterId,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrInvalidFilter) {
-						return nil, InvalidFilter(err)
-					}
-
-					if errors.Is(err, database.ErrInvalidSort) {
-						return nil, InvalidSort(err)
-					}
-
-					return nil, err
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				res := GetTracks{
@@ -157,7 +167,6 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, track := range tracks {
-					track.Order = utils.IntPtr((i + 1) + (p.Page * p.PerPage))
 					res.Tracks[i] = ConvertDBTrack(c, track)
 				}
 
@@ -166,19 +175,41 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
+			Name:         "GetTrackById",
+			Method:       http.MethodGet,
+			Path:         "/tracks/:id",
+			ResponseType: GetTrackById{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+
+				ctx := c.Request().Context()
+
+				track, err := app.TrackService().GetTrackById(
+					ctx,
+					service.GetTrackByIdParams{
+						TrackId: c.Param("id"),
+					},
+				)
+				if err != nil {
+					return nil, handleTrackServiceErrors(err)
+				}
+
+				return GetTrackById{
+					Track: ConvertDBTrack(c, track),
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
 			Name:         "SearchTracks",
 			Method:       http.MethodGet,
 			Path:         "/tracks/search",
 			ResponseType: SearchTracks{},
-			Errors:       []pyrin.ErrorType{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
 
-				query := strings.TrimSpace(q.Get("query"))
-
 				ctx := c.Request().Context()
 
-				tracks, err := app.SearchService().SearchTracks(ctx, query)
+				tracks, err := app.SearchService().SearchTracks(ctx, q.Get("query"))
 				if err != nil {
 					return nil, err
 				}
@@ -193,30 +224,6 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetTrackById",
-			Method:       http.MethodGet,
-			Path:         "/tracks/:id",
-			ResponseType: GetTrackById{},
-			Errors:       []pyrin.ErrorType{ErrTypeTrackNotFound},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
-
-				track, err := app.DB().GetTrackById(c.Request().Context(), id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, TrackNotFound()
-					}
-
-					return nil, err
-				}
-
-				return GetTrackById{
-					Track: ConvertDBTrack(c, track),
-				}, nil
 			},
 		},
 	)
