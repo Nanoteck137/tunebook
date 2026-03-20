@@ -250,24 +250,6 @@ export const CreateTrackFilterBody = z.object({
 });
 export type CreateTrackFilterBody = z.infer<typeof CreateTrackFilterBody>;
 
-// Name: CreateVirtualPlaylist
-export const CreateVirtualPlaylist = z.object({
-  // Name: CreateVirtualPlaylist.id
-  "id": z.string(),
-});
-export type CreateVirtualPlaylist = z.infer<typeof CreateVirtualPlaylist>;
-
-// Name: CreateVirtualPlaylistBody
-export const CreateVirtualPlaylistBody = z.object({
-  // Name: CreateVirtualPlaylistBody.name
-  "name": z.string(),
-  // Name: CreateVirtualPlaylistBody.playlistId
-  "playlistId": z.string(),
-  // Name: CreateVirtualPlaylistBody.filter
-  "filter": z.string(),
-});
-export type CreateVirtualPlaylistBody = z.infer<typeof CreateVirtualPlaylistBody>;
-
 // Name: EditPlaylistBody
 export const EditPlaylistBody = z.object({
   // Name: EditPlaylistBody.name
@@ -399,18 +381,8 @@ export type GetArtistAlbumsById = z.infer<typeof GetArtistAlbumsById>;
 
 // Name: GetArtistById
 export const GetArtistById = z.object({
-  // Name: GetArtistById.id
-  "id": z.string(),
-  // Name: GetArtistById.name
-  "name": z.string(),
-  // Name: GetArtistById.coverArt
-  "coverArt": Images,
-  // Name: GetArtistById.tags
-  "tags": z.array(z.string()),
-  // Name: GetArtistById.created
-  "created": z.number(),
-  // Name: GetArtistById.updated
-  "updated": z.number(),
+  // Name: GetArtistById.artist
+  "artist": Artist,
 });
 export type GetArtistById = z.infer<typeof GetArtistById>;
 
@@ -764,61 +736,6 @@ export const GetUserQuickPlaylistItemIds = z.object({
 });
 export type GetUserQuickPlaylistItemIds = z.infer<typeof GetUserQuickPlaylistItemIds>;
 
-// Name: GetVirtualPlaylistById
-export const GetVirtualPlaylistById = z.object({
-  // Name: GetVirtualPlaylistById.id
-  "id": z.string(),
-  // Name: GetVirtualPlaylistById.name
-  "name": z.string(),
-  // Name: GetVirtualPlaylistById.filter
-  "filter": z.string(),
-  // Name: GetVirtualPlaylistById.created
-  "created": z.number(),
-  // Name: GetVirtualPlaylistById.updated
-  "updated": z.number(),
-});
-export type GetVirtualPlaylistById = z.infer<typeof GetVirtualPlaylistById>;
-
-// Name: GetVirtualPlaylistTracks
-export const GetVirtualPlaylistTracks = z.object({
-  // Name: GetVirtualPlaylistTracks.page
-  "page": Page,
-  // Name: GetVirtualPlaylistTracks.tracks
-  "tracks": z.array(Track),
-});
-export type GetVirtualPlaylistTracks = z.infer<typeof GetVirtualPlaylistTracks>;
-
-// Name: VirtualPlaylist
-export const VirtualPlaylist = z.object({
-  // Name: VirtualPlaylist.id
-  "id": z.string(),
-  // Name: VirtualPlaylist.name
-  "name": z.string(),
-  // Name: VirtualPlaylist.filter
-  "filter": z.string(),
-  // Name: VirtualPlaylist.created
-  "created": z.number(),
-  // Name: VirtualPlaylist.updated
-  "updated": z.number(),
-});
-export type VirtualPlaylist = z.infer<typeof VirtualPlaylist>;
-
-// Name: GetVirtualPlaylists
-export const GetVirtualPlaylists = z.object({
-  // Name: GetVirtualPlaylists.virtualPlaylists
-  "virtualPlaylists": z.array(VirtualPlaylist),
-});
-export type GetVirtualPlaylists = z.infer<typeof GetVirtualPlaylists>;
-
-// Name: PostPlaylistFilterBody
-export const PostPlaylistFilterBody = z.object({
-  // Name: PostPlaylistFilterBody.name
-  "name": z.string(),
-  // Name: PostPlaylistFilterBody.filter
-  "filter": z.string(),
-});
-export type PostPlaylistFilterBody = z.infer<typeof PostPlaylistFilterBody>;
-
 // Name: RecordTrackBody
 export const RecordTrackBody = z.object({
   // Name: RecordTrackBody.duration
@@ -880,15 +797,4 @@ export const UpdateUserSettingsBody = z.object({
   "quickPlaylist": z.string().nullable().optional(),
 });
 export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
-
-// Name: UpdateVirtualPlaylistBody
-export const UpdateVirtualPlaylistBody = z.object({
-  // Name: UpdateVirtualPlaylistBody.name
-  "name": z.string().nullable().optional(),
-  // Name: UpdateVirtualPlaylistBody.playlistId
-  "playlistId": z.string().nullable().optional(),
-  // Name: UpdateVirtualPlaylistBody.filter
-  "filter": z.string().nullable().optional(),
-});
-export type UpdateVirtualPlaylistBody = z.infer<typeof UpdateVirtualPlaylistBody>;
 

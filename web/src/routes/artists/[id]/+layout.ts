@@ -11,6 +11,6 @@ export const load: LayoutLoad = async ({ parent, params }) => {
 
   return {
     ...data,
-    artist: res.data,
+    artist: res.data.artist,
   };
 };

@@ -46,7 +46,7 @@ type GetArtists struct {
 }
 
 type GetArtistById struct {
-	Artist
+	Artist Artist `json:"artist"`
 }
 
 type GetArtistAlbumsById struct {
@@ -182,7 +182,7 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				artists, err := app.SearchService().SearchArtists(
-					ctx, 
+					ctx,
 					q.Get("query"),
 				)
 				if err != nil {

@@ -227,22 +227,6 @@ func (c *Client) CreatePlaylist(body CreatePlaylistBody, options Options) (*Crea
 	return Request[CreatePlaylist](data, body)
 }
 
-func (c *Client) CreatePlaylistFromFilter(body PostPlaylistFilterBody, options Options) (*CreatePlaylist, error) {
-	path := "/api/v1/playlists/filter"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[CreatePlaylist](data, body)
-}
-
 func (c *Client) CreateTrackFilter(body CreateTrackFilterBody, options Options) (*CreateTrackFilter, error) {
 	path := "/api/v1/user/tracks/filter"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -257,22 +241,6 @@ func (c *Client) CreateTrackFilter(body CreateTrackFilterBody, options Options) 
 		Headers: options.Header,
 	}
 	return Request[CreateTrackFilter](data, body)
-}
-
-func (c *Client) CreateVirtualPlaylist(body CreateVirtualPlaylistBody, options Options) (*CreateVirtualPlaylist, error) {
-	path := "/api/v1/virtual-playlists"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[CreateVirtualPlaylist](data, body)
 }
 
 func (c *Client) DeleteApiToken(id string, options Options) (*any, error) {
@@ -309,22 +277,6 @@ func (c *Client) DeletePlaylist(id string, options Options) (*any, error) {
 
 func (c *Client) DeleteTrackFilter(filterId string, options Options) (*any, error) {
 	path := Sprintf("/api/v1/user/tracks/filter/%v", filterId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "DELETE",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-func (c *Client) DeleteVirtualPlaylist(id string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -807,70 +759,6 @@ func (c *Client) GetUserQuickPlaylistItemIds(options Options) (*GetUserQuickPlay
 	return Request[GetUserQuickPlaylistItemIds](data, nil)
 }
 
-func (c *Client) GetVirtualPlaylistById(id string, options Options) (*GetVirtualPlaylistById, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetVirtualPlaylistById](data, nil)
-}
-
-func (c *Client) GetVirtualPlaylistTracks(id string, options Options) (*GetVirtualPlaylistTracks, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v/tracks", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetVirtualPlaylistTracks](data, nil)
-}
-
-func (c *Client) GetVirtualPlaylists(options Options) (*GetVirtualPlaylists, error) {
-	path := "/api/v1/virtual-playlists"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetVirtualPlaylists](data, nil)
-}
-
-func (c *Client) GetVirtualPlaylistsForPlaylist(playlistId string, options Options) (*GetVirtualPlaylists, error) {
-	path := Sprintf("/api/v1/virtual-playlists/playlists/%v", playlistId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetVirtualPlaylists](data, nil)
-}
-
 func (c *Client) RecordTrack(trackId string, body RecordTrackBody, options Options) (*any, error) {
 	path := Sprintf("/api/v1/media/record/track/%v", trackId)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1017,22 +905,6 @@ func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options
 	return Request[any](data, body)
 }
 
-func (c *Client) UpdateVirtualPlaylist(id string, body UpdateVirtualPlaylistBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
 func (c *Client) UploadPlaylistImage(id string, boundary string, body Reader, options Options) (*any, error) {
 	path := Sprintf("/api/v1/playlists/%v/image", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1124,18 +996,8 @@ func (c *ClientUrls) CreatePlaylist() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) CreatePlaylistFromFilter() (*URL, error) {
-	path := "/api/v1/playlists/filter"
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) CreateTrackFilter() (*URL, error) {
 	path := "/api/v1/user/tracks/filter"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) CreateVirtualPlaylist() (*URL, error) {
-	path := "/api/v1/virtual-playlists"
 	return c.getUrl(path)
 }
 
@@ -1151,11 +1013,6 @@ func (c *ClientUrls) DeletePlaylist(id string) (*URL, error) {
 
 func (c *ClientUrls) DeleteTrackFilter(filterId string) (*URL, error) {
 	path := Sprintf("/api/v1/user/tracks/filter/%v", filterId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) DeleteVirtualPlaylist(id string) (*URL, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v", id)
 	return c.getUrl(path)
 }
 
@@ -1324,26 +1181,6 @@ func (c *ClientUrls) GetUserQuickPlaylistItemIds() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetVirtualPlaylistById(id string) (*URL, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetVirtualPlaylistTracks(id string) (*URL, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v/tracks", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetVirtualPlaylists() (*URL, error) {
-	path := "/api/v1/virtual-playlists"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetVirtualPlaylistsForPlaylist(playlistId string) (*URL, error) {
-	path := Sprintf("/api/v1/virtual-playlists/playlists/%v", playlistId)
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) RecordTrack(trackId string) (*URL, error) {
 	path := Sprintf("/api/v1/media/record/track/%v", trackId)
 	return c.getUrl(path)
@@ -1390,17 +1227,12 @@ func (c *ClientUrls) SseHandler() (*URL, error) {
 }
 
 func (c *ClientUrls) StreamTrack(trackId string) (*URL, error) {
-	path := Sprintf("/media/tracks/%v/stream", trackId)
+	path := Sprintf("/api/v1/media/stream/tracks/%v", trackId)
 	return c.getUrl(path)
 }
 
 func (c *ClientUrls) UpdateUserSettings() (*URL, error) {
 	path := "/api/v1/user/settings"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) UpdateVirtualPlaylist(id string) (*URL, error) {
-	path := Sprintf("/api/v1/virtual-playlists/%v", id)
 	return c.getUrl(path)
 }
 

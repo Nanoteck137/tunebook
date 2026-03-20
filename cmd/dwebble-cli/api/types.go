@@ -223,22 +223,6 @@ type CreateTrackFilterBody struct {
 	Filter string `json:"filter"`
 }
 
-// Name: CreateVirtualPlaylist
-type CreateVirtualPlaylist struct {
-	// Name: CreateVirtualPlaylist.id
-	Id string `json:"id"`
-}
-
-// Name: CreateVirtualPlaylistBody
-type CreateVirtualPlaylistBody struct {
-	// Name: CreateVirtualPlaylistBody.name
-	Name string `json:"name"`
-	// Name: CreateVirtualPlaylistBody.playlistId
-	PlaylistId string `json:"playlistId"`
-	// Name: CreateVirtualPlaylistBody.filter
-	Filter string `json:"filter"`
-}
-
 // Name: EditPlaylistBody
 type EditPlaylistBody struct {
 	// Name: EditPlaylistBody.name
@@ -359,18 +343,8 @@ type GetArtistAlbumsById struct {
 
 // Name: GetArtistById
 type GetArtistById struct {
-	// Name: GetArtistById.id
-	Id string `json:"id"`
-	// Name: GetArtistById.name
-	Name string `json:"name"`
-	// Name: GetArtistById.coverArt
-	CoverArt Images `json:"coverArt"`
-	// Name: GetArtistById.tags
-	Tags []string `json:"tags"`
-	// Name: GetArtistById.created
-	Created int `json:"created"`
-	// Name: GetArtistById.updated
-	Updated int `json:"updated"`
+	// Name: GetArtistById.artist
+	Artist Artist `json:"artist"`
 }
 
 // Name: GetArtists
@@ -695,56 +669,6 @@ type GetUserQuickPlaylistItemIds struct {
 	TrackIds []string `json:"trackIds"`
 }
 
-// Name: GetVirtualPlaylistById
-type GetVirtualPlaylistById struct {
-	// Name: GetVirtualPlaylistById.id
-	Id string `json:"id"`
-	// Name: GetVirtualPlaylistById.name
-	Name string `json:"name"`
-	// Name: GetVirtualPlaylistById.filter
-	Filter string `json:"filter"`
-	// Name: GetVirtualPlaylistById.created
-	Created int `json:"created"`
-	// Name: GetVirtualPlaylistById.updated
-	Updated int `json:"updated"`
-}
-
-// Name: GetVirtualPlaylistTracks
-type GetVirtualPlaylistTracks struct {
-	// Name: GetVirtualPlaylistTracks.page
-	Page Page `json:"page"`
-	// Name: GetVirtualPlaylistTracks.tracks
-	Tracks []Track `json:"tracks"`
-}
-
-// Name: VirtualPlaylist
-type VirtualPlaylist struct {
-	// Name: VirtualPlaylist.id
-	Id string `json:"id"`
-	// Name: VirtualPlaylist.name
-	Name string `json:"name"`
-	// Name: VirtualPlaylist.filter
-	Filter string `json:"filter"`
-	// Name: VirtualPlaylist.created
-	Created int `json:"created"`
-	// Name: VirtualPlaylist.updated
-	Updated int `json:"updated"`
-}
-
-// Name: GetVirtualPlaylists
-type GetVirtualPlaylists struct {
-	// Name: GetVirtualPlaylists.virtualPlaylists
-	VirtualPlaylists []VirtualPlaylist `json:"virtualPlaylists"`
-}
-
-// Name: PostPlaylistFilterBody
-type PostPlaylistFilterBody struct {
-	// Name: PostPlaylistFilterBody.name
-	Name string `json:"name"`
-	// Name: PostPlaylistFilterBody.filter
-	Filter string `json:"filter"`
-}
-
 // Name: RecordTrackBody
 type RecordTrackBody struct {
 	// Name: RecordTrackBody.duration
@@ -797,15 +721,5 @@ type TrackId struct {
 type UpdateUserSettingsBody struct {
 	// Name: UpdateUserSettingsBody.quickPlaylist
 	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
-}
-
-// Name: UpdateVirtualPlaylistBody
-type UpdateVirtualPlaylistBody struct {
-	// Name: UpdateVirtualPlaylistBody.name
-	Name *string `json:"name,omitempty"`
-	// Name: UpdateVirtualPlaylistBody.playlistId
-	PlaylistId *string `json:"playlistId,omitempty"`
-	// Name: UpdateVirtualPlaylistBody.filter
-	Filter *string `json:"filter,omitempty"`
 }
 
