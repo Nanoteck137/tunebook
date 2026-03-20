@@ -3,10 +3,10 @@ package apis
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
@@ -71,6 +71,25 @@ type SearchAlbums struct {
 	Albums []Album `json:"albums"`
 }
 
+func handleAlbumServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrAlbumServiceAlbumNotFound):
+		return AlbumNotFound()
+	}
+
+	var invalidFilter *service.InvalidFilterError
+	if errors.As(err, &invalidFilter) {
+		return InvalidFilter(errors.New(invalidFilter.Message))
+	}
+
+	var invalidSort *service.InvalidSortError
+	if errors.As(err, &invalidSort) {
+		return InvalidSort(errors.New(invalidSort.Message))
+	}
+
+	return err
+}
+
 func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -78,22 +97,23 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 			Path:         "/albums",
 			Method:       http.MethodGet,
 			ResponseType: GetAlbums{},
-			Errors:       []pyrin.ErrorType{ErrTypeInvalidFilter, ErrTypeInvalidSort},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
-				opts := getPageOptions(q)
 
-				albums, pageInfo, err := app.DB().GetAlbumsPaged(c.Request().Context(), opts)
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				albums, pageInfo, err := app.AlbumService().GetAlbums(
+					ctx,
+					service.GetAlbumsParams{
+						Page:   pageParams,
+						Filter: filterParams,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrInvalidFilter) {
-						return nil, InvalidFilter(err)
-					}
-
-					if errors.Is(err, database.ErrInvalidSort) {
-						return nil, InvalidSort(err)
-					}
-
-					return nil, err
+					return nil, handleAlbumServiceErrors(err)
 				}
 
 				res := GetAlbums{
@@ -110,50 +130,21 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "SearchAlbums",
-			Path:         "/albums/search",
-			Method:       http.MethodGet,
-			ResponseType: SearchAlbums{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-
-				query := strings.TrimSpace(q.Get("query"))
-
-				ctx := c.Request().Context()
-
-				albums, err := app.SearchService().SearchAlbums(ctx, query)
-				if err != nil {
-					return nil, err
-				}
-
-				res := SearchAlbums{
-					Albums: make([]Album, len(albums)),
-				}
-
-				for i, album := range albums {
-					res.Albums[i] = ConvertDBAlbum(c, album)
-				}
-
-				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
 			Name:         "GetAlbumById",
 			Method:       http.MethodGet,
 			Path:         "/albums/:id",
 			ResponseType: GetAlbumById{},
-			Errors:       []pyrin.ErrorType{ErrTypeAlbumNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
+				ctx := c.Request().Context()
 
-				album, err := app.DB().GetAlbumById(c.Request().Context(), id)
+				album, err := app.AlbumService().GetAlbumById(
+					ctx,
+					service.GetAlbumByIdParams{
+						AlbumId: c.Param("id"),
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AlbumNotFound()
-					}
-
-					return nil, err
+					return nil, handleAlbumServiceErrors(err)
 				}
 
 				return GetAlbumById{
@@ -167,20 +158,15 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			Path:         "/albums/:id/tracks",
 			ResponseType: GetAlbumTracks{},
-			Errors:       []pyrin.ErrorType{ErrTypeAlbumNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
+				ctx := c.Request().Context()
 
-				album, err := app.DB().GetAlbumById(c.Request().Context(), id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AlbumNotFound()
-					}
-
-					return nil, err
-				}
-
-				tracks, err := app.DB().GetTracksByAlbum(c.Request().Context(), album.Id)
+				tracks, err := app.AlbumService().GetAlbumTracks(
+					ctx,
+					service.GetAlbumTracksParams{
+						AlbumId: c.Param("id"),
+					},
+				)
 				if err != nil {
 					return nil, err
 				}
@@ -190,11 +176,34 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, track := range tracks {
-					if track.Number.Valid {
-						track.Order = utils.IntPtr(int(track.Number.Int64))
-					}
-
 					res.Tracks[i] = ConvertDBTrack(c, track)
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "SearchAlbums",
+			Path:         "/albums/search",
+			Method:       http.MethodGet,
+			ResponseType: SearchAlbums{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+
+				ctx := c.Request().Context()
+
+				albums, err := app.SearchService().SearchAlbums(ctx, q.Get("query"))
+				if err != nil {
+					return nil, err
+				}
+
+				res := SearchAlbums{
+					Albums: make([]Album, len(albums)),
+				}
+
+				for i, album := range albums {
+					res.Albums[i] = ConvertDBAlbum(c, album)
 				}
 
 				return res, nil

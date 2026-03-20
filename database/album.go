@@ -120,45 +120,32 @@ func (db DB) GetAllAlbums(ctx context.Context, filterStr string, sortStr string)
 	return ember.Multiple[Album](db.db, ctx, query)
 }
 
-func (db DB) GetAlbumsPaged(ctx context.Context, opts FetchOptions) ([]Album, types.Page, error) {
+type GetAlbumsParams struct {
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (db DB) GetAlbums(
+	ctx context.Context, 
+	params GetAlbumsParams,
+) ([]Album, types.Page, error) {
 	query := AlbumQuery()
 
 	var err error
 
 	a := adapter.AlbumResolverAdapter{}
-	resolver := filter.New(&a)
 
-	query, err = applyFilter(query, resolver, opts.Filter)
+	query, err = applyFilterParams(params.Filter, &a, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	query, err = applySort(query, resolver, opts.Sort)
+	page, err := buildPage(ctx, db.db, params.Page, query, "albums.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	countQuery := query.
-		Select(goqu.COUNT("albums.id"))
-
-	if opts.PerPage > 0 {
-		query = query.
-			Limit(uint(opts.PerPage)).
-			Offset(uint(opts.Page * opts.PerPage))
-	}
-
-	totalItems, err := ember.Single[int](db.db, ctx, countQuery)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	totalPages := utils.TotalPages(opts.PerPage, totalItems)
-	page := types.Page{
-		Page:       opts.Page,
-		PerPage:    opts.PerPage,
-		TotalItems: totalItems,
-		TotalPages: totalPages,
-	}
+	query = applyPageParams(params.Page, query)
 
 	items, err := ember.Multiple[Album](db.db, ctx, query)
 	if err != nil {
