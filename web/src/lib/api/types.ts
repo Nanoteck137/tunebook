@@ -646,32 +646,8 @@ export type GetSystemInfo = z.infer<typeof GetSystemInfo>;
 
 // Name: GetTrackById
 export const GetTrackById = z.object({
-  // Name: GetTrackById.id
-  "id": z.string(),
-  // Name: GetTrackById.name
-  "name": z.string(),
-  // Name: GetTrackById.order
-  "order": z.number().nullable(),
-  // Name: GetTrackById.duration
-  "duration": z.number(),
-  // Name: GetTrackById.number
-  "number": z.number().nullable(),
-  // Name: GetTrackById.year
-  "year": z.number().nullable(),
-  // Name: GetTrackById.coverArt
-  "coverArt": Images,
-  // Name: GetTrackById.albumId
-  "albumId": z.string(),
-  // Name: GetTrackById.albumName
-  "albumName": z.string(),
-  // Name: GetTrackById.artists
-  "artists": z.array(ArtistInfo),
-  // Name: GetTrackById.tags
-  "tags": z.array(z.string()),
-  // Name: GetTrackById.created
-  "created": z.number(),
-  // Name: GetTrackById.updated
-  "updated": z.number(),
+  // Name: GetTrackById.track
+  "track": Track,
 });
 export type GetTrackById = z.infer<typeof GetTrackById>;
 

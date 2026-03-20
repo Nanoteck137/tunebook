@@ -75,10 +75,10 @@ type GetTracks struct {
 }
 
 type GetTrackById struct {
-	Track
+	Track Track `json:"track"`
 }
 
-// TODO(patrik): Move
+// TODO(patrik): Remove after PlaylistService
 func getPageOptions(q url.Values) database.FetchOptions {
 	perPage := 100
 	page := 0

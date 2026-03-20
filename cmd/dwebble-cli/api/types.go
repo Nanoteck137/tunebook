@@ -585,32 +585,8 @@ type GetSystemInfo struct {
 
 // Name: GetTrackById
 type GetTrackById struct {
-	// Name: GetTrackById.id
-	Id string `json:"id"`
-	// Name: GetTrackById.name
-	Name string `json:"name"`
-	// Name: GetTrackById.order
-	Order *int `json:"order,omitempty"`
-	// Name: GetTrackById.duration
-	Duration int `json:"duration"`
-	// Name: GetTrackById.number
-	Number *int `json:"number,omitempty"`
-	// Name: GetTrackById.year
-	Year *int `json:"year,omitempty"`
-	// Name: GetTrackById.coverArt
-	CoverArt Images `json:"coverArt"`
-	// Name: GetTrackById.albumId
-	AlbumId string `json:"albumId"`
-	// Name: GetTrackById.albumName
-	AlbumName string `json:"albumName"`
-	// Name: GetTrackById.artists
-	Artists []ArtistInfo `json:"artists"`
-	// Name: GetTrackById.tags
-	Tags []string `json:"tags"`
-	// Name: GetTrackById.created
-	Created int `json:"created"`
-	// Name: GetTrackById.updated
-	Updated int `json:"updated"`
+	// Name: GetTrackById.track
+	Track Track `json:"track"`
 }
 
 // Name: TrackFilter
