@@ -11,6 +11,14 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 ## Rewrite
 
+- [ ] Backend: Add ArtistService
+- [ ] Backend: Add AlbumService
+- [ ] Backend: Add TrackService
+- [ ] Backend: Add PlaylistService
+
+- [ ] Backend: Feature: Image Service: Add helper for downloading playlist images
+- [ ] Backend: Feature: Image Service: Add helper for uploading playlist images
+
 - [ ] Backend: Fix: SPA Web handling
 
 - [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish
