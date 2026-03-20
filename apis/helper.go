@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/nanoteck137/dwebble/core"
@@ -160,5 +162,34 @@ func ConvertUserPictureURL(c pyrin.Context, userId string, val sql.NullString) t
 		Small:    ConvertURL(c, first+IMAGE_SMALL),
 		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
 		Large:    ConvertURL(c, first+IMAGE_LARGE),
+	}
+}
+
+func getPageParams(q url.Values, defaultPerPage int) types.PageParams {
+	perPage := defaultPerPage
+	page := 0
+
+	if s := q.Get("perPage"); s != "" {
+		i, _ := strconv.Atoi(s)
+		if i > 0 {
+			perPage = i
+		}
+	}
+
+	if s := q.Get("page"); s != "" {
+		i, _ := strconv.Atoi(s)
+		page = i
+	}
+
+	return types.PageParams{
+		PerPage: perPage,
+		Page:    page,
+	}
+}
+
+func getFilterParams(q url.Values) types.FilterParams {
+	return types.FilterParams{
+		Filter: q.Get("filter"),
+		Sort:   q.Get("sort"),
 	}
 }

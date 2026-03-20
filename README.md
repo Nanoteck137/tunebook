@@ -11,6 +11,8 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 ## Rewrite
 
+- [ ] Backend: Fix: API: Move every search handler to a /search endpoint
+
 - [ ] Backend: Add ArtistService
 - [ ] Backend: Add AlbumService
 - [ ] Backend: Add TrackService

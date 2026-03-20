@@ -23,6 +23,10 @@ type App interface {
 	LibraryService() *service.LibraryService
 	ImageService() *service.ImageService
 	MediaService() *service.MediaService
+
+	ArtistService() *service.ArtistService
+	AlbumService() *service.AlbumService
+	TrackService() *service.TrackService
 	PlaylistService() *service.PlaylistService
 
 	Broker() *broker.Broker

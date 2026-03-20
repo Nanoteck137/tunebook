@@ -106,9 +106,25 @@ type BaseApp struct {
 	libraryService      *service.LibraryService
 	imageService        *service.ImageService
 	mediaService        *service.MediaService
-	playlistService     *service.PlaylistService
+
+	artistService   *service.ArtistService
+	albumService    *service.AlbumService
+	trackService    *service.TrackService
+	playlistService *service.PlaylistService
 
 	broker *broker.Broker
+}
+
+func (app *BaseApp) ArtistService() *service.ArtistService {
+	return app.artistService
+}
+
+func (app *BaseApp) AlbumService() *service.AlbumService {
+	return app.albumService
+}
+
+func (app *BaseApp) TrackService() *service.TrackService {
+	return app.trackService
 }
 
 func (app *BaseApp) PlaylistService() *service.PlaylistService {
@@ -192,18 +208,18 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	app.notificationService = service.NewNotificationService(
-		newServiceLogger("notification-service"),
+		newServiceLogger("notification"),
 		app.config,
 	)
 
-	app.jobService = service.NewJobService(newServiceLogger("job-service"))
+	app.jobService = service.NewJobService(newServiceLogger("job"))
 	err = app.jobService.Init()
 	if err != nil {
 		return err
 	}
 
 	app.imageService = service.NewImageService(
-		newServiceLogger("image-service"),
+		newServiceLogger("image"),
 		app.db,
 		dataDir,
 	)
@@ -230,8 +246,23 @@ func (app *BaseApp) Bootstrap() error {
 		app.searchService,
 	)
 
+	app.artistService = service.NewArtistService(
+		newServiceLogger("artist"),
+		app.db,
+	)
+
+	app.albumService = service.NewAlbumService(
+		newServiceLogger("album"),
+		app.db,
+	)
+
+	app.trackService = service.NewTrackService(
+		newServiceLogger("track"),
+		app.db,
+	)
+
 	app.playlistService = service.NewPlaylistService(
-		newServiceLogger("playlist-service"), 
+		newServiceLogger("playlist"),
 		app.db,
 		dataDir,
 		app.imageService,

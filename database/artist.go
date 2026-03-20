@@ -70,20 +70,20 @@ func ArtistQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db DB) GetAllArtists(ctx context.Context, filterStr, sortStr string) ([]Artist, error) {
+type GetAllArtistsParams struct {
+	Filter types.FilterParams
+}
+
+func (db DB) GetAllArtists(
+	ctx context.Context,
+	params GetAllArtistsParams,
+) ([]Artist, error) {
 	query := ArtistQuery()
 
 	var err error
 
 	a := adapter.ArtistResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err = applyFilter(query, resolver, filterStr)
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = applySort(query, resolver, sortStr)
+	query, err = applyFilterParams(params.Filter, &a, query)
 	if err != nil {
 		return nil, err
 	}
@@ -91,45 +91,82 @@ func (db DB) GetAllArtists(ctx context.Context, filterStr, sortStr string) ([]Ar
 	return ember.Multiple[Artist](db.db, ctx, query)
 }
 
-func (db DB) GetArtistsPaged(ctx context.Context, opts FetchOptions) ([]Artist, types.Page, error) {
+func applyFilterParams(
+	params types.FilterParams,
+	adapter filter.ResolverAdapter,
+	query *goqu.SelectDataset,
+) (*goqu.SelectDataset, error) {
+	resolver := filter.New(adapter)
+
+	query, err := applyFilter(query, resolver, params.Filter)
+	if err != nil {
+		return nil, err
+	}
+
+	query, err = applySort(query, resolver, params.Sort)
+	if err != nil {
+		return nil, err
+	}
+
+	return query, nil
+}
+
+func buildPage(
+	ctx context.Context,
+	db ember.DB,
+	params types.PageParams,
+	query *goqu.SelectDataset,
+	countCol any,
+) (types.Page, error) {
+	countQuery := query.Select(goqu.COUNT(countCol))
+
+	totalItems, err := ember.Single[int](db, ctx, countQuery)
+	if err != nil {
+		return types.Page{}, err
+	}
+
+	return types.Page{
+		Page:       params.Page,
+		PerPage:    params.PerPage,
+		TotalItems: totalItems,
+		TotalPages: utils.TotalPages(params.PerPage, totalItems),
+	}, nil
+}
+
+func applyPageParams(
+	params types.PageParams,
+	query *goqu.SelectDataset,
+) *goqu.SelectDataset {
+	return query.
+		Limit(uint(params.PerPage)).
+		Offset(uint(params.Page * params.PerPage))
+}
+
+type GetArtistsParams struct {
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (db DB) GetArtists(
+	ctx context.Context,
+	params GetArtistsParams,
+) ([]Artist, types.Page, error) {
 	query := ArtistQuery()
 
 	var err error
 
 	a := adapter.ArtistResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err = applyFilter(query, resolver, opts.Filter)
+	query, err = applyFilterParams(params.Filter, &a, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	query, err = applySort(query, resolver, opts.Sort)
+	page, err := buildPage(ctx, db.db, params.Page, query, "artists.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	countQuery := query.
-		Select(goqu.COUNT("artists.id"))
-
-	if opts.PerPage > 0 {
-		query = query.
-			Limit(uint(opts.PerPage)).
-			Offset(uint(opts.Page * opts.PerPage))
-	}
-
-	totalItems, err := ember.Single[int](db.db, ctx, countQuery)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	totalPages := utils.TotalPages(opts.PerPage, totalItems)
-	page := types.Page{
-		Page:       opts.Page,
-		PerPage:    opts.PerPage,
-		TotalItems: totalItems,
-		TotalPages: totalPages,
-	}
+	query = applyPageParams(params.Page, query)
 
 	items, err := ember.Multiple[Artist](db.db, ctx, query)
 	if err != nil {
@@ -232,12 +269,12 @@ func (db DB) CreateArtist(ctx context.Context, params CreateArtistParams) (Artis
 }
 
 type ArtistChanges struct {
-	Slug      types.Change[string]
+	Slug types.Change[string]
 
-	Name      types.Change[string]
+	Name types.Change[string]
 
 	OtherName types.Change[sql.NullString]
-	CoverArt   types.Change[sql.NullString]
+	CoverArt  types.Change[sql.NullString]
 
 	Created types.Change[int64]
 }

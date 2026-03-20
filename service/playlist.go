@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	ErrPlaylistServicePlaylistNotFound = errors.New("playlist-service: playlist not found")
+	ErrPlaylistServicePlaylistNotFound = errors.New("playlist service: playlist not found")
 )
 
 type PlaylistService struct {

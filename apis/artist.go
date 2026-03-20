@@ -3,10 +3,10 @@ package apis
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
@@ -57,6 +57,25 @@ type SearchArtists struct {
 	Artists []Artist `json:"artists"`
 }
 
+func handleArtistServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrArtistServiceArtistNotFound):
+		return ArtistNotFound()
+	}
+
+	var invalidFilter *service.InvalidFilterError
+	if errors.As(err, &invalidFilter) {
+		return InvalidFilter(errors.New(invalidFilter.Message))
+	}
+
+	var invalidSort *service.InvalidSortError
+	if errors.As(err, &invalidSort) {
+		return InvalidSort(errors.New(invalidSort.Message))
+	}
+
+	return err
+}
+
 func InstallArtistHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -64,56 +83,27 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			Path:         "/artists",
 			ResponseType: GetArtists{},
-			Errors:       []pyrin.ErrorType{ErrTypeInvalidFilter, ErrTypeInvalidSort},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
-
-				opts := getPageOptions(q)
-
-				artists, pageInfo, err := app.DB().GetArtistsPaged(c.Request().Context(), opts)
-				if err != nil {
-					if errors.Is(err, database.ErrInvalidFilter) {
-						return nil, InvalidFilter(err)
-					}
-
-					if errors.Is(err, database.ErrInvalidSort) {
-						return nil, InvalidSort(err)
-					}
-
-					return nil, err
-				}
-
-				res := GetArtists{
-					Page:    pageInfo,
-					Artists: make([]Artist, len(artists)),
-				}
-
-				for i, artist := range artists {
-					res.Artists[i] = ConvertDBArtist(c, artist)
-				}
-
-				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "SearchArtists",
-			Method:       http.MethodGet,
-			Path:         "/artists/search",
-			ResponseType: SearchArtists{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-
-				query := strings.TrimSpace(q.Get("query"))
 
 				ctx := c.Request().Context()
 
-				artists, err := app.SearchService().SearchArtists(ctx, query)
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				artists, page, err := app.ArtistService().GetArtists(
+					ctx,
+					service.GetArtistsParams{
+						Page:   pageParams,
+						Filter: filterParams,
+					},
+				)
 				if err != nil {
-					return nil, err
+					return nil, handleArtistServiceErrors(err)
 				}
 
-				res := SearchArtists{
+				res := GetArtists{
+					Page:    page,
 					Artists: make([]Artist, len(artists)),
 				}
 
@@ -130,16 +120,17 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			Path:         "/artists/:id",
 			ResponseType: GetArtistById{},
-			Errors:       []pyrin.ErrorType{ErrTypeArtistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
+				ctx := c.Request().Context()
 
-				artist, err := app.DB().GetArtistById(c.Request().Context(), id)
+				artist, err := app.ArtistService().GetArtistById(
+					ctx,
+					service.GetArtistByIdParams{
+						ArtistId: c.Param("id"),
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, ArtistNotFound()
-					}
-					return nil, err
+					return nil, handleArtistServiceErrors(err)
 				}
 
 				return GetArtistById{
@@ -155,20 +146,16 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 			ResponseType: GetArtistAlbumsById{},
 			Errors:       []pyrin.ErrorType{ErrTypeArtistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
+				ctx := c.Request().Context()
 
-				artist, err := app.DB().GetArtistById(c.Request().Context(), id)
+				albums, err := app.ArtistService().GetArtistAlbums(
+					ctx,
+					service.GetArtistAlbumsParams{
+						ArtistId: c.Param("id"),
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, ArtistNotFound()
-					}
-
-					return nil, err
-				}
-
-				albums, err := app.DB().GetAlbumsByArtist(c.Request().Context(), artist.Id)
-				if err != nil {
-					return nil, err
+					return nil, handleArtistServiceErrors(err)
 				}
 
 				res := GetArtistAlbumsById{
@@ -177,6 +164,37 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 
 				for i, album := range albums {
 					res.Albums[i] = ConvertDBAlbum(c, album)
+				}
+
+				return res, nil
+			},
+		},
+
+		// TODO(patrik): Move from /artists/search to /search/artists
+		pyrin.ApiHandler{
+			Name:         "SearchArtists",
+			Method:       http.MethodGet,
+			Path:         "/artists/search",
+			ResponseType: SearchArtists{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+
+				ctx := c.Request().Context()
+
+				artists, err := app.SearchService().SearchArtists(
+					ctx, 
+					q.Get("query"),
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				res := SearchArtists{
+					Artists: make([]Artist, len(artists)),
+				}
+
+				for i, artist := range artists {
+					res.Artists[i] = ConvertDBArtist(c, artist)
 				}
 
 				return res, nil

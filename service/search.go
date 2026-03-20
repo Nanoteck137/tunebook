@@ -256,7 +256,7 @@ func (s *SearchService) UpdateTrack(ctx context.Context, trackId string) error {
 }
 
 func (s *SearchService) indexArtists() error {
-	artists, err := s.db.GetAllArtists(context.TODO(), "", "")
+	artists, err := s.db.GetAllArtists(context.TODO(), database.GetAllArtistsParams{})
 	if err != nil {
 		return fmt.Errorf("failed to get artists: %w", err)
 	}
