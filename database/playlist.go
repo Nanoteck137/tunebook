@@ -11,6 +11,8 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 )
 
+var CreatePlaylistId = utils.CreateIdGenerator(16)
+
 type Playlist struct {
 	Id       string         `db:"id"`
 	Name     string         `db:"name"`
@@ -100,45 +102,39 @@ type CreatePlaylistParams struct {
 	Updated int64
 }
 
-func (db DB) CreatePlaylist(ctx context.Context, params CreatePlaylistParams) (Playlist, error) {
-	t := time.Now().UnixMilli()
-	created := params.Created
-	updated := params.Updated
+func (db DB) CreatePlaylist(
+	ctx context.Context,
+	params CreatePlaylistParams,
+) (string, error) {
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
 
-	if created == 0 && updated == 0 {
-		created = t
-		updated = t
+		params.Created = t
+		params.Updated = t
 	}
 
-	id := params.Id
-	if id == "" {
-		// TODO(patrik): Change to CreatePlaylistId
-		id = utils.CreateId()
+	if params.Id == "" {
+		params.Id = CreatePlaylistId()
 	}
 
 	query := dialect.Insert("playlists").
 		Rows(goqu.Record{
-			"id":        id,
+			"id":        params.Id,
 			"name":      params.Name,
 			"cover_art": params.CoverArt,
 
 			"owner_id": params.OwnerId,
 
-			"created": created,
-			"updated": updated,
-		}).
-		Returning(
-			"playlists.id",
-			"playlists.name",
-			"playlists.cover_art",
+			"created": params.Created,
+			"updated": params.Updated,
+		})
 
-			"playlists.owner_id",
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return "", err
+	}
 
-			"playlists.created",
-			"playlists.updated",
-		)
-
-	return ember.Single[Playlist](db.db, ctx, query)
+	return params.Id, nil
 }
 
 type PlaylistChanges struct {
@@ -151,7 +147,11 @@ type PlaylistChanges struct {
 	Created types.Change[int64]
 }
 
-func (db DB) UpdatePlaylist(ctx context.Context, id string, changes PlaylistChanges) error {
+func (db DB) UpdatePlaylist(
+	ctx context.Context, 
+	id string, 
+	changes PlaylistChanges,
+) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)

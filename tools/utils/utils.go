@@ -21,26 +21,26 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-var CreateId = createIdGenerator(32)
-var CreateSmallId = createIdGenerator(8)
+var CreateId = CreateIdGenerator(32)
+var CreateSmallId = CreateIdGenerator(8)
 
-var CreateUserId = createIdGenerator(10)
+var CreateUserId = CreateIdGenerator(10)
 
-var CreateArtistId = createIdGenerator(10)
-var CreateAlbumId = createIdGenerator(16)
-var CreateTrackId = createIdGenerator(32)
-var CreateTrackMediaId = createIdGenerator(32)
+var CreateArtistId = CreateIdGenerator(10)
+var CreateAlbumId = CreateIdGenerator(16)
+var CreateTrackId = CreateIdGenerator(32)
+var CreateTrackMediaId = CreateIdGenerator(32)
 
-var CreatePlaylistFilterId = createIdGenerator(8)
-var CreateTrackFilterId = createIdGenerator(8)
+var CreatePlaylistFilterId = CreateIdGenerator(8)
+var CreateTrackFilterId = CreateIdGenerator(8)
 
-var CreateVirtualPlaylistId = createIdGenerator(16)
+var CreateVirtualPlaylistId = CreateIdGenerator(16)
 
-var CreateApiTokenId = createIdGenerator(32)
+var CreateApiTokenId = CreateIdGenerator(32)
 
-var CreateUserListeningEventId = createIdGenerator(32)
+var CreateUserListeningEventId = CreateIdGenerator(32)
 
-func createIdGenerator(length int) func() string {
+func CreateIdGenerator(length int) func() string {
 	res, err := cuid2.Init(cuid2.WithLength(length))
 	if err != nil {
 		log.Fatal("Failed to create id generator", "err", err)

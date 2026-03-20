@@ -13,12 +13,14 @@ import (
 	"github.com/nanoteck137/dwebble/types"
 )
 
+// TODO(patrik): Move to it's own file
 const (
 	jobAuthCleanup  = "auth-cleanup"
 	jobCacheCleanup = "cache-cleanup"
 	jobLibrarySync  = "library-sync"
 )
 
+// TODO(patrik): Move to it's own file
 var _ service.Job = (*AuthCleanupJob)(nil)
 
 type AuthCleanupJob struct {
@@ -38,6 +40,7 @@ func (j *AuthCleanupJob) Run(ctx context.Context) error {
 	return nil
 }
 
+// TODO(patrik): Move to it's own file
 var _ service.Job = (*CacheCleanupJob)(nil)
 
 type CacheCleanupJob struct {
@@ -70,6 +73,7 @@ func (j *CacheCleanupJob) Run(ctx context.Context) error {
 	return nil
 }
 
+// TODO(patrik): Move to it's own file
 var _ service.Job = (*LibrarySyncJob)(nil)
 
 type LibrarySyncJob struct {
@@ -102,8 +106,13 @@ type BaseApp struct {
 	libraryService      *service.LibraryService
 	imageService        *service.ImageService
 	mediaService        *service.MediaService
+	playlistService     *service.PlaylistService
 
 	broker *broker.Broker
+}
+
+func (app *BaseApp) PlaylistService() *service.PlaylistService {
+	return app.playlistService
 }
 
 func (app *BaseApp) JobService() *service.JobService {
@@ -219,6 +228,13 @@ func (app *BaseApp) Bootstrap() error {
 		app.notificationService,
 		app.mediaService,
 		app.searchService,
+	)
+
+	app.playlistService = service.NewPlaylistService(
+		newServiceLogger("playlist-service"), 
+		app.db,
+		dataDir,
+		app.imageService,
 	)
 
 	app.broker = broker.NewBroker(func() []broker.Event {

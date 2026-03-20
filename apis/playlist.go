@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime"
 	"net/http"
 	"os"
 	"path"
 
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
@@ -272,6 +272,15 @@ type ReorderPlaylistItemsBody struct {
 	TrackIds      []string `json:"trackIds"`
 }
 
+func handlePlaylistServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrPlaylistServicePlaylistNotFound):
+		return PlaylistNotFound()
+	}
+
+	return err
+}
+
 func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -285,9 +294,11 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				playlists, err := app.DB().GetPlaylistsByUser(c.Request().Context(), user.Id)
+				ctx := c.Request().Context()
+
+				playlists, err := app.PlaylistService().GetPlaylistsByUser(ctx, user.Id)
 				if err != nil {
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				res := GetPlaylists{
@@ -316,17 +327,17 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
+				ctx := c.Request().Context()
+
+				playlist, err := app.PlaylistService().GetPlaylistById(
+					ctx,
+					service.GetPlaylistByIdParams{
+						PlaylistId: playlistId,
+						UserId:     user.Id,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				return GetPlaylistById{
@@ -342,92 +353,32 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			ResponseType: CreatePlaylist{},
 			BodyType:     CreatePlaylistBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
 				body, err := pyrin.Body[CreatePlaylistBody](c)
 				if err != nil {
 					return nil, err
 				}
 
-				playlist, err := app.DB().CreatePlaylist(c.Request().Context(), database.CreatePlaylistParams{
-					Name:    body.Name,
-					OwnerId: user.Id,
-				})
+				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
 
+				ctx := c.Request().Context()
+
+				playlistId, err := app.PlaylistService().CreatePlaylist(
+					ctx,
+					service.CreatePlaylistParams{
+						Name:    body.Name,
+						OwnerId: user.Id,
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
+				}
+
 				return CreatePlaylist{
-					Id: playlist.Id,
+					Id: playlistId,
 				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "CreatePlaylistFromFilter",
-			Path:         "/playlists/filter",
-			Method:       http.MethodPost,
-			ResponseType: CreatePlaylist{},
-			BodyType:     PostPlaylistFilterBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// FIXME(patrik): This needs fixing
-				panic("FIX ME")
-
-				// user, err := User(app, c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// body, err := pyrin.Body[PostPlaylistFilterBody](c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// ctx := context.TODO()
-				//
-				// tx, err := app.DB().Begin()
-				// if err != nil {
-				// 	return nil, err
-				// }
-				// defer tx.Rollback()
-				//
-				// playlist, err := tx.CreatePlaylist(ctx, database.CreatePlaylistParams{
-				// 	Name:    body.Name,
-				// 	OwnerId: user.Id,
-				// })
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// tracks, err := tx.GetAllTracks(ctx, body.Filter, "")
-				// if err != nil {
-				// 	if errors.Is(err, database.ErrInvalidFilter) {
-				// 		return nil, InvalidFilter(err)
-				// 	}
-				//
-				// 	return nil, err
-				// }
-				//
-				// for _, track := range tracks {
-				// 	err = tx.AddItemToPlaylist(ctx, playlist.Id, track.Id, 0)
-				// 	if err != nil {
-				// 		return nil, err
-				// 	}
-				// }
-				//
-				// err = tx.Commit()
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// return CreatePlaylist{
-				// 	Id: playlist.Id,
-				// }, nil
-
-				return nil, nil
 			},
 		},
 
@@ -451,123 +402,18 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbPlaylist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				err = app.PlaylistService().EditPlaylist(
+					ctx,
+					service.EditPlaylistParams{
+						PlaylistId: playlistId,
+						UserId:     user.Id,
+
+						Name:     body.Name,
+						CoverUrl: body.CoverUrl,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if dbPlaylist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				changes := database.PlaylistChanges{}
-
-				if body.Name != nil {
-					changes.Name = types.Change[string]{
-						Value:   *body.Name,
-						Changed: *body.Name != dbPlaylist.Name,
-					}
-				}
-
-				if body.CoverUrl != nil {
-					url := *body.CoverUrl
-
-					// TODO(patrik): Cleanup, move to utils
-					getImageExtFromContentType := func(contentType string) (string, error) {
-						mediaType, _, err := mime.ParseMediaType(contentType)
-						if err != nil {
-							return "", fmt.Errorf("failed to parse content type: %w", err)
-						}
-
-						// TODO(patrik): Add support for more exts
-						switch mediaType {
-						case "image/png":
-							return ".png", nil
-						case "image/jpeg":
-							return ".jpeg", nil
-						default:
-							return "", fmt.Errorf("unsupported media type: %s", mediaType)
-						}
-					}
-
-					resp, err := http.Get(url)
-					if err != nil {
-						return "", err
-					}
-					defer resp.Body.Close()
-
-					contentType := resp.Header.Get("Content-Type")
-					ext, err := getImageExtFromContentType(contentType)
-					if err != nil {
-						return "", err
-					}
-
-					// TODO(patrik): The tmp dir should be inside the work dir
-					tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
-					if err != nil {
-						return "", fmt.Errorf("failed to create temp file: %w", err)
-					}
-					tmpPath := tmp.Name()
-					defer tmp.Close()
-
-					// always clean up temp file if something goes wrong
-					defer func() {
-						_, err := os.Stat(tmpPath)
-						if err == nil {
-							os.Remove(tmpPath)
-						}
-					}()
-
-					_, err = io.Copy(tmp, resp.Body)
-					if err != nil {
-						return "", err
-					}
-
-					tmp.Close()
-
-					imageType, err := app.ImageService().ValidateImage(tmpPath)
-					if err != nil {
-						return "", err
-					}
-
-					// TODO(patrik): I hate this
-					playlistDir := app.DataDir().Playlist(dbPlaylist.Id)
-
-					err = utils.CreateDirectories([]string{
-						playlistDir,
-					})
-					if err != nil {
-						return "", err
-					}
-
-					imageExt, ok := imageType.ToExt()
-					if !ok {
-						return "", errors.New("invalid image type")
-					}
-
-					cover := "downloaded" + imageExt
-					output := path.Join(playlistDir, cover)
-					err = os.Rename(tmpPath, output)
-					if err != nil {
-						return "", fmt.Errorf("failed to promote temp file: %w", err)
-					}
-
-					changes.CoverArt = types.Change[sql.NullString]{
-						Value:   sql.NullString{
-							String: cover,
-							Valid:  cover != "",
-						},
-						Changed: cover != dbPlaylist.CoverArt.String,
-					}
-				}
-
-				err = app.DB().UpdatePlaylist(ctx, dbPlaylist.Id, changes)
-				if err != nil {
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				return nil, nil

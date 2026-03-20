@@ -23,6 +23,7 @@ type App interface {
 	LibraryService() *service.LibraryService
 	ImageService() *service.ImageService
 	MediaService() *service.MediaService
+	PlaylistService() *service.PlaylistService
 
 	Broker() *broker.Broker
 
