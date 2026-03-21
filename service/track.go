@@ -42,6 +42,7 @@ func (s *TrackService) GetTracks(
 	params GetTracksParams,
 ) ([]database.Track, types.Page, error) {
 	if params.UserId != "" && params.FilterId != "" {
+		// TODO(patrik): Maybe log the error, or check for NotFound
 		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId, params.UserId)
 		if err == nil {
 			params.Filter.Filter = dbFilter.Filter

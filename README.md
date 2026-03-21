@@ -11,6 +11,10 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 ## Rewrite
 
+- [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
+
+- [ ] Backend: Fix: Make playlist public, remove the playlist.OwnerId != user.Id on the get methods
+
 - [ ] Backend: Fix: track_filters should be able to be accessed by everyone 
 
 - [ ] Backend: Fix: API: Move every search handler to a /search endpoint

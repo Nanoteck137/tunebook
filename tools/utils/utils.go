@@ -313,6 +313,11 @@ func CreateDirectories(dirs []string) error {
 	return nil
 }
 
+func Pointer[T any](val T) *T {
+	return &val
+}
+
+// TODO(patrik): Remove these
 func StringPtr(val string) *string {
 	return &val
 }

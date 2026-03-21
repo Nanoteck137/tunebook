@@ -6,8 +6,6 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/dwebble/database/adapter"
-	"github.com/nanoteck137/dwebble/tools/filter"
-	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin/ember"
 )
@@ -73,51 +71,54 @@ func (db DB) GetNextPlaylistItemIndex(ctx context.Context, playlistId string) (i
 	return res + 1, nil
 }
 
-func (db DB) GetPlaylistTracks(ctx context.Context, playlistId, filterStr string) ([]OrderedTrack, error) {
-	tracks := TrackQuery()
+// func (db DB) GetPlaylistTracks(ctx context.Context, playlistId, filterStr string) ([]OrderedTrack, error) {
+// 	tracks := TrackQuery()
+//
+// 	var err error
+//
+// 	a := adapter.TrackResolverAdapter{}
+// 	resolver := filter.New(&a)
+//
+// 	tracks, err = applyFilter(tracks, resolver, filterStr)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	// tracks, err = applySort(tracks, resolver, sortStr)
+// 	// if err != nil {
+// 	// 	return nil, err
+// 	// }
+//
+// 	query := dialect.From("playlist_items").
+// 		Select("tracks.*", "playlist_items.order_num").
+// 		Join(
+// 			tracks.As("tracks"),
+// 			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+// 		).
+// 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
+// 		Order(goqu.I("playlist_items.order_num").Asc())
+//
+// 	return ember.Multiple[OrderedTrack](db.db, ctx, query)
+// }
 
-	var err error
-
-	a := adapter.TrackResolverAdapter{}
-	resolver := filter.New(&a)
-
-	tracks, err = applyFilter(tracks, resolver, filterStr)
-	if err != nil {
-		return nil, err
-	}
-
-	// tracks, err = applySort(tracks, resolver, sortStr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	query := dialect.From("playlist_items").
-		Select("tracks.*", "playlist_items.order_num").
-		Join(
-			tracks.As("tracks"),
-			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-		).
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		Order(goqu.I("playlist_items.order_num").Asc())
-
-	return ember.Multiple[OrderedTrack](db.db, ctx, query)
+type GetPlaylistTracksParams struct {
+	PlaylistId string
+	Page       types.PageParams
+	Filter     types.FilterParams
 }
 
-func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts FetchOptions) ([]OrderedTrack, types.Page, error) {
+func (db DB) GetPlaylistTracks(
+	ctx context.Context, 
+	params GetPlaylistTracksParams,
+) ([]OrderedTrack, types.Page, error) {
 	tracks := TrackQuery()
 
 	var err error
 
-	a := adapter.TrackResolverAdapter{}
-	resolver := filter.New(&a)
-
-	tracks, err = applyFilter(tracks, resolver, opts.Filter)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
 	// TODO(patrik): Fix this, using order for playlist_items
-	tracks, err = applySort(tracks, resolver, opts.Sort)
+
+	a := adapter.TrackResolverAdapter{}
+	tracks, err = applyFilterParams(params.Filter, &a, tracks)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -128,30 +129,15 @@ func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts
 			tracks.As("tracks"),
 			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
 		).
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
+		Where(goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId)).
 		Order(goqu.I("playlist_items.order_num").Asc())
 
-	countQuery := query.
-		Select(goqu.COUNT("tracks.id"))
-
-	if opts.PerPage > 0 {
-		query = query.
-			Limit(uint(opts.PerPage)).
-			Offset(uint(opts.Page * opts.PerPage))
-	}
-
-	totalItems, err := ember.Single[int](db.db, ctx, countQuery)
+	page, err := buildPage(ctx, db.db, params.Page, query, "tracks.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	totalPages := utils.TotalPages(opts.PerPage, totalItems)
-	page := types.Page{
-		Page:       opts.Page,
-		PerPage:    opts.PerPage,
-		TotalItems: totalItems,
-		TotalPages: totalPages,
-	}
+	query = applyPageParams(params.Page, query)
 
 	items, err := ember.Multiple[OrderedTrack](db.db, ctx, query)
 	if err != nil {

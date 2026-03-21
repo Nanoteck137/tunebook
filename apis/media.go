@@ -300,63 +300,67 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			BodyType:     GetMediaFromPlaylistBody{},
 			Errors:       []pyrin.ErrorType{ErrTypePlaylistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("playlistId")
+				// FIXME(patrik): This needs fixing
 
-				ctx := context.TODO()
-
-				body, err := pyrin.Body[GetMediaFromPlaylistBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				filter := ""
-
-				if body.FilterId != "" {
-					f, err := app.DB().GetPlaylistFilterById(ctx, body.FilterId, playlist.Id)
-					if err != nil {
-						// TODO(patrik): Handle err
-						return nil, err
-					}
-
-					filter = f.Filter
-				}
-
-				tracks, err := app.DB().GetPlaylistTracks(ctx, playlist.Id, filter)
-				if err != nil {
-					return nil, err
-				}
-
-				// subquery := database.PlaylistTrackSubquery(playlist.Id)
-				// tracks, err := app.DB().GetTracksIn(ctx, subquery, "")
+				// playlistId := c.Param("playlistId")
+				//
+				// ctx := context.TODO()
+				//
+				// body, err := pyrin.Body[GetMediaFromPlaylistBody](c)
 				// if err != nil {
 				// 	return nil, err
 				// }
+				//
+				// user, err := User(app, c)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				// if err != nil {
+				// 	if errors.Is(err, database.ErrItemNotFound) {
+				// 		return nil, PlaylistNotFound()
+				// 	}
+				//
+				// 	return nil, err
+				// }
+				//
+				// if playlist.OwnerId != user.Id {
+				// 	return nil, PlaylistNotFound()
+				// }
+				//
+				// filter := ""
+				//
+				// if body.FilterId != "" {
+				// 	f, err := app.DB().GetPlaylistFilterById(ctx, body.FilterId, playlist.Id)
+				// 	if err != nil {
+				// 		// TODO(patrik): Handle err
+				// 		return nil, err
+				// 	}
+				//
+				// 	filter = f.Filter
+				// }
+				//
+				// tracks, err := app.DB().GetPlaylistTracks(ctx, playlist.Id, filter)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// // subquery := database.PlaylistTrackSubquery(playlist.Id)
+				// // tracks, err := app.DB().GetTracksIn(ctx, subquery, "")
+				// // if err != nil {
+				// // 	return nil, err
+				// // }
+				//
+				// // TODO(patrik): Better handling of this?
+				// t := make([]database.Track, len(tracks))
+				// for i, track := range tracks {
+				// 	t[i] = track.Track
+				// }
+				//
+				// return packMediaResult(c, t, body.MediaFormat, body.Shuffle)
 
-				// TODO(patrik): Better handling of this?
-				t := make([]database.Track, len(tracks))
-				for i, track := range tracks {
-					t[i] = track.Track
-				}
-
-				return packMediaResult(c, t, body.MediaFormat, body.Shuffle)
+				return nil, nil
 			},
 		},
 
