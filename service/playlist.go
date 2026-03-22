@@ -458,13 +458,11 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		return playlistErr.Wrap("reorder items: db get items", err)
 	}
 
-	// Index current items by ID for O(1) lookup.
 	index := make(map[string]database.PlaylistItem, len(current))
 	for _, item := range current {
 		index[item.TrackId] = item
 	}
 
-	// Validate that all supplied trackIDs exist in the playlist and resolve them to PlaylistItems.
 	items := make([]database.PlaylistItem, 0, len(params.TrackIds))
 	for _, id := range params.TrackIds {
 		item, ok := index[id]
@@ -476,7 +474,6 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		items = append(items, item)
 	}
 
-	// Validate that anchorTrackID exists in the playlist (unless it's empty).
 	if params.AnchorTrackId != "" {
 		if _, ok := index[params.AnchorTrackId]; !ok {
 			// TODO(patrik): Handle error
@@ -484,13 +481,11 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		}
 	}
 
-	// Build a set of IDs to move for O(1) lookup.
 	moveSet := make(map[string]bool, len(items))
 	for _, item := range items {
 		moveSet[item.TrackId] = true
 	}
 
-	// Collect all items that are NOT being moved, preserving their order.
 	stationary := make([]database.PlaylistItem, 0, len(current))
 	for _, item := range current {
 		if !moveSet[item.TrackId] {
@@ -498,8 +493,6 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		}
 	}
 
-	// Find the insertion index within the stationary slice.
-	// Defaults to 0 so that an empty anchorTrackID prepends the moved items.
 	insertAt := 0
 	if params.AnchorTrackId != "" {
 		for i, item := range stationary {
@@ -510,7 +503,6 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		}
 	}
 
-	// Splice: stationary[:insertAt] + items + stationary[insertAt:]
 	spliced := make([]database.PlaylistItem, 0, len(current))
 	spliced = append(spliced, stationary[:insertAt]...)
 	spliced = append(spliced, items...)

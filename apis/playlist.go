@@ -211,7 +211,10 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				playlists, err := app.PlaylistService().GetPlaylistsByUser(ctx, user.Id)
+				playlists, err := app.PlaylistService().GetPlaylistsByUser(
+					ctx, 
+					user.Id,
+				)
 				if err != nil {
 					return nil, handlePlaylistServiceErrors(err)
 				}
