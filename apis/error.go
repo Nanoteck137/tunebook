@@ -22,6 +22,7 @@ const (
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
 	ErrTypePlaylistNotFound        pyrin.ErrorType = "PLAYLIST_NOT_FOUND"
+	ErrTypePlaylistFilterNotFound  pyrin.ErrorType = "PLAYLIST_FILTER_NOT_FOUND"
 	ErrTypePlaylistAlreadyHasTrack pyrin.ErrorType = "PLAYLIST_ALREADY_HAS_TRACK"
 )
 
@@ -126,6 +127,14 @@ func PlaylistNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypePlaylistNotFound,
 		Message: "Playlist not found",
+	}
+}
+
+func PlaylistFilterNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypePlaylistFilterNotFound,
+		Message: "Playlist filter not found",
 	}
 }
 

@@ -4,26 +4,23 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"go/parser"
-	"io"
 	"log/slog"
-	"mime"
 	"mime/multipart"
-	"net/http"
 	"os"
-	"path"
-	"path/filepath"
 
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/database/adapter"
-	"github.com/nanoteck137/dwebble/tools/filter"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 )
 
+var playlistErr = NewServiceErrCreator("playlist")
+
 var (
-	ErrPlaylistServicePlaylistNotFound = errors.New("playlist service: playlist not found")
+	ErrPlaylistServicePlaylistNotFound  = playlistErr.New("playlist not found")
+	ErrPlaylistServiceTrackNotFound     = playlistErr.New("track not found")
+	ErrPlaylistServiceTrackAlreadyAdded = playlistErr.New("track already added")
+	ErrPlaylistServiceFilterNotFound    = playlistErr.New("filter not found")
 )
 
 type PlaylistService struct {
@@ -71,7 +68,7 @@ func (s *PlaylistService) GetPlaylistById(
 			return database.Playlist{}, ErrPlaylistServicePlaylistNotFound
 		}
 
-		return database.Playlist{}, fmt.Errorf("playlist-service: get playlist by id: %w", err)
+		return database.Playlist{}, playlistErr.Wrap("get playlist by id", err)
 	}
 
 	if playlist.OwnerId != params.UserId {
@@ -95,7 +92,7 @@ func (s *PlaylistService) CreatePlaylist(
 		OwnerId: params.OwnerId,
 	})
 	if err != nil {
-		return "", fmt.Errorf("playlist-service: create playlist: %w", err)
+		return "", playlistErr.Wrap("create: db create", err)
 	}
 
 	return playlistId, nil
@@ -113,17 +110,12 @@ func (s *PlaylistService) EditPlaylist(
 	ctx context.Context,
 	params EditPlaylistParams,
 ) error {
-	dbPlaylist, err := s.db.GetPlaylistById(ctx, params.PlaylistId)
+	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
+		PlaylistId: params.PlaylistId,
+		UserId:     params.UserId,
+	})
 	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return ErrPlaylistServicePlaylistNotFound
-		}
-
-		return fmt.Errorf("playlist-service: edit playlist: get playlist by id: %w", err)
-	}
-
-	if dbPlaylist.OwnerId != params.UserId {
-		return ErrPlaylistServicePlaylistNotFound
+		return err
 	}
 
 	changes := database.PlaylistChanges{}
@@ -131,91 +123,22 @@ func (s *PlaylistService) EditPlaylist(
 	if params.Name != nil {
 		changes.Name = types.Change[string]{
 			Value:   *params.Name,
-			Changed: *params.Name != dbPlaylist.Name,
+			Changed: *params.Name != playlist.Name,
 		}
 	}
 
 	if params.CoverUrl != nil {
 		url := *params.CoverUrl
 
-		// TODO(patrik): Cleanup, move to utils
-		getImageExtFromContentType := func(contentType string) (string, error) {
-			mediaType, _, err := mime.ParseMediaType(contentType)
-			if err != nil {
-				return "", fmt.Errorf("failed to parse content type: %w", err)
-			}
-
-			// TODO(patrik): Add support for more exts
-			switch mediaType {
-			case "image/png":
-				return ".png", nil
-			case "image/jpeg":
-				return ".jpeg", nil
-			default:
-				return "", fmt.Errorf("unsupported media type: %s", mediaType)
-			}
-		}
-
-		resp, err := http.Get(url)
+		cover, err := s.imageService.DownloadCoverForPlaylist(
+			ctx,
+			DownloadCoverForPlaylistParams{
+				PlaylistId: playlist.Id,
+				Url:        url,
+			},
+		)
 		if err != nil {
 			return err
-		}
-		defer resp.Body.Close()
-
-		contentType := resp.Header.Get("Content-Type")
-		ext, err := getImageExtFromContentType(contentType)
-		if err != nil {
-			return err
-		}
-
-		// TODO(patrik): The tmp dir should be inside the work dir
-		tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
-		if err != nil {
-			return fmt.Errorf("failed to create temp file: %w", err)
-		}
-		tmpPath := tmp.Name()
-		defer tmp.Close()
-
-		// always clean up temp file if something goes wrong
-		defer func() {
-			_, err := os.Stat(tmpPath)
-			if err == nil {
-				os.Remove(tmpPath)
-			}
-		}()
-
-		_, err = io.Copy(tmp, resp.Body)
-		if err != nil {
-			return err
-		}
-
-		tmp.Close()
-
-		imageType, err := s.imageService.ValidateImage(tmpPath)
-		if err != nil {
-			return err
-		}
-
-		// TODO(patrik): I hate this
-		playlistDir := s.dataDir.Playlist(dbPlaylist.Id)
-
-		err = utils.CreateDirectories([]string{
-			playlistDir,
-		})
-		if err != nil {
-			return err
-		}
-
-		imageExt, ok := imageType.ToExt()
-		if !ok {
-			return errors.New("invalid image type")
-		}
-
-		cover := "downloaded" + imageExt
-		output := filepath.Join(playlistDir, cover)
-		err = os.Rename(tmpPath, output)
-		if err != nil {
-			return fmt.Errorf("failed to promote temp file: %w", err)
 		}
 
 		changes.CoverArt = types.Change[sql.NullString]{
@@ -223,13 +146,18 @@ func (s *PlaylistService) EditPlaylist(
 				String: cover,
 				Valid:  cover != "",
 			},
-			Changed: cover != dbPlaylist.CoverArt.String,
+			Changed: cover != playlist.CoverArt.String,
 		}
 	}
 
-	err = s.db.UpdatePlaylist(ctx, dbPlaylist.Id, changes)
+	err = s.db.UpdatePlaylist(ctx, playlist.Id, changes)
 	if err != nil {
-		return fmt.Errorf("playlist-service: edit playlist: update playlist: %w", err)
+		return playlistErr.Wrap("edit: db update", err)
+	}
+
+	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
+	if err != nil {
+		return playlistErr.Wrap("edit: remove cache", err)
 	}
 
 	return nil
@@ -254,17 +182,17 @@ func (s *PlaylistService) DeletePlaylist(
 
 	err = s.db.DeletePlaylist(ctx, playlist.Id)
 	if err != nil {
-		return err
+		return playlistErr.Wrap("delete: db delete", err)
 	}
 
 	err = os.RemoveAll(s.dataDir.Playlist(playlist.Id))
 	if err != nil {
-		return err
+		return playlistErr.Wrap("delete: remove dir", err)
 	}
 
 	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
 	if err != nil {
-		return err
+		return playlistErr.Wrap("delete: remove cache", err)
 	}
 
 	return nil
@@ -289,78 +217,33 @@ func (s *PlaylistService) UploadPlaylistImage(
 		return err
 	}
 
-	ext := path.Ext(params.File.Filename)
-
-	// TODO(patrik): The tmp dir should be inside the work dir
-	tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+	cover, err := s.imageService.UploadImageForPlaylist(
+		ctx,
+		UploadImageForPlaylistParams{
+			PlaylistId: playlist.Id,
+			File:       params.File,
+		},
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
-	}
-	tmpPath := tmp.Name()
-	defer tmp.Close()
-
-	// always clean up temp file if something goes wrong
-	defer func() {
-		_, err := os.Stat(tmpPath)
-		if err == nil {
-			os.Remove(tmpPath)
-		}
-	}()
-
-	srcImage, err := params.File.Open()
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(tmp, srcImage)
-	if err != nil {
-		return err
-	}
-
-	tmp.Close()
-
-	imageType, err := s.imageService.ValidateImage(tmpPath)
-	if err != nil {
-		return err
-	}
-
-	playlistDir := s.dataDir.Playlist(playlist.Id)
-
-	err = utils.CreateDirectories([]string{
-		playlistDir,
-	})
-	if err != nil {
-		return err
-	}
-
-	imageExt, ok := imageType.ToExt()
-	if !ok {
-		return errors.New("invalid image type")
-	}
-
-	coverArt := "uploaded" + imageExt
-	output := path.Join(playlistDir, coverArt)
-	err = os.Rename(tmpPath, output)
-	if err != nil {
-		return fmt.Errorf("failed to promote temp file: %w", err)
+		return playlistErr.Wrap("upload image: upload", err)
 	}
 
 	err = s.db.UpdatePlaylist(ctx, playlist.Id, database.PlaylistChanges{
 		CoverArt: types.Change[sql.NullString]{
 			Value: sql.NullString{
-				String: coverArt,
-				Valid:  coverArt != "",
+				String: cover,
+				Valid:  cover != "",
 			},
-			Changed: coverArt != playlist.CoverArt.String,
+			Changed: cover != playlist.CoverArt.String,
 		},
 	})
 	if err != nil {
-		return err
+		return playlistErr.Wrap("upload image: db update", err)
 	}
 
 	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
 	if err != nil {
-		return err
+		return playlistErr.Wrap("upload image: remove cache", err)
 	}
 
 	return nil
@@ -383,53 +266,32 @@ func (s *PlaylistService) GeneratePlaylistImage(
 		return err
 	}
 
-	images, err := s.db.GetPlaylistTrackImages(ctx, playlist.Id, 4)
+	cover, err := s.imageService.GenerateImageForPlaylist(
+		ctx,
+		GenerateImageForPlaylistParams{
+			PlaylistId: playlist.Id,
+		},
+	)
 	if err != nil {
-		return err
-	}
-
-	imgs := [4]string{}
-
-	for i, img := range images {
-		if !img.Valid {
-			continue
-		}
-
-		imgs[i] = img.String
-	}
-
-	playlistDir := s.dataDir.Playlist(playlist.Id)
-
-	err = utils.CreateDirectories([]string{
-		playlistDir,
-	})
-	if err != nil {
-		return err
-	}
-
-	coverArt := "generated.png"
-	out := path.Join(playlistDir, coverArt)
-	err = utils.GeneratePlaylistCover(imgs, out, 512)
-	if err != nil {
-		return err
+		return playlistErr.Wrap("gen image: image gen", err)
 	}
 
 	err = s.db.UpdatePlaylist(ctx, playlist.Id, database.PlaylistChanges{
 		CoverArt: types.Change[sql.NullString]{
 			Value: sql.NullString{
-				String: coverArt,
-				Valid:  coverArt != "",
+				String: cover,
+				Valid:  cover != "",
 			},
-			Changed: coverArt != playlist.CoverArt.String,
+			Changed: cover != playlist.CoverArt.String,
 		},
 	})
 	if err != nil {
-		return err
+		return playlistErr.Wrap("gen image: db update", err)
 	}
 
 	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
 	if err != nil {
-		return err
+		return playlistErr.Wrap("gen image: remove cache", err)
 	}
 
 	return nil
@@ -460,9 +322,15 @@ func (s *PlaylistService) GetPlaylistItems(
 	if params.FilterId != "" {
 		// TODO(patrik): Maybe log the error, or check for NotFound
 		filter, err := s.db.GetPlaylistFilterById(ctx, params.FilterId, playlist.Id)
-		if err == nil {
-			params.Filter.Filter = filter.Filter
+		if err != nil {
+			if errors.Is(err, database.ErrItemNotFound) {
+				return nil, types.Page{}, ErrPlaylistServiceFilterNotFound
+			}
+
+			return nil, types.Page{}, playlistErr.Wrap("get items: get filter", err)
 		}
+
+		params.Filter.Filter = filter.Filter
 	}
 
 	tracks, page, err := s.db.GetPlaylistTracks(ctx, database.GetPlaylistTracksParams{
@@ -471,14 +339,14 @@ func (s *PlaylistService) GetPlaylistItems(
 		Filter:     params.Filter,
 	})
 	if err != nil {
-		return nil, types.Page{}, err
+		return nil, types.Page{}, playlistErr.Wrap("get items: db", err)
 	}
 
 	for i, track := range tracks {
 		tracks[i].Track.Order = utils.Pointer(track.Order + 1)
 	}
 
-	return tracks, page, err
+	return tracks, page, nil
 }
 
 type AddItemToPlaylistParams struct {
@@ -504,17 +372,16 @@ func (s *PlaylistService) AddItemToPlaylist(
 	// know if the track exists and not all the data it has
 	track, err := s.db.GetTrackById(ctx, params.TrackId)
 	if err != nil {
-		// TODO(patrik): Handle
-		// if errors.Is(err, database.ErrItemNotFound) {
-		// 	return nil, TrackNotFound()
-		// }
+		if errors.Is(err, database.ErrItemNotFound) {
+			return ErrPlaylistServiceTrackNotFound
+		}
 
 		return err
 	}
 
 	index, err := s.db.GetNextPlaylistItemIndex(ctx, playlist.Id)
 	if err != nil {
-		return err
+		return playlistErr.Wrap("add item: db get next index", err)
 	}
 
 	err = s.db.CreatePlaylistItem(ctx, database.CreatePlaylistItemParams{
@@ -523,12 +390,11 @@ func (s *PlaylistService) AddItemToPlaylist(
 		Order:      index,
 	})
 	if err != nil {
-		// TODO(patrik): Handle
-		// if errors.Is(err, database.ErrItemAlreadyExists) {
-		// 	return nil, PlaylistAlreadyHasTrack()
-		// }
+		if errors.Is(err, database.ErrItemAlreadyExists) {
+			return ErrPlaylistServiceTrackAlreadyAdded
+		}
 
-		return err
+		return playlistErr.Wrap("add item: db create item", err)
 	}
 
 	return nil
@@ -553,10 +419,9 @@ func (s *PlaylistService) RemovePlaylistItem(
 		return err
 	}
 
-	// TODO(patrik): Check for trackId exists?
 	err = s.db.DeletePlaylistItem(ctx, playlist.Id, params.TrackId)
 	if err != nil {
-		return err
+		return playlistErr.Wrap("remove item: db delete item", err)
 	}
 
 	return nil
@@ -585,13 +450,13 @@ func (s *PlaylistService) ReorderPlaylistItems(
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return playlistErr.Wrap("reorder items: db begin", err)
 	}
 	defer tx.Rollback()
 
 	current, err := tx.GetPlaylistItems(ctx, playlist.Id)
 	if err != nil {
-		return err
+		return playlistErr.Wrap("reorder items: db get items", err)
 	}
 
 	// Index current items by ID for O(1) lookup.
@@ -606,7 +471,7 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		item, ok := index[id]
 		if !ok {
 			// TODO(patrik): Handle error
-			return fmt.Errorf("track %q not found in playlist %q", id, playlist.Id)
+			return playlistErr.Newf("track %q not found in playlist %q", id, playlist.Id)
 		}
 
 		items = append(items, item)
@@ -616,7 +481,7 @@ func (s *PlaylistService) ReorderPlaylistItems(
 	if params.AnchorTrackId != "" {
 		if _, ok := index[params.AnchorTrackId]; !ok {
 			// TODO(patrik): Handle error
-			return fmt.Errorf("anchor track %q not found in playlist %q", params.AnchorTrackId, playlist.Id)
+			return playlistErr.Newf("anchor track %q not found in playlist %q", params.AnchorTrackId, playlist.Id)
 		}
 	}
 
@@ -665,13 +530,13 @@ func (s *PlaylistService) ReorderPlaylistItems(
 			},
 		)
 		if err != nil {
-			return err
+			return playlistErr.Wrap("reorder items: db update item", err)
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return playlistErr.Wrap("reorder items: db commit", err)
 	}
 
 	return nil
@@ -696,30 +561,15 @@ func (s *PlaylistService) GetPlaylistFilters(
 
 	filters, err := s.db.GetPlaylistFiltersByPlaylistId(ctx, playlist.Id)
 	if err != nil {
-		return nil, err
+		return nil, playlistErr.Wrap("get filters: db get", err)
 	}
 
 	return filters, nil
 }
 
-// TODO(patrik): Handle errors
-// TODO(patrik): Move this, this needs to be used in the validation
 func (s *PlaylistService) testFilter(filterStr string) error {
-	ast, err := parser.ParseExpr(filterStr)
-	if err != nil {
-		return err
-		// return InvalidFilter(err)
-	}
-
-	a := adapter.TrackResolverAdapter{}
-	r := filter.New(&a)
-	_, err = r.Resolve(ast)
-	if err != nil {
-		return err
-		// return InvalidFilter(err)
-	}
-
-	return nil
+	// TODO(patrik): Change to PlaylistResolverAdapter when that exists
+	return database.TestFilter(filterStr, &adapter.TrackResolverAdapter{})
 }
 
 type CreatePlaylistFilterParams struct {
@@ -744,8 +594,7 @@ func (s *PlaylistService) CreatePlaylistFilter(
 
 	err = s.testFilter(params.Filter)
 	if err != nil {
-		// TODO(patrik): Better error
-		return "", err
+		return "", playlistErr.Wrap("create filter: test filter", err)
 	}
 
 	filterId, err := s.db.CreatePlaylistFilter(
@@ -757,7 +606,7 @@ func (s *PlaylistService) CreatePlaylistFilter(
 		},
 	)
 	if err != nil {
-		return "", err
+		return "", playlistErr.Wrap("create filter: db create", err)
 	}
 
 	return filterId, nil
@@ -786,10 +635,9 @@ func (s *PlaylistService) EditPlaylistFilter(
 
 	filter, err := s.db.GetPlaylistFilterById(ctx, params.FilterId, playlist.Id)
 	if err != nil {
-		// TODO(patrik): Handle error
-		// if errors.Is(err, database.ErrItemNotFound) {
-		// 	return nil, PlaylistFilter()
-		// }
+		if errors.Is(err, database.ErrItemNotFound) {
+			return ErrPlaylistServiceFilterNotFound
+		}
 
 		return err
 	}
@@ -804,8 +652,10 @@ func (s *PlaylistService) EditPlaylistFilter(
 	}
 
 	if params.Filter != nil {
-		// TODO(patrik): Test filter?
-		// s.testFilter(*params.Filter)
+		err := s.testFilter(*params.Filter)
+		if err != nil {
+			return playlistErr.Wrap("edit filter: test filter", err)
+		}
 
 		changes.Filter = types.Change[string]{
 			Value:   *params.Filter,
@@ -815,7 +665,7 @@ func (s *PlaylistService) EditPlaylistFilter(
 
 	err = s.db.UpdatePlaylistFilter(ctx, filter.Id, playlist.Id, changes)
 	if err != nil {
-		return err
+		return playlistErr.Wrap("edit filter: db update", err)
 	}
 
 	return nil

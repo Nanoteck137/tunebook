@@ -24,11 +24,16 @@ import (
 
 type ServiceError struct {
 	Service string
+	Message string
 	Err     error
 }
 
 func (e *ServiceError) Error() string {
-	return fmt.Sprintf("%s: %s", e.Service, e.Err)
+	if e.Message != "" {
+		return fmt.Sprintf("%s service: %s: %s", e.Service, e.Message, e.Err)
+	}
+
+	return fmt.Sprintf("%s service: %s", e.Service, e.Err)
 }
 
 type ServiceErrCreator struct {
@@ -41,14 +46,22 @@ func NewServiceErrCreator(service string) ServiceErrCreator {
 	}
 }
 
-func (s *ServiceErrCreator) Error(text string) error {
+func (s *ServiceErrCreator) Wrap(message string, err error) error {
+	return &ServiceError{
+		Service: s.Service,
+		Message: message,
+		Err:     err,
+	}
+}
+
+func (s *ServiceErrCreator) New(text string) error {
 	return &ServiceError{
 		Service: s.Service,
 		Err:     errors.New(text),
 	}
 }
 
-func (s *ServiceErrCreator) Errorf(format string, a ...any) error {
+func (s *ServiceErrCreator) Newf(format string, a ...any) error {
 	return &ServiceError{
 		Service: s.Service,
 		Err:     fmt.Errorf(format, a...),
@@ -58,13 +71,13 @@ func (s *ServiceErrCreator) Errorf(format string, a ...any) error {
 var authErr = NewServiceErrCreator("auth-service")
 
 var (
-	ErrAuthServiceProviderNotFound = authErr.Error("provider not found")
+	ErrAuthServiceProviderNotFound = authErr.New("provider not found")
 
-	ErrAuthServiceRequestAlreadyExists = authErr.Error("request already exists")
-	ErrAuthServiceRequestNotFound      = authErr.Error("request not found")
-	ErrAuthServiceRequestExpired       = authErr.Error("request is expired")
-	ErrAuthServiceRequestNotReady      = authErr.Error("request is not ready")
-	ErrAuthServiceRequestInvalid       = authErr.Error("request is invalid")
+	ErrAuthServiceRequestAlreadyExists = authErr.New("request already exists")
+	ErrAuthServiceRequestNotFound      = authErr.New("request not found")
+	ErrAuthServiceRequestExpired       = authErr.New("request is expired")
+	ErrAuthServiceRequestNotReady      = authErr.New("request is not ready")
+	ErrAuthServiceRequestInvalid       = authErr.New("request is invalid")
 )
 
 const (
@@ -308,13 +321,13 @@ func (a *AuthService) CreateProviderRequest(providerId string) (ProviderRequestR
 	// Initialize the provider, this checks for if it's already initialized
 	err := provider.init(context.TODO())
 	if err != nil {
-		return ProviderRequestResult{}, authErr.Errorf("initialize AuthProvider(%s): %w", provider.id, err)
+		return ProviderRequestResult{}, authErr.Newf("initialize AuthProvider(%s): %w", provider.id, err)
 	}
 
 	// Generate the unique challenge used to check calls to requests
 	challenge, err := utils.GenerateAuthChallenge()
 	if err != nil {
-		return ProviderRequestResult{}, authErr.Errorf("generate auth challenge: %w", err)
+		return ProviderRequestResult{}, authErr.Newf("generate auth challenge: %w", err)
 	}
 
 	// Create a unique id for the request
@@ -643,7 +656,7 @@ func (a *AuthService) CreateAuthTokenForQuickConnect(requestCode, challenge stri
 func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvider, code string) (string, error) {
 	oidcClaims, err := provider.claim(ctx, code)
 	if err != nil {
-		return "", authErr.Errorf("provider claim: %w", err)
+		return "", authErr.Newf("provider claim: %w", err)
 	}
 
 	// Helper function to get/create the user
@@ -684,7 +697,7 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				Role:        role,
 			})
 			if err != nil {
-				return "", authErr.Errorf("create user: %w", err)
+				return "", authErr.Newf("create user: %w", err)
 			}
 
 			// TODO(patrik): Cleanup, move to utils
@@ -770,8 +783,8 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				}
 
 				err = a.db.UpdateUser(ctx, user.Id, database.UserChanges{
-					Picture:     types.Change[sql.NullString]{
-						Value:   sql.NullString{
+					Picture: types.Change[sql.NullString]{
+						Value: sql.NullString{
 							String: picture,
 							Valid:  picture != "",
 						},
@@ -783,10 +796,9 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				}
 			}
 
-
 			return user.Id, nil
 		} else {
-			return "", authErr.Errorf("get user by email: %w", err)
+			return "", authErr.Newf("get user by email: %w", err)
 		}
 	}
 
@@ -812,12 +824,12 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 			UserId:     userId,
 		})
 		if err != nil {
-			return "", authErr.Errorf("create user identity: %w", err)
+			return "", authErr.Newf("create user identity: %w", err)
 		}
 
 		return userId, nil
 	} else {
-		return "", authErr.Errorf("get user identity: %w", err)
+		return "", authErr.Newf("get user identity: %w", err)
 	}
 }
 
@@ -827,7 +839,7 @@ func (a *AuthService) SignUserToken(userId string) (string, error) {
 	// Check if the user with the id exists in the database
 	user, err := a.db.GetUserById(context.Background(), userId)
 	if err != nil {
-		return "", authErr.Errorf("signing token: get user by id: %w", err)
+		return "", authErr.Newf("signing token: get user by id: %w", err)
 	}
 
 	// Create jwt token with the for the user
@@ -840,7 +852,7 @@ func (a *AuthService) SignUserToken(userId string) (string, error) {
 	// Sign the newly created token
 	tokenString, err := token.SignedString(([]byte)(a.jwtSecret))
 	if err != nil {
-		return "", authErr.Errorf("signing token: jwt sign: %w", err)
+		return "", authErr.Newf("signing token: jwt sign: %w", err)
 	}
 
 	return tokenString, nil

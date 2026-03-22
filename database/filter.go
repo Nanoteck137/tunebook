@@ -165,3 +165,18 @@ func generateSort(e filter.SortExpr) ([]exp.OrderedExpression, error) {
 
 	return nil, fmt.Errorf("Unimplemented expr %T", e)
 }
+
+func TestFilter(f string, a filter.ResolverAdapter) error {
+	ast, err := parser.ParseExpr(f)
+	if err != nil {
+		return InvalidFilter(err)
+	}
+
+	r := filter.New(a)
+	_, err = r.Resolve(ast)
+	if err != nil {
+		return InvalidFilter(err)
+	}
+
+	return nil
+}

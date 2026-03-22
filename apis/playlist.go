@@ -180,10 +180,17 @@ type ReorderPlaylistItemsBody struct {
 	TrackIds      []string `json:"trackIds"`
 }
 
+// TODO(patrik): Handle filter errors
 func handlePlaylistServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrPlaylistServicePlaylistNotFound):
 		return PlaylistNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceTrackNotFound):
+		return TrackNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceTrackAlreadyAdded):
+		return PlaylistAlreadyHasTrack()
+	case errors.Is(err, service.ErrPlaylistServiceFilterNotFound):
+		return PlaylistFilterNotFound()
 	}
 
 	return err

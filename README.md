@@ -11,6 +11,10 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 
 ## Rewrite
 
+```go
+api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
+```
+
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
 - [ ] Backend: Fix: Make playlist public, remove the playlist.OwnerId != user.Id on the get methods

@@ -4,11 +4,16 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
+	"mime"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/nanoteck137/dwebble/assets"
@@ -18,7 +23,7 @@ import (
 )
 
 var magickImageMapping = map[string]ImageType{
-	"PNG": ImageTypePng,
+	"PNG":  ImageTypePng,
 	"JPEG": ImageTypeJpeg,
 }
 
@@ -400,8 +405,8 @@ func (s *ImageService) ValidateImage(p string) (ImageType, error) {
 	if err != nil {
 		details := strings.TrimSpace(errOut.String())
 
-		s.logger.Error("failed to validate image", 
-			slog.Any("err", err), 
+		s.logger.Error("failed to validate image",
+			slog.Any("err", err),
 			slog.String("output", details),
 		)
 
@@ -423,4 +428,214 @@ func (s *ImageService) ValidateImage(p string) (ImageType, error) {
 	}
 
 	return res, nil
+}
+
+type DownloadCoverForPlaylistParams struct {
+	PlaylistId string
+	Url        string
+}
+
+// TODO(patrik): Cleanup
+// TODO(patrik): Hash for files
+func (s *ImageService) DownloadCoverForPlaylist(
+	ctx context.Context, 
+	params DownloadCoverForPlaylistParams,
+) (string, error) {
+	// TODO(patrik): Cleanup, move to utils
+	getImageExtFromContentType := func(contentType string) (string, error) {
+		mediaType, _, err := mime.ParseMediaType(contentType)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse content type: %w", err)
+		}
+
+		// TODO(patrik): Add support for more exts
+		switch mediaType {
+		case "image/png":
+			return ".png", nil
+		case "image/jpeg":
+			return ".jpeg", nil
+		default:
+			return "", fmt.Errorf("unsupported media type: %s", mediaType)
+		}
+	}
+
+	resp, err := http.Get(params.Url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+	ext, err := getImageExtFromContentType(contentType)
+	if err != nil {
+		return "", err
+	}
+
+	// TODO(patrik): The tmp dir should be inside the work dir
+	tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	defer tmp.Close()
+
+	// always clean up temp file if something goes wrong
+	defer func() {
+		_, err := os.Stat(tmpPath)
+		if err == nil {
+			os.Remove(tmpPath)
+		}
+	}()
+
+	_, err = io.Copy(tmp, resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	tmp.Close()
+
+	imageType, err := s.ValidateImage(tmpPath)
+	if err != nil {
+		return "", err
+	}
+
+	playlistDir := s.dataDir.Playlist(params.PlaylistId)
+
+	err = utils.CreateDirectories([]string{
+		playlistDir,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	imageExt, ok := imageType.ToExt()
+	if !ok {
+		return "", errors.New("invalid image type")
+	}
+
+	cover := "downloaded" + imageExt
+	output := filepath.Join(playlistDir, cover)
+	err = os.Rename(tmpPath, output)
+	if err != nil {
+		return "", fmt.Errorf("failed to promote temp file: %w", err)
+	}
+
+	return cover, nil
+}
+
+type GenerateImageForPlaylistParams struct {
+	PlaylistId string
+}
+
+// TODO(patrik): Cleanup
+// TODO(patrik): Hash for files
+func (s *ImageService) GenerateImageForPlaylist(
+	ctx context.Context, 
+	params GenerateImageForPlaylistParams,
+) (string, error) {
+	images, err := s.db.GetPlaylistTrackImages(ctx, params.PlaylistId, 4)
+	if err != nil {
+		return "", fmt.Errorf("image service: generate playlist image: get images: %w", err)
+	}
+
+	imgs := [4]string{}
+
+	for i, img := range images {
+		if !img.Valid {
+			continue
+		}
+
+		imgs[i] = img.String
+	}
+
+	playlistDir := s.dataDir.Playlist(params.PlaylistId)
+
+	err = utils.CreateDirectories([]string{
+		playlistDir,
+	})
+	if err != nil {
+		// TODO(patrik): Handle error
+		return "", err
+	}
+
+	cover := "generated.png"
+	out := path.Join(playlistDir, cover)
+	err = utils.GeneratePlaylistCover(imgs, out, 512)
+	if err != nil {
+		// TODO(patrik): Handle error
+		return "", err
+	}
+
+	return cover, nil
+}
+
+type UploadImageForPlaylistParams struct {
+	PlaylistId string
+
+	File *multipart.FileHeader
+}
+
+// TODO(patrik): Cleanup
+// TODO(patrik): Hash for files
+func (s *ImageService) UploadImageForPlaylist(
+	ctx context.Context, 
+	params UploadImageForPlaylistParams,
+) (string, error) {
+	ext := path.Ext(params.File.Filename)
+
+	// TODO(patrik): The tmp dir should be inside the work dir
+	tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	defer tmp.Close()
+
+	// always clean up temp file if something goes wrong
+	defer func() {
+		_, err := os.Stat(tmpPath)
+		if err == nil {
+			os.Remove(tmpPath)
+		}
+	}()
+
+	srcImage, err := params.File.Open()
+	if err != nil {
+		return "", err
+	}
+
+	_, err = io.Copy(tmp, srcImage)
+	if err != nil {
+		return "", err
+	}
+
+	tmp.Close()
+
+	imageType, err := s.ValidateImage(tmpPath)
+	if err != nil {
+		return "", err
+	}
+
+	playlistDir := s.dataDir.Playlist(params.PlaylistId)
+
+	err = utils.CreateDirectories([]string{
+		playlistDir,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	imageExt, ok := imageType.ToExt()
+	if !ok {
+		return "", errors.New("invalid image type")
+	}
+
+	cover := "uploaded" + imageExt
+	output := path.Join(playlistDir, cover)
+	err = os.Rename(tmpPath, output)
+	if err != nil {
+		return "", fmt.Errorf("failed to promote temp file: %w", err)
+	}
+
+	return cover, nil
 }
