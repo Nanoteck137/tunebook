@@ -17,10 +17,11 @@ import (
 var playlistErr = NewServiceErrCreator("playlist")
 
 var (
-	ErrPlaylistServicePlaylistNotFound  = playlistErr.New("playlist not found")
-	ErrPlaylistServiceTrackNotFound     = playlistErr.New("track not found")
-	ErrPlaylistServiceTrackAlreadyAdded = playlistErr.New("track already added")
-	ErrPlaylistServiceFilterNotFound    = playlistErr.New("filter not found")
+	ErrPlaylistServicePlaylistNotFound    = playlistErr.New("playlist not found")
+	ErrPlaylistServiceTrackNotFound       = playlistErr.New("track not found")
+	ErrPlaylistServiceTrackAlreadyAdded   = playlistErr.New("track already added")
+	ErrPlaylistServiceFilterNotFound      = playlistErr.New("filter not found")
+	ErrPlaylistServiceAnchorTrackNotFound = playlistErr.New("anchor track not found")
 )
 
 type PlaylistService struct {
@@ -467,17 +468,19 @@ func (s *PlaylistService) ReorderPlaylistItems(
 	for _, id := range params.TrackIds {
 		item, ok := index[id]
 		if !ok {
-			// TODO(patrik): Handle error
-			return playlistErr.Newf("track %q not found in playlist %q", id, playlist.Id)
+			continue
 		}
 
 		items = append(items, item)
 	}
 
+	if len(items) == 0 {
+		return nil
+	}
+
 	if params.AnchorTrackId != "" {
 		if _, ok := index[params.AnchorTrackId]; !ok {
-			// TODO(patrik): Handle error
-			return playlistErr.Newf("anchor track %q not found in playlist %q", params.AnchorTrackId, playlist.Id)
+			return ErrPlaylistServiceAnchorTrackNotFound
 		}
 	}
 
