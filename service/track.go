@@ -33,7 +33,6 @@ type GetTracksParams struct {
 	Page   types.PageParams
 	Filter types.FilterParams
 
-	UserId   string
 	FilterId string
 }
 
@@ -41,9 +40,9 @@ func (s *TrackService) GetTracks(
 	ctx context.Context,
 	params GetTracksParams,
 ) ([]database.Track, types.Page, error) {
-	if params.UserId != "" && params.FilterId != "" {
+	if params.FilterId != "" {
 		// TODO(patrik): Maybe log the error, or check for NotFound
-		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId, params.UserId)
+		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err == nil {
 			params.Filter.Filter = dbFilter.Filter
 		}

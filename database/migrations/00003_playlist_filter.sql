@@ -35,16 +35,15 @@ CREATE TABLE playlist_filters (
 );
 
 CREATE TABLE track_filters (
-    id TEXT NOT NULL,
+    id TEXT NOT NULL PRIMARY KEY,
+
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
     name TEXT NOT NULL CHECK(name<>''),
     filter TEXT NOT NULL,
 
     created INTEGER NOT NULL,
-    updated INTEGER NOT NULL,
-
-    PRIMARY KEY(id, user_id)
+    updated INTEGER NOT NULL
 );
 
 ALTER TABLE users_settings ADD COLUMN quick_playlist TEXT REFERENCES playlists(id) ON DELETE SET NULL;

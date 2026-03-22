@@ -548,7 +548,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId, user.Id)
+				dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId)
 				if err != nil {
 					// TODO(patrik): Handle Error
 					// if errors.Is(err, database.ErrItemNotFound) {
@@ -556,6 +556,11 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					// }
 
 					return nil, err
+				}
+
+				if dbFilter.UserId != user.Id {
+					// TODO(patrik): Handle
+					return nil, errors.New("not the owner")
 				}
 
 				changes := database.TrackFilterChanges{}
@@ -574,7 +579,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				err = app.DB().UpdateTrackFilter(ctx, dbFilter.Id, dbFilter.UserId, changes)
+				err = app.DB().UpdateTrackFilter(ctx, dbFilter.Id, changes)
 				if err != nil {
 					return nil, err
 				}
@@ -597,7 +602,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId, user.Id)
+				dbFilter, err := app.DB().GetTrackFilterById(ctx, filterId)
 				if err != nil {
 					// TODO(patrik): Handle Error
 					// if errors.Is(err, database.ErrItemNotFound) {
@@ -607,7 +612,12 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.DB().DeleteTrackFilter(ctx, dbFilter.Id, dbFilter.UserId)
+				if dbFilter.UserId != user.Id {
+					// TODO(patrik): Handle
+					return nil, errors.New("not the owner")
+				}
+
+				err = app.DB().DeleteTrackFilter(ctx, dbFilter.Id)
 				if err != nil {
 					return nil, err
 				}
