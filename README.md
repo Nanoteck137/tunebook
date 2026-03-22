@@ -15,25 +15,14 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] Backend: API: Fix: Media api
+- [ ] Backend: API: Fix: Media "packMediaResult"
+
+- [ ] Backend: Fix: Playlist Service: When deleting tracks we need to reorder the tracks again
+- [ ] Backend: Fix: Make playlist public, remove the playlist.OwnerId != user.Id on the get methods
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
-- [ ] Backend: Fix: Make playlist public, remove the playlist.OwnerId != user.Id on the get methods
-
-- [ ] Backend: Fix: track_filters should be able to be accessed by everyone 
-
-- [ ] Backend: Fix: API: Move every search handler to a /search endpoint
-
-- [ ] Backend: Add ArtistService
-- [ ] Backend: Add AlbumService
-- [ ] Backend: Add TrackService
-- [ ] Backend: Add PlaylistService
-
-- [ ] Backend: Feature: Image Service: Add helper for downloading playlist images
-- [ ] Backend: Feature: Image Service: Add helper for uploading playlist images
-
-- [ ] Backend: Fix: SPA Web handling
-
-- [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish
+- [ ] Backend: Fix: track_filters should be able to be accessed by everyone
 
 - [ ] CLI: Feature: Update Cmd: Use library.json
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
@@ -59,16 +48,11 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Frontend: Feature: Design: Track filtering
 - [ ] Frontend: Feature: Design: Playlist Filtering/Sorting
 - [ ] Frontend: Fix: Album track count
-- [ ] Frontend: Cleanup: Remove virtual playlists
-- [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: Form errors is hard to see
 - [ ] Frontend: Fix: Handle api errors in a clean way
 
-- [ ] Backend: Fix: When uploading images, we need to clear the cache of the item
-- [ ] Backend: API: Fix: Media api
-- [ ] Backend: API: Fix: Media "packMediaResult"
-
-- [ ] Backend: Database: Rename artists.slug to search_name
+- [ ] Frontend: Cleanup: Modal forms 
+- [ ] Frontend: Fix: cancel() on forms on api errors, this makes sure that the form is not reset when error occurs
 
 - [ ] Backend: Feature: User Tracking
 - [ ] Backend: Feature: Favorites
@@ -81,9 +65,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Cleanup: Figure out how to handle service errors
 - [ ] Backend: Cleanup: Figure out how to handle service logging
 - [ ] Backend: Cleanup: API: Better way to log the API Errors
-- [ ] Backend: Cleanup: Remove virtual playlist
 - [ ] Backend: Cleanup: Cleanup user picture code
-- [ ] Backend: Cleanup: Database: Database Migration files
 - [ ] Backend: Cleanup: Database: Database code
 - [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
 - [ ] Backend: Cleanup: Search Service: Code Cleanup
@@ -99,6 +81,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Search Service: Add Users
 - [ ] Backend: Search Service: Batch indexing
 - [ ] Backend: Search Service: Add more logging
+- [ ] Backend: Fix: API: Move every search handler to a /search endpoint
 
 - [ ] Backend: Media Service: API Route for getTrackStream need to handle errors
 - [ ] Backend: Media Service: Locking
@@ -111,6 +94,11 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Library Service: Cleanup after sync (artists, albums and tracks not existing anymore)
 
 - [ ] Backend: Database: Use database indexes
+
+- [ ] Backend: Fix: SPA Web handling
+
+- [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
+- [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish
 
 - [ ] General: Use nix to build a docker image
 
