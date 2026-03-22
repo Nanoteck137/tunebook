@@ -213,9 +213,8 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntr
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
 			_, err = s.db.CreateArtist(ctx, database.CreateArtistParams{
-				Id:   entry.Id,
-				Slug: entry.SearchName,
-				Name: entry.Name,
+				Id:         entry.Id,
+				Name:       entry.Name,
 				CoverArt: sql.NullString{
 					String: coverArt,
 					Valid:  coverArt != "",
@@ -231,11 +230,6 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntr
 		changes.Name = types.Change[string]{
 			Value:   entry.Name,
 			Changed: entry.Name != dbArtist.Name,
-		}
-
-		changes.Slug = types.Change[string]{
-			Value:   entry.SearchName,
-			Changed: entry.SearchName != dbArtist.Slug,
 		}
 
 		changes.CoverArt = types.Change[sql.NullString]{

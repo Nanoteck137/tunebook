@@ -23,8 +23,6 @@ type Track struct {
 	MediaFormat  types.MediaFormat `db:"media_format"`
 
 	Name string `db:"name"`
-	// TODO(patrik): Remove
-	OtherName sql.NullString `db:"other_name"`
 
 	AlbumId  string `db:"album_id"`
 	ArtistId string `db:"artist_id"`
@@ -33,18 +31,10 @@ type Track struct {
 	Number   sql.NullInt64 `db:"number"`
 	Year     sql.NullInt64 `db:"year"`
 
-	// TODO(patrik): Remove
-	OriginalFilename string `db:"original_filename"`
-	MobileFilename   string `db:"mobile_filename"`
-
-	AlbumName string `db:"album_name"`
-	// TODO(patrik): Remove
-	AlbumOtherName sql.NullString `db:"album_other_name"`
-	AlbumCoverArt  sql.NullString `db:"album_cover_art"`
+	AlbumName     string         `db:"album_name"`
+	AlbumCoverArt sql.NullString `db:"album_cover_art"`
 
 	ArtistName string `db:"artist_name"`
-	// TODO(patrik): Remove
-	ArtistOtherName sql.NullString `db:"artist_other_name"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -71,8 +61,6 @@ func FeaturingArtistsQuery(table, idColName string) *goqu.SelectDataset {
 					goqu.I("artists.id"),
 					"name",
 					goqu.I("artists.name"),
-					"other_name",
-					goqu.I("artists.other_name"),
 				),
 			).As("artists"),
 		).
@@ -107,7 +95,6 @@ func TrackQuery() *goqu.SelectDataset {
 			"tracks.media_format",
 
 			"tracks.name",
-			"tracks.other_name",
 
 			"tracks.album_id",
 			"tracks.artist_id",
@@ -120,11 +107,9 @@ func TrackQuery() *goqu.SelectDataset {
 			"tracks.updated",
 
 			goqu.I("albums.name").As("album_name"),
-			goqu.I("albums.other_name").As("album_other_name"),
 			goqu.I("albums.cover_art").As("album_cover_art"),
 
 			goqu.I("artists.name").As("artist_name"),
-			goqu.I("artists.other_name").As("artist_other_name"),
 
 			goqu.I("tags.tags").As("tags"),
 
@@ -334,8 +319,7 @@ type CreateTrackParams struct {
 	ModifiedTime int64
 	MediaFormat  types.MediaFormat
 
-	Name      string
-	OtherName sql.NullString
+	Name string
 
 	AlbumId  string
 	ArtistId string
@@ -344,37 +328,29 @@ type CreateTrackParams struct {
 	Number   sql.NullInt64
 	Year     sql.NullInt64
 
-	// OriginalFilename string
-	// MobileFilename   string
-
 	Created int64
 	Updated int64
 }
 
 func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string, error) {
-	t := time.Now().UnixMilli()
-	created := params.Created
-	updated := params.Updated
-
-	if created == 0 && updated == 0 {
-		created = t
-		updated = t
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
 	}
 
-	id := params.Id
-	if id == "" {
-		id = utils.CreateId()
+	if params.Id == "" {
+		params.Id = utils.CreateId()
 	}
 
 	query := dialect.Insert("tracks").Rows(goqu.Record{
-		"id": id,
+		"id": params.Id,
 
 		"filename":      params.Filename,
 		"modified_time": params.ModifiedTime,
 		"media_format":  params.MediaFormat,
 
-		"name":       params.Name,
-		"other_name": params.OtherName,
+		"name": params.Name,
 
 		"album_id":  params.AlbumId,
 		"artist_id": params.ArtistId,
@@ -383,12 +359,16 @@ func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string,
 		"number":   params.Number,
 		"year":     params.Year,
 
-		"created": created,
-		"updated": updated,
-	}).
-		Returning("id")
+		"created": params.Created,
+		"updated": params.Updated,
+	})
 
-	return ember.Single[string](db.db, ctx, query)
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return "", err
+	}
+
+	return params.Id, nil
 }
 
 type TrackChanges struct {
@@ -397,7 +377,6 @@ type TrackChanges struct {
 	MediaFormat  types.Change[types.MediaFormat]
 
 	Name      types.Change[string]
-	OtherName types.Change[sql.NullString]
 
 	AlbumId  types.Change[string]
 	ArtistId types.Change[string]
@@ -417,7 +396,6 @@ func (db DB) UpdateTrack(ctx context.Context, id string, changes TrackChanges) e
 	addToRecord(record, "media_format", changes.MediaFormat)
 
 	addToRecord(record, "name", changes.Name)
-	addToRecord(record, "other_name", changes.OtherName)
 
 	addToRecord(record, "album_id", changes.AlbumId)
 	addToRecord(record, "artist_id", changes.ArtistId)
@@ -446,36 +424,6 @@ func (db DB) UpdateTrack(ctx context.Context, id string, changes TrackChanges) e
 	return nil
 }
 
-func (db DB) ChangeAllTrackArtist(ctx context.Context, artistId, newArtistId string) error {
-	record := goqu.Record{
-		"artist_id": newArtistId,
-		"updated":   time.Now().UnixMilli(),
-	}
-
-	query := goqu.Update("tracks").
-		Set(record).
-		Where(goqu.I("tracks.artist_id").Eq(artistId))
-
-	_, err := db.db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func (db DB) DeleteTrackMedia(ctx context.Context, trackId string) error {
-	query := dialect.Delete("tracks_media").
-		Where(goqu.I("tracks_media.track_id").Eq(trackId))
-
-	_, err := db.db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (db DB) DeleteTrack(ctx context.Context, id string) error {
 	query := dialect.Delete("tracks").
 		Where(goqu.I("tracks.id").Eq(id))
@@ -486,15 +434,6 @@ func (db DB) DeleteTrack(ctx context.Context, id string) error {
 	}
 
 	return nil
-}
-
-func TrackMapNameToId(typ string, name string) string {
-	switch typ {
-	case "tags":
-		return name
-	}
-
-	return ""
 }
 
 func (db DB) AddTagToTrack(ctx context.Context, tagSlug, trackId string) error {
@@ -561,36 +500,6 @@ func (db DB) RemoveFeaturingArtistFromTrack(ctx context.Context, trackId, artist
 				goqu.I("tracks_featuring_artists.artist_id").Eq(artistId),
 			),
 		)
-
-	_, err := db.db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-type CreateTrackMediaParams struct {
-	Id      string
-	TrackId string
-
-	Filename    string
-	MediaFormat types.MediaFormat
-	Rank        int
-	IsOriginal  bool
-}
-
-func (db DB) CreateTrackMedia(ctx context.Context, params CreateTrackMediaParams) error {
-	query := dialect.Insert("tracks_media").
-		Rows(goqu.Record{
-			"id":       params.Id,
-			"track_id": params.TrackId,
-
-			"filename":     params.Filename,
-			"media_format": params.MediaFormat,
-			"rank":         params.Rank,
-			"is_original":  params.IsOriginal,
-		})
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {

@@ -203,7 +203,7 @@
       return;
     }
 
-    toast.success("Successfully deleted album");
+    toast.success("Deleted playlist");
     goto("/playlists", { invalidateAll: true });
   }}
 />

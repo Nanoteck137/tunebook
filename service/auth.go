@@ -36,6 +36,10 @@ func (e *ServiceError) Error() string {
 	return fmt.Sprintf("%s service: %s", e.Service, e.Err)
 }
 
+func (e *ServiceError) Unwrap() error {
+    return e.Err
+}
+
 type ServiceErrCreator struct {
 	Service string
 }

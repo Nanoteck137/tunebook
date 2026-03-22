@@ -8,6 +8,7 @@ import (
 
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/database/adapter"
 	"github.com/nanoteck137/dwebble/service"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
@@ -133,13 +134,18 @@ func (b *EditPlaylistFilterBody) Transform() {
 	b.Filter = anvil.StringPtr(b.Filter)
 }
 
+func testPlaylistItemFilter(val string) error {
+	// TODO(patrik): Replace with PlaylistResolverAdapter when it exists
+	return database.TestFilter(val, &adapter.TrackResolverAdapter{})
+}
+
 // TODO(patrik): Move
 var validateFilter = validate.By(func(value any) error {
 	switch value := value.(type) {
 	case *string:
-		return TestFilter(*value)
+		return testPlaylistItemFilter(*value)
 	case string:
-		return TestFilter(value)
+		return testPlaylistItemFilter(value)
 	default:
 		panic(fmt.Sprintf("validateFilter: Unknown type: %T", value))
 	}

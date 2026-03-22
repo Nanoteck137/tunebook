@@ -183,13 +183,6 @@
           icon={ListMusic}
           onClick={close}
         />
-
-        <Link
-          title="Virtual Playlists"
-          href="/virtual-playlists"
-          icon={Tags}
-          onClick={close}
-        />
       {/if}
     </div>
     <div class="flex-grow"></div>

@@ -3,12 +3,10 @@ package database
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"strings"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/mattn/go-sqlite3"
 	"github.com/nanoteck137/dwebble/database/adapter"
 	"github.com/nanoteck137/dwebble/tools/filter"
 	"github.com/nanoteck137/dwebble/tools/utils"
@@ -19,11 +17,9 @@ import (
 type Artist struct {
 	RowId int `db:"rowid"`
 
-	Id   string `db:"id"`
-	Slug string `db:"slug"`
+	Id string `db:"id"`
 
-	Name      string         `db:"name"`
-	OtherName sql.NullString `db:"other_name"`
+	Name string `db:"name"`
 
 	CoverArt sql.NullString `db:"cover_art"`
 
@@ -50,10 +46,8 @@ func ArtistQuery() *goqu.SelectDataset {
 			"artists.rowid",
 
 			"artists.id",
-			"artists.slug",
 
 			"artists.name",
-			"artists.other_name",
 
 			"artists.cover_art",
 
@@ -91,6 +85,7 @@ func (db DB) GetAllArtists(
 	return ember.Multiple[Artist](db.db, ctx, query)
 }
 
+// TODO(patrik): Move
 func applyFilterParams(
 	params types.FilterParams,
 	adapter filter.ResolverAdapter,
@@ -111,6 +106,7 @@ func applyFilterParams(
 	return query, nil
 }
 
+// TODO(patrik): Move
 func buildPage(
 	ctx context.Context,
 	db ember.DB,
@@ -133,6 +129,7 @@ func buildPage(
 	}, nil
 }
 
+// TODO(patrik): Move
 func applyPageParams(
 	params types.PageParams,
 	query *goqu.SelectDataset,
@@ -183,13 +180,6 @@ func (db DB) GetArtistById(ctx context.Context, id string) (Artist, error) {
 	return ember.Single[Artist](db.db, ctx, query)
 }
 
-func (db DB) GetArtistBySlug(ctx context.Context, slug string) (Artist, error) {
-	query := ArtistQuery().
-		Where(goqu.I("artists.slug").Eq(slug))
-
-	return ember.Single[Artist](db.db, ctx, query)
-}
-
 func (db DB) GetArtistByName(ctx context.Context, name string) (Artist, error) {
 	query := ArtistQuery().
 		Where(goqu.Func("LOWER", goqu.I("artists.name")).Eq(strings.ToLower(name)))
@@ -215,11 +205,9 @@ func (db DB) GetArtistsIn(ctx context.Context, in any, sort string) ([]Artist, e
 }
 
 type CreateArtistParams struct {
-	Id   string
-	Slug string
+	Id string
 
-	Name      string
-	OtherName sql.NullString
+	Name string
 
 	CoverArt sql.NullString
 
@@ -227,53 +215,39 @@ type CreateArtistParams struct {
 	Updated int64
 }
 
-func (db DB) CreateArtist(ctx context.Context, params CreateArtistParams) (Artist, error) {
-	t := time.Now().UnixMilli()
-	created := params.Created
-	updated := params.Updated
-
-	if created == 0 && updated == 0 {
-		created = t
-		updated = t
+func (db DB) CreateArtist(ctx context.Context, params CreateArtistParams) (string, error) {
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
 	}
 
-	id := params.Id
-	if id == "" {
-		id = utils.CreateArtistId()
+	if params.Id == "" {
+		params.Id = utils.CreateArtistId()
 	}
 
 	query := dialect.Insert("artists").Rows(goqu.Record{
-		"id":   id,
-		"slug": params.Slug,
+		"id": params.Id,
 
-		"name":       params.Name,
-		"other_name": params.OtherName,
+		"name": params.Name,
 
 		"cover_art": params.CoverArt,
 
-		"created": created,
-		"updated": updated,
-	}).
-		Returning(
-			"artists.id",
-			"artists.name",
-			"artists.other_name",
+		"created": params.Created,
+		"updated": params.Updated,
+	})
 
-			"artists.cover_art",
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return "", err
+	}
 
-			"artists.updated",
-			"artists.created",
-		)
-
-	return ember.Single[Artist](db.db, ctx, query)
+	return params.Id, nil
 }
 
 type ArtistChanges struct {
-	Slug types.Change[string]
-
 	Name types.Change[string]
 
-	OtherName types.Change[sql.NullString]
 	CoverArt  types.Change[sql.NullString]
 
 	Created types.Change[int64]
@@ -282,10 +256,7 @@ type ArtistChanges struct {
 func (db DB) UpdateArtist(ctx context.Context, id string, changes ArtistChanges) error {
 	record := goqu.Record{}
 
-	addToRecord(record, "slug", changes.Slug)
-
 	addToRecord(record, "name", changes.Name)
-	addToRecord(record, "other_name", changes.OtherName)
 
 	addToRecord(record, "cover_art", changes.CoverArt)
 
@@ -321,93 +292,6 @@ func (db DB) DeleteArtist(ctx context.Context, id string) error {
 	return nil
 }
 
-func (db DB) MergeArtist(ctx context.Context, targetId, artistId string) error {
-	// TODO(patrik): Changes
-	// - albums
-	// - albums_featuring_artists
-	// - tracks
-	// - tracks_featuring_artists
-	// - artists_tags (maybe)
-
-	albums, err := db.GetAlbumsByArtist(ctx, artistId)
-	if err != nil {
-		return err
-	}
-
-	for _, album := range albums {
-		err = db.UpdateAlbum(ctx, album.Id, AlbumChanges{
-			ArtistId: types.Change[string]{
-				Value:   targetId,
-				Changed: true,
-			},
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	{
-		record := goqu.Record{
-			"artist_id": targetId,
-		}
-		query := goqu.Update("albums_featuring_artists").
-			Set(record).
-			Where(goqu.I("albums_featuring_artists.artist_id").Eq(artistId))
-
-		_, err = db.db.Exec(ctx, query)
-		if err != nil {
-			// TODO(patrik): Change
-			var sqlErr sqlite3.Error
-			if errors.As(err, &sqlErr) {
-				if sqlErr.ExtendedCode != sqlite3.ErrConstraintPrimaryKey {
-					return err
-				}
-			} else {
-				return err
-			}
-		}
-	}
-
-	{
-		record := goqu.Record{
-			"artist_id": targetId,
-			"updated":   time.Now().UnixMilli(),
-		}
-		query := goqu.Update("tracks").
-			Set(record).
-			Where(goqu.I("tracks.artist_id").Eq(artistId))
-
-		_, err = db.db.Exec(ctx, query)
-		if err != nil {
-			return err
-		}
-	}
-
-	{
-		record := goqu.Record{
-			"artist_id": targetId,
-		}
-		query := goqu.Update("tracks_featuring_artists").
-			Set(record).
-			Where(goqu.I("tracks_featuring_artists.artist_id").Eq(artistId))
-
-		_, err = db.db.Exec(ctx, query)
-		if err != nil {
-			// TODO(patrik): Change
-			var sqlErr sqlite3.Error
-			if errors.As(err, &sqlErr) {
-				if sqlErr.ExtendedCode != sqlite3.ErrConstraintPrimaryKey {
-					return err
-				}
-			} else {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 // TODO(patrik): Generalize
 // TODO(patrik): Rename to AddArtistTag, same with track
 func (db DB) AddTagToArtist(ctx context.Context, tagSlug, artistId string) error {
@@ -419,13 +303,6 @@ func (db DB) AddTagToArtist(ctx context.Context, tagSlug, artistId string) error
 
 	_, err := db.db.Exec(ctx, ds)
 	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
 		return err
 	}
 

@@ -112,11 +112,11 @@ func (s *PlaylistService) EditPlaylist(
 	params EditPlaylistParams,
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
-		PlaylistId: params.PlaylistId,
+		PlaylistId: params.PlaylistId + "test",
 		UserId:     params.UserId,
 	})
 	if err != nil {
-		return err
+		return playlistErr.Wrap("edit: get playlist", err)
 	}
 
 	changes := database.PlaylistChanges{}

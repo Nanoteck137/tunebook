@@ -26,12 +26,6 @@ func (a *ArtistResolverAdapter) ResolveVariableName(name string) (filter.Name, b
 			Kind: filter.NameKindString,
 			Name: "artists.name",
 		}, true
-	case "otherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "artists.other_name",
-			Nullable: true,
-		}, true
 	case "created":
 		return filter.Name{
 			Kind: filter.NameKindNumber,

@@ -10,7 +10,6 @@ import (
 type FeaturingArtist struct {
 	Id        string  `json:"id"`
 	Name      string  `json:"name"`
-	OtherName *string `json:"other_name"`
 }
 
 type FeaturingArtists []FeaturingArtist

@@ -27,12 +27,6 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Kind: filter.NameKindString,
 			Name: "tracks.name",
 		}, true
-	case "otherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "tracks.other_name",
-			Nullable: true,
-		}, true
 	case "number":
 		return filter.Name{
 			Kind:     filter.NameKindNumber,
@@ -66,22 +60,10 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Kind: filter.NameKindString,
 			Name: "albums.name",
 		}, true
-	case "albumOtherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "albums.other_name",
-			Nullable: true,
-		}, true
 	case "artistName":
 		return filter.Name{
 			Kind: filter.NameKindString,
 			Name: "artists.name",
-		}, true
-	case "artistOtherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "artists.other_name",
-			Nullable: true,
 		}, true
 	case "created":
 		return filter.Name{

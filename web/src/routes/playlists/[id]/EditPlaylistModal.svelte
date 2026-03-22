@@ -13,7 +13,7 @@
 
   const Schema = z.object({
     name: z.string().min(1),
-    coverUrl: z.string().min(1),
+    coverUrl: z.string(),
   });
 
   export type Props = {
@@ -42,7 +42,7 @@
       validators: zod(Schema),
       dataType: "json",
       resetForm: true,
-      async onUpdate({ form }) {
+      async onUpdate({ form, cancel }) {
         if (form.valid) {
           const formData = form.data;
 
@@ -51,6 +51,7 @@
             coverUrl: formData.coverUrl !== "" ? formData.coverUrl : null,
           });
           if (!res.success) {
+            cancel();
             return handleApiError(res.error);
           }
 

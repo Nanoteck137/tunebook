@@ -1,9 +1,9 @@
 -- +goose Up
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE CHECK(email<>''),
 
-    display_name TEXT NOT NULL,
+    display_name TEXT NOT NULL CHECK(display_name<>''),
     role TEXT NOT NULL,
 
     picture TEXT,
@@ -25,6 +25,10 @@ CREATE TABLE user_identities (
     UNIQUE(provider, user_id)
 );
 
+CREATE TABLE users_settings (
+    id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE api_tokens (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -34,8 +38,3 @@ CREATE TABLE api_tokens (
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
 );
-
--- +goose Down
-DROP TABLE api_tokens; 
-DROP TABLE user_identities; 
-DROP TABLE users; 
