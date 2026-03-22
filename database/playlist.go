@@ -148,8 +148,8 @@ type PlaylistChanges struct {
 }
 
 func (db DB) UpdatePlaylist(
-	ctx context.Context, 
-	id string, 
+	ctx context.Context,
+	id string,
 	changes PlaylistChanges,
 ) error {
 	record := goqu.Record{}

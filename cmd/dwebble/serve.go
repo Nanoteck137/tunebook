@@ -13,7 +13,7 @@ import (
 )
 
 var serveCmd = &cobra.Command{
-	Use: "serve",
+	Use:   "serve",
 	Short: "Run the api server",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfgFile, _ := cmd.Flags().GetString("config")

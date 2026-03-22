@@ -28,8 +28,8 @@ func NewSearchService(db *database.Database, dataDir types.DataDir, config *conf
 	return &SearchService{
 		db:      db,
 		dataDir: dataDir,
-		client:  meilisearch.New(
-			config.MeilisearchAddress, 
+		client: meilisearch.New(
+			config.MeilisearchAddress,
 			meilisearch.WithAPIKey(config.MeilisearchApiKey),
 		),
 	}

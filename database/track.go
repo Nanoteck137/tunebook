@@ -214,7 +214,7 @@ type GetTracksParams struct {
 }
 
 func (db DB) GetTracks(
-	ctx context.Context, 
+	ctx context.Context,
 	params GetTracksParams,
 ) ([]Track, types.Page, error) {
 	query := TrackQuery()

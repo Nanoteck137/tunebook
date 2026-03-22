@@ -108,7 +108,7 @@ type GetPlaylistTracksParams struct {
 }
 
 func (db DB) GetPlaylistTracks(
-	ctx context.Context, 
+	ctx context.Context,
 	params GetPlaylistTracksParams,
 ) ([]OrderedTrack, types.Page, error) {
 	tracks := TrackQuery()

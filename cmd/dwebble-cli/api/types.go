@@ -684,4 +684,3 @@ type UpdateUserSettingsBody struct {
 	// Name: UpdateUserSettingsBody.quickPlaylist
 	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
 }
-

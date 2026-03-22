@@ -76,7 +76,7 @@ func runImport(dbFile string) error {
 
 		serverPlaylist, err := client.CreatePlaylist(api.CreatePlaylistBody{
 			Name: playlist.Name,
-		}, api.Options{});
+		}, api.Options{})
 		if err != nil {
 			return err
 		}

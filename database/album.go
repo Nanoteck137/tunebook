@@ -126,7 +126,7 @@ type GetAlbumsParams struct {
 }
 
 func (db DB) GetAlbums(
-	ctx context.Context, 
+	ctx context.Context,
 	params GetAlbumsParams,
 ) ([]Album, types.Page, error) {
 	query := AlbumQuery()

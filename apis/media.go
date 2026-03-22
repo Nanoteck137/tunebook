@@ -162,7 +162,7 @@ type GetMediaSettings struct {
 type RecordTrackBody struct {
 	Duration float32 `json:"duration"`
 	// TODO(patrik): Validate
-	Source   string  `json:"source"`
+	Source string `json:"source"`
 }
 
 func InstallMediaHandlers(app core.App, group pyrin.Group) {
@@ -198,7 +198,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/record/track/:trackId",
 			ResponseType: nil,
 			BodyType:     RecordTrackBody{},
-			HandlerFunc:  func(c pyrin.Context) (any, error) {
+			HandlerFunc: func(c pyrin.Context) (any, error) {
 				trackId := c.Param("trackId")
 
 				body, err := pyrin.Body[RecordTrackBody](c)

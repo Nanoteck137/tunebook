@@ -100,12 +100,12 @@ func getDefaultQualityMapping() map[types.MediaFormat]QualitySpec {
 func getDefaultDeviceSpecs() map[Device]DeviceSpec {
 	return map[Device]DeviceSpec{
 		DeviceIOS: {
-			Name: "IOS",
+			Name:           "IOS",
 			PreferedFormat: types.MediaFormatAac,
 			AllowedFormats: []types.MediaFormat{types.MediaFormatMp3},
 		},
 		DeviceAndroid: {
-			Name: "Android",
+			Name:           "Android",
 			PreferedFormat: types.MediaFormatOpus,
 			AllowedFormats: []types.MediaFormat{types.MediaFormatVorbis, types.MediaFormatMp3},
 		},
@@ -395,9 +395,9 @@ func (s *MediaService) ProbeMedia(ctx context.Context, filepath string) (*probe.
 		return nil, err
 	}
 
-	s.logger.Info("Probing result", 
-		"filepath", filepath, 
-		"format", result.MediaFormat, 
+	s.logger.Info("Probing result",
+		"filepath", filepath,
+		"format", result.MediaFormat,
 		"duration", result.Duration,
 	)
 

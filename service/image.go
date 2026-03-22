@@ -438,7 +438,7 @@ type DownloadCoverForPlaylistParams struct {
 // TODO(patrik): Cleanup
 // TODO(patrik): Hash for files
 func (s *ImageService) DownloadCoverForPlaylist(
-	ctx context.Context, 
+	ctx context.Context,
 	params DownloadCoverForPlaylistParams,
 ) (string, error) {
 	// TODO(patrik): Cleanup, move to utils
@@ -530,7 +530,7 @@ type GenerateImageForPlaylistParams struct {
 // TODO(patrik): Cleanup
 // TODO(patrik): Hash for files
 func (s *ImageService) GenerateImageForPlaylist(
-	ctx context.Context, 
+	ctx context.Context,
 	params GenerateImageForPlaylistParams,
 ) (string, error) {
 	images, err := s.db.GetPlaylistTrackImages(ctx, params.PlaylistId, 4)
@@ -578,7 +578,7 @@ type UploadImageForPlaylistParams struct {
 // TODO(patrik): Cleanup
 // TODO(patrik): Hash for files
 func (s *ImageService) UploadImageForPlaylist(
-	ctx context.Context, 
+	ctx context.Context,
 	params UploadImageForPlaylistParams,
 ) (string, error) {
 	ext := path.Ext(params.File.Filename)
