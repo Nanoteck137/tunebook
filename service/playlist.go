@@ -320,7 +320,6 @@ func (s *PlaylistService) GetPlaylistItems(
 	}
 
 	if params.FilterId != "" {
-		// TODO(patrik): Maybe log the error, or check for NotFound
 		filter, err := s.db.GetPlaylistFilterById(ctx, params.FilterId, playlist.Id)
 		if err != nil {
 			if errors.Is(err, database.ErrItemNotFound) {
