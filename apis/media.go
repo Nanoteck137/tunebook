@@ -3,8 +3,6 @@ package apis
 import (
 	"context"
 	"errors"
-	"fmt"
-	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -299,10 +297,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.TODO()
 
-				body, err := pyrin.Body[GetMediaFromArtistBody](c)
-				if err != nil {
-					return nil, err
-				}
+				// body, err := pyrin.Body[GetMediaFromArtistBody](c)
+				// if err != nil {
+				// 	return nil, err
+				// }
 
 				artist, err := app.DB().GetArtistById(ctx, artistId)
 				if err != nil {
@@ -334,10 +332,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.TODO()
 
-				body, err := pyrin.Body[GetMediaFromAlbumBody](c)
-				if err != nil {
-					return nil, err
-				}
+				// body, err := pyrin.Body[GetMediaFromAlbumBody](c)
+				// if err != nil {
+				// 	return nil, err
+				// }
 
 				album, err := app.DB().GetAlbumById(ctx, albumId)
 				if err != nil {
@@ -348,13 +346,13 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				sort := body.Sort
-				if sort == "" {
-					sort = "sort=number,name"
-				}
+				// sort := body.Sort
+				// if sort == "" {
+				// 	sort = "sort=number,name"
+				// }
 
 				subquery := database.AlbumTrackSubquery(album.Id)
-				tracks, err := app.DB().GetTracksIn(ctx, subquery, sort)
+				tracks, err := app.DB().GetTracksIn(ctx, subquery, "")
 				if err != nil {
 					return nil, err
 				}
