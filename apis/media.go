@@ -19,8 +19,7 @@ import (
 	"github.com/nanoteck137/pyrin"
 )
 
-// TODO(patrik): Change name?
-type MediaResource struct {
+type MediaRef struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
@@ -29,13 +28,10 @@ type MediaItem struct {
 	TrackId string `json:"trackId"`
 	Name    string `json:"name"`
 
-	Artists []MediaResource `json:"artists"`
-	Album   MediaResource   `json:"album"`
+	Artists []MediaRef `json:"artists"`
+	Album   MediaRef   `json:"album"`
 
 	CoverArt types.Images `json:"coverArt"`
-
-	MediaFormat types.MediaFormat `json:"mediaFormat"`
-	MediaUrl    string            `json:"mediaUrl"`
 }
 
 type GetMedia struct {
@@ -43,11 +39,6 @@ type GetMedia struct {
 }
 
 type GetMediaCommonBody struct {
-	MediaFormat types.MediaFormat `json:"mediaFormat,omitempty"`
-
-	Shuffle bool   `json:"shuffle,omitempty"`
-	Sort    string `json:"sort,omitempty"`
-
 	Limit  int `json:"limit,omitempty"`
 	Offset int `json:"offset,omitempty"`
 }
@@ -83,53 +74,35 @@ type GetMediaFromIdsBody struct {
 	KeepOrder bool     `json:"keepOrder,omitempty"`
 }
 
-// TODO(patrik): This might need some fixing, because this only returns the
-// original track stream so the user of the media api can't choose which
-// format to use
-func packMediaResult(c pyrin.Context, tracks []database.Track, targetMediaFormat types.MediaFormat, shuffle bool) (GetMedia, error) {
-	if shuffle {
-		rand.Shuffle(len(tracks), func(i, j int) {
-			tracks[i], tracks[j] = tracks[j], tracks[i]
-		})
-	}
-
+func packMediaResult(c pyrin.Context, tracks []database.Track) (GetMedia, error) {
 	res := GetMedia{
 		Items: make([]MediaItem, len(tracks)),
 	}
 
 	for i, track := range tracks {
-		artists := make([]MediaResource, len(track.FeaturingArtists)+1)
+		artists := make([]MediaRef, len(track.FeaturingArtists)+1)
 
-		artists[0] = MediaResource{
+		artists[0] = MediaRef{
 			Id:   track.ArtistId,
 			Name: track.ArtistName,
 		}
 
 		for i, v := range track.FeaturingArtists {
-			artists[i+1] = MediaResource{
+			artists[i+1] = MediaRef{
 				Id:   v.Id,
 				Name: v.Name,
 			}
 		}
 
-		mediaFormat := types.MediaFormatUnknown
-		if !track.MediaFormat.IsValid() {
-			mediaFormat = track.MediaFormat
-		}
-
-		mediaUrl := ConvertURL(c, fmt.Sprintf("/media/tracks/%s/stream?policy=original", track.Id))
-
 		res.Items[i] = MediaItem{
 			TrackId: track.Id,
 			Name:    track.Name,
 			Artists: artists,
-			Album: MediaResource{
+			Album: MediaRef{
 				Id:   track.AlbumId,
 				Name: track.AlbumName,
 			},
 			CoverArt:    ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
-			MediaFormat: mediaFormat,
-			MediaUrl:    mediaUrl,
 		}
 	}
 
@@ -311,7 +284,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
+				return packMediaResult(c, tracks)
 			},
 		},
 
@@ -346,7 +319,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
+				return packMediaResult(c, tracks)
 			},
 		},
 
@@ -386,7 +359,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
+				return packMediaResult(c, tracks)
 			},
 		},
 
@@ -426,7 +399,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
+				return packMediaResult(c, tracks)
 			},
 		},
 	)
