@@ -416,8 +416,10 @@ export type MediaResource = z.infer<typeof MediaResource>;
 
 // Name: MediaItem
 export const MediaItem = z.object({
-  // Name: MediaItem.track
-  "track": MediaResource,
+  // Name: MediaItem.trackId
+  "trackId": z.string(),
+  // Name: MediaItem.name
+  "name": z.string(),
   // Name: MediaItem.artists
   "artists": z.array(MediaResource),
   // Name: MediaItem.album
@@ -518,23 +520,6 @@ export const GetMediaFromIdsBody = z.object({
   "keepOrder": z.boolean().optional(),
 });
 export type GetMediaFromIdsBody = z.infer<typeof GetMediaFromIdsBody>;
-
-// Name: GetMediaFromPlaylistBody
-export const GetMediaFromPlaylistBody = z.object({
-  // Name: GetMediaFromPlaylistBody.mediaFormat
-  "mediaFormat": z.string().optional(),
-  // Name: GetMediaFromPlaylistBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromPlaylistBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromPlaylistBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromPlaylistBody.offset
-  "offset": z.number().optional(),
-  // Name: GetMediaFromPlaylistBody.filterId
-  "filterId": z.string(),
-});
-export type GetMediaFromPlaylistBody = z.infer<typeof GetMediaFromPlaylistBody>;
 
 // Name: MediaFormat
 export const MediaFormat = z.object({

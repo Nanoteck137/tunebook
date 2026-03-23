@@ -8,152 +8,8 @@
 
   const musicManager = getMusicManager();
 
-  let showPlayer = $state(false);
-
-  let loading = $state(false);
-  let playing = $state(false);
-
-  let currentTime = $state(0);
-  let duration = $state(0);
-
-  let volume = $state(getVolume());
-  let muted = $state(false);
-
-  let currentMediaItem = $state<MediaItem | null>(null);
-
-  let audio: HTMLAudioElement;
-
-  function getVolume(): number {
-    if (!browser) return 1.0;
-
-    const volume = localStorage.getItem("player-volume");
-    if (volume) {
-      return parseFloat(volume);
-    }
-
-    return 1.0;
-  }
-
-  function getMuted(): boolean {
-    const muted = localStorage.getItem("player-muted");
-    if (muted) {
-      return muted === "true";
-    }
-
-    return false;
-  }
-
-  function updateTrack() {
-    const mediaItem = musicManager.queue.getCurrentMediaItem();
-
-    if (mediaItem) {
-      if (currentMediaItem?.track.id === mediaItem.track.id) return;
-
-      currentMediaItem = mediaItem;
-      audio.src = mediaItem.mediaUrl;
-    } else {
-      currentMediaItem = null;
-      audio.removeAttribute("src");
-      audio.load();
-    }
-  }
-
-  onMount(() => {
-    audio = new Audio();
-
-    audio.addEventListener("canplay", () => {
-      // console.log("canplay");
-      loading = false;
-    });
-
-    audio.addEventListener("loadstart", () => {
-      // console.log("loadstart");
-      loading = true;
-    });
-
-    audio.addEventListener("loadedmetadata", () => {
-      // console.log("loadedmetadata");
-      currentTime = audio.currentTime;
-      duration = audio.duration;
-    });
-
-    audio.addEventListener("progress", () => {
-      // console.log("progress");
-    });
-
-    audio.addEventListener("timeupdate", () => {
-      currentTime = audio.currentTime;
-    });
-
-    audio.addEventListener("loadeddata", () => {
-      // console.log("loadeddata");
-    });
-
-    audio.addEventListener("playing", () => {
-      // console.log("playing");
-      playing = true;
-    });
-
-    audio.addEventListener("pause", () => {
-      // console.log("pause");
-      playing = false;
-    });
-
-    audio.addEventListener("load", () => {
-      // console.log("load");
-    });
-
-    audio.addEventListener("ended", async () => {
-      await musicManager.nextTrack();
-    });
-
-    musicManager.emitter.on("requestPlay", () => {
-      audio.play();
-    });
-
-    musicManager.emitter.on("requestPause", () => {
-      audio.pause();
-    });
-
-    musicManager.emitter.on("requestPlayPause", () => {
-      if (playing) {
-        audio.pause();
-      } else {
-        audio.play();
-      }
-    });
-  });
-
-  onMount(() => {
-    volume = getVolume();
-    muted = getMuted();
-
-    if (muted) {
-      audio.volume = 0.0;
-    } else {
-      audio.volume = volume;
-    }
-  });
-
-  let queue: MediaItem[] = $state([]);
-  let currentQueueIndex = $state(0);
-
-  onMount(() => {
-    let unsub = musicManager.emitter.on("onQueueUpdated", () => {
-      showPlayer = !musicManager.queue.isQueueEmpty();
-      queue = musicManager.queue.items;
-      currentQueueIndex = musicManager.queue.index;
-
-      updateTrack();
-    });
-
-    return () => {
-      unsub();
-    };
-  });
-
   $effect(() => {
-    if (showPlayer) {
+    if (musicManager.showPlayer) {
       document.body.setAttribute("data-player", "true");
     } else {
       document.body.setAttribute("data-player", "false");
@@ -172,10 +28,8 @@
   }}
 /> -->
 
-{#if showPlayer}
-  <LargePlayer
-    {playing}
-    {loading}
+<!-- playing={musicManager.playing}
+    loading={musicManager.loading}
     mediaItem={currentMediaItem}
     {currentTime}
     {duration}
@@ -215,10 +69,12 @@
       } else {
         audio.volume = volume;
       }
-    }}
-  />
+    }} -->
 
-  <SmallPlayer
+{#if musicManager.showPlayer}
+  <LargePlayer />
+
+  <!-- <SmallPlayer
     {playing}
     {loading}
     {currentMediaItem}
@@ -261,5 +117,5 @@
         audio.volume = volume;
       }
     }}
-  />
+  /> -->
 {/if}

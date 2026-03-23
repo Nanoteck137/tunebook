@@ -59,14 +59,14 @@
 <TrackListHeader
   name="Tracks"
   onPlay={async (shuffle) => {
-    await musicManager.queueRequest(
-      {
-        type: "addFilter",
-        // filter: data.filter ?? "",
-        filter: "",
-      },
-      { shuffle },
-    );
+    // await musicManager.queueRequest(
+    //   {
+    //     type: "addFilter",
+    //     // filter: data.filter ?? "",
+    //     filter: "",
+    //   },
+    //   { shuffle },
+    // );
   }}
 />
 
@@ -84,14 +84,17 @@
   userPlaylists={data.userPlaylists}
   quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
-    await musicManager.queueRequest(
-      {
-        type: "addFilter",
-        // filter: data.filter ?? "",
-        filter: "",
-      },
-      { queueIndexToTrackId: trackId },
-    );
+    musicManager.addTracks({ trackId });
+    musicManager.play();
+
+    // await musicManager.queueRequest(
+    //   {
+    //     type: "addFilter",
+    //     // filter: data.filter ?? "",
+    //     filter: "",
+    //   },
+    //   { queueIndexToTrackId: trackId },
+    // );
   }}
 />
 

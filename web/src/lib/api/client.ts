@@ -11,12 +11,8 @@ export class ApiClient extends BaseApiClient {
     this.url = new ClientUrls(baseUrl);
   }
   
-  addItemToPlaylist(id: string, body: api.AddItemToPlaylistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items`, "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  addPlaylistFilter(playlistId: string, body: api.AddPlaylistFilterBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${playlistId}/filters`, "POST", api.AddPlaylistFilter, z.any(), body, options)
+  addItemToPlaylist(playlistId: string, body: api.AddItemToPlaylistBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
   addToUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
@@ -56,16 +52,16 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/auth/quick-connect/initiate", "POST", api.AuthQuickConnectInitiate, z.any(), undefined, options)
   }
   
-  clearPlaylist(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items/all`, "DELETE", z.undefined(), z.any(), undefined, options)
-  }
-  
   createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/apitoken", "POST", api.CreateApiToken, z.any(), body, options)
   }
   
   createPlaylist(body: api.CreatePlaylistBody, options?: ExtraOptions) {
     return this.request("/api/v1/playlists", "POST", api.CreatePlaylist, z.any(), body, options)
+  }
+  
+  createPlaylistFilter(playlistId: string, body: api.AddPlaylistFilterBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/filters`, "POST", api.AddPlaylistFilter, z.any(), body, options)
   }
   
   createTrackFilter(body: api.CreateTrackFilterBody, options?: ExtraOptions) {
@@ -76,16 +72,16 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/user/apitoken/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  deletePlaylist(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  deletePlaylist(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   deleteTrackFilter(filterId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/user/tracks/filter/${filterId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  editPlaylist(id: string, body: api.EditPlaylistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  editPlaylist(playlistId: string, body: api.EditPlaylistBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   editPlaylistFilter(playlistId: string, filterId: string, body: api.EditPlaylistFilterBody, options?: ExtraOptions) {
@@ -100,8 +96,8 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user", "PATCH", z.undefined(), z.any(), body, options)
   }
   
-  generatePlaylistImage(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/images/generate`, "POST", z.undefined(), z.any(), undefined, options)
+  generatePlaylistImage(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/images/generate`, "POST", z.undefined(), z.any(), undefined, options)
   }
   
   getAlbumById(id: string, options?: ExtraOptions) {
@@ -154,16 +150,12 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/media/ids", "POST", api.GetMedia, z.any(), body, options)
   }
   
-  getMediaFromPlaylist(playlistId: string, body: api.GetMediaFromPlaylistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/playlist/${playlistId}`, "POST", api.GetMedia, z.any(), body, options)
-  }
-  
   getMediaSettings(options?: ExtraOptions) {
     return this.request("/api/v1/media/settings", "GET", api.GetMediaSettings, z.any(), undefined, options)
   }
   
-  getPlaylistById(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
+  getPlaylistById(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
   }
   
   getPlaylistFilters(playlistId: string, options?: ExtraOptions) {
@@ -171,8 +163,8 @@ export class ApiClient extends BaseApiClient {
   }
   
   
-  getPlaylistItems(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items`, "GET", api.GetPlaylistItems, z.any(), undefined, options)
+  getPlaylistItems(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items`, "GET", api.GetPlaylistItems, z.any(), undefined, options)
   }
   
   getPlaylists(options?: ExtraOptions) {
@@ -212,12 +204,12 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/quickplaylist", "DELETE", z.undefined(), z.any(), body, options)
   }
   
-  removePlaylistItem(id: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items`, "DELETE", z.undefined(), z.any(), body, options)
+  removePlaylistItem(playlistId: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items`, "DELETE", z.undefined(), z.any(), body, options)
   }
   
-  reorderPlaylistItems(id: string, body: api.ReorderPlaylistItemsBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
+  reorderPlaylistItems(playlistId: string, body: api.ReorderPlaylistItemsBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
   }
   
   runJob(jobName: string, options?: ExtraOptions) {
@@ -242,8 +234,8 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }
   
-  uploadPlaylistImage(id: string, body: FormData, options?: ExtraOptions) {
-    return this.requestForm(`/api/v1/playlists/${id}/image`, "POST", z.undefined(), z.any(), body, options)
+  uploadPlaylistImage(playlistId: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/playlists/${playlistId}/image/upload`, "POST", z.undefined(), z.any(), body, options)
   }
 }
 
@@ -254,12 +246,8 @@ export class ClientUrls {
     this.baseUrl = baseUrl;
   }
   
-  addItemToPlaylist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
-  }
-  
-  addPlaylistFilter(playlistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters`)
+  addItemToPlaylist(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
   addToUserQuickPlaylist() {
@@ -302,16 +290,16 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/initiate")
   }
   
-  clearPlaylist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items/all`)
-  }
-  
   createApiToken() {
     return createUrl(this.baseUrl, "/api/v1/user/apitoken")
   }
   
   createPlaylist() {
     return createUrl(this.baseUrl, "/api/v1/playlists")
+  }
+  
+  createPlaylistFilter(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters`)
   }
   
   createTrackFilter() {
@@ -322,16 +310,16 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/user/apitoken/${id}`)
   }
   
-  deletePlaylist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
+  deletePlaylist(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
   }
   
   deleteTrackFilter(filterId: string) {
     return createUrl(this.baseUrl, `/api/v1/user/tracks/filter/${filterId}`)
   }
   
-  editPlaylist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
+  editPlaylist(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
   }
   
   editPlaylistFilter(playlistId: string, filterId: string) {
@@ -346,8 +334,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/user")
   }
   
-  generatePlaylistImage(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/images/generate`)
+  generatePlaylistImage(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/images/generate`)
   }
   
   getAlbumById(id: string) {
@@ -406,16 +394,12 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/media/ids")
   }
   
-  getMediaFromPlaylist(playlistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/playlist/${playlistId}`)
-  }
-  
   getMediaSettings() {
     return createUrl(this.baseUrl, "/api/v1/media/settings")
   }
   
-  getPlaylistById(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
+  getPlaylistById(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
   }
   
   getPlaylistFilters(playlistId: string) {
@@ -426,8 +410,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/files/playlists/images/${playlistId}/${image}`)
   }
   
-  getPlaylistItems(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
+  getPlaylistItems(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
   getPlaylists() {
@@ -470,12 +454,12 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
   }
   
-  removePlaylistItem(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
+  removePlaylistItem(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
-  reorderPlaylistItems(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items/reorder`)
+  reorderPlaylistItems(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items/reorder`)
   }
   
   runJob(jobName: string) {
@@ -506,7 +490,7 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/user/settings")
   }
   
-  uploadPlaylistImage(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/image`)
+  uploadPlaylistImage(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/image/upload`)
   }
 }

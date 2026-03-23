@@ -373,8 +373,10 @@ type MediaResource struct {
 
 // Name: MediaItem
 type MediaItem struct {
-	// Name: MediaItem.track
-	Track MediaResource `json:"track"`
+	// Name: MediaItem.trackId
+	TrackId string `json:"trackId"`
+	// Name: MediaItem.name
+	Name string `json:"name"`
 	// Name: MediaItem.artists
 	Artists []MediaResource `json:"artists"`
 	// Name: MediaItem.album
@@ -467,22 +469,6 @@ type GetMediaFromIdsBody struct {
 	TrackIds []string `json:"trackIds"`
 	// Name: GetMediaFromIdsBody.keepOrder
 	KeepOrder bool `json:"keepOrder"`
-}
-
-// Name: GetMediaFromPlaylistBody
-type GetMediaFromPlaylistBody struct {
-	// Name: GetMediaFromPlaylistBody.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: GetMediaFromPlaylistBody.shuffle
-	Shuffle bool `json:"shuffle"`
-	// Name: GetMediaFromPlaylistBody.sort
-	Sort string `json:"sort"`
-	// Name: GetMediaFromPlaylistBody.limit
-	Limit int `json:"limit"`
-	// Name: GetMediaFromPlaylistBody.offset
-	Offset int `json:"offset"`
-	// Name: GetMediaFromPlaylistBody.filterId
-	FilterId string `json:"filterId"`
 }
 
 // Name: MediaFormat
@@ -684,3 +670,4 @@ type UpdateUserSettingsBody struct {
 	// Name: UpdateUserSettingsBody.quickPlaylist
 	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
 }
+

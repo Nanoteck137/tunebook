@@ -22,8 +22,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Fix: Make playlist public, remove the playlist.OwnerId != user.Id on the get methods
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
-- [ ] Backend: Fix: track_filters should be able to be accessed by everyone
-
 - [ ] CLI: Feature: Update Cmd: Use library.json
 - [ ] CLI: Feature: Init Cmd: Add init library cmd
 - [ ] CLI: Feature: Init Cmd: Better logging
@@ -50,6 +48,8 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Frontend: Fix: Album track count
 - [ ] Frontend: Fix: Form errors is hard to see
 - [ ] Frontend: Fix: Handle api errors in a clean way
+- [ ] Frontend: Fix: Music Manager
+- [ ] Frontend: Fix: Small Audio player 
 
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: cancel() on forms on api errors, this makes sure that the form is not reset when error occurs

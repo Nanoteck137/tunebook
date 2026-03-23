@@ -752,41 +752,6 @@
       ]
     },
     {
-      "name": "GetMediaFromPlaylistBody",
-      "fields": [
-        {
-          "name": "mediaFormat",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        },
-        {
-          "name": "sort",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "limit",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "filterId",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "GetMediaSettings",
       "fields": [
         {
@@ -1025,8 +990,13 @@
       "name": "MediaItem",
       "fields": [
         {
-          "name": "track",
-          "type": "MediaResource",
+          "name": "trackId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
           "omitEmpty": false
         },
         {
@@ -1342,16 +1312,8 @@
       "type": "api",
       "name": "AddItemToPlaylist",
       "method": "POST",
-      "path": "/api/v1/playlists/:id/items",
+      "path": "/api/v1/playlists/:playlistId/items",
       "body": "AddItemToPlaylistBody"
-    },
-    {
-      "type": "api",
-      "name": "AddPlaylistFilter",
-      "method": "POST",
-      "path": "/api/v1/playlists/:playlistId/filters",
-      "response": "AddPlaylistFilter",
-      "body": "AddPlaylistFilterBody"
     },
     {
       "type": "api",
@@ -1429,12 +1391,6 @@
     },
     {
       "type": "api",
-      "name": "ClearPlaylist",
-      "method": "DELETE",
-      "path": "/api/v1/playlists/:id/items/all"
-    },
-    {
-      "type": "api",
       "name": "CreateApiToken",
       "method": "POST",
       "path": "/api/v1/user/apitoken",
@@ -1448,6 +1404,14 @@
       "path": "/api/v1/playlists",
       "response": "CreatePlaylist",
       "body": "CreatePlaylistBody"
+    },
+    {
+      "type": "api",
+      "name": "CreatePlaylistFilter",
+      "method": "POST",
+      "path": "/api/v1/playlists/:playlistId/filters",
+      "response": "AddPlaylistFilter",
+      "body": "AddPlaylistFilterBody"
     },
     {
       "type": "api",
@@ -1467,7 +1431,7 @@
       "type": "api",
       "name": "DeletePlaylist",
       "method": "DELETE",
-      "path": "/api/v1/playlists/:id"
+      "path": "/api/v1/playlists/:playlistId"
     },
     {
       "type": "api",
@@ -1479,7 +1443,7 @@
       "type": "api",
       "name": "EditPlaylist",
       "method": "PATCH",
-      "path": "/api/v1/playlists/:id",
+      "path": "/api/v1/playlists/:playlistId",
       "body": "EditPlaylistBody"
     },
     {
@@ -1507,7 +1471,7 @@
       "type": "api",
       "name": "GeneratePlaylistImage",
       "method": "POST",
-      "path": "/api/v1/playlists/:id/images/generate"
+      "path": "/api/v1/playlists/:playlistId/images/generate"
     },
     {
       "type": "api",
@@ -1611,14 +1575,6 @@
     },
     {
       "type": "api",
-      "name": "GetMediaFromPlaylist",
-      "method": "POST",
-      "path": "/api/v1/media/playlist/:playlistId",
-      "response": "GetMedia",
-      "body": "GetMediaFromPlaylistBody"
-    },
-    {
-      "type": "api",
       "name": "GetMediaSettings",
       "method": "GET",
       "path": "/api/v1/media/settings",
@@ -1628,7 +1584,7 @@
       "type": "api",
       "name": "GetPlaylistById",
       "method": "GET",
-      "path": "/api/v1/playlists/:id",
+      "path": "/api/v1/playlists/:playlistId",
       "response": "GetPlaylistById"
     },
     {
@@ -1648,7 +1604,7 @@
       "type": "api",
       "name": "GetPlaylistItems",
       "method": "GET",
-      "path": "/api/v1/playlists/:id/items",
+      "path": "/api/v1/playlists/:playlistId/items",
       "response": "GetPlaylistItems"
     },
     {
@@ -1724,14 +1680,14 @@
       "type": "api",
       "name": "RemovePlaylistItem",
       "method": "DELETE",
-      "path": "/api/v1/playlists/:id/items",
+      "path": "/api/v1/playlists/:playlistId/items",
       "body": "RemovePlaylistItemBody"
     },
     {
       "type": "api",
       "name": "ReorderPlaylistItems",
       "method": "POST",
-      "path": "/api/v1/playlists/:id/items/reorder",
+      "path": "/api/v1/playlists/:playlistId/items/reorder",
       "body": "ReorderPlaylistItemsBody"
     },
     {
@@ -1784,7 +1740,7 @@
       "type": "form",
       "name": "UploadPlaylistImage",
       "method": "POST",
-      "path": "/api/v1/playlists/:id/image"
+      "path": "/api/v1/playlists/:playlistId/image/upload"
     }
   ]
 }

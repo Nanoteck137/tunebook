@@ -26,7 +26,9 @@ type MediaResource struct {
 }
 
 type MediaItem struct {
-	Track   MediaResource   `json:"track"`
+	TrackId string `json:"trackId"`
+	Name    string `json:"name"`
+
 	Artists []MediaResource `json:"artists"`
 	Album   MediaResource   `json:"album"`
 
@@ -118,10 +120,8 @@ func packMediaResult(c pyrin.Context, tracks []database.Track, targetMediaFormat
 		mediaUrl := ConvertURL(c, fmt.Sprintf("/media/tracks/%s/stream?policy=original", track.Id))
 
 		res.Items[i] = MediaItem{
-			Track: MediaResource{
-				Id:   track.Id,
-				Name: track.Name,
-			},
+			TrackId: track.Id,
+			Name:    track.Name,
 			Artists: artists,
 			Album: MediaResource{
 				Id:   track.AlbumId,
@@ -293,138 +293,11 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "GetMediaFromPlaylist",
-			Method:       http.MethodPost,
-			Path:         "/media/playlist/:playlistId",
-			ResponseType: GetMedia{},
-			BodyType:     GetMediaFromPlaylistBody{},
-			Errors:       []pyrin.ErrorType{ErrTypePlaylistNotFound},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// FIXME(patrik): This needs fixing
-
-				// playlistId := c.Param("playlistId")
-				//
-				// ctx := context.TODO()
-				//
-				// body, err := pyrin.Body[GetMediaFromPlaylistBody](c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// user, err := User(app, c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
-				// if err != nil {
-				// 	if errors.Is(err, database.ErrItemNotFound) {
-				// 		return nil, PlaylistNotFound()
-				// 	}
-				//
-				// 	return nil, err
-				// }
-				//
-				// if playlist.OwnerId != user.Id {
-				// 	return nil, PlaylistNotFound()
-				// }
-				//
-				// filter := ""
-				//
-				// if body.FilterId != "" {
-				// 	f, err := app.DB().GetPlaylistFilterById(ctx, body.FilterId, playlist.Id)
-				// 	if err != nil {
-				// 		// TODO(patrik): Handle err
-				// 		return nil, err
-				// 	}
-				//
-				// 	filter = f.Filter
-				// }
-				//
-				// tracks, err := app.DB().GetPlaylistTracks(ctx, playlist.Id, filter)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// // subquery := database.PlaylistTrackSubquery(playlist.Id)
-				// // tracks, err := app.DB().GetTracksIn(ctx, subquery, "")
-				// // if err != nil {
-				// // 	return nil, err
-				// // }
-				//
-				// // TODO(patrik): Better handling of this?
-				// t := make([]database.Track, len(tracks))
-				// for i, track := range tracks {
-				// 	t[i] = track.Track
-				// }
-				//
-				// return packMediaResult(c, t, body.MediaFormat, body.Shuffle)
-
-				return nil, nil
-			},
-		},
-
-		// TODO(patrik): Remove and remove from frontend also
-		// pyrin.ApiHandler{
-		// 	Name:         "GetMediaFromVirtualPlaylist",
-		// 	Method:       http.MethodPost,
-		// 	Path:         "/media/virtual-playlist/:virtualPlaylistId",
-		// 	ResponseType: GetMedia{},
-		// 	BodyType:     GetMediaFromTaglistBody{},
-		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
-		// 		taglistId := c.Param("taglistId")
-		//
-		// 		ctx := context.TODO()
-		//
-		// 		body, err := pyrin.Body[GetMediaFromTaglistBody](c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		user, err := User(app, c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		_ = user
-		// 		_ = body
-		// 		_ = ctx
-		// 		_ = taglistId
-		//
-		// 		// TODO(patrik): IMPLEMENT ME
-		// 		// FIXME(patrik): FIXME
-		// 		panic("IMPLEMENT ME")
-		//
-		// 		// taglist, err := app.DB().GetTaglistById(ctx, taglistId)
-		// 		// if err != nil {
-		// 		// 	if errors.Is(err, database.ErrItemNotFound) {
-		// 		// 		return nil, TaglistNotFound()
-		// 		// 	}
-		// 		//
-		// 		// 	return nil, err
-		// 		// }
-		// 		//
-		// 		// if taglist.OwnerId != user.Id {
-		// 		// 	return nil, TaglistNotFound()
-		// 		// }
-		// 		//
-		// 		// tracks, err := app.DB().GetAllTracks(ctx, taglist.Filter, "")
-		// 		// if err != nil {
-		// 		// 	return nil, err
-		// 		// }
-		// 		//
-		// 		// return packMediaResult(c, tracks, body.MediaFormat, body.Shuffle)
-		// 		return nil, nil
-		// 	},
-		// },
-
-		pyrin.ApiHandler{
 			Name:         "GetMediaFromFilter",
 			Method:       http.MethodPost,
 			Path:         "/media/filter",
 			ResponseType: GetMedia{},
 			BodyType:     GetMediaFromFilterBody{},
-			Errors:       []pyrin.ErrorType{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				ctx := context.TODO()
 
@@ -448,7 +321,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/artist/:artistId",
 			ResponseType: GetMedia{},
 			BodyType:     GetMediaFromArtistBody{},
-			Errors:       []pyrin.ErrorType{ErrTypeArtistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				artistId := c.Param("artistId")
 
@@ -484,7 +356,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/album/:albumId",
 			ResponseType: GetMedia{},
 			BodyType:     GetMediaFromAlbumBody{},
-			Errors:       []pyrin.ErrorType{ErrTypeAlbumNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				albumId := c.Param("albumId")
 
@@ -525,7 +396,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/ids",
 			ResponseType: GetMedia{},
 			BodyType:     GetMediaFromIdsBody{},
-			Errors:       []pyrin.ErrorType{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				ctx := context.TODO()
 

@@ -10,7 +10,6 @@
     Menu,
     Search,
     Server,
-    Tags,
     User,
     Users,
   } from "lucide-svelte";
@@ -22,11 +21,7 @@
   import { Button, buttonVariants } from "@nanoteck137/nano-ui";
   import toast, { Toaster } from "svelte-5-french-toast";
   import { handleApiError, setApiClientRaw } from "$lib";
-  import {
-    DummyQueue,
-    LocalQueue,
-    setMusicManager,
-  } from "$lib/music-manager.svelte";
+  import { setMusicManager } from "$lib/music-manager.svelte";
   import { goto, invalidateAll } from "$app/navigation";
   import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
@@ -35,26 +30,13 @@
 
   let apiClient = setApiClientRaw(data.apiClient);
 
-  // $effect(() => {
-  //   if (!browser) return;
-  //   setApiClientAuth(apiClient, data.userToken);
-  // });
+  setMusicManager(apiClient);
 
-  let musicManager = setMusicManager(apiClient, new DummyQueue());
   let quickPlaylist = setQuickPlaylist(
     apiClient,
     data.user?.quickPlaylist ?? "",
     data.quickPlaylistIds,
   );
-
-  $effect(() => {
-    if (!browser) return;
-
-    if (!(musicManager.queue instanceof LocalQueue)) {
-      console.log("Local");
-      musicManager.setQueue(new LocalQueue(apiClient));
-    }
-  });
 
   $effect(() => {
     quickPlaylist.playlistId = data.user?.quickPlaylist ?? "";
