@@ -200,6 +200,9 @@ func handlePlaylistServiceErrors(err error) error {
 	case errors.Is(err, service.ErrPlaylistServiceAnchorTrackNotFound):
 		// TODO(patrik): Replace with its own error
 		return TrackNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceNotAuthorized):
+		// TODO(patrik): Replace with its own error
+		return PlaylistNotFound()
 	}
 
 	return err

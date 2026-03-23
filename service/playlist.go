@@ -22,6 +22,7 @@ var (
 	ErrPlaylistServiceTrackAlreadyAdded   = playlistErr.New("track already added")
 	ErrPlaylistServiceFilterNotFound      = playlistErr.New("filter not found")
 	ErrPlaylistServiceAnchorTrackNotFound = playlistErr.New("anchor track not found")
+	ErrPlaylistServiceNotAuthorized       = playlistErr.New("not authorized")
 )
 
 type PlaylistService struct {
@@ -54,6 +55,14 @@ func (s *PlaylistService) GetPlaylistsByUser(
 	return s.db.GetPlaylistsByUser(ctx, userId)
 }
 
+func (s *PlaylistService) checkOwnership(playlist database.Playlist, userId string) error {
+	if playlist.OwnerId != userId {
+		return ErrPlaylistServiceNotAuthorized
+	}
+
+	return nil
+}
+
 type GetPlaylistByIdParams struct {
 	PlaylistId string
 	UserId     string
@@ -70,10 +79,6 @@ func (s *PlaylistService) GetPlaylistById(
 		}
 
 		return database.Playlist{}, playlistErr.Wrap("get playlist by id", err)
-	}
-
-	if playlist.OwnerId != params.UserId {
-		return database.Playlist{}, ErrPlaylistServicePlaylistNotFound
 	}
 
 	return playlist, nil
@@ -117,6 +122,11 @@ func (s *PlaylistService) EditPlaylist(
 	})
 	if err != nil {
 		return playlistErr.Wrap("edit: get playlist", err)
+	}
+
+	err = s.checkOwnership(playlist, params.UserId)
+	if err != nil {
+		return err
 	}
 
 	changes := database.PlaylistChanges{}
@@ -181,6 +191,11 @@ func (s *PlaylistService) DeletePlaylist(
 		return err
 	}
 
+	err = s.checkOwnership(playlist, params.UserId)
+	if err != nil {
+		return err
+	}
+
 	err = s.db.DeletePlaylist(ctx, playlist.Id)
 	if err != nil {
 		return playlistErr.Wrap("delete: db delete", err)
@@ -214,6 +229,11 @@ func (s *PlaylistService) UploadPlaylistImage(
 		PlaylistId: params.PlaylistId,
 		UserId:     params.UserId,
 	})
+	if err != nil {
+		return err
+	}
+
+	err = s.checkOwnership(playlist, params.UserId)
 	if err != nil {
 		return err
 	}
@@ -263,6 +283,11 @@ func (s *PlaylistService) GeneratePlaylistImage(
 		PlaylistId: params.PlaylistId,
 		UserId:     params.UserId,
 	})
+	if err != nil {
+		return err
+	}
+
+	err = s.checkOwnership(playlist, params.UserId)
 	if err != nil {
 		return err
 	}
@@ -368,6 +393,11 @@ func (s *PlaylistService) AddItemToPlaylist(
 		return err
 	}
 
+	err = s.checkOwnership(playlist, params.UserId)
+	if err != nil {
+		return err
+	}
+
 	// TODO(patrik): Replace with a simpler track query, we only need to
 	// know if the track exists and not all the data it has
 	track, err := s.db.GetTrackById(ctx, params.TrackId)
@@ -419,6 +449,11 @@ func (s *PlaylistService) RemovePlaylistItem(
 		return err
 	}
 
+	err = s.checkOwnership(playlist, params.UserId)
+	if err != nil {
+		return err
+	}
+
 	err = s.db.DeletePlaylistItem(ctx, playlist.Id, params.TrackId)
 	if err != nil {
 		return playlistErr.Wrap("remove item: db delete item", err)
@@ -444,6 +479,11 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		PlaylistId: params.PlaylistId,
 		UserId:     params.UserId,
 	})
+	if err != nil {
+		return err
+	}
+
+	err = s.checkOwnership(playlist, params.UserId)
 	if err != nil {
 		return err
 	}
@@ -586,6 +626,11 @@ func (s *PlaylistService) CreatePlaylistFilter(
 		return "", err
 	}
 
+	err = s.checkOwnership(playlist, params.UserId)
+	if err != nil {
+		return "", err
+	}
+
 	err = s.testFilter(params.Filter)
 	if err != nil {
 		return "", playlistErr.Wrap("create filter: test filter", err)
@@ -623,6 +668,11 @@ func (s *PlaylistService) EditPlaylistFilter(
 		PlaylistId: params.PlaylistId,
 		UserId:     params.UserId,
 	})
+	if err != nil {
+		return err
+	}
+
+	err = s.checkOwnership(playlist, params.UserId)
 	if err != nil {
 		return err
 	}
