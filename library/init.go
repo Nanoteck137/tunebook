@@ -20,6 +20,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
+// TODO(patrik): Move?
 func downloadImage(url, dir, name string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -80,20 +81,20 @@ func parseArtist(s string) []string {
 	return artists
 }
 
-type TrackInfo struct {
+type trackInfo struct {
 	Name   string
 	Artist string
 	Number int
 	Year   int
 }
 
-func getTrackInfo(p string) (TrackInfo, error) {
+func getTrackInfo(p string) (trackInfo, error) {
 	probe, err := probe.ProbeMedia(context.Background(), p)
 	if err != nil {
-		return TrackInfo{}, err
+		return trackInfo{}, err
 	}
 
-	var res TrackInfo
+	var res trackInfo
 
 	res.Name, _ = probe.Tags.GetString("title")
 	res.Artist, _ = probe.Tags.GetString("artist")
@@ -119,7 +120,7 @@ func InitializeAlbum(dir string) error {
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("read dir: %w", err)
+		return fmt.Errorf("init album: read dir: %w", err)
 	}
 
 	var tracks []string
@@ -135,7 +136,7 @@ func InitializeAlbum(dir string) error {
 		// Skip files starting wtih .
 		if strings.HasPrefix(e.Name(), ".") {
 			continue
-		}
+		}Track Count: 7
 
 		p := filepath.Join(dir, name)
 
@@ -159,8 +160,7 @@ func InitializeAlbum(dir string) error {
 
 	probe, err := probe.ProbeMedia(context.Background(), p)
 	if err != nil {
-		slog.Error("failed to probe track", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("init album: probe track %s: %w", p, err)
 	}
 
 	isSingle := len(tracks) == 1
@@ -207,8 +207,7 @@ func InitializeAlbum(dir string) error {
 
 		trackInfo, err := getTrackInfo(p)
 		if err != nil {
-			slog.Error("failed to get track info", "err", err)
-			os.Exit(1)
+			return fmt.Errorf("init album: get track info %s: %w", p, err)
 		}
 
 		if trackInfo.Name == "" {
@@ -235,16 +234,14 @@ func InitializeAlbum(dir string) error {
 
 	data, err := toml.Marshal(&metadata)
 	if err != nil {
-		slog.Error("failed to marshal metadata", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("init album: marshal: %w", err)
 	}
 
 	// TODO(patrik): Move album.toml to constant
 	out := filepath.Join(dir, "album.toml")
 	err = os.WriteFile(out, data, 0644)
 	if err != nil {
-		slog.Error("failed to write output", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("init album: write file: %w", err)
 	}
 
 	return nil
@@ -263,7 +260,7 @@ func InitializeArtist(dir string, params InitializeArtistParams) error {
 	if params.ArtistName == "" {
 		absDir, err := filepath.Abs(dir)
 		if err != nil {
-			return fmt.Errorf("absolute path for artist name: %w", err)
+			return fmt.Errorf("init artist: absolute path: %w", err)
 		}
 
 		params.ArtistName = filepath.Base(absDir)
@@ -276,7 +273,7 @@ func InitializeArtist(dir string, params InitializeArtistParams) error {
 		// where we also validate the images using magick
 		p, err := downloadImage(params.CoverUrl, dir, "cover")
 		if err != nil {
-			return fmt.Errorf("failed to downlaod cover: %w", err)
+			return fmt.Errorf("init artist: download cover: %w", err)
 		}
 
 		cover = p
