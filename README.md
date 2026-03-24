@@ -15,6 +15,7 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] Backend: Cleanup: Cleanup user picture code
 - [ ] Backend: API: Fix: Media api
 
 - [ ] Backend: Fix: Playlist Service: When deleting tracks we need to reorder the tracks again
@@ -27,9 +28,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
 - [ ] CLI: Cleanup: Code Cleanup
 - [ ] CLI: Cleanup: Cleanup init commands
-
-- [ ] CLI: Fix: Fix the dwebble migrate commands
-- [ ] CLI: Fix: Add some reminders to migrate commands
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
@@ -63,7 +61,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Cleanup: Figure out how to handle service errors
 - [ ] Backend: Cleanup: Figure out how to handle service logging
 - [ ] Backend: Cleanup: API: Better way to log the API Errors
-- [ ] Backend: Cleanup: Cleanup user picture code
+
 - [ ] Backend: Cleanup: Database: Database code
 - [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
 - [ ] Backend: Cleanup: Media Service: Code Cleanup
@@ -73,7 +71,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Cleanup: CLI: Code Cleanup
 
 - [ ] Backend: Search Service: RWLock lock
-- [ ] Backend: Search Service: Add Playlists
 - [ ] Backend: Search Service: Add Users
 - [ ] Backend: Search Service: Add more logging
 
@@ -104,3 +101,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] General: Use new logo from dwebble_app
 
 - [ ] Backend: API: Add Compression for Static file routes (SPA Routes)
+
+## Future
+
+- [ ] Backend: Add back migrate command, maybe only for dev
