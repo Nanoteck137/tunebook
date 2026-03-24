@@ -304,3 +304,21 @@ func InitializeArtist(dir string, params InitializeArtistParams) error {
 
 	return nil
 }
+
+func InitializeLibrary(dir string) error {
+	metadata := LibraryMetadata{}
+
+	d, err := toml.Marshal(metadata)
+	if err != nil {
+		return fmt.Errorf("init library: marshal: %w", err)
+	}
+
+	// TODO(patrik): Move to constant
+	p := path.Join(dir, "library.toml")
+	err = os.WriteFile(p, d, 0644)
+	if err != nil {
+		return fmt.Errorf("init library: write file: %w", err)
+	}
+
+	return nil
+}

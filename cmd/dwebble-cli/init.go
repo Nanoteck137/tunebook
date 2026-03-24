@@ -12,6 +12,19 @@ var initCmd = &cobra.Command{
 	Use: "init",
 }
 
+var initLibraryCmd = &cobra.Command{
+	Use: "library",
+	Run: func(cmd *cobra.Command, args []string) {
+		dir, _ := cmd.Flags().GetString("dir")
+
+		err := library.InitializeLibrary(dir)
+		if err != nil {
+			slog.Error("failed to initialize library", "err", err)
+			os.Exit(1)
+		}
+	},
+}
+
 var initAlbumCmd = &cobra.Command{
 	Use: "album",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -43,13 +56,15 @@ var initArtistCmd = &cobra.Command{
 }
 
 func init() {
+	initLibraryCmd.Flags().String("dir", ".", "directory to use")
+
 	initAlbumCmd.Flags().String("dir", ".", "directory to use")
 
 	initArtistCmd.Flags().String("dir", ".", "directory to use")
 	initArtistCmd.Flags().String("artist-name", "", "set the artist name (when empty it uses the directory name)")
 	initArtistCmd.Flags().String("cover-url", "", "url to image for downloading")
 
-	initCmd.AddCommand(initAlbumCmd, initArtistCmd)
+	initCmd.AddCommand(initLibraryCmd, initAlbumCmd, initArtistCmd)
 
 	rootCmd.AddCommand(initCmd)
 }
