@@ -22,8 +22,8 @@ type Playlist struct {
 
 	CoverArt types.Images `json:"coverArt"`
 
-	OwnerId          string         `json:"ownerId"`
-	OwnerDisplayName string         `json:"ownerDisplayName"`
+	OwnerId          string       `json:"ownerId"`
+	OwnerDisplayName string       `json:"ownerDisplayName"`
 	OwnerPicture     types.Images `json:"ownerPicture"`
 
 	TrackCount int64 `json:"trackCount"`
