@@ -1,78 +1,12 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"io"
 	"log/slog"
-	"mime"
-	"net/http"
 	"os"
-	"path"
-	"path/filepath"
-	"regexp"
-	"strconv"
-	"strings"
 
-	"github.com/nanoteck137/dwebble/tools/probe"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
-	"github.com/pelletier/go-toml/v2"
+	"github.com/nanoteck137/dwebble/library"
 	"github.com/spf13/cobra"
 )
-
-var dateRegex = regexp.MustCompile(`^([12]\d\d\d)`)
-
-func parseArtist(s string) []string {
-	if s == "" {
-		return []string{}
-	}
-
-	splits := strings.Split(s, ",")
-
-	artists := make([]string, 0, len(splits))
-	for _, s := range splits {
-		a := strings.TrimSpace(s)
-
-		if a != "" {
-			artists = append(artists, a)
-		}
-	}
-
-	return artists
-}
-
-type TrackInfo struct {
-	Name   string
-	Artist string
-	Number int
-	Year   int
-}
-
-func getTrackInfo(p string) (TrackInfo, error) {
-	probe, err := probe.ProbeMedia(context.Background(), p)
-	if err != nil {
-		return TrackInfo{}, err
-	}
-
-	var res TrackInfo
-
-	res.Name, _ = probe.Tags.GetString("title")
-	res.Artist, _ = probe.Tags.GetString("artist")
-
-	if tag, err := probe.Tags.GetString("date"); err == nil {
-		match := dateRegex.FindStringSubmatch(tag)
-		if len(match) > 0 {
-			res.Year, _ = strconv.Atoi(match[1])
-		}
-	}
-
-	if tag, err := probe.Tags.GetInt("track"); err == nil {
-		res.Number = int(tag)
-	}
-
-	return res, nil
-}
 
 var initCmd = &cobra.Command{
 	Use: "init",
@@ -82,179 +16,12 @@ var initAlbumCmd = &cobra.Command{
 	Use: "album",
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := cmd.Flags().GetString("dir")
-		output, _ := cmd.Flags().GetString("output")
-
-		metadata := types.AlbumMetadata{}
-
-		extract := true
-
-		entries, err := os.ReadDir(dir)
+		err := library.InitializeAlbum(dir)
 		if err != nil {
-			slog.Error("failed to read dir", "err", err)
-			os.Exit(1)
-		}
-
-		var tracks []string
-		var images []string
-
-		for _, e := range entries {
-			if e.IsDir() {
-				continue
-			}
-
-			name := e.Name()
-
-			// Skip files starting wtih .
-			if strings.HasPrefix(e.Name(), ".") {
-				continue
-			}
-
-			p := path.Join(dir, name)
-
-			ext := path.Ext(p)
-
-			if utils.IsValidTrackExt(ext) {
-				tracks = append(tracks, p)
-			}
-
-			if utils.IsValidImageExt(ext) {
-				images = append(images, p)
-			}
-		}
-
-		if len(tracks) <= 0 {
-			slog.Warn("No tracks found... Quitting")
-			return
-		}
-
-		p := tracks[0]
-
-		probe, err := probe.ProbeMedia(context.Background(), p)
-		if err != nil {
-			slog.Error("failed to probe track", "err", err)
-			os.Exit(1)
-		}
-
-		isSingle := len(tracks) == 1
-
-		metadata.Album.Id = utils.CreateAlbumId()
-
-		if len(images) > 0 {
-			// TODO(patrik): Better selection?
-			metadata.General.Cover = images[0]
-		}
-
-		if !isSingle {
-			metadata.Album.Name, _ = probe.Tags.GetString("album")
-		} else {
-			// NOTE(patrik): If we only have one track then we make the
-			// album name the same as the track name
-			metadata.Album.Name, _ = probe.Tags.GetString("title")
-		}
-
-		if !isSingle {
-			if tag, err := probe.Tags.GetString("album_artist"); err == nil {
-				metadata.Album.Artists = parseArtist(tag)
-			} else {
-				if tag, err := probe.Tags.GetString("artist"); err == nil {
-					metadata.Album.Artists = parseArtist(tag)
-				}
-			}
-		} else {
-			if tag, err := probe.Tags.GetString("artist"); err == nil {
-				metadata.Album.Artists = parseArtist(tag)
-			}
-		}
-
-		if tag, err := probe.Tags.GetString("date"); err == nil {
-			match := dateRegex.FindStringSubmatch(tag)
-			if len(match) > 0 {
-				metadata.General.Year, _ = strconv.ParseInt(match[1], 10, 64)
-			}
-		}
-
-		for _, p := range tracks {
-			filename := path.Base(p)
-			fmt.Printf("Found track: %s\n", filename)
-
-			trackInfo, err := getTrackInfo(p)
-			if err != nil {
-				slog.Error("failed to get track info", "err", err)
-				os.Exit(1)
-			}
-
-			if trackInfo.Name == "" {
-				trackInfo.Name = strings.TrimSuffix(filename, path.Ext(p))
-			}
-
-			if trackInfo.Number == 0 || extract {
-				trackInfo.Number = utils.ExtractNumber(filename)
-			}
-
-			// TODO(patrik): If artist is empty then use album maybe
-			artists := parseArtist(trackInfo.Artist)
-
-			metadata.Tracks = append(metadata.Tracks, types.AlbumMetadataTrack{
-				Id:      utils.CreateTrackId(),
-				File:    filename,
-				Name:    trackInfo.Name,
-				Number:  int64(trackInfo.Number),
-				Year:    0,
-				Tags:    []string{},
-				Artists: artists,
-			})
-		}
-
-		data, err := toml.Marshal(&metadata)
-		if err != nil {
-			slog.Error("failed to marshal metadata", "err", err)
-			os.Exit(1)
-		}
-
-		err = os.WriteFile(output, data, 0644)
-		if err != nil {
-			slog.Error("failed to write output", "err", err)
+			slog.Error("failed to initialize album", "err", err)
 			os.Exit(1)
 		}
 	},
-}
-
-func downloadImage(url, dir, name string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", fmt.Errorf("failed to send http request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	contentType := resp.Header.Get("Content-Type")
-	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse media type: %w", err)
-	}
-
-	ext := ""
-	switch mediaType {
-	case "image/png":
-		ext = ".png"
-	case "image/jpeg":
-		ext = ".jpeg"
-	default:
-		return "", fmt.Errorf("unsupported media type: %s", mediaType)
-	}
-
-	p := path.Join(dir, name+ext)
-	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return "", fmt.Errorf("failed to open output file: %w", err)
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to copy http body to file: %w", err)
-	}
-
-	return p, nil
 }
 
 var initArtistCmd = &cobra.Command{
@@ -264,59 +31,19 @@ var initArtistCmd = &cobra.Command{
 		artistName, _ := cmd.Flags().GetString("artist-name")
 		coverUrl, _ := cmd.Flags().GetString("cover-url")
 
-		// TODO(patrik): Add check for artist.toml already exists
-
-		if artistName == "" {
-			absDir, err := filepath.Abs(dir)
-			if err != nil {
-				slog.Error("failed to get the absolute path of directory", "err", err, "path", dir)
-				os.Exit(1)
-			}
-
-			artistName = filepath.Base(absDir)
-		}
-
-		artistName = strings.TrimSpace(artistName)
-
-		cover := ""
-
-		if coverUrl != "" {
-			// TODO(patrik): I want a better setup to download images,
-			// where we also validate the images using magick
-			if p, err := downloadImage(coverUrl, dir, "cover"); err == nil {
-				cover = p
-			} else {
-				slog.Error("failed to download cover image", "err", err)
-			}
-		}
-
-		metadata := types.ArtistMetadata{
-			Id:         utils.CreateArtistId(),
-			SearchName: utils.Slug(artistName),
-			Name:       artistName,
-			Cover:      cover,
-			Tags:       []string{},
-		}
-
-		d, err := toml.Marshal(metadata)
+		err := library.InitializeArtist(dir, library.InitializeArtistParams{
+			ArtistName: artistName,
+			CoverUrl:   coverUrl,
+		})
 		if err != nil {
-			slog.Error("failed to marshal artist metadata", "err", err)
-			return
-		}
-
-		// TODO(patrik): Move to constant
-		p := path.Join(dir, "artist.toml")
-		err = os.WriteFile(p, d, 0644)
-		if err != nil {
-			slog.Error("failed to write artist metadata", "err", err, "path", p)
-			return
+			slog.Error("failed to initialize artist", "err", err)
+			os.Exit(1)
 		}
 	},
 }
 
 func init() {
 	initAlbumCmd.Flags().String("dir", ".", "directory to use")
-	initAlbumCmd.Flags().StringP("output", "o", "album.toml", "write result to file")
 
 	initArtistCmd.Flags().String("dir", ".", "directory to use")
 	initArtistCmd.Flags().String("artist-name", "", "set the artist name (when empty it uses the directory name)")
