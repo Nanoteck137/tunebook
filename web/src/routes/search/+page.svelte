@@ -2,6 +2,7 @@
   import { goto, invalidateAll, onNavigate } from "$app/navigation";
   import AlbumListItem from "$lib/components/AlbumListItem.svelte";
   import ArtistListItem from "$lib/components/ArtistListItem.svelte";
+  import Image from "$lib/components/Image.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { Button, Input, Label } from "@nanoteck137/nano-ui";
   import { onMount } from "svelte";
@@ -23,6 +24,7 @@
     initialValue = data.query;
   });
 
+  // eslint-disable-next-line no-undef
   let timer: NodeJS.Timeout;
   function onInput(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -123,4 +125,64 @@
     onPlay={() => {}}
   />
   <!-- onTrackPlay={() => {}} -->
+{/if}
+
+{#if data.playlists.length > 0}
+  <div class="flex items-center justify-between">
+    <p class="text-bold">Playlists</p>
+    <p class="text-xs">{data.playlists.length} playlist(s)</p>
+  </div>
+
+  {#each data.playlists as playlist}
+    <div class="flex items-center gap-2 border-b py-2 pr-2">
+      <div class="group relative">
+        <Image
+          class="w-14 min-w-14"
+          src={playlist.coverArt.small}
+          alt="cover"
+        />
+      </div>
+      <div class="flex flex-grow flex-col">
+        <div class="flex items-center gap-1">
+          <a
+            class="line-clamp-1 w-fit text-sm font-medium hover:underline"
+            title={playlist.name}
+            href="/playlists/{playlist.id}"
+          >
+            {playlist.name}
+          </a>
+
+          <!-- <p>•</p> -->
+
+          <!-- <ArtistList artists={album.artists} /> -->
+          <!-- <a
+            class="line-clamp-1 text-xs font-light hover:underline"
+            title={playlist.ownerDisplayName}
+            href={`/artists/${playlist.ownerId}`}
+          >
+            {playlist.ownerDisplayName}
+          </a> -->
+        </div>
+
+        <div class="flex items-center gap-2">
+          <Image
+            class="w-6 min-w-6"
+            src={playlist.ownerPicture.small}
+            alt="cover"
+          />
+
+          <a
+            class="line-clamp-1 text-xs hover:underline"
+            title={playlist.ownerDisplayName}
+            href={`/artists/${playlist.ownerId}`}
+          >
+            {playlist.ownerDisplayName}
+          </a>
+        </div>
+      </div>
+      <div class="flex items-center">
+        <!-- {@render children?.()} -->
+      </div>
+    </div>
+  {/each}
 {/if}

@@ -20,6 +20,10 @@ type SearchTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
+type SearchPlaylists struct {
+	Playlists []Playlist `json:"playlists"`
+}
+
 func InstallSearchHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -115,6 +119,39 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 
 				for i, track := range tracks {
 					res.Tracks[i] = ConvertDBTrack(c, track)
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "SearchPlaylists",
+			Method:       http.MethodGet,
+			Path:         "/search/playlists",
+			ResponseType: SearchPlaylists{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+
+				ctx := c.Request().Context()
+
+				playlists, err := app.SearchService().SearchPlaylists(
+					ctx,
+					service.SearchParams{
+						Query: q.Get("query"),
+						Limit: 5,
+					},
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				res := SearchPlaylists{
+					Playlists: make([]Playlist, len(playlists)),
+				}
+
+				for i, playlist := range playlists {
+					res.Playlists[i] = ConvertDBPlaylist(c, playlist)
 				}
 
 				return res, nil

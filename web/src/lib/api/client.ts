@@ -224,6 +224,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/search/artists", "GET", api.SearchArtists, z.any(), undefined, options)
   }
   
+  searchPlaylists(options?: ExtraOptions) {
+    return this.request("/api/v1/search/playlists", "GET", api.SearchPlaylists, z.any(), undefined, options)
+  }
+  
   searchTracks(options?: ExtraOptions) {
     return this.request("/api/v1/search/tracks", "GET", api.SearchTracks, z.any(), undefined, options)
   }
@@ -472,6 +476,10 @@ export class ClientUrls {
   
   searchArtists() {
     return createUrl(this.baseUrl, "/api/v1/search/artists")
+  }
+  
+  searchPlaylists() {
+    return createUrl(this.baseUrl, "/api/v1/search/playlists")
   }
   
   searchTracks() {

@@ -710,6 +710,21 @@
           "omitEmpty": false
         },
         {
+          "name": "ownerId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "ownerDisplayName",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "ownerPicture",
+          "type": "Images",
+          "omitEmpty": false
+        },
+        {
           "name": "trackCount",
           "type": "int",
           "omitEmpty": false
@@ -1000,6 +1015,21 @@
           "omitEmpty": false
         },
         {
+          "name": "ownerId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "ownerDisplayName",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "ownerPicture",
+          "type": "Images",
+          "omitEmpty": false
+        },
+        {
           "name": "trackCount",
           "type": "int",
           "omitEmpty": false
@@ -1092,6 +1122,16 @@
         {
           "name": "artists",
           "type": "[]Artist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "SearchPlaylists",
+      "fields": [
+        {
+          "name": "playlists",
+          "type": "[]Playlist",
           "omitEmpty": false
         }
       ]
@@ -1624,6 +1664,13 @@
       "method": "GET",
       "path": "/api/v1/search/artists",
       "response": "SearchArtists"
+    },
+    {
+      "type": "api",
+      "name": "SearchPlaylists",
+      "method": "GET",
+      "path": "/api/v1/search/playlists",
+      "response": "SearchPlaylists"
     },
     {
       "type": "api",

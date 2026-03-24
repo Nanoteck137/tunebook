@@ -23,6 +23,9 @@ type Playlist struct {
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
+	OwnerDisplayName string         `db:"owner_display_name"`
+	OwnerPicture     sql.NullString `db:"owner_picture"`
+
 	TrackCount sql.NullInt64 `db:"track_count"`
 }
 
@@ -45,7 +48,14 @@ func PlaylistQuery() *goqu.SelectDataset {
 			"playlists.created",
 			"playlists.updated",
 
+			goqu.I("owner.display_name").As("owner_display_name"),
+			goqu.I("owner.picture").As("owner_picture"),
+
 			goqu.I("track_count.data").As("track_count"),
+		).
+		Join(
+			UserQuery().As("owner"),
+			goqu.On(goqu.I("playlists.owner_id").Eq(goqu.I("owner.id"))),
 		).
 		LeftJoin(
 			trackCountQuery.As("track_count"),
@@ -53,6 +63,57 @@ func PlaylistQuery() *goqu.SelectDataset {
 		)
 
 	return query
+}
+
+type GetPlaylistsParams struct {
+	Page types.PageParams
+	// Filter types.FilterParams
+}
+
+func (db DB) GetPlaylists(
+	ctx context.Context,
+	params GetPlaylistsParams,
+) ([]Playlist, types.Page, error) {
+	query := PlaylistQuery()
+
+	var err error
+
+	// a := adapter.TrackResolverAdapter{}
+	// query, err = applyFilterParams(params.Filter, &a, query)
+	// if err != nil {
+	// 	return nil, types.Page{}, err
+	// }
+
+	page, err := buildPage(ctx, db.db, params.Page, query, "playlists.id")
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := ember.Multiple[Playlist](db.db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+func (db DB) GetPlaylistsIn(ctx context.Context, in any, sort string) ([]Playlist, error) {
+	query := PlaylistQuery().
+		Where(
+			goqu.I("playlists.id").In(in),
+		)
+
+	// a := adapter.PlaylistResolverAdapter{}
+	// resolver := filter.New(&a)
+	//
+	// query, err := applySort(query, resolver, sort)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	return ember.Multiple[Playlist](db.db, ctx, query)
 }
 
 func (db DB) GetAllPlaylists(ctx context.Context) ([]Playlist, error) {

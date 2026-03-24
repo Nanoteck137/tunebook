@@ -22,15 +22,22 @@ type Playlist struct {
 
 	CoverArt types.Images `json:"coverArt"`
 
+	OwnerId          string         `json:"ownerId"`
+	OwnerDisplayName string         `json:"ownerDisplayName"`
+	OwnerPicture     types.Images `json:"ownerPicture"`
+
 	TrackCount int64 `json:"trackCount"`
 }
 
 func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
 	return Playlist{
-		Id:         playlist.Id,
-		Name:       playlist.Name,
-		CoverArt:   ConvertPlaylistCoverURL(c, playlist.Id, playlist.CoverArt),
-		TrackCount: playlist.TrackCount.Int64,
+		Id:               playlist.Id,
+		Name:             playlist.Name,
+		CoverArt:         ConvertPlaylistCoverURL(c, playlist.Id, playlist.CoverArt),
+		OwnerId:          playlist.OwnerId,
+		OwnerDisplayName: playlist.OwnerDisplayName,
+		OwnerPicture:     ConvertUserPictureURL(c, playlist.OwnerId, playlist.OwnerPicture),
+		TrackCount:       playlist.TrackCount.Int64,
 	}
 }
 
@@ -224,7 +231,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				playlists, err := app.PlaylistService().GetPlaylistsByUser(
-					ctx, 
+					ctx,
 					user.Id,
 				)
 				if err != nil {

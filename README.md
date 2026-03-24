@@ -57,7 +57,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Feature: Favorites
 - [ ] Backend: Feature: Year over year
 
-- [ ] Backend: Feature: Search indexing job
 - [ ] Backend: Feature: Library cleanup job
 
 - [ ] Backend: Cleanup: Figure out how to handle logging through out the project
@@ -67,20 +66,16 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Cleanup: Cleanup user picture code
 - [ ] Backend: Cleanup: Database: Database code
 - [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
-- [ ] Backend: Cleanup: Search Service: Code Cleanup
 - [ ] Backend: Cleanup: Media Service: Code Cleanup
 - [ ] Backend: Cleanup: Job Service: Code Cleanup
 - [ ] Backend: Cleanup: Library Service: Code Cleanup
 - [ ] Backend: Cleanup: Auth Service: Code Cleanup
 - [ ] Backend: Cleanup: CLI: Code Cleanup
 
-- [ ] Backend: Search Service: init lazily, same as the auth service
 - [ ] Backend: Search Service: RWLock lock
 - [ ] Backend: Search Service: Add Playlists
 - [ ] Backend: Search Service: Add Users
-- [ ] Backend: Search Service: Batch indexing
 - [ ] Backend: Search Service: Add more logging
-- [ ] Backend: Fix: API: Move every search handler to a /search endpoint
 
 - [ ] Backend: Media Service: API Route for getTrackStream need to handle errors
 - [ ] Backend: Media Service: Locking

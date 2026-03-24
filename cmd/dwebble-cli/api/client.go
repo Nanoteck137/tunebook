@@ -839,6 +839,22 @@ func (c *Client) SearchArtists(options Options) (*SearchArtists, error) {
 	return Request[SearchArtists](data, nil)
 }
 
+func (c *Client) SearchPlaylists(options Options) (*SearchPlaylists, error) {
+	path := "/api/v1/search/playlists"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[SearchPlaylists](data, nil)
+}
+
 func (c *Client) SearchTracks(options Options) (*SearchTracks, error) {
 	path := "/api/v1/search/tracks"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1171,6 +1187,11 @@ func (c *ClientUrls) SearchAlbums() (*URL, error) {
 
 func (c *ClientUrls) SearchArtists() (*URL, error) {
 	path := "/api/v1/search/artists"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SearchPlaylists() (*URL, error) {
+	path := "/api/v1/search/playlists"
 	return c.getUrl(path)
 }
 

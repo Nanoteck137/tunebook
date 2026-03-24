@@ -534,6 +534,12 @@ export const GetPlaylistById = z.object({
   "name": z.string(),
   // Name: GetPlaylistById.coverArt
   "coverArt": Images,
+  // Name: GetPlaylistById.ownerId
+  "ownerId": z.string(),
+  // Name: GetPlaylistById.ownerDisplayName
+  "ownerDisplayName": z.string(),
+  // Name: GetPlaylistById.ownerPicture
+  "ownerPicture": Images,
   // Name: GetPlaylistById.trackCount
   "trackCount": z.number(),
 });
@@ -576,6 +582,12 @@ export const Playlist = z.object({
   "name": z.string(),
   // Name: Playlist.coverArt
   "coverArt": Images,
+  // Name: Playlist.ownerId
+  "ownerId": z.string(),
+  // Name: Playlist.ownerDisplayName
+  "ownerDisplayName": z.string(),
+  // Name: Playlist.ownerPicture
+  "ownerPicture": Images,
   // Name: Playlist.trackCount
   "trackCount": z.number(),
 });
@@ -689,6 +701,13 @@ export const SearchArtists = z.object({
   "artists": z.array(Artist),
 });
 export type SearchArtists = z.infer<typeof SearchArtists>;
+
+// Name: SearchPlaylists
+export const SearchPlaylists = z.object({
+  // Name: SearchPlaylists.playlists
+  "playlists": z.array(Playlist),
+});
+export type SearchPlaylists = z.infer<typeof SearchPlaylists>;
 
 // Name: SearchTracks
 export const SearchTracks = z.object({

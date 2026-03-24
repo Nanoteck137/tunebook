@@ -481,6 +481,12 @@ type GetPlaylistById struct {
 	Name string `json:"name"`
 	// Name: GetPlaylistById.coverArt
 	CoverArt Images `json:"coverArt"`
+	// Name: GetPlaylistById.ownerId
+	OwnerId string `json:"ownerId"`
+	// Name: GetPlaylistById.ownerDisplayName
+	OwnerDisplayName string `json:"ownerDisplayName"`
+	// Name: GetPlaylistById.ownerPicture
+	OwnerPicture Images `json:"ownerPicture"`
 	// Name: GetPlaylistById.trackCount
 	TrackCount int `json:"trackCount"`
 }
@@ -519,6 +525,12 @@ type Playlist struct {
 	Name string `json:"name"`
 	// Name: Playlist.coverArt
 	CoverArt Images `json:"coverArt"`
+	// Name: Playlist.ownerId
+	OwnerId string `json:"ownerId"`
+	// Name: Playlist.ownerDisplayName
+	OwnerDisplayName string `json:"ownerDisplayName"`
+	// Name: Playlist.ownerPicture
+	OwnerPicture Images `json:"ownerPicture"`
 	// Name: Playlist.trackCount
 	TrackCount int `json:"trackCount"`
 }
@@ -617,6 +629,12 @@ type SearchAlbums struct {
 type SearchArtists struct {
 	// Name: SearchArtists.artists
 	Artists []Artist `json:"artists"`
+}
+
+// Name: SearchPlaylists
+type SearchPlaylists struct {
+	// Name: SearchPlaylists.playlists
+	Playlists []Playlist `json:"playlists"`
 }
 
 // Name: SearchTracks

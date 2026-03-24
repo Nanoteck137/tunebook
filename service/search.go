@@ -13,7 +13,15 @@ import (
 	"github.com/nanoteck137/dwebble/types"
 )
 
-const batchSize = 200
+const (
+	artistIndex   = "artists"
+	albumIndex    = "album"
+	trackIndex    = "tracks"
+	playlistIndex = "playlists"
+	userIndex     = "users"
+
+	batchSize = 200
+)
 
 var searchErr = NewServiceErrCreator("search")
 
@@ -65,16 +73,24 @@ type SearchTrack struct {
 
 func (s SearchTrack) GetID() string { return s.Id }
 
+type SearchPlaylist struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	OwnerId   string `json:"ownerId"`
+	OwnerName string `json:"ownerName"`
+}
+
+func (s SearchPlaylist) GetID() string { return s.Id }
+
 type SearchService struct {
 	logger *slog.Logger
 
 	db      *database.Database
 	dataDir types.DataDir
 
-	client      meilisearch.ServiceManager
-	artistIndex meilisearch.IndexManager
-	albumIndex  meilisearch.IndexManager
-	trackIndex  meilisearch.IndexManager
+	client meilisearch.ServiceManager
 }
 
 func NewSearchService(
@@ -89,13 +105,10 @@ func NewSearchService(
 	)
 
 	return &SearchService{
-		logger:      logger,
-		db:          db,
-		dataDir:     dataDir,
-		client:      client,
-		artistIndex: client.Index("artists"),
-		albumIndex:  client.Index("albums"),
-		trackIndex:  client.Index("tracks"),
+		logger:  logger,
+		db:      db,
+		dataDir: dataDir,
+		client:  client,
 	}
 }
 
@@ -174,9 +187,11 @@ func (s *SearchService) indexArtists(ctx context.Context) error {
 		return searchErr.Wrap("index artists: recreate index", err)
 	}
 
+	index := s.client.Index(artistIndex)
+
 	err = indexInBatches[SearchArtist, database.Artist](
 		ctx,
-		s.artistIndex,
+		index,
 		func(ctx context.Context, page types.PageParams) ([]database.Artist, types.Page, error) {
 			return s.db.GetArtists(ctx, database.GetArtistsParams{
 				Page: page,
@@ -211,9 +226,11 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		return searchErr.Wrap("index albums: recreate index", err)
 	}
 
+	index := s.client.Index(albumIndex)
+
 	err = indexInBatches[SearchAlbum, database.Album](
 		ctx,
-		s.albumIndex,
+		index,
 		func(ctx context.Context, page types.PageParams) ([]database.Album, types.Page, error) {
 			return s.db.GetAlbums(ctx, database.GetAlbumsParams{
 				Page: page,
@@ -255,9 +272,11 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 		return searchErr.Wrap("index tracks: recreate index", err)
 	}
 
+	index := s.client.Index(trackIndex)
+
 	err = indexInBatches[SearchTrack, database.Track](
 		ctx,
-		s.trackIndex,
+		index,
 		func(ctx context.Context, page types.PageParams) ([]database.Track, types.Page, error) {
 			return s.db.GetTracks(ctx, database.GetTracksParams{
 				Page: page,
@@ -288,6 +307,45 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 	return nil
 }
 
+func (s *SearchService) indexPlaylists(ctx context.Context) error {
+	err := s.recreateIndex(ctx, recreateIndexParams{
+		index: playlistIndex,
+		settings: &meilisearch.Settings{
+			SearchableAttributes: []string{"name", "ownerName"},
+			FilterableAttributes: []string{"id", "name", "ownerId", "ownerDisplayName"},
+		},
+		delete: true,
+	})
+	if err != nil {
+		return searchErr.Wrap("index playlists: recreate index", err)
+	}
+
+	index := s.client.Index(playlistIndex)
+
+	err = indexInBatches[SearchPlaylist, database.Playlist](
+		ctx,
+		index,
+		func(ctx context.Context, page types.PageParams) ([]database.Playlist, types.Page, error) {
+			return s.db.GetPlaylists(ctx, database.GetPlaylistsParams{
+				Page: page,
+			})
+		},
+		func(item database.Playlist) SearchPlaylist {
+			return SearchPlaylist{
+				Id:        item.Id,
+				Name:      item.Name,
+				OwnerId:   item.OwnerId,
+				OwnerName: item.OwnerDisplayName,
+			}
+		},
+	)
+	if err != nil {
+		return searchErr.Wrap("index playlists: index batches", err)
+	}
+
+	return nil
+}
+
 func (s *SearchService) Index() error {
 	var err error
 
@@ -308,6 +366,11 @@ func (s *SearchService) Index() error {
 		return err
 	}
 
+	err = s.indexPlaylists(ctx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -320,9 +383,11 @@ func (s *SearchService) SearchArtists(
 	ctx context.Context,
 	params SearchParams,
 ) ([]database.Artist, error) {
+	index := s.client.Index(artistIndex)
+
 	artists, err := search[SearchArtist, database.Artist](
 		ctx,
-		s.artistIndex,
+		index,
 		params,
 		func(ctx context.Context, ids []string) ([]database.Artist, error) {
 			return s.db.GetArtistsIn(ctx, ids, "")
@@ -342,9 +407,11 @@ func (s *SearchService) SearchAlbums(
 	ctx context.Context,
 	params SearchParams,
 ) ([]database.Album, error) {
+	index := s.client.Index(albumIndex)
+
 	albums, err := search[SearchAlbum, database.Album](
 		ctx,
-		s.albumIndex,
+		index,
 		params,
 		func(ctx context.Context, ids []string) ([]database.Album, error) {
 			return s.db.GetAlbumsIn(ctx, ids, "")
@@ -364,9 +431,11 @@ func (s *SearchService) SearchTracks(
 	ctx context.Context,
 	params SearchParams,
 ) ([]database.Track, error) {
+	index := s.client.Index(trackIndex)
+
 	tracks, err := search[SearchTrack, database.Track](
 		ctx,
-		s.trackIndex,
+		index,
 		params,
 		func(ctx context.Context, ids []string) ([]database.Track, error) {
 			return s.db.GetTracksIn(ctx, ids, "")
@@ -384,6 +453,30 @@ func (s *SearchService) SearchTracks(
 	}
 
 	return tracks, nil
+}
+
+func (s *SearchService) SearchPlaylists(
+	ctx context.Context,
+	params SearchParams,
+) ([]database.Playlist, error) {
+	index := s.client.Index(playlistIndex)
+
+	playlists, err := search[SearchPlaylist, database.Playlist](
+		ctx,
+		index,
+		params,
+		func(ctx context.Context, ids []string) ([]database.Playlist, error) {
+			return s.db.GetPlaylistsIn(ctx, ids, "")
+		},
+		func(playlist database.Playlist) string {
+			return playlist.Id
+		},
+	)
+	if err != nil {
+		return nil, searchErr.Wrap("search playlists", err)
+	}
+
+	return playlists, nil
 }
 
 func search[TDoc hasID, TResult any](

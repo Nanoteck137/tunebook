@@ -1,4 +1,4 @@
-import type { Album, Artist, Track } from "$lib/api/types";
+import type { Album, Artist, Playlist, Track } from "$lib/api/types";
 import type { PageLoad } from "./$types";
 
 type Err = {
@@ -21,11 +21,16 @@ export const load: PageLoad = async ({ parent, url }) => {
   let tracks = [] as Track[];
   let trackError: Err | null = null;
 
-  const [artistQuery, albumQuery, trackQuery] = await Promise.all([
-    data.apiClient.searchArtists({ query: { query } }),
-    data.apiClient.searchAlbums({ query: { query } }),
-    data.apiClient.searchTracks({ query: { query } }),
-  ]);
+  let playlists = [] as Playlist[];
+  let playlistError: Err | null = null;
+
+  const [artistQuery, albumQuery, trackQuery, playlistQuery] =
+    await Promise.all([
+      data.apiClient.searchArtists({ query: { query } }),
+      data.apiClient.searchAlbums({ query: { query } }),
+      data.apiClient.searchTracks({ query: { query } }),
+      data.apiClient.searchPlaylists({ query: { query } }),
+    ]);
 
   if (!artistQuery.success) {
     artistError = artistQuery.error;
@@ -45,6 +50,12 @@ export const load: PageLoad = async ({ parent, url }) => {
     tracks = trackQuery.data.tracks;
   }
 
+  if (!playlistQuery.success) {
+    playlistError = playlistQuery.error;
+  } else {
+    playlists = playlistQuery.data.playlists;
+  }
+
   return {
     ...data,
 
@@ -58,5 +69,8 @@ export const load: PageLoad = async ({ parent, url }) => {
 
     trackError,
     tracks,
+
+    playlistError,
+    playlists,
   };
 };
