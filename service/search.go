@@ -83,20 +83,20 @@ func NewSearchService(
 	dataDir types.DataDir,
 	config *config.Config,
 ) *SearchService {
+	client := meilisearch.New(
+		config.MeilisearchAddress,
+		meilisearch.WithAPIKey(config.MeilisearchApiKey),
+	)
+
 	return &SearchService{
-		db:      db,
-		dataDir: dataDir,
-		client: meilisearch.New(
-			config.MeilisearchAddress,
-			meilisearch.WithAPIKey(config.MeilisearchApiKey),
-		),
+		logger:      logger,
+		db:          db,
+		dataDir:     dataDir,
+		client:      client,
+		artistIndex: client.Index("artists"),
+		albumIndex:  client.Index("albums"),
+		trackIndex:  client.Index("tracks"),
 	}
-}
-
-func (s *SearchService) Reindex() error {
-	// s.client.Index()
-
-	return nil
 }
 
 func (s *SearchService) waitForTask(ctx context.Context, taskId int64) error {
@@ -104,7 +104,11 @@ func (s *SearchService) waitForTask(ctx context.Context, taskId int64) error {
 	defer cancel()
 
 	_, err := s.client.WaitForTaskWithContext(ctx, taskId, 100*time.Millisecond)
-	return err
+	if err != nil {
+		return fmt.Errorf("wait for task: %w", err)
+	}
+
+	return nil
 }
 
 type recreateIndexParams struct {
@@ -120,14 +124,12 @@ func (s *SearchService) recreateIndex(
 	if params.delete {
 		task, err := s.client.DeleteIndex(params.index)
 		if err != nil {
-			// TODO(patrik): Handle error
-			return err
+			return fmt.Errorf("recreate index: delete index: %w", err)
 		}
 
 		err = s.waitForTask(ctx, task.TaskUID)
 		if err != nil {
-			// TODO(patrik): Handle error
-			return err
+			return fmt.Errorf("recreate index: delete wait: %w", err)
 		}
 	}
 
@@ -136,28 +138,24 @@ func (s *SearchService) recreateIndex(
 		PrimaryKey: "id",
 	})
 	if err != nil {
-		// TODO(patrik): Handle error
-		return err
+		return fmt.Errorf("recreate index: create index: %w", err)
 	}
 
 	err = s.waitForTask(ctx, task.TaskUID)
 	if err != nil {
-		// TODO(patrik): Handle error
-		return err
+		return fmt.Errorf("recreate index: create index wait: %w", err)
 	}
 
 	idx := s.client.Index(params.index)
 
 	settingsTask, err := idx.UpdateSettings(params.settings)
 	if err != nil {
-		// TODO(patrik): Handle error
-		return err
+		return fmt.Errorf("recreate index: update settings: %w", err)
 	}
 
 	err = s.waitForTask(ctx, settingsTask.TaskUID)
 	if err != nil {
-		// TODO(patrik): Handle error
-		return err
+		return fmt.Errorf("recreate index: update settings wait: %w", err)
 	}
 
 	return nil
@@ -173,7 +171,7 @@ func (s *SearchService) indexArtists(ctx context.Context) error {
 		delete: true,
 	})
 	if err != nil {
-		return err
+		return searchErr.Wrap("index artists: recreate index", err)
 	}
 
 	err = indexInBatches[SearchArtist, database.Artist](
@@ -194,7 +192,7 @@ func (s *SearchService) indexArtists(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return err
+		return searchErr.Wrap("index artists: index batches", err)
 	}
 
 	return nil
@@ -210,7 +208,7 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		delete: true,
 	})
 	if err != nil {
-		return err
+		return searchErr.Wrap("index albums: recreate index", err)
 	}
 
 	err = indexInBatches[SearchAlbum, database.Album](
@@ -238,7 +236,7 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return err
+		return searchErr.Wrap("index albums: index batches", err)
 	}
 
 	return nil
@@ -254,7 +252,7 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 		delete: true,
 	})
 	if err != nil {
-		return err
+		return searchErr.Wrap("index tracks: recreate index", err)
 	}
 
 	err = indexInBatches[SearchTrack, database.Track](
@@ -284,16 +282,8 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return err
+		return searchErr.Wrap("index tracks: index batches", err)
 	}
-
-	return nil
-}
-
-func (s *SearchService) Init() error {
-	s.artistIndex = s.client.Index("artists")
-	s.albumIndex = s.client.Index("albums")
-	s.trackIndex = s.client.Index("tracks")
 
 	return nil
 }
@@ -326,7 +316,10 @@ type SearchParams struct {
 	Limit int
 }
 
-func (s *SearchService) SearchArtists(ctx context.Context, params SearchParams) ([]database.Artist, error) {
+func (s *SearchService) SearchArtists(
+	ctx context.Context,
+	params SearchParams,
+) ([]database.Artist, error) {
 	artists, err := search[SearchArtist, database.Artist](
 		ctx,
 		s.artistIndex,
@@ -339,13 +332,16 @@ func (s *SearchService) SearchArtists(ctx context.Context, params SearchParams) 
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, searchErr.Wrap("search artists", err)
 	}
 
 	return artists, nil
 }
 
-func (s *SearchService) SearchAlbums(ctx context.Context, params SearchParams) ([]database.Album, error) {
+func (s *SearchService) SearchAlbums(
+	ctx context.Context,
+	params SearchParams,
+) ([]database.Album, error) {
 	albums, err := search[SearchAlbum, database.Album](
 		ctx,
 		s.albumIndex,
@@ -358,13 +354,16 @@ func (s *SearchService) SearchAlbums(ctx context.Context, params SearchParams) (
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, searchErr.Wrap("search albums", err)
 	}
 
 	return albums, nil
 }
 
-func (s *SearchService) SearchTracks(ctx context.Context, params SearchParams) ([]database.Track, error) {
+func (s *SearchService) SearchTracks(
+	ctx context.Context,
+	params SearchParams,
+) ([]database.Track, error) {
 	tracks, err := search[SearchTrack, database.Track](
 		ctx,
 		s.trackIndex,
@@ -377,7 +376,7 @@ func (s *SearchService) SearchTracks(ctx context.Context, params SearchParams) (
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, searchErr.Wrap("search tracks", err)
 	}
 
 	for i := range tracks {
@@ -415,8 +414,8 @@ func search[TDoc hasID, TResult any](
 	}
 
 	ids := make([]string, len(hits))
-	for i, h := range hits {
-		ids[i] = h.GetID()
+	for i, hit := range hits {
+		ids[i] = hit.GetID()
 	}
 
 	results, err := fetch(ctx, ids)
@@ -425,8 +424,9 @@ func search[TDoc hasID, TResult any](
 	}
 
 	mapped := make(map[string]TResult, len(results))
-	for _, r := range results {
-		mapped[getID(r)] = r
+	for _, res := range results {
+		id := getID(res)
+		mapped[id] = res
 	}
 
 	final := make([]TResult, 0, len(hits))
@@ -451,10 +451,10 @@ func indexInBatches[TDoc any, TItem any](
 		Page:    0,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("fetch (0): %w", err)
 	}
 
-	sendItems := func(items []TItem) {
+	sendItems := func(items []TItem, page int) error {
 		docs := make([]TDoc, 0, batchSize)
 		for _, item := range items {
 			data := mapItem(item)
@@ -465,12 +465,16 @@ func indexInBatches[TDoc any, TItem any](
 			PrimaryKey: meilisearch.StringPtr("id"),
 		})
 		if err != nil {
-			// TODO(patrik): Fix
-			slog.Error("failed to add tracks to index", "err", err)
+			return fmt.Errorf("add documents (%d): %w", page, err)
 		}
+
+		return nil
 	}
 
-	sendItems(items)
+	err = sendItems(items, 0)
+	if err != nil {
+		return err
+	}
 
 	for i := 1; i < page.TotalPages; i++ {
 		items, _, err := fetch(ctx, types.PageParams{
@@ -478,10 +482,13 @@ func indexInBatches[TDoc any, TItem any](
 			Page:    i,
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("fetch (%d): %w", i, err)
 		}
 
-		sendItems(items)
+		err = sendItems(items, i)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

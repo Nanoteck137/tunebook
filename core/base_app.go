@@ -254,12 +254,6 @@ func (app *BaseApp) Bootstrap() error {
 		app.config,
 	)
 
-	// TODO(patrik): Do this lazily
-	err = app.searchService.Init()
-	if err != nil {
-		return err
-	}
-
 	app.mediaService = service.NewMediaService(app.db, dataDir)
 
 	app.libraryService = service.NewLibraryService(
