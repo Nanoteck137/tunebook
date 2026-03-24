@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"mime"
 	"net/http"
 	"os"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/nanoteck137/dwebble/tools/probe"
 	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
 	"github.com/pelletier/go-toml/v2"
 )
 
@@ -114,7 +112,7 @@ func getTrackInfo(p string) (trackInfo, error) {
 }
 
 func InitializeAlbum(dir string) error {
-	metadata := types.AlbumMetadata{}
+	metadata := AlbumMetadata{}
 
 	extract := true
 
@@ -136,7 +134,7 @@ func InitializeAlbum(dir string) error {
 		// Skip files starting wtih .
 		if strings.HasPrefix(e.Name(), ".") {
 			continue
-		}Track Count: 7
+		}
 
 		p := filepath.Join(dir, name)
 
@@ -221,7 +219,7 @@ func InitializeAlbum(dir string) error {
 		// TODO(patrik): If artist is empty then use album maybe
 		artists := parseArtist(trackInfo.Artist)
 
-		metadata.Tracks = append(metadata.Tracks, types.AlbumMetadataTrack{
+		metadata.Tracks = append(metadata.Tracks, AlbumMetadataTrack{
 			Id:      utils.CreateTrackId(),
 			File:    filename,
 			Name:    trackInfo.Name,
@@ -279,7 +277,7 @@ func InitializeArtist(dir string, params InitializeArtistParams) error {
 		cover = p
 	}
 
-	metadata := types.ArtistMetadata{
+	metadata := ArtistMetadata{
 		Id:         utils.CreateArtistId(),
 		SearchName: utils.Slug(params.ArtistName),
 		Name:       params.ArtistName,

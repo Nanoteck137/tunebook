@@ -14,77 +14,11 @@ import (
 	"github.com/nanoteck137/dwebble"
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
+	"github.com/nanoteck137/dwebble/library"
 	"github.com/nanoteck137/dwebble/tools/broker"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 )
-
-// TODO(patrik): Move to types or library package
-type ArtistEntry struct {
-	Id string `json:"id"`
-
-	Name string `json:"name"`
-	// TODO(patrik): Should this be here?
-	SearchName string   `json:"searchName"`
-	CoverArt   string   `json:"coverArt"`
-	Tags       []string `json:"tags"`
-
-	Path string `json:"path"`
-}
-
-func (e ArtistEntry) GetCoverArt() string {
-	if e.CoverArt == "" || e.Path == "" {
-		return ""
-	}
-
-	return path.Join(e.Path, e.CoverArt)
-}
-
-// TODO(patrik): Move to types or library package
-type AlbumEntry struct {
-	Id string `json:"id"`
-
-	Name               string   `json:"name"`
-	CoverArt           string   `json:"coverArt"`
-	Year               int64    `json:"year"`
-	ArtistId           string   `json:"artistId"`
-	FeaturingArtistIds []string `json:"featuringArtistIds"`
-	Tags               []string `json:"tags"`
-
-	Path string `json:"path"`
-}
-
-func (e AlbumEntry) GetCoverArt() string {
-	if e.CoverArt == "" || e.Path == "" {
-		return ""
-	}
-
-	return path.Join(e.Path, e.CoverArt)
-}
-
-// TODO(patrik): Move to types or library package
-type TrackEntry struct {
-	Id string `json:"id"`
-
-	Name               string   `json:"name"`
-	TrackFile          string   `json:"trackFile"`
-	Number             int64    `json:"number"`
-	Year               int64    `json:"year"`
-	Tags               []string `json:"tags"`
-	AlbumId            string   `json:"albumId"`
-	ArtistId           string   `json:"artistId"`
-	FeaturingArtistIds []string `json:"featuringArtistIds"`
-
-	Path string `json:"path"`
-}
-
-func (e TrackEntry) GetTrackFile() string {
-	if e.TrackFile == "" || e.Path == "" {
-		return ""
-	}
-
-	return path.Join(e.Path, e.TrackFile)
-}
 
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
 
@@ -203,7 +137,7 @@ func setArtistTags(ctx context.Context, db database.DB, artistId string, tags []
 	return nil
 }
 
-func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntry) error {
+func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *library.ArtistEntry) error {
 	coverArt := entry.GetCoverArt()
 
 	dbArtist, err := s.db.GetArtistById(ctx, entry.Id)
@@ -267,7 +201,7 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 	decoder := json.NewDecoder(file)
 
 	for decoder.More() {
-		var entry ArtistEntry
+		var entry library.ArtistEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
 			return err
@@ -328,7 +262,7 @@ func setAlbumTags(ctx context.Context, db database.DB, albumId string, tags []st
 	return nil
 }
 
-func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *AlbumEntry) error {
+func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.AlbumEntry) error {
 	coverArt := entry.GetCoverArt()
 
 	dbAlbum, err := s.db.GetAlbumById(ctx, entry.Id)
@@ -420,7 +354,7 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 	decoder := json.NewDecoder(file)
 
 	for decoder.More() {
-		var entry AlbumEntry
+		var entry library.AlbumEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
 			return err
@@ -481,7 +415,7 @@ func setTrackTags(ctx context.Context, db database.DB, trackId string, tags []st
 	return nil
 }
 
-func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry) error {
+func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.TrackEntry) error {
 	trackFile := entry.GetTrackFile()
 
 	stat, err := os.Stat(trackFile)
@@ -644,7 +578,7 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 	decoder := json.NewDecoder(file)
 
 	for idx := 0; decoder.More(); idx++ {
-		var entry TrackEntry
+		var entry library.TrackEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
 			stop := s.addError(fmt.Errorf("failed to decode next track entry[%d]: %w", idx, err))

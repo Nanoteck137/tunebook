@@ -6,22 +6,18 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 	"time"
 
-	"github.com/nanoteck137/dwebble/service"
+	"github.com/fatih/color"
+	"github.com/maruel/natural"
 	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin/anvil"
-)
-
-// TODO(patrik): Move?
-const (
-	libraryMetadataFilename = "library.json"
-	artistMetadataFilename  = "artist.toml"
-	albumMetadataFilename   = "album.toml"
 )
 
 func validateImage(p string) error {
@@ -60,14 +56,14 @@ func transformTagsArr(tags []string) []string {
 	return dedupStringArr(tags)
 }
 
-func processArtistMetadata(metadata *types.ArtistMetadata) {
+func processArtistMetadata(metadata *ArtistMetadata) {
 	metadata.Name = anvil.String(metadata.Name)
 	metadata.SearchName = utils.Slug(metadata.SearchName)
 
 	metadata.Tags = transformTagsArr(metadata.Tags)
 }
 
-func processAlbumMetadata(metadata *types.AlbumMetadata) {
+func processAlbumMetadata(metadata *AlbumMetadata) {
 	album := &metadata.Album
 
 	album.Name = anvil.String(album.Name)
@@ -101,7 +97,8 @@ func processAlbumMetadata(metadata *types.AlbumMetadata) {
 func ReadLibraryMetadata(dir string) (LibraryMetadata, error) {
 	var res LibraryMetadata
 
-	res, err := utils.ReadJson[LibraryMetadata](filepath.Join(dir, libraryMetadataFilename))
+	p := filepath.Join(dir, libraryMetadataFilename)
+	res, err := utils.ReadToml[LibraryMetadata](p)
 	if err == nil {
 		res.Path = dir
 		return res, nil
@@ -149,14 +146,14 @@ func FindFile(dir, filename string) (string, error) {
 }
 
 type fetchResult struct {
-	artists []types.ArtistMetadata
-	albums  []types.AlbumMetadata
+	artists []ArtistMetadata
+	albums  []AlbumMetadata
 }
 
 func fetch(dir string, reporter *Reporter) (*fetchResult, error) {
 	res := &fetchResult{
-		artists: []types.ArtistMetadata{},
-		albums:  []types.AlbumMetadata{},
+		artists: []ArtistMetadata{},
+		albums:  []AlbumMetadata{},
 	}
 
 	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
@@ -176,7 +173,7 @@ func fetch(dir string, reporter *Reporter) (*fetchResult, error) {
 
 		switch name {
 		case artistMetadataFilename:
-			artist, err := utils.ReadToml[types.ArtistMetadata](p)
+			artist, err := utils.ReadToml[ArtistMetadata](p)
 			if err != nil {
 				reporter.AddWarning(p, fmt.Errorf("failed to read artist: %w", err))
 				return nil
@@ -190,7 +187,7 @@ func fetch(dir string, reporter *Reporter) (*fetchResult, error) {
 			artist.Path = p
 			res.artists = append(res.artists, artist)
 		case albumMetadataFilename:
-			album, err := utils.ReadToml[types.AlbumMetadata](p)
+			album, err := utils.ReadToml[AlbumMetadata](p)
 			if err != nil {
 				reporter.AddWarning(p, fmt.Errorf("failed to read album: %w", err))
 				return nil
@@ -214,7 +211,7 @@ func fetch(dir string, reporter *Reporter) (*fetchResult, error) {
 	return res, nil
 }
 
-func validateArtistMetadata(artist *types.ArtistMetadata, reporter *Reporter) bool {
+func validateArtistMetadata(artist *ArtistMetadata, reporter *Reporter) bool {
 	file := filepath.Join(artist.Path, artistMetadataFilename)
 
 	valid := true
@@ -250,7 +247,7 @@ func validateArtistMetadata(artist *types.ArtistMetadata, reporter *Reporter) bo
 	return valid
 }
 
-func validateAlbumMetadata(album *types.AlbumMetadata, reporter *Reporter) bool {
+func validateAlbumMetadata(album *AlbumMetadata, reporter *Reporter) bool {
 	file := filepath.Join(album.Path, albumMetadataFilename)
 
 	valid := true
@@ -285,7 +282,7 @@ func validateAlbumMetadata(album *types.AlbumMetadata, reporter *Reporter) bool 
 	return valid
 }
 
-func validateTrackMetadata(prefix, file string, track *types.AlbumMetadataTrack, reporter *Reporter) bool {
+func validateTrackMetadata(prefix, file string, track *AlbumMetadataTrack, reporter *Reporter) bool {
 	valid := true
 
 	if track.Id == "" {
@@ -366,9 +363,9 @@ type Library struct {
 
 	Reporter Reporter
 
-	Artists []service.ArtistEntry
-	Albums  []service.AlbumEntry
-	Tracks  []service.TrackEntry
+	Artists []ArtistEntry
+	Albums  []AlbumEntry
+	Tracks  []TrackEntry
 }
 
 func (lib *Library) WriteToDisk() error {
@@ -433,47 +430,43 @@ func (lib *Library) WriteToDisk() error {
 	return nil
 }
 
-type FetchLibraryOpts struct {
-	OnlyArtists bool
-}
-
-func FetchLibrary(library *LibraryMetadata, opts FetchLibraryOpts) (*Library, error) {
-	//  - Fetch all artists and albums
-	//  - Validate artists, albums, tracks
+func ProcessMusicLibrary(dir string) (*Library, error) {
+	libraryMetadata, err := ReadLibraryMetadata(dir)
+	if err != nil {
+		return nil, err
+	}
 
 	lib := &Library{
-		Path: library.Path,
+		Path: libraryMetadata.Path,
 		Reporter: Reporter{
 			// TODO(patrik): Rename errors to reports
 			Errors: map[string][]Report{},
 		},
-		Artists: []service.ArtistEntry{},
-		Albums:  []service.AlbumEntry{},
-		Tracks:  []service.TrackEntry{},
+		Artists: []ArtistEntry{},
+		Albums:  []AlbumEntry{},
+		Tracks:  []TrackEntry{},
 	}
 
-	// overallTimer := utils.SimpleTimer{}
-	// dirwalkTimer := utils.SimpleTimer{}
-	// validationTimer := utils.SimpleTimer{}
+	fetchingTimer := utils.SimpleTimer{}
+	processingTimer := utils.SimpleTimer{}
 
-	// overallTimer.Start()
-	//
-	// dirwalkTimer.Start()
+	fetchingTimer.Start()
 
 	fmt.Println("fetching files...")
 
-	fetched, err := fetch(library.Path, &lib.Reporter)
+	fetched, err := fetch(lib.Path, &lib.Reporter)
 	if err != nil {
 		return nil, fmt.Errorf("dir walk: %w", err)
 	}
 
-	// dirwalkTimer.Stop()
+	fetchingTimer.Stop()
 
-	// fmt.Println("fetch done", dirwalkTimer.Duration())
-	fmt.Println("fetch done")
+	fmt.Println("fetch done", fetchingTimer.Duration())
 	fmt.Printf("Found %d artists\n", len(fetched.artists))
 	fmt.Printf("Found %d albums\n", len(fetched.albums))
 	fmt.Println()
+
+	processingTimer.Start()
 
 	artistMap := map[string]string{}
 
@@ -485,10 +478,9 @@ func FetchLibrary(library *LibraryMetadata, opts FetchLibraryOpts) (*Library, er
 			// TODO(patrik): HERE we can check for duplicated artists name
 			artistMap[artist.SearchName] = artist.Id
 
-			lib.Artists = append(lib.Artists, service.ArtistEntry{
+			lib.Artists = append(lib.Artists, ArtistEntry{
 				Id:         artist.Id,
 				Name:       artist.Name,
-				SearchName: artist.SearchName,
 				CoverArt:   artist.Cover,
 				Tags:       artist.Tags,
 				Path:       artist.Path,
@@ -555,7 +547,7 @@ func FetchLibrary(library *LibraryMetadata, opts FetchLibraryOpts) (*Library, er
 		}
 
 		if valid {
-			lib.Albums = append(lib.Albums, service.AlbumEntry{
+			lib.Albums = append(lib.Albums, AlbumEntry{
 				Id:                 album.Album.Id,
 				Name:               album.Album.Name,
 				CoverArt:           album.General.Cover,
@@ -577,7 +569,7 @@ func FetchLibrary(library *LibraryMetadata, opts FetchLibraryOpts) (*Library, er
 			}
 
 			if valid && trackValid {
-				lib.Tracks = append(lib.Tracks, service.TrackEntry{
+				lib.Tracks = append(lib.Tracks, TrackEntry{
 					Id:                 track.Id,
 					TrackFile:          track.File,
 					Name:               track.Name,
@@ -593,276 +585,62 @@ func FetchLibrary(library *LibraryMetadata, opts FetchLibraryOpts) (*Library, er
 		}
 	}
 
+	processingTimer.Stop()
+
+	keys := slices.Collect(maps.Keys(lib.Reporter.Errors))
+	sort.SliceStable(keys, func(i, j int) bool {
+		return natural.Less(keys[i], keys[j])
+	})
+
+	for _, file := range keys {
+		reports := lib.Reporter.Errors[file]
+
+		color.Set(color.FgBlue)
+		fmt.Fprintln(os.Stderr, file)
+
+		for _, report := range reports {
+			if report.IsWarning {
+				color.Set(color.FgYellow)
+				fmt.Fprintf(os.Stderr, " - warn:  ")
+			} else {
+				color.Set(color.FgRed)
+				fmt.Fprintf(os.Stderr, " - error: ")
+			}
+
+			fmt.Fprintf(os.Stderr, "%s\n", report.Err.Error())
+		}
+
+		color.Unset()
+
+		fmt.Fprintln(os.Stderr)
+	}
+
+	color.Set(color.FgGreen)
+
+	fmt.Println("Report:")
+	fmt.Printf(" Total:    %v\n", (lib.Reporter.NumErrors + lib.Reporter.NumWarnings))
+
+	color.Set(color.FgRed)
+	fmt.Printf(" Errors:   ")
+	color.Set(color.FgGreen)
+	fmt.Printf("%v\n", lib.Reporter.NumErrors)
+
+	color.Set(color.FgYellow)
+	fmt.Printf(" Warnings: ")
+	color.Set(color.FgGreen)
+	fmt.Printf("%v\n", lib.Reporter.NumWarnings)
+	fmt.Println()
+
+	color.Set(color.FgMagenta)
+
+	total := fetchingTimer.Duration() + processingTimer.Duration()
+
+	fmt.Println("Time:")
+	fmt.Printf(" Total: %v\n", total)
+	fmt.Printf(" Fetching: %v\n", fetchingTimer.Duration())
+	fmt.Printf(" Processing: %v\n", processingTimer.Duration())
+
+	color.Unset()
+
 	return lib, nil
-}
-
-func UpdateLibrary(library *LibraryMetadata, opts UpdateLibraryOptions) (*UpdateResult, error) {
-	// Steps
-	//  - Get library location
-
-	//  - Write artists, albums, tracks
-
-	// p, dir, err := ReadLibraryMetadata(dir)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("find library metadata: %w", err)
-	// }
-	//
-	// _ = p
-
-	// reporter := Reporter{
-	// 	// TODO(patrik): Rename errors to reports
-	// 	Errors:      map[string][]Report{},
-	// 	NumErrors:   0,
-	// 	NumWarnings: 0,
-	// }
-	//
-	// overallTimer := utils.SimpleTimer{}
-	// dirwalkTimer := utils.SimpleTimer{}
-	// validationTimer := utils.SimpleTimer{}
-	//
-	// overallTimer.Start()
-	//
-	// dirwalkTimer.Start()
-	// fmt.Println("fetching files...")
-	//
-	// fetched, err := fetch(library.Path, &reporter)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("dir walk: %w", err)
-	// }
-	//
-	// dirwalkTimer.Stop()
-	//
-	// fmt.Println("fetch done", dirwalkTimer.Duration())
-	// fmt.Printf("Found %d artists\n", len(fetched.artists))
-	// fmt.Printf("Found %d albums\n", len(fetched.albums))
-	// fmt.Println()
-	//
-	// validationTimer.Start()
-	//
-	// libraryPath := filepath.Join(library.Path, ".library")
-	//
-	// err = utils.CreateDirectories([]string{
-	// 	libraryPath,
-	// })
-	// if err != nil {
-	// 	return nil, fmt.Errorf("mkdir for library: %w", err)
-	// }
-	//
-	// openLib := func(name string) (*os.File, error) {
-	// 	p := filepath.Join(libraryPath, name)
-	// 	libFile, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	// 	return libFile, nil
-	// }
-	//
-	// libArtists, err := openLib("artists")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("open artists library: %w", err)
-	// }
-	// defer libArtists.Close()
-	//
-	// libAlbums, err := openLib("albums")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("open albums library: %w", err)
-	// }
-	// defer libAlbums.Close()
-	//
-	// libTracks, err := openLib("tracks")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("open tracks library: %w", err)
-	// }
-	// defer libTracks.Close()
-	//
-	// artistMap := map[string]string{}
-	//
-	// for _, artist := range fetched.artists {
-	// 	processArtistMetadata(&artist)
-	// 	valid := validateArtistMetadata(&artist, &reporter)
-	//
-	// 	if valid {
-	// 		err := writeEntry(libArtists, service.ArtistEntry{
-	// 			Id:         artist.Id,
-	// 			Name:       artist.Name,
-	// 			SearchName: artist.SearchName,
-	// 			CoverArt:   artist.Cover,
-	// 			Tags:       artist.Tags,
-	// 			Path:       artist.Path,
-	// 		})
-	// 		if err != nil {
-	// 			return nil, fmt.Errorf("write artist entry: %w", err)
-	// 		}
-	//
-	// 		// TODO(patrik): HERE we can check for duplicated artists name
-	// 		artistMap[artist.SearchName] = artist.Id
-	// 	}
-	// }
-	//
-	// checkForArtist := func(name string) (string, bool) {
-	// 	id, exists := artistMap[utils.Slug(name)]
-	// 	if exists {
-	// 		return id, true
-	// 	}
-	//
-	// 	return "", false
-	// }
-	//
-	// type ResolvedArtists struct {
-	// 	ArtistId           string
-	// 	FeaturingArtistIds []string
-	// }
-	//
-	// resolveArtists := func(file string, prefix string, artists []string) (ResolvedArtists, bool) {
-	// 	if len(artists) <= 0 {
-	// 		reporter.AddError(file, errors.New(prefix+": no artists"))
-	// 		return ResolvedArtists{}, false
-	// 	}
-	//
-	// 	valid := true
-	//
-	// 	artistId := ""
-	// 	featuringArtistIds := []string{}
-	//
-	// 	if id, ok := checkForArtist(artists[0]); ok {
-	// 		artistId = id
-	// 	} else {
-	// 		reporter.AddError(file, fmt.Errorf("%s: missing artist: '%s'", prefix, artists[0]))
-	// 		valid = false
-	// 	}
-	//
-	// 	for _, artist := range artists[1:] {
-	// 		if id, ok := checkForArtist(artist); ok {
-	// 			featuringArtistIds = append(featuringArtistIds, id)
-	// 		} else {
-	// 			reporter.AddError(file, fmt.Errorf("%s: missing artist: '%s'", prefix, artist))
-	// 			valid = false
-	// 		}
-	// 	}
-	//
-	// 	return ResolvedArtists{
-	// 		ArtistId:           artistId,
-	// 		FeaturingArtistIds: featuringArtistIds,
-	// 	}, valid
-	// }
-	//
-	// for _, album := range fetched.albums {
-	// 	file := filepath.Join(album.Path, albumMetadataFilename)
-	//
-	// 	processAlbumMetadata(&album)
-	// 	valid := validateAlbumMetadata(&album, &reporter)
-	//
-	// 	artists, ok := resolveArtists(file, "album.artists", album.Album.Artists)
-	// 	if !ok {
-	// 		valid = false
-	// 	}
-	//
-	// 	albumEntry := service.AlbumEntry{
-	// 		Id:                 album.Album.Id,
-	// 		Name:               album.Album.Name,
-	// 		CoverArt:           album.General.Cover,
-	// 		Year:               album.Album.Year,
-	// 		ArtistId:           artists.ArtistId,
-	// 		FeaturingArtistIds: artists.FeaturingArtistIds,
-	// 		Tags:               album.Album.Tags,
-	// 		Path:               album.Path,
-	// 	}
-	//
-	// 	if valid {
-	// 		err := writeEntry(libAlbums, albumEntry)
-	// 		if err != nil {
-	// 			return nil, fmt.Errorf("write album entry: %w", err)
-	// 		}
-	// 	}
-	//
-	// 	for i, track := range album.Tracks {
-	// 		prefix := fmt.Sprintf("album.tracks[%d]", i)
-	// 		trackValid := validateTrackMetadata(prefix, file, &track, &reporter)
-	//
-	// 		artists, ok := resolveArtists(file, prefix+".artists", track.Artists)
-	// 		if !ok {
-	// 			trackValid = false
-	// 		}
-	//
-	// 		trackEntry := service.TrackEntry{
-	// 			Id:                 track.Id,
-	// 			TrackFile:          track.File,
-	// 			Name:               track.Name,
-	// 			Number:             track.Number,
-	// 			Year:               track.Year,
-	// 			Tags:               track.Tags,
-	// 			AlbumId:            album.Album.Id,
-	// 			ArtistId:           artists.ArtistId,
-	// 			FeaturingArtistIds: artists.FeaturingArtistIds,
-	// 			Path:               album.Path,
-	// 		}
-	//
-	// 		if valid && trackValid {
-	// 			err := writeEntry(libTracks, trackEntry)
-	// 			if err != nil {
-	// 				return nil, fmt.Errorf("write track entry: %w", err)
-	// 			}
-	// 		}
-	// 	}
-	// }
-	//
-	// validationTimer.Stop()
-	//
-	// keys := slices.Collect(maps.Keys(reporter.Errors))
-	// sort.SliceStable(keys, func(i, j int) bool {
-	// 	return natural.Less(keys[i], keys[j])
-	// })
-	//
-	// for _, file := range keys {
-	// 	reports := reporter.Errors[file]
-	//
-	// 	color.Set(color.FgBlue)
-	// 	fmt.Fprintln(os.Stderr, file)
-	//
-	// 	for _, report := range reports {
-	// 		if report.IsWarning {
-	// 			color.Set(color.FgYellow)
-	// 			fmt.Fprintf(os.Stderr, " - warn:  ")
-	// 		} else {
-	// 			color.Set(color.FgRed)
-	// 			fmt.Fprintf(os.Stderr, " - error: ")
-	// 		}
-	//
-	// 		fmt.Fprintf(os.Stderr, "%s\n", report.Err.Error())
-	// 	}
-	//
-	// 	color.Unset()
-	//
-	// 	fmt.Fprintln(os.Stderr)
-	// }
-	//
-	// overallTimer.Stop()
-	//
-	// color.Set(color.FgGreen)
-	//
-	// fmt.Printf("dirwalk: %v\n", dirwalkTimer.Duration())
-	// fmt.Printf("validation: %v\n", validationTimer.Duration())
-	// fmt.Printf("overall: %v\n", overallTimer.Duration())
-	//
-	// fmt.Printf("total: %v\n", (reporter.NumErrors + reporter.NumWarnings))
-	// fmt.Printf("numErrors: %v\n", reporter.NumErrors)
-	// fmt.Printf("numWarning: %v\n", reporter.NumWarnings)
-	//
-	// color.Unset()
-	//
-	// totalDuration := dirwalkTimer.Duration() + validationTimer.Duration()
-	//
-	// res := &UpdateResult{
-	// 	Reports:          reporter.Errors,
-	// 	NumErrors:        reporter.NumErrors,
-	// 	NumWarnings:      reporter.NumWarnings,
-	// 	FetchingDuration: dirwalkTimer.Duration(),
-	// 	WritingDuration:  validationTimer.Duration(),
-	// 	TotalDuration:    totalDuration,
-	// }
-	//
-	// return res, nil
-
-	return nil, nil
 }

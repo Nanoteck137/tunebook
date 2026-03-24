@@ -22,12 +22,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Feature: Ability to get all playlist + filters
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
-- [ ] CLI: Feature: Update Cmd: Use library.json
-- [ ] CLI: Feature: Init Cmd: Add init library cmd
-- [ ] CLI: Feature: Init Cmd: Better logging
-- [ ] CLI: Cleanup: Update Cmd: Cleanup Code 
-- [ ] CLI: Cleanup: Code Cleanup
-- [ ] CLI: Cleanup: Cleanup init commands
+- [ ] Backend: Library: Feature: Use library.toml
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI

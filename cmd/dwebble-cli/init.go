@@ -57,12 +57,15 @@ var initArtistCmd = &cobra.Command{
 
 func init() {
 	initLibraryCmd.Flags().String("dir", ".", "directory to use")
+	initLibraryCmd.MarkFlagDirname("dir")
 
 	initAlbumCmd.Flags().String("dir", ".", "directory to use")
+	initAlbumCmd.MarkFlagDirname("dir")
 
 	initArtistCmd.Flags().String("dir", ".", "directory to use")
 	initArtistCmd.Flags().String("artist-name", "", "set the artist name (when empty it uses the directory name)")
 	initArtistCmd.Flags().String("cover-url", "", "url to image for downloading")
+	initArtistCmd.MarkFlagDirname("dir")
 
 	initCmd.AddCommand(initLibraryCmd, initAlbumCmd, initArtistCmd)
 
