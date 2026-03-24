@@ -363,11 +363,11 @@ type GetMe struct {
 	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
 }
 
-// Name: MediaResource
-type MediaResource struct {
-	// Name: MediaResource.id
+// Name: MediaRef
+type MediaRef struct {
+	// Name: MediaRef.id
 	Id string `json:"id"`
-	// Name: MediaResource.name
+	// Name: MediaRef.name
 	Name string `json:"name"`
 }
 
@@ -378,15 +378,11 @@ type MediaItem struct {
 	// Name: MediaItem.name
 	Name string `json:"name"`
 	// Name: MediaItem.artists
-	Artists []MediaResource `json:"artists"`
+	Artists []MediaRef `json:"artists"`
 	// Name: MediaItem.album
-	Album MediaResource `json:"album"`
+	Album MediaRef `json:"album"`
 	// Name: MediaItem.coverArt
 	CoverArt Images `json:"coverArt"`
-	// Name: MediaItem.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: MediaItem.mediaUrl
-	MediaUrl string `json:"mediaUrl"`
 }
 
 // Name: GetMedia
@@ -397,12 +393,6 @@ type GetMedia struct {
 
 // Name: GetMediaCommonBody
 type GetMediaCommonBody struct {
-	// Name: GetMediaCommonBody.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: GetMediaCommonBody.shuffle
-	Shuffle bool `json:"shuffle"`
-	// Name: GetMediaCommonBody.sort
-	Sort string `json:"sort"`
 	// Name: GetMediaCommonBody.limit
 	Limit int `json:"limit"`
 	// Name: GetMediaCommonBody.offset
@@ -411,12 +401,6 @@ type GetMediaCommonBody struct {
 
 // Name: GetMediaFromAlbumBody
 type GetMediaFromAlbumBody struct {
-	// Name: GetMediaFromAlbumBody.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: GetMediaFromAlbumBody.shuffle
-	Shuffle bool `json:"shuffle"`
-	// Name: GetMediaFromAlbumBody.sort
-	Sort string `json:"sort"`
 	// Name: GetMediaFromAlbumBody.limit
 	Limit int `json:"limit"`
 	// Name: GetMediaFromAlbumBody.offset
@@ -425,12 +409,6 @@ type GetMediaFromAlbumBody struct {
 
 // Name: GetMediaFromArtistBody
 type GetMediaFromArtistBody struct {
-	// Name: GetMediaFromArtistBody.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: GetMediaFromArtistBody.shuffle
-	Shuffle bool `json:"shuffle"`
-	// Name: GetMediaFromArtistBody.sort
-	Sort string `json:"sort"`
 	// Name: GetMediaFromArtistBody.limit
 	Limit int `json:"limit"`
 	// Name: GetMediaFromArtistBody.offset
@@ -439,12 +417,6 @@ type GetMediaFromArtistBody struct {
 
 // Name: GetMediaFromFilterBody
 type GetMediaFromFilterBody struct {
-	// Name: GetMediaFromFilterBody.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: GetMediaFromFilterBody.shuffle
-	Shuffle bool `json:"shuffle"`
-	// Name: GetMediaFromFilterBody.sort
-	Sort string `json:"sort"`
 	// Name: GetMediaFromFilterBody.limit
 	Limit int `json:"limit"`
 	// Name: GetMediaFromFilterBody.offset
@@ -455,12 +427,6 @@ type GetMediaFromFilterBody struct {
 
 // Name: GetMediaFromIdsBody
 type GetMediaFromIdsBody struct {
-	// Name: GetMediaFromIdsBody.mediaFormat
-	MediaFormat string `json:"mediaFormat"`
-	// Name: GetMediaFromIdsBody.shuffle
-	Shuffle bool `json:"shuffle"`
-	// Name: GetMediaFromIdsBody.sort
-	Sort string `json:"sort"`
 	// Name: GetMediaFromIdsBody.limit
 	Limit int `json:"limit"`
 	// Name: GetMediaFromIdsBody.offset

@@ -808,7 +808,7 @@ func (c *Client) RunJob(jobName string, options Options) (*any, error) {
 }
 
 func (c *Client) SearchAlbums(options Options) (*SearchAlbums, error) {
-	path := "/api/v1/albums/search"
+	path := "/api/v1/search/albums"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -824,7 +824,7 @@ func (c *Client) SearchAlbums(options Options) (*SearchAlbums, error) {
 }
 
 func (c *Client) SearchArtists(options Options) (*SearchArtists, error) {
-	path := "/api/v1/artists/search"
+	path := "/api/v1/search/artists"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -840,7 +840,7 @@ func (c *Client) SearchArtists(options Options) (*SearchArtists, error) {
 }
 
 func (c *Client) SearchTracks(options Options) (*SearchTracks, error) {
-	path := "/api/v1/tracks/search"
+	path := "/api/v1/search/tracks"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -1165,17 +1165,17 @@ func (c *ClientUrls) RunJob(jobName string) (*URL, error) {
 }
 
 func (c *ClientUrls) SearchAlbums() (*URL, error) {
-	path := "/api/v1/albums/search"
+	path := "/api/v1/search/albums"
 	return c.getUrl(path)
 }
 
 func (c *ClientUrls) SearchArtists() (*URL, error) {
-	path := "/api/v1/artists/search"
+	path := "/api/v1/search/artists"
 	return c.getUrl(path)
 }
 
 func (c *ClientUrls) SearchTracks() (*URL, error) {
-	path := "/api/v1/tracks/search"
+	path := "/api/v1/search/tracks"
 	return c.getUrl(path)
 }
 

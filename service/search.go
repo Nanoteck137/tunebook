@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/nanoteck137/dwebble/config"
 	"github.com/nanoteck137/dwebble/database"
@@ -14,26 +13,40 @@ import (
 	"github.com/nanoteck137/dwebble/types"
 )
 
-type SearchService struct {
-	db      *database.Database
-	dataDir types.DataDir
+const batchSize = 200
 
-	client      meilisearch.ServiceManager
-	artistIndex meilisearch.IndexManager
-	albumIndex  meilisearch.IndexManager
-	trackIndex  meilisearch.IndexManager
+var searchErr = NewServiceErrCreator("search")
+
+type hasID interface {
+	GetID() string
 }
 
-func NewSearchService(db *database.Database, dataDir types.DataDir, config *config.Config) *SearchService {
-	return &SearchService{
-		db:      db,
-		dataDir: dataDir,
-		client: meilisearch.New(
-			config.MeilisearchAddress,
-			meilisearch.WithAPIKey(config.MeilisearchApiKey),
-		),
-	}
+type SearchArtist struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	CoverArt *string `json:"coverArt"`
+
+	Tags []string `json:"tags"`
 }
+
+func (s SearchArtist) GetID() string { return s.Id }
+
+type SearchAlbum struct {
+	Id string `json:"id"`
+
+	Name string `json:"name"`
+
+	CoverArt *string `json:"coverArt"`
+	Year     *int64  `json:"year"`
+
+	Artists []string `json:"artists"`
+
+	Tags []string `json:"tags"`
+}
+
+func (s SearchAlbum) GetID() string { return s.Id }
 
 type SearchTrack struct {
 	Id string `json:"id"`
@@ -50,484 +63,426 @@ type SearchTrack struct {
 	Tags []string `json:"tags"`
 }
 
-type SearchAlbum struct {
-	Id string `json:"id"`
+func (s SearchTrack) GetID() string { return s.Id }
 
-	Name string `json:"name"`
+type SearchService struct {
+	logger *slog.Logger
 
-	CoverArt *string `json:"coverArt"`
-	Year     *int64  `json:"year"`
+	db      *database.Database
+	dataDir types.DataDir
 
-	Artists []string `json:"artists"`
-
-	Tags []string `json:"tags"`
+	client      meilisearch.ServiceManager
+	artistIndex meilisearch.IndexManager
+	albumIndex  meilisearch.IndexManager
+	trackIndex  meilisearch.IndexManager
 }
 
-type SearchArtist struct {
-	Id string `json:"id"`
-
-	Name string `json:"name"`
-
-	CoverArt *string `json:"coverArt"`
-
-	Tags []string `json:"tags"`
+func NewSearchService(
+	logger *slog.Logger,
+	db *database.Database,
+	dataDir types.DataDir,
+	config *config.Config,
+) *SearchService {
+	return &SearchService{
+		db:      db,
+		dataDir: dataDir,
+		client: meilisearch.New(
+			config.MeilisearchAddress,
+			meilisearch.WithAPIKey(config.MeilisearchApiKey),
+		),
+	}
 }
 
-func (s *SearchService) configure() error {
-	err := createIndex(s.client, "artists")
-	if err != nil {
-		return err
-	}
-
-	s.artistIndex = s.client.Index("artists")
-
-	// TODO(patrik): Check if it contains everything
-	settingsTask, err := s.artistIndex.UpdateSettings(&meilisearch.Settings{
-		SearchableAttributes: []string{"name", "tags"},
-		FilterableAttributes: []string{"id", "name", "tags"},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to apply settings for artists index: %w", err)
-	}
-
-	err = waitForTask(s.client, settingsTask.TaskUID)
-	if err != nil {
-		return fmt.Errorf("failed to wait for task: %w", err)
-	}
-
-	err = createIndex(s.client, "albums")
-	if err != nil {
-		return err
-	}
-
-	s.albumIndex = s.client.Index("albums")
-
-	// TODO(patrik): Check if it contains everything
-	settingsTask, err = s.albumIndex.UpdateSettings(&meilisearch.Settings{
-		SearchableAttributes: []string{"name", "artists", "tags"},
-		FilterableAttributes: []string{"id", "name", "year", "artists", "tags"},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to apply settings for artists index: %w", err)
-	}
-
-	err = waitForTask(s.client, settingsTask.TaskUID)
-	if err != nil {
-		return fmt.Errorf("failed to wait for task: %w", err)
-	}
-
-	err = createIndex(s.client, "tracks")
-	if err != nil {
-		return err
-	}
-
-	s.trackIndex = s.client.Index("tracks")
-
-	// TODO(patrik): Check if it contains everything
-	settingsTask, err = s.trackIndex.UpdateSettings(&meilisearch.Settings{
-		SearchableAttributes: []string{"name", "artists", "album", "tags"},
-		FilterableAttributes: []string{"id", "name", "duration", "number", "year", "artists", "album", "tags"},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to apply settings for artists index: %w", err)
-	}
-
-	err = waitForTask(s.client, settingsTask.TaskUID)
-	if err != nil {
-		return fmt.Errorf("failed to wait for task: %w", err)
-	}
+func (s *SearchService) Reindex() error {
+	// s.client.Index()
 
 	return nil
 }
 
-func (s *SearchService) UpdateArtist(ctx context.Context, artistId string) error {
-	slog.Info("Search Service: Updating artist", "artistId", artistId)
+func (s *SearchService) waitForTask(ctx context.Context, taskId int64) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
-	dbArtist, err := s.db.GetArtistById(ctx, artistId)
-	if err != nil {
-		return err
-	}
-
-	data := SearchArtist{
-		Id:       dbArtist.Id,
-		Name:     dbArtist.Name,
-		CoverArt: utils.SqlNullToStringPtr(dbArtist.CoverArt),
-		Tags:     utils.SplitString(dbArtist.Tags.String),
-	}
-
-	task, err := s.artistIndex.AddDocuments(data, &meilisearch.DocumentOptions{
-		PrimaryKey: meilisearch.StringPtr("id"),
-	})
-	if err != nil {
-		return err
-	}
-
-	_ = task
-
-	// TODO(patrik): Remove
-	// err = waitForTask(s.client, task.TaskUID)
-	// if err != nil {
-	// 	return err
-	// }
-
-	return nil
+	_, err := s.client.WaitForTaskWithContext(ctx, taskId, 100*time.Millisecond)
+	return err
 }
 
-func (s *SearchService) UpdateAlbum(ctx context.Context, albumId string) error {
-	slog.Info("Search Service: Updating album", "albumId", albumId)
-
-	dbAlbum, err := s.db.GetAlbumById(ctx, albumId)
-	if err != nil {
-		return err
-	}
-
-	artists := []string{dbAlbum.ArtistName}
-	for _, a := range dbAlbum.FeaturingArtists {
-		artists = append(artists, a.Name)
-	}
-
-	data := SearchAlbum{
-		Id:       dbAlbum.Id,
-		Name:     dbAlbum.Name,
-		CoverArt: utils.SqlNullToStringPtr(dbAlbum.CoverArt),
-		Year:     utils.SqlNullToInt64Ptr(dbAlbum.Year),
-		Artists:  artists,
-		Tags:     utils.SplitString(dbAlbum.Tags.String),
-	}
-
-	task, err := s.albumIndex.AddDocuments(data, &meilisearch.DocumentOptions{
-		PrimaryKey: meilisearch.StringPtr("id"),
-	})
-	if err != nil {
-		return err
-	}
-
-	_ = task
-
-	// TODO(patrik): Remove
-	// err = waitForTask(s.client, task.TaskUID)
-	// if err != nil {
-	// 	return err
-	// }
-
-	return nil
+type recreateIndexParams struct {
+	index    string
+	settings *meilisearch.Settings
+	delete   bool
 }
 
-func (s *SearchService) UpdateTrack(ctx context.Context, trackId string) error {
-	slog.Info("Search Service: Updating track", "trackId", trackId)
-
-	dbTrack, err := s.db.GetTrackById(ctx, trackId)
-	if err != nil {
-		return err
-	}
-
-	artists := []string{dbTrack.ArtistName}
-	for _, a := range dbTrack.FeaturingArtists {
-		artists = append(artists, a.Name)
-	}
-
-	data := SearchTrack{
-		Id:       dbTrack.Id,
-		Name:     dbTrack.Name,
-		Duration: dbTrack.Duration,
-		Number:   utils.SqlNullToInt64Ptr(dbTrack.Number),
-		Year:     utils.SqlNullToInt64Ptr(dbTrack.Year),
-		Artists:  artists,
-		Album:    dbTrack.AlbumName,
-		Tags:     utils.SplitString(dbTrack.Tags.String),
-	}
-
-	task, err := s.trackIndex.AddDocuments(data, &meilisearch.DocumentOptions{
-		PrimaryKey: meilisearch.StringPtr("id"),
-	})
-	if err != nil {
-		return err
-	}
-
-	_ = task
-
-	// TODO(patrik): Remove
-	// err = waitForTask(s.client, task.TaskUID)
-	// if err != nil {
-	// 	return err
-	// }
-
-	return nil
-}
-
-func (s *SearchService) indexArtists() error {
-	artists, err := s.db.GetAllArtists(context.TODO(), database.GetAllArtistsParams{})
-	if err != nil {
-		return fmt.Errorf("failed to get artists: %w", err)
-	}
-
-	for _, artist := range artists {
-		// artists := []string{track.ArtistName}
-		// for _, a := range track.FeaturingArtists {
-		// 	artists = append(artists, a.Name)
-		// }
-
-		data := SearchArtist{
-			Id:       artist.Id,
-			Name:     artist.Name,
-			CoverArt: utils.SqlNullToStringPtr(artist.CoverArt),
-			Tags:     utils.SplitString(artist.Tags.String),
-		}
-
-		_, err := s.artistIndex.AddDocuments(data, &meilisearch.DocumentOptions{
-			PrimaryKey: meilisearch.StringPtr("id"),
-		})
+func (s *SearchService) recreateIndex(
+	ctx context.Context,
+	params recreateIndexParams,
+) error {
+	if params.delete {
+		task, err := s.client.DeleteIndex(params.index)
 		if err != nil {
-			slog.Error("failed to add artist to index", "err", err)
-			continue
+			// TODO(patrik): Handle error
+			return err
 		}
+
+		err = s.waitForTask(ctx, task.TaskUID)
+		if err != nil {
+			// TODO(patrik): Handle error
+			return err
+		}
+	}
+
+	task, err := s.client.CreateIndex(&meilisearch.IndexConfig{
+		Uid:        params.index,
+		PrimaryKey: "id",
+	})
+	if err != nil {
+		// TODO(patrik): Handle error
+		return err
+	}
+
+	err = s.waitForTask(ctx, task.TaskUID)
+	if err != nil {
+		// TODO(patrik): Handle error
+		return err
+	}
+
+	idx := s.client.Index(params.index)
+
+	settingsTask, err := idx.UpdateSettings(params.settings)
+	if err != nil {
+		// TODO(patrik): Handle error
+		return err
+	}
+
+	err = s.waitForTask(ctx, settingsTask.TaskUID)
+	if err != nil {
+		// TODO(patrik): Handle error
+		return err
 	}
 
 	return nil
 }
 
-func (s *SearchService) indexAlbums() error {
-	albums, err := s.db.GetAllAlbums(context.TODO(), "", "")
+func (s *SearchService) indexArtists(ctx context.Context) error {
+	err := s.recreateIndex(ctx, recreateIndexParams{
+		index: "artists",
+		settings: &meilisearch.Settings{
+			SearchableAttributes: []string{"name", "tags"},
+			FilterableAttributes: []string{"id", "name", "tags"},
+		},
+		delete: true,
+	})
 	if err != nil {
-		return fmt.Errorf("failed to get albums: %w", err)
+		return err
 	}
 
-	for _, album := range albums {
-		artists := []string{album.ArtistName}
-		for _, a := range album.FeaturingArtists {
-			artists = append(artists, a.Name)
-		}
-
-		data := SearchAlbum{
-			Id:       album.Id,
-			Name:     album.Name,
-			CoverArt: utils.SqlNullToStringPtr(album.CoverArt),
-			Year:     utils.SqlNullToInt64Ptr(album.Year),
-			Artists:  artists,
-			Tags:     utils.SplitString(album.Tags.String),
-		}
-
-		_, err := s.albumIndex.AddDocuments(data, &meilisearch.DocumentOptions{
-			PrimaryKey: meilisearch.StringPtr("id"),
-		})
-		if err != nil {
-			slog.Error("failed to add album to index", "err", err)
-			continue
-		}
+	err = indexInBatches[SearchArtist, database.Artist](
+		ctx,
+		s.artistIndex,
+		func(ctx context.Context, page types.PageParams) ([]database.Artist, types.Page, error) {
+			return s.db.GetArtists(ctx, database.GetArtistsParams{
+				Page: page,
+			})
+		},
+		func(item database.Artist) SearchArtist {
+			return SearchArtist{
+				Id:       item.Id,
+				Name:     item.Name,
+				CoverArt: utils.SqlNullToStringPtr(item.CoverArt),
+				Tags:     utils.SplitString(item.Tags.String),
+			}
+		},
+	)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (s *SearchService) indexTracks() error {
-	tracks, err := s.db.GetAllTracks(context.TODO(), "", "")
+func (s *SearchService) indexAlbums(ctx context.Context) error {
+	err := s.recreateIndex(ctx, recreateIndexParams{
+		index: "albums",
+		settings: &meilisearch.Settings{
+			SearchableAttributes: []string{"name", "artists", "tags"},
+			FilterableAttributes: []string{"id", "name", "year", "artists", "tags"},
+		},
+		delete: true,
+	})
 	if err != nil {
-		return fmt.Errorf("failed to get tracks: %w", err)
+		return err
 	}
 
-	for _, track := range tracks {
-		artists := []string{track.ArtistName}
-		for _, a := range track.FeaturingArtists {
-			artists = append(artists, a.Name)
-		}
+	err = indexInBatches[SearchAlbum, database.Album](
+		ctx,
+		s.albumIndex,
+		func(ctx context.Context, page types.PageParams) ([]database.Album, types.Page, error) {
+			return s.db.GetAlbums(ctx, database.GetAlbumsParams{
+				Page: page,
+			})
+		},
+		func(item database.Album) SearchAlbum {
+			artists := []string{item.ArtistName}
+			for _, a := range item.FeaturingArtists {
+				artists = append(artists, a.Name)
+			}
 
-		data := SearchTrack{
-			Id:       track.Id,
-			Name:     track.Name,
-			Duration: track.Duration,
-			Number:   utils.SqlNullToInt64Ptr(track.Number),
-			Year:     utils.SqlNullToInt64Ptr(track.Year),
-			Artists:  artists,
-			Album:    track.AlbumName,
-			Tags:     utils.SplitString(track.Tags.String),
-		}
+			return SearchAlbum{
+				Id:       item.Id,
+				Name:     item.Name,
+				CoverArt: utils.SqlNullToStringPtr(item.CoverArt),
+				Year:     utils.SqlNullToInt64Ptr(item.Year),
+				Artists:  artists,
+				Tags:     utils.SplitString(item.Tags.String),
+			}
+		},
+	)
+	if err != nil {
+		return err
+	}
 
-		_, err := s.trackIndex.AddDocuments(data, &meilisearch.DocumentOptions{
-			PrimaryKey: meilisearch.StringPtr("id"),
-		})
-		if err != nil {
-			slog.Error("failed to add album to index", "err", err)
-			continue
-		}
+	return nil
+}
+
+func (s *SearchService) indexTracks(ctx context.Context) error {
+	err := s.recreateIndex(ctx, recreateIndexParams{
+		index: "tracks",
+		settings: &meilisearch.Settings{
+			SearchableAttributes: []string{"name", "artists", "album", "tags"},
+			FilterableAttributes: []string{"id", "name", "duration", "number", "year", "artists", "album", "tags"},
+		},
+		delete: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = indexInBatches[SearchTrack, database.Track](
+		ctx,
+		s.trackIndex,
+		func(ctx context.Context, page types.PageParams) ([]database.Track, types.Page, error) {
+			return s.db.GetTracks(ctx, database.GetTracksParams{
+				Page: page,
+			})
+		},
+		func(item database.Track) SearchTrack {
+			artists := []string{item.ArtistName}
+			for _, a := range item.FeaturingArtists {
+				artists = append(artists, a.Name)
+			}
+
+			return SearchTrack{
+				Id:       item.Id,
+				Name:     item.Name,
+				Duration: item.Duration,
+				Number:   utils.SqlNullToInt64Ptr(item.Number),
+				Year:     utils.SqlNullToInt64Ptr(item.Year),
+				Artists:  artists,
+				Album:    item.AlbumName,
+				Tags:     utils.SplitString(item.Tags.String),
+			}
+		},
+	)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (s *SearchService) Init() error {
-	err := s.configure()
+	s.artistIndex = s.client.Index("artists")
+	s.albumIndex = s.client.Index("albums")
+	s.trackIndex = s.client.Index("tracks")
+
+	return nil
+}
+
+func (s *SearchService) Index() error {
+	var err error
+
+	ctx := context.Background()
+
+	err = s.indexArtists(ctx)
 	if err != nil {
-		slog.Error("failed to configure", "err", err)
-		return nil
+		return err
+	}
+
+	err = s.indexAlbums(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = s.indexTracks(ctx)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (s *SearchService) SearchArtists(ctx context.Context, query string) ([]database.Artist, error) {
-	searchResult, err := s.artistIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
-		Limit: 5,
-	})
+type SearchParams struct {
+	Query string
+	Limit int
+}
+
+func (s *SearchService) SearchArtists(ctx context.Context, params SearchParams) ([]database.Artist, error) {
+	artists, err := search[SearchArtist, database.Artist](
+		ctx,
+		s.artistIndex,
+		params,
+		func(ctx context.Context, ids []string) ([]database.Artist, error) {
+			return s.db.GetArtistsIn(ctx, ids, "")
+		},
+		func(artist database.Artist) string {
+			return artist.Id
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	hits := []SearchArtist{}
-	err = searchResult.Hits.DecodeInto(&hits)
+	return artists, nil
+}
+
+func (s *SearchService) SearchAlbums(ctx context.Context, params SearchParams) ([]database.Album, error) {
+	albums, err := search[SearchAlbum, database.Album](
+		ctx,
+		s.albumIndex,
+		params,
+		func(ctx context.Context, ids []string) ([]database.Album, error) {
+			return s.db.GetAlbumsIn(ctx, ids, "")
+		},
+		func(album database.Album) string {
+			return album.Id
+		},
+	)
 	if err != nil {
 		return nil, err
+	}
+
+	return albums, nil
+}
+
+func (s *SearchService) SearchTracks(ctx context.Context, params SearchParams) ([]database.Track, error) {
+	tracks, err := search[SearchTrack, database.Track](
+		ctx,
+		s.trackIndex,
+		params,
+		func(ctx context.Context, ids []string) ([]database.Track, error) {
+			return s.db.GetTracksIn(ctx, ids, "")
+		},
+		func(track database.Track) string {
+			return track.Id
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range tracks {
+		tracks[i].Order = utils.IntPtr(i)
+	}
+
+	return tracks, nil
+}
+
+func search[TDoc hasID, TResult any](
+	ctx context.Context,
+	index meilisearch.IndexManager,
+	params SearchParams,
+	fetch func(ctx context.Context, ids []string) ([]TResult, error),
+	getID func(TResult) string,
+) ([]TResult, error) {
+	searchResult, err := index.SearchWithContext(
+		ctx,
+		params.Query,
+		&meilisearch.SearchRequest{
+			Limit: int64(params.Limit),
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("search: %w", err)
+	}
+
+	var hits []TDoc
+	if err := searchResult.Hits.DecodeInto(&hits); err != nil {
+		return nil, fmt.Errorf("decode hits: %w", err)
+	}
+
+	if len(hits) == 0 {
+		return []TResult{}, nil
 	}
 
 	ids := make([]string, len(hits))
-	for i, t := range hits {
-		ids[i] = t.Id
+	for i, h := range hits {
+		ids[i] = h.GetID()
 	}
 
-	mappedArtists := make(map[string]database.Artist, len(hits))
-
-	artists, err := s.db.GetArtistsIn(ctx, ids, "")
+	results, err := fetch(ctx, ids)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetch results: %w", err)
 	}
 
-	for _, t := range artists {
-		mappedArtists[t.Id] = t
+	mapped := make(map[string]TResult, len(results))
+	for _, r := range results {
+		mapped[getID(r)] = r
 	}
 
-	final := make([]database.Artist, 0, len(hits))
-
-	for _, hit := range hits {
-		mapped, exists := mappedArtists[hit.Id]
-		if !exists {
-			continue
+	final := make([]TResult, 0, len(hits))
+	for _, id := range ids {
+		res, ok := mapped[id]
+		if ok {
+			final = append(final, res)
 		}
-
-		final = append(final, mapped)
 	}
 
 	return final, nil
 }
 
-func (s *SearchService) SearchAlbums(ctx context.Context, query string) ([]database.Album, error) {
-	searchResult, err := s.albumIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
-		Limit: 5,
+func indexInBatches[TDoc any, TItem any](
+	ctx context.Context,
+	index meilisearch.IndexManager,
+	fetch func(ctx context.Context, page types.PageParams) ([]TItem, types.Page, error),
+	mapItem func(item TItem) TDoc,
+) error {
+	items, page, err := fetch(ctx, types.PageParams{
+		PerPage: batchSize,
+		Page:    0,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	hits := []SearchAlbum{}
-	err = searchResult.Hits.DecodeInto(&hits)
-	if err != nil {
-		return nil, err
-	}
-
-	ids := make([]string, len(hits))
-	for i, t := range hits {
-		ids[i] = t.Id
-	}
-
-	mappedAlbums := make(map[string]database.Album, len(hits))
-
-	albums, err := s.db.GetAlbumsIn(ctx, ids, "")
-	if err != nil {
-		return nil, err
-	}
-
-	for _, t := range albums {
-		mappedAlbums[t.Id] = t
-	}
-
-	final := make([]database.Album, 0, len(hits))
-
-	for _, hit := range hits {
-		mapped, exists := mappedAlbums[hit.Id]
-		if !exists {
-			continue
+	sendItems := func(items []TItem) {
+		docs := make([]TDoc, 0, batchSize)
+		for _, item := range items {
+			data := mapItem(item)
+			docs = append(docs, data)
 		}
 
-		final = append(final, mapped)
+		_, err := index.AddDocuments(docs, &meilisearch.DocumentOptions{
+			PrimaryKey: meilisearch.StringPtr("id"),
+		})
+		if err != nil {
+			// TODO(patrik): Fix
+			slog.Error("failed to add tracks to index", "err", err)
+		}
 	}
 
-	return final, nil
-}
+	sendItems(items)
 
-func (s *SearchService) SearchTracks(ctx context.Context, query string) ([]database.Track, error) {
-	searchResult, err := s.trackIndex.SearchWithContext(ctx, query, &meilisearch.SearchRequest{
-		Limit: 5,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	hits := []SearchTrack{}
-	err = searchResult.Hits.DecodeInto(&hits)
-	if err != nil {
-		return nil, err
-	}
-
-	ids := make([]string, len(hits))
-	for i, t := range hits {
-		ids[i] = t.Id
-	}
-
-	mappedTracks := make(map[string]database.Track, len(hits))
-
-	tracks, err := s.db.GetTracksIn(ctx, ids, "")
-	if err != nil {
-		return nil, err
-	}
-
-	for _, t := range tracks {
-		mappedTracks[t.Id] = t
-	}
-
-	final := make([]database.Track, 0, len(hits))
-
-	for _, hit := range hits {
-		mapped, exists := mappedTracks[hit.Id]
-		if !exists {
-			continue
+	for i := 1; i < page.TotalPages; i++ {
+		items, _, err := fetch(ctx, types.PageParams{
+			PerPage: batchSize,
+			Page:    i,
+		})
+		if err != nil {
+			return err
 		}
 
-		final = append(final, mapped)
+		sendItems(items)
 	}
 
-	return final, nil
-}
-
-func createIndex(client meilisearch.ServiceManager, indexUID string) error {
-	fmt.Printf("Creating index '%s'...\n", indexUID)
-
-	// task, err := client.DeleteIndex(indexUID)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// err = waitForTask(client, task.TaskUID)
-	// if err != nil {
-	// 	return err
-	// }
-
-	task, err := client.CreateIndex(&meilisearch.IndexConfig{
-		Uid:        indexUID,
-		PrimaryKey: "id",
-	})
-	pretty.Println(task)
-	fmt.Printf("err: %v\n", err)
-	if err != nil {
-		slog.Error("failed to create index", "err", err)
-		return nil
-	}
-
-	fmt.Println("Waiting for task", task.TaskUID)
-	return waitForTask(client, task.TaskUID)
-}
-
-func waitForTask(client meilisearch.ServiceManager, taskUID int64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err := client.WaitForTaskWithContext(ctx, taskUID, 100*time.Millisecond)
-	return err
+	return nil
 }

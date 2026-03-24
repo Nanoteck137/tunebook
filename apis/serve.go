@@ -22,6 +22,8 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 	InstallTagHandlers(app, g)
 
 	InstallPlaylistHandlers(app, g)
+
+InstallSearchHandlers(app, g)
 }
 
 func RegisterStaticHandlers(app core.App, g pyrin.Group) {

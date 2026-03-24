@@ -113,7 +113,6 @@ type LibraryService struct {
 
 	norificationService *NotificationService
 	mediaService        *MediaService
-	searchService       *SearchService
 
 	errors []error
 
@@ -134,14 +133,12 @@ func NewLibraryService(
 	config *config.Config,
 	notificationService *NotificationService,
 	mediaService *MediaService,
-	searchService *SearchService,
 ) *LibraryService {
 	return &LibraryService{
 		db:                  db,
 		config:              config,
 		norificationService: notificationService,
 		mediaService:        mediaService,
-		searchService:       searchService,
 	}
 }
 
@@ -253,12 +250,6 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *ArtistEntr
 		entry.Tags,
 	)
 	if err != nil {
-		return err
-	}
-
-	err = s.searchService.UpdateArtist(ctx, entry.Id)
-	if err != nil {
-		// TODO(patrik): Better error
 		return err
 	}
 
@@ -412,12 +403,6 @@ func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *AlbumEntry)
 		entry.Tags,
 	)
 	if err != nil {
-		return err
-	}
-
-	err = s.searchService.UpdateAlbum(ctx, entry.Id)
-	if err != nil {
-		// TODO(patrik): Better error
 		return err
 	}
 
@@ -642,12 +627,6 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *TrackEntry)
 		entry.Tags,
 	)
 	if err != nil {
-		return err
-	}
-
-	err = s.searchService.UpdateTrack(ctx, entry.Id)
-	if err != nil {
-		// TODO(patrik): Better error
 		return err
 	}
 

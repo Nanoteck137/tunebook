@@ -217,15 +217,15 @@ export class ApiClient extends BaseApiClient {
   }
   
   searchAlbums(options?: ExtraOptions) {
-    return this.request("/api/v1/albums/search", "GET", api.SearchAlbums, z.any(), undefined, options)
+    return this.request("/api/v1/search/albums", "GET", api.SearchAlbums, z.any(), undefined, options)
   }
   
   searchArtists(options?: ExtraOptions) {
-    return this.request("/api/v1/artists/search", "GET", api.SearchArtists, z.any(), undefined, options)
+    return this.request("/api/v1/search/artists", "GET", api.SearchArtists, z.any(), undefined, options)
   }
   
   searchTracks(options?: ExtraOptions) {
-    return this.request("/api/v1/tracks/search", "GET", api.SearchTracks, z.any(), undefined, options)
+    return this.request("/api/v1/search/tracks", "GET", api.SearchTracks, z.any(), undefined, options)
   }
   
   
@@ -467,15 +467,15 @@ export class ClientUrls {
   }
   
   searchAlbums() {
-    return createUrl(this.baseUrl, "/api/v1/albums/search")
+    return createUrl(this.baseUrl, "/api/v1/search/albums")
   }
   
   searchArtists() {
-    return createUrl(this.baseUrl, "/api/v1/artists/search")
+    return createUrl(this.baseUrl, "/api/v1/search/artists")
   }
   
   searchTracks() {
-    return createUrl(this.baseUrl, "/api/v1/tracks/search")
+    return createUrl(this.baseUrl, "/api/v1/search/tracks")
   }
   
   sseHandler() {

@@ -103,10 +103,6 @@ func getPageOptions(q url.Values) database.FetchOptions {
 	}
 }
 
-type SearchTracks struct {
-	Tracks []Track `json:"tracks"`
-}
-
 func handleTrackServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrTrackServiceTrackNotFound):
@@ -188,34 +184,6 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 				return GetTrackById{
 					Track: ConvertDBTrack(c, track),
 				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "SearchTracks",
-			Method:       http.MethodGet,
-			Path:         "/tracks/search",
-			ResponseType: SearchTracks{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-
-				ctx := c.Request().Context()
-
-				tracks, err := app.SearchService().SearchTracks(ctx, q.Get("query"))
-				if err != nil {
-					return nil, err
-				}
-
-				res := SearchTracks{
-					Tracks: make([]Track, len(tracks)),
-				}
-
-				for i, track := range tracks {
-					track.Order = utils.IntPtr(i)
-					res.Tracks[i] = ConvertDBTrack(c, track)
-				}
-
-				return res, nil
 			},
 		},
 	)

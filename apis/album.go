@@ -67,10 +67,6 @@ type GetAlbumTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
-type SearchAlbums struct {
-	Albums []Album `json:"albums"`
-}
-
 func handleAlbumServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrAlbumServiceAlbumNotFound):
@@ -177,33 +173,6 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 
 				for i, track := range tracks {
 					res.Tracks[i] = ConvertDBTrack(c, track)
-				}
-
-				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "SearchAlbums",
-			Path:         "/albums/search",
-			Method:       http.MethodGet,
-			ResponseType: SearchAlbums{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-
-				ctx := c.Request().Context()
-
-				albums, err := app.SearchService().SearchAlbums(ctx, q.Get("query"))
-				if err != nil {
-					return nil, err
-				}
-
-				res := SearchAlbums{
-					Albums: make([]Album, len(albums)),
-				}
-
-				for i, album := range albums {
-					res.Albums[i] = ConvertDBAlbum(c, album)
 				}
 
 				return res, nil

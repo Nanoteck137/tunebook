@@ -405,14 +405,14 @@ export const GetMe = z.object({
 });
 export type GetMe = z.infer<typeof GetMe>;
 
-// Name: MediaResource
-export const MediaResource = z.object({
-  // Name: MediaResource.id
+// Name: MediaRef
+export const MediaRef = z.object({
+  // Name: MediaRef.id
   "id": z.string(),
-  // Name: MediaResource.name
+  // Name: MediaRef.name
   "name": z.string(),
 });
-export type MediaResource = z.infer<typeof MediaResource>;
+export type MediaRef = z.infer<typeof MediaRef>;
 
 // Name: MediaItem
 export const MediaItem = z.object({
@@ -421,15 +421,11 @@ export const MediaItem = z.object({
   // Name: MediaItem.name
   "name": z.string(),
   // Name: MediaItem.artists
-  "artists": z.array(MediaResource),
+  "artists": z.array(MediaRef),
   // Name: MediaItem.album
-  "album": MediaResource,
+  "album": MediaRef,
   // Name: MediaItem.coverArt
   "coverArt": Images,
-  // Name: MediaItem.mediaFormat
-  "mediaFormat": z.string(),
-  // Name: MediaItem.mediaUrl
-  "mediaUrl": z.string(),
 });
 export type MediaItem = z.infer<typeof MediaItem>;
 
@@ -442,12 +438,6 @@ export type GetMedia = z.infer<typeof GetMedia>;
 
 // Name: GetMediaCommonBody
 export const GetMediaCommonBody = z.object({
-  // Name: GetMediaCommonBody.mediaFormat
-  "mediaFormat": z.string().optional(),
-  // Name: GetMediaCommonBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaCommonBody.sort
-  "sort": z.string().optional(),
   // Name: GetMediaCommonBody.limit
   "limit": z.number().optional(),
   // Name: GetMediaCommonBody.offset
@@ -457,12 +447,6 @@ export type GetMediaCommonBody = z.infer<typeof GetMediaCommonBody>;
 
 // Name: GetMediaFromAlbumBody
 export const GetMediaFromAlbumBody = z.object({
-  // Name: GetMediaFromAlbumBody.mediaFormat
-  "mediaFormat": z.string().optional(),
-  // Name: GetMediaFromAlbumBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromAlbumBody.sort
-  "sort": z.string().optional(),
   // Name: GetMediaFromAlbumBody.limit
   "limit": z.number().optional(),
   // Name: GetMediaFromAlbumBody.offset
@@ -472,12 +456,6 @@ export type GetMediaFromAlbumBody = z.infer<typeof GetMediaFromAlbumBody>;
 
 // Name: GetMediaFromArtistBody
 export const GetMediaFromArtistBody = z.object({
-  // Name: GetMediaFromArtistBody.mediaFormat
-  "mediaFormat": z.string().optional(),
-  // Name: GetMediaFromArtistBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromArtistBody.sort
-  "sort": z.string().optional(),
   // Name: GetMediaFromArtistBody.limit
   "limit": z.number().optional(),
   // Name: GetMediaFromArtistBody.offset
@@ -487,12 +465,6 @@ export type GetMediaFromArtistBody = z.infer<typeof GetMediaFromArtistBody>;
 
 // Name: GetMediaFromFilterBody
 export const GetMediaFromFilterBody = z.object({
-  // Name: GetMediaFromFilterBody.mediaFormat
-  "mediaFormat": z.string().optional(),
-  // Name: GetMediaFromFilterBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromFilterBody.sort
-  "sort": z.string().optional(),
   // Name: GetMediaFromFilterBody.limit
   "limit": z.number().optional(),
   // Name: GetMediaFromFilterBody.offset
@@ -504,12 +476,6 @@ export type GetMediaFromFilterBody = z.infer<typeof GetMediaFromFilterBody>;
 
 // Name: GetMediaFromIdsBody
 export const GetMediaFromIdsBody = z.object({
-  // Name: GetMediaFromIdsBody.mediaFormat
-  "mediaFormat": z.string().optional(),
-  // Name: GetMediaFromIdsBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromIdsBody.sort
-  "sort": z.string().optional(),
   // Name: GetMediaFromIdsBody.limit
   "limit": z.number().optional(),
   // Name: GetMediaFromIdsBody.offset

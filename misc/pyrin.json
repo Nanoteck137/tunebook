@@ -590,21 +590,6 @@
       "name": "GetMediaCommonBody",
       "fields": [
         {
-          "name": "mediaFormat",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        },
-        {
-          "name": "sort",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
           "name": "limit",
           "type": "int",
           "omitEmpty": true
@@ -619,21 +604,6 @@
     {
       "name": "GetMediaFromAlbumBody",
       "fields": [
-        {
-          "name": "mediaFormat",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        },
-        {
-          "name": "sort",
-          "type": "string",
-          "omitEmpty": true
-        },
         {
           "name": "limit",
           "type": "int",
@@ -650,21 +620,6 @@
       "name": "GetMediaFromArtistBody",
       "fields": [
         {
-          "name": "mediaFormat",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        },
-        {
-          "name": "sort",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
           "name": "limit",
           "type": "int",
           "omitEmpty": true
@@ -679,21 +634,6 @@
     {
       "name": "GetMediaFromFilterBody",
       "fields": [
-        {
-          "name": "mediaFormat",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        },
-        {
-          "name": "sort",
-          "type": "string",
-          "omitEmpty": true
-        },
         {
           "name": "limit",
           "type": "int",
@@ -714,21 +654,6 @@
     {
       "name": "GetMediaFromIdsBody",
       "fields": [
-        {
-          "name": "mediaFormat",
-          "type": "string",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        },
-        {
-          "name": "sort",
-          "type": "string",
-          "omitEmpty": true
-        },
         {
           "name": "limit",
           "type": "int",
@@ -1001,33 +926,23 @@
         },
         {
           "name": "artists",
-          "type": "[]MediaResource",
+          "type": "[]MediaRef",
           "omitEmpty": false
         },
         {
           "name": "album",
-          "type": "MediaResource",
+          "type": "MediaRef",
           "omitEmpty": false
         },
         {
           "name": "coverArt",
           "type": "Images",
           "omitEmpty": false
-        },
-        {
-          "name": "mediaFormat",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "mediaUrl",
-          "type": "string",
-          "omitEmpty": false
         }
       ]
     },
     {
-      "name": "MediaResource",
+      "name": "MediaRef",
       "fields": [
         {
           "name": "id",
@@ -1700,21 +1615,21 @@
       "type": "api",
       "name": "SearchAlbums",
       "method": "GET",
-      "path": "/api/v1/albums/search",
+      "path": "/api/v1/search/albums",
       "response": "SearchAlbums"
     },
     {
       "type": "api",
       "name": "SearchArtists",
       "method": "GET",
-      "path": "/api/v1/artists/search",
+      "path": "/api/v1/search/artists",
       "response": "SearchArtists"
     },
     {
       "type": "api",
       "name": "SearchTracks",
       "method": "GET",
-      "path": "/api/v1/tracks/search",
+      "path": "/api/v1/search/tracks",
       "response": "SearchTracks"
     },
     {

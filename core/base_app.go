@@ -18,6 +18,7 @@ const (
 	jobAuthCleanup  = "auth-cleanup"
 	jobCacheCleanup = "cache-cleanup"
 	jobLibrarySync  = "library-sync"
+	jobSearchIndex  = "search-index"
 )
 
 // TODO(patrik): Move to it's own file
@@ -89,8 +90,26 @@ func (j *LibrarySyncJob) Schedule() string {
 }
 
 func (j *LibrarySyncJob) Run(ctx context.Context) error {
-	j.libraryService.Sync()
-	return nil
+	return j.libraryService.Sync()
+}
+
+// TODO(patrik): Move to it's own file
+var _ service.Job = (*SearchIndexJob)(nil)
+
+type SearchIndexJob struct {
+	searchService *service.SearchService
+}
+
+func (j *SearchIndexJob) Name() string {
+	return jobSearchIndex
+}
+
+func (j *SearchIndexJob) Schedule() string {
+	return ""
+}
+
+func (j *SearchIndexJob) Run(ctx context.Context) error {
+	return j.searchService.Index()
 }
 
 var _ App = (*BaseApp)(nil)
@@ -228,7 +247,12 @@ func (app *BaseApp) Bootstrap() error {
 	// TODO(patrik): This should be a worker
 	// go app.authService.CleanRoutine()
 
-	app.searchService = service.NewSearchService(app.db, dataDir, app.config)
+	app.searchService = service.NewSearchService(
+		newServiceLogger("search"),
+		app.db,
+		dataDir,
+		app.config,
+	)
 
 	// TODO(patrik): Do this lazily
 	err = app.searchService.Init()
@@ -243,7 +267,6 @@ func (app *BaseApp) Bootstrap() error {
 		app.config,
 		app.notificationService,
 		app.mediaService,
-		app.searchService,
 	)
 
 	app.artistService = service.NewArtistService(
@@ -299,6 +322,13 @@ func (app *BaseApp) Bootstrap() error {
 
 	err = app.jobService.AddJob(&LibrarySyncJob{
 		libraryService: app.libraryService,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = app.jobService.AddJob(&SearchIndexJob{
+		searchService: app.searchService,
 	})
 	if err != nil {
 		return err

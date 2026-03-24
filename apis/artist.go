@@ -53,10 +53,6 @@ type GetArtistAlbumsById struct {
 	Albums []Album `json:"albums"`
 }
 
-type SearchArtists struct {
-	Artists []Artist `json:"artists"`
-}
-
 func handleArtistServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrArtistServiceArtistNotFound):
@@ -164,37 +160,6 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 
 				for i, album := range albums {
 					res.Albums[i] = ConvertDBAlbum(c, album)
-				}
-
-				return res, nil
-			},
-		},
-
-		// TODO(patrik): Move from /artists/search to /search/artists
-		pyrin.ApiHandler{
-			Name:         "SearchArtists",
-			Method:       http.MethodGet,
-			Path:         "/artists/search",
-			ResponseType: SearchArtists{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-
-				ctx := c.Request().Context()
-
-				artists, err := app.SearchService().SearchArtists(
-					ctx,
-					q.Get("query"),
-				)
-				if err != nil {
-					return nil, err
-				}
-
-				res := SearchArtists{
-					Artists: make([]Artist, len(artists)),
-				}
-
-				for i, artist := range artists {
-					res.Artists[i] = ConvertDBArtist(c, artist)
 				}
 
 				return res, nil
