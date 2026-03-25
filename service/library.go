@@ -51,8 +51,11 @@ func (e LibrarySyncStateEvent) GetEventType() string {
 type UpdateFunc func()
 
 type LibraryService struct {
-	db     *database.Database
-	config *config.Config
+	logger *slog.Logger
+
+	db      *database.Database
+	dataDir types.DataDir
+	config  *config.Config
 
 	norificationService *NotificationService
 	mediaService        *MediaService
@@ -80,13 +83,17 @@ type LibraryService struct {
 }
 
 func NewLibraryService(
+	logger *slog.Logger,
 	db *database.Database,
+	dataDir types.DataDir,
 	config *config.Config,
 	notificationService *NotificationService,
 	mediaService *MediaService,
 ) *LibraryService {
 	return &LibraryService{
+		logger:              logger,
 		db:                  db,
+		dataDir:             dataDir,
 		config:              config,
 		norificationService: notificationService,
 		mediaService:        mediaService,
@@ -789,6 +796,21 @@ func (s *LibraryService) Sync() error {
 	s.albumsSyncDuration = albumTimer.Duration()
 	s.tracksSyncDuration = trackTimer.Duration()
 	s.totalSyncDuration = s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
+
+	dir := s.dataDir.Cache().String()
+	s.logger.Info("clearing the cache", "path", dir)
+
+	err = os.RemoveAll(dir)
+	if err != nil {
+		return err
+	}
+
+	err = utils.CreateDirectories([]string{
+		dir,
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

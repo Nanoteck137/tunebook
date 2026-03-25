@@ -257,7 +257,9 @@ func (app *BaseApp) Bootstrap() error {
 	app.mediaService = service.NewMediaService(app.db, dataDir)
 
 	app.libraryService = service.NewLibraryService(
+		newServiceLogger("library"),
 		app.db,
+		dataDir,
 		app.config,
 		app.notificationService,
 		app.mediaService,

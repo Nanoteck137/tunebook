@@ -74,8 +74,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Job Service: Locking
 
 - [ ] Backend: Library Service: Multi-threaded syncing
-- [ ] Backend: Library Service: Clear the cache after sync
-- [ ] Backend: Library Service: Cleanup after sync (artists, albums and tracks not existing anymore)
 
 - [ ] Backend: Database: Use database indexes
 
