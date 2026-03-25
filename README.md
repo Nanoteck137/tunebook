@@ -25,7 +25,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: API: Fix: Media api
 
-- [ ] Backend: Fix: Playlist Service: When deleting tracks we need to reorder the tracks again
 - [ ] Backend: Feature: Ability to get all playlist + filters
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 

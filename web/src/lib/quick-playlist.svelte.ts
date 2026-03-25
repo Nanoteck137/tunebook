@@ -21,7 +21,7 @@ class QuickPlaylist {
     }
 
     if (this.hasTrack(trackId)) {
-      const res = await this.apiClient.removeItemFromUserQuickPlaylist({
+      const res = await this.apiClient.removePlaylistItem(this.playlistId, {
         trackId: trackId,
       });
 
@@ -30,7 +30,7 @@ class QuickPlaylist {
         return;
       }
     } else {
-      const res = await this.apiClient.addToUserQuickPlaylist({
+      const res = await this.apiClient.addItemToPlaylist(this.playlistId, {
         trackId: trackId,
       });
 

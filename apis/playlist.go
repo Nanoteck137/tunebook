@@ -202,6 +202,8 @@ func handlePlaylistServiceErrors(err error) error {
 		return TrackNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceTrackAlreadyAdded):
 		return PlaylistAlreadyHasTrack()
+	case errors.Is(err, service.ErrPlaylistServiceItemNotFound):
+		return TrackNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceFilterNotFound):
 		return PlaylistFilterNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceAnchorTrackNotFound):

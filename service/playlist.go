@@ -20,6 +20,7 @@ var (
 	ErrPlaylistServicePlaylistNotFound    = playlistErr.New("playlist not found")
 	ErrPlaylistServiceTrackNotFound       = playlistErr.New("track not found")
 	ErrPlaylistServiceTrackAlreadyAdded   = playlistErr.New("track already added")
+	ErrPlaylistServiceItemNotFound        = playlistErr.New("item not found")
 	ErrPlaylistServiceFilterNotFound      = playlistErr.New("filter not found")
 	ErrPlaylistServiceAnchorTrackNotFound = playlistErr.New("anchor track not found")
 	ErrPlaylistServiceNotAuthorized       = playlistErr.New("not authorized")
@@ -454,9 +455,34 @@ func (s *PlaylistService) RemovePlaylistItem(
 		return err
 	}
 
-	err = s.db.DeletePlaylistItem(ctx, playlist.Id, params.TrackId)
+	item, err := s.db.GetPlaylistItemByTrackId(ctx, playlist.Id, params.TrackId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return ErrPlaylistServiceItemNotFound
+		}
+
+		return playlistErr.Wrap("remove item: db get item", err)
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return playlistErr.Wrap("remove item: db begin", err)
+	}
+	defer tx.Rollback()
+
+	err = tx.DeletePlaylistItem(ctx, playlist.Id, params.TrackId)
 	if err != nil {
 		return playlistErr.Wrap("remove item: db delete item", err)
+	}
+
+	err = tx.ReorderPlaylistItemsAfterDelete(ctx, playlist.Id, item.Order)
+	if err != nil {
+		return playlistErr.Wrap("remove item: db reorder items", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return playlistErr.Wrap("remove item: db commit", err)
 	}
 
 	return nil

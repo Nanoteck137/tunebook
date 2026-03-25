@@ -213,3 +213,31 @@ func (db DB) DeletePlaylistItem(ctx context.Context, playlistId, trackId string)
 
 	return nil
 }
+
+func (db DB) GetPlaylistItemByTrackId(ctx context.Context, playlistId, trackId string) (PlaylistItem, error) {
+	query := PlaylistItemQuery().
+		Where(
+			goqu.I("playlist_items.playlist_id").Eq(playlistId),
+			goqu.I("playlist_items.track_id").Eq(trackId),
+		)
+
+	return ember.Single[PlaylistItem](db.db, ctx, query)
+}
+
+func (db DB) ReorderPlaylistItemsAfterDelete(ctx context.Context, playlistId string, deletedOrder int) error {
+	query := goqu.Update("playlist_items").
+		Set(goqu.Record{
+			"order_num": goqu.L("order_num - 1"),
+		}).
+		Where(
+			goqu.I("playlist_items.playlist_id").Eq(playlistId),
+			goqu.I("order_num").Gt(deletedOrder),
+		)
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
