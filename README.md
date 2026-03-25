@@ -22,8 +22,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Feature: Ability to get all playlist + filters
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
-- [ ] Backend: Library: Feature: Use library.toml
-
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
 - [ ] Frontend: Design: Re-design the album items on /albums
