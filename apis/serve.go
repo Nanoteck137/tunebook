@@ -27,6 +27,7 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 }
 
 func RegisterStaticHandlers(app core.App, g pyrin.Group) {
+
 	g.Register(
 		pyrin.NormalHandler{
 			Method: http.MethodGet,
@@ -41,10 +42,18 @@ func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 				return nil
 			},
 		},
-
-		// TODO(patrik): Fix this
-		pyrin.SpaHandler(os.DirFS("./result"), "index.html"),
 	)
+
+	// TODO(patrik): Change this
+	webDir := app.Config().WebDir
+	slog.Info("Web Dir", "dir", webDir)
+
+	if webDir != "" {
+		g.Register(
+			// TODO(patrik): Fix this
+			pyrin.SpaHandler(os.DirFS(webDir), "index.html"),
+		)
+	}
 }
 
 func RegisterHandlers(app core.App, router pyrin.Router) {

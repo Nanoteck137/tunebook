@@ -46,13 +46,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: cancel() on forms on api errors, this makes sure that the form is not reset when error occurs
 
-- [ ] Backend: Cleanup: Database: Database code
-- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
-- [ ] Backend: Cleanup: Media Service: Code Cleanup
-- [ ] Backend: Cleanup: Job Service: Code Cleanup
-- [ ] Backend: Cleanup: Library Service: Code Cleanup
-- [ ] Backend: Cleanup: Auth Service: Code Cleanup
-
 - [ ] Backend: Media Service: Locking
 - [ ] Backend: Media Service: Logging
 
@@ -75,9 +68,16 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] General: Use new logo from dwebble_app
 
-- [ ] Backend: API: Add Compression for Static file routes (SPA Routes)
+- [ ] Backend: Cleanup: Database: Database code
+- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
+- [ ] Backend: Cleanup: Media Service: Code Cleanup
+- [ ] Backend: Cleanup: Job Service: Code Cleanup
+- [ ] Backend: Cleanup: Library Service: Code Cleanup
+- [ ] Backend: Cleanup: Auth Service: Code Cleanup
 
 - [ ] Backend: Cleanup: API: Better way to log the API Errors
+
+- [ ] Backend: API: Add Compression for Static file routes (SPA Routes)
 
 ## Future
 

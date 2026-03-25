@@ -34,7 +34,7 @@
             "-X github.com/nanoteck137/dwebble.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
-          vendorHash = "sha256-1HbNz94qQg1dRhl6DAdmJWovy1DX+d4FbMg2U3XjqnI=";
+          vendorHash = "sha256-0bNFL1iIrtG+siWbHu3ipTX3U9essxR7xnaR7BpAUyw=";
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
 
@@ -49,22 +49,45 @@
           version = fullVersion;
 
           src = gitignore.lib.gitignoreSource ./web;
-          npmDepsHash = "sha256-fWymnJnrDS39AHzT90h8+ItxPJ+q8CxENWUfkk79MG4=";
+          npmDepsHash = "sha256-sWnyOEp+fxjCJbdn2uwp45ExFwblTMZY+rfzWZpFHnQ=";
 
           PUBLIC_VERSION=version;
           PUBLIC_COMMIT=self.dirtyRev or self.rev or "no-commit";
+          PUBLIC_API_ADDRESS="";
 
           installPhase = ''
             runHook preInstall
             cp -r build $out/
-            echo '{ "type": "module" }' > $out/package.json
-
-            mkdir $out/bin
-            echo -e "#!${pkgs.runtimeShell}\n${pkgs.nodejs}/bin/node $out\n" > $out/bin/dwebble-web
-            chmod +x $out/bin/dwebble-web
-
             runHook postInstall
           '';
+        };
+
+        docker = pkgs.dockerTools.buildLayeredImage {
+          name = "dwebble";
+          tag  = fullVersion;
+
+          contents = [
+            pkgs.dockerTools.caCertificates
+            frontend   # ← add this so the frontend store path is present in the image
+            backend
+          ];
+
+          extraCommands = ''
+            mkdir -p tmp
+            chmod 1777 tmp
+
+            mkdir -p data
+            mkdir -p media
+          '';
+
+          config = {
+            Entrypoint   = [ "/bin/dwebble" ];
+            Cmd = [ "serve" ];
+            ExposedPorts = { "3000/tcp" = {}; };
+            Env = [
+              "DWEBBLE_WEB=${frontend}"  # resolves to the frontend's /nix/store/... path at build time
+            ];
+          };
         };
 
         tools = devtools.packages.${system};
@@ -72,7 +95,7 @@
       {
         packages = {
           default = backend;
-          inherit backend frontend;
+          inherit backend frontend docker;
         };
 
         devShells.default = pkgs.mkShell {

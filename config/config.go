@@ -33,6 +33,8 @@ type Config struct {
 	LibraryDir    string `mapstructure:"library_dir"`
 	JwtSecret     string `mapstructure:"jwt_secret"`
 
+	WebDir string `mapstructure:"web"`
+
 	MeilisearchAddress string `mapstructure:"meilisearch_address"`
 	MeilisearchApiKey  string `mapstructure:"meilisearch_api_key"`
 
@@ -61,6 +63,8 @@ func Load(cfgFile string) (*Config, error) {
 	v.SetDefault("listen_addr", ":3000")
 	v.BindEnv("data_dir")
 	v.BindEnv("jwt_secret")
+
+	v.BindEnv("web")
 
 	v.BindEnv("meilisearch_address")
 	v.BindEnv("meilisearch_api_key")
