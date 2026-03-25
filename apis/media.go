@@ -9,7 +9,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/dwebble/core"
 	"github.com/nanoteck137/dwebble/database"
 	"github.com/nanoteck137/dwebble/service"
@@ -256,8 +255,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 					res.DeviceSpecs = append(res.DeviceSpecs, r)
 				}
-
-				pretty.Println(res)
 
 				return res, nil
 			},
