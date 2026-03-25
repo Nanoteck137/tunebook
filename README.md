@@ -20,10 +20,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Feature: Favorites
 - [ ] Backend: Feature: Year over year
 
-- [ ] Backend: Search Service: Add Users
-
-- [ ] Backend: Cleanup: Cleanup user picture code
-
 - [ ] Backend: API: Fix: Media api
 
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
@@ -90,3 +86,4 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ## Future
 
 - [ ] Backend: Add back migrate command, maybe only for dev
+- [ ] Pyrin: Generate Structures for SSE events
