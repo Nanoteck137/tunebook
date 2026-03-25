@@ -16,10 +16,20 @@
   let numAlbums = $state(0);
   let numTracks = $state(0);
 
+  let missingArtists = $state<MissingItemTy[]>([]);
+  let missingAlbums = $state<MissingItemTy[]>([]);
+  let missingTracks = $state<MissingItemTy[]>([]);
+
   let artistSyncTime = $state(0);
   let albumSyncTime = $state(0);
   let trackSyncTime = $state(0);
   let totalSyncTime = $state(0);
+
+  const MissingItem = z.object({
+    id: z.string(),
+    name: z.string(),
+  });
+  type MissingItemTy = z.infer<typeof MissingItem>;
 
   const LibrarySyncStateEvent = z.object({
     errors: z.array(z.string()),
@@ -27,6 +37,10 @@
     numArtists: z.number(),
     numAlbums: z.number(),
     numTracks: z.number(),
+
+    missingArtists: z.array(MissingItem),
+    missingAlbums: z.array(MissingItem),
+    missingTracks: z.array(MissingItem),
 
     artistsSyncDurationMs: z.number(),
     albumsSyncDurationMs: z.number(),
@@ -54,6 +68,7 @@
     });
 
     eventSource.addEventListener("library-sync-state", (e) => {
+      console.log(JSON.parse(e.data));
       const data = LibrarySyncStateEvent.parse(JSON.parse(e.data));
 
       console.log("library state", data);
@@ -62,6 +77,10 @@
       numArtists = data.numArtists;
       numAlbums = data.numAlbums;
       numTracks = data.numTracks;
+
+      missingArtists = data.missingArtists;
+      missingAlbums = data.missingAlbums;
+      missingTracks = data.missingTracks;
 
       artistSyncTime = data.artistsSyncDurationMs;
       albumSyncTime = data.albumsSyncDurationMs;
@@ -130,6 +149,27 @@
 <p>Album Sync Time: {formatDuration(albumSyncTime)}</p>
 <p>Track Sync Time: {formatDuration(trackSyncTime)}</p>
 <p>Total Sync Time: {formatDuration(totalSyncTime)}</p>
+
+<p>Missing Artists:</p>
+<div class="flex flex-col">
+  {#each missingArtists as artist}
+    <a href="/artists/{artist.id}">{artist.name}</a>
+  {/each}
+</div>
+
+<p>Missing Albums:</p>
+<div class="flex flex-col">
+  {#each missingAlbums as album}
+    <a href="/albums/{album.id}">{album.name}</a>
+  {/each}
+</div>
+
+<p>Missing Tracks:</p>
+<div class="flex flex-col">
+  {#each missingTracks as track}
+    <p>{track.name}</p>
+  {/each}
+</div>
 
 <p>Errors:</p>
 {#each errors as err}

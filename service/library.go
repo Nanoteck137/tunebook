@@ -22,12 +22,21 @@ import (
 
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
 
+type MissingItem struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type LibrarySyncStateEvent struct {
 	Errors []string `json:"errors"`
 
 	NumArtists int `json:"numArtists"`
 	NumAlbums  int `json:"numAlbums"`
 	NumTracks  int `json:"numTracks"`
+
+	MissingArtists []MissingItem `json:"missingArtists"`
+	MissingAlbums  []MissingItem `json:"missingAlbums"`
+	MissingTracks  []MissingItem `json:"missingTracks"`
 
 	ArtistsSyncDurationMs int64 `json:"artistsSyncDurationMs"`
 	AlbumsSyncDurationMs  int64 `json:"albumsSyncDurationMs"`
@@ -54,6 +63,14 @@ type LibraryService struct {
 	numAlbums  int
 	numTracks  int
 
+	missingArtists []MissingItem
+	missingAlbums  []MissingItem
+	missingTracks  []MissingItem
+
+	syncedArtistIds map[string]struct{}
+	syncedAlbumIds  map[string]struct{}
+	syncedTrackIds  map[string]struct{}
+
 	artistsSyncDuration time.Duration
 	albumsSyncDuration  time.Duration
 	tracksSyncDuration  time.Duration
@@ -73,6 +90,12 @@ func NewLibraryService(
 		config:              config,
 		norificationService: notificationService,
 		mediaService:        mediaService,
+
+		// NOTE(patrik): We need to initialize these or else the frontend
+		// gets an error because these are nil
+		missingArtists: []MissingItem{},
+		missingAlbums:  []MissingItem{},
+		missingTracks:  []MissingItem{},
 	}
 }
 
@@ -98,6 +121,9 @@ func (s *LibraryService) GetSyncStateEvent() LibrarySyncStateEvent {
 		NumArtists:            s.numArtists,
 		NumAlbums:             s.numAlbums,
 		NumTracks:             s.numTracks,
+		MissingArtists:        s.missingArtists,
+		MissingAlbums:         s.missingAlbums,
+		MissingTracks:         s.missingTracks,
 		ArtistsSyncDurationMs: s.artistsSyncDuration.Milliseconds(),
 		AlbumsSyncDurationMs:  s.albumsSyncDuration.Milliseconds(),
 		TracksSyncDurationMs:  s.tracksSyncDuration.Milliseconds(),
@@ -144,8 +170,8 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *library.Ar
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
 			_, err = s.db.CreateArtist(ctx, database.CreateArtistParams{
-				Id:         entry.Id,
-				Name:       entry.Name,
+				Id:   entry.Id,
+				Name: entry.Name,
 				CoverArt: sql.NullString{
 					String: coverArt,
 					Valid:  coverArt != "",
@@ -216,6 +242,7 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 			return err
 		}
 
+		s.syncedArtistIds[entry.Id] = struct{}{}
 		s.numArtists += 1
 		s.update()
 	}
@@ -369,6 +396,7 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 			return err
 		}
 
+		s.syncedAlbumIds[entry.Id] = struct{}{}
 		s.numAlbums += 1
 		s.update()
 	}
@@ -603,6 +631,7 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 			continue
 		}
 
+		s.syncedTrackIds[entry.Id] = struct{}{}
 		s.numTracks += 1
 		s.update()
 	}
@@ -620,6 +649,8 @@ func (s *LibraryService) Sync() error {
 	})
 
 	defer func() {
+		s.update()
+
 		slog.Info("stopped library sync")
 
 		message := fmt.Sprintf(
@@ -644,6 +675,19 @@ func (s *LibraryService) Sync() error {
 	s.numAlbums = 0
 	s.numTracks = 0
 
+	s.artistsSyncDuration = 0
+	s.albumsSyncDuration = 0
+	s.tracksSyncDuration = 0
+	s.totalSyncDuration = 0
+
+	s.missingArtists = []MissingItem{}
+	s.missingAlbums = []MissingItem{}
+	s.missingTracks = []MissingItem{}
+
+	s.syncedArtistIds = make(map[string]struct{})
+	s.syncedAlbumIds = make(map[string]struct{})
+	s.syncedTrackIds = make(map[string]struct{})
+
 	s.update()
 
 	ctx := context.TODO()
@@ -651,7 +695,6 @@ func (s *LibraryService) Sync() error {
 	artistTimer := utils.SimpleTimer{}
 	artistTimer.Start()
 
-	// TODO(patrik): Check for deleted artists
 	err := s.syncArtists(ctx, p)
 	if err != nil {
 		return err
@@ -662,7 +705,6 @@ func (s *LibraryService) Sync() error {
 	albumTimer := utils.SimpleTimer{}
 	albumTimer.Start()
 
-	// TODO(patrik): Check for deleted albums
 	err = s.syncAlbums(ctx, p)
 	if err != nil {
 		return err
@@ -673,13 +715,75 @@ func (s *LibraryService) Sync() error {
 	trackTimer := utils.SimpleTimer{}
 	trackTimer.Start()
 
-	// TODO(patrik): Check for deleted tracks
 	err = s.syncTracks(ctx, p)
 	if err != nil {
 		return err
 	}
 
 	trackTimer.Stop()
+
+	existingArtistIds, err := s.db.GetAllArtistIds(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get all artist ids: %w", err)
+	}
+	existingAlbumIds, err := s.db.GetAllAlbumIds(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get all album ids: %w", err)
+	}
+	existingTrackIds, err := s.db.GetAllTrackIds(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get all track ids: %w", err)
+	}
+
+	for _, id := range existingArtistIds {
+		_, exists := s.syncedArtistIds[id]
+		if !exists {
+			artist, err := s.db.GetArtistById(ctx, id)
+			if err == nil {
+				slog.Warn("missing artist",
+					"id", id,
+					"name", artist.Name,
+				)
+
+				s.missingArtists = append(s.missingArtists, MissingItem{Id: id, Name: artist.Name})
+			}
+		}
+	}
+
+	for _, id := range existingAlbumIds {
+		_, exists := s.syncedAlbumIds[id]
+		if !exists {
+			album, err := s.db.GetAlbumById(ctx, id)
+			if err == nil {
+				slog.Warn("missing album",
+					"id", id,
+					"name", album.Name,
+					"artist", album.ArtistName,
+				)
+
+				displayName := fmt.Sprintf("%s (%s)", album.Name, album.ArtistName)
+				s.missingAlbums = append(s.missingAlbums, MissingItem{Id: id, Name: displayName})
+			}
+		}
+	}
+
+	for _, id := range existingTrackIds {
+		_, exists := s.syncedTrackIds[id]
+		if !exists {
+			track, err := s.db.GetTrackById(ctx, id)
+			if err == nil {
+				slog.Warn("missing track",
+					"id", id,
+					"name", track.Name,
+					"album", track.AlbumName,
+					"artist", track.ArtistName,
+				)
+
+				displayName := fmt.Sprintf("%s (%s) (%s)", track.Name, track.AlbumName, track.ArtistName)
+				s.missingTracks = append(s.missingTracks, MissingItem{Id: id, Name: displayName})
+			}
+		}
+	}
 
 	s.artistsSyncDuration = artistTimer.Duration()
 	s.albumsSyncDuration = albumTimer.Duration()

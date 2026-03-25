@@ -204,6 +204,11 @@ func (db DB) GetArtistsIn(ctx context.Context, in any, sort string) ([]Artist, e
 	return ember.Multiple[Artist](db.db, ctx, query)
 }
 
+func (db DB) GetAllArtistIds(ctx context.Context) ([]string, error) {
+	query := dialect.From("artists").Select("artists.id")
+	return ember.Multiple[string](db.db, ctx, query)
+}
+
 type CreateArtistParams struct {
 	Id string
 
@@ -248,7 +253,7 @@ func (db DB) CreateArtist(ctx context.Context, params CreateArtistParams) (strin
 type ArtistChanges struct {
 	Name types.Change[string]
 
-	CoverArt  types.Change[sql.NullString]
+	CoverArt types.Change[sql.NullString]
 
 	Created types.Change[int64]
 }
