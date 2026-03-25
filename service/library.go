@@ -814,3 +814,44 @@ func (s *LibraryService) Sync() error {
 
 	return nil
 }
+
+func (s *LibraryService) Cleanup(ctx context.Context) error {
+	deletedArtists := 0
+	deletedAlbums := 0
+	deletedTracks := 0
+
+	for _, item := range s.missingTracks {
+		err := s.db.DeleteTrack(ctx, item.Id)
+		if err != nil {
+			s.logger.Warn("failed to delete track", "id", item.Id, "name", item.Name, "err", err)
+			continue
+		}
+		deletedTracks++
+	}
+
+	for _, item := range s.missingAlbums {
+		err := s.db.DeleteAlbum(ctx, item.Id)
+		if err != nil {
+			s.logger.Warn("failed to delete album", "id", item.Id, "name", item.Name, "err", err)
+			continue
+		}
+		deletedAlbums++
+	}
+
+	for _, item := range s.missingArtists {
+		err := s.db.DeleteArtist(ctx, item.Id)
+		if err != nil {
+			s.logger.Warn("failed to delete artist", "id", item.Id, "name", item.Name, "err", err)
+			continue
+		}
+		deletedArtists++
+	}
+
+	s.logger.Info("library cleanup completed",
+		"deletedArtists", deletedArtists,
+		"deletedAlbums", deletedAlbums,
+		"deletedTracks", deletedTracks,
+	)
+
+	return nil
+}

@@ -15,10 +15,11 @@ import (
 
 // TODO(patrik): Move to it's own file
 const (
-	jobAuthCleanup  = "auth-cleanup"
-	jobCacheCleanup = "cache-cleanup"
-	jobLibrarySync  = "library-sync"
-	jobSearchIndex  = "search-index"
+	jobAuthCleanup    = "auth-cleanup"
+	jobCacheCleanup   = "cache-cleanup"
+	jobLibrarySync    = "library-sync"
+	jobLibraryCleanup = "library-cleanup"
+	jobSearchIndex    = "search-index"
 )
 
 // TODO(patrik): Move to it's own file
@@ -91,6 +92,25 @@ func (j *LibrarySyncJob) Schedule() string {
 
 func (j *LibrarySyncJob) Run(ctx context.Context) error {
 	return j.libraryService.Sync()
+}
+
+// TODO(patrik): Move to it's own file
+var _ service.Job = (*LibraryCleanupJob)(nil)
+
+type LibraryCleanupJob struct {
+	libraryService *service.LibraryService
+}
+
+func (j *LibraryCleanupJob) Name() string {
+	return jobLibraryCleanup
+}
+
+func (j *LibraryCleanupJob) Schedule() string {
+	return ""
+}
+
+func (j *LibraryCleanupJob) Run(ctx context.Context) error {
+	return j.libraryService.Cleanup(ctx)
 }
 
 // TODO(patrik): Move to it's own file
@@ -317,6 +337,13 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	err = app.jobService.AddJob(&LibrarySyncJob{
+		libraryService: app.libraryService,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = app.jobService.AddJob(&LibraryCleanupJob{
 		libraryService: app.libraryService,
 	})
 	if err != nil {

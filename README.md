@@ -19,8 +19,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Search Service: Add Users
 - [ ] Backend: Search Service: Add more logging
 
-- [ ] Backend: Feature: Library cleanup job
-
 - [ ] Backend: Cleanup: Cleanup user picture code
 
 - [ ] Backend: API: Fix: Media api
