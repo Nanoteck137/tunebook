@@ -15,7 +15,14 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] Backend: Search Service: RWLock lock
+- [ ] Backend: Search Service: Add Users
+- [ ] Backend: Search Service: Add more logging
+
+- [ ] Backend: Feature: Library cleanup job
+
 - [ ] Backend: Cleanup: Cleanup user picture code
+
 - [ ] Backend: API: Fix: Media api
 
 - [ ] Backend: Fix: Playlist Service: When deleting tracks we need to reorder the tracks again
@@ -48,8 +55,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Feature: Favorites
 - [ ] Backend: Feature: Year over year
 
-- [ ] Backend: Feature: Library cleanup job
-
 - [ ] Backend: Cleanup: Figure out how to handle logging through out the project
 - [ ] Backend: Cleanup: Figure out how to handle service errors
 - [ ] Backend: Cleanup: Figure out how to handle service logging
@@ -61,11 +66,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Cleanup: Job Service: Code Cleanup
 - [ ] Backend: Cleanup: Library Service: Code Cleanup
 - [ ] Backend: Cleanup: Auth Service: Code Cleanup
-- [ ] Backend: Cleanup: CLI: Code Cleanup
-
-- [ ] Backend: Search Service: RWLock lock
-- [ ] Backend: Search Service: Add Users
-- [ ] Backend: Search Service: Add more logging
 
 - [ ] Backend: Media Service: API Route for getTrackStream need to handle errors
 - [ ] Backend: Media Service: Locking
