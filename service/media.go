@@ -125,12 +125,13 @@ type MediaService struct {
 	DeviceSpecs    map[Device]DeviceSpec
 }
 
-func NewMediaService(db *database.Database, dataDir types.DataDir) *MediaService {
+func NewMediaService(
+	logger *slog.Logger,
+	db *database.Database,
+	dataDir types.DataDir,
+) *MediaService {
 	return &MediaService{
-		// TODO(patrik): Add to function params
-		logger: slog.With(
-			slog.String("service", "media-service"),
-		),
+		logger:         logger,
 		db:             db,
 		dataDir:        dataDir,
 		QualityMapping: getDefaultQualityMapping(),

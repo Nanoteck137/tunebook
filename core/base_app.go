@@ -129,7 +129,7 @@ func (j *SearchIndexJob) Schedule() string {
 }
 
 func (j *SearchIndexJob) Run(ctx context.Context) error {
-	return j.searchService.Index()
+	return j.searchService.Index(ctx)
 }
 
 var _ App = (*BaseApp)(nil)
@@ -264,8 +264,6 @@ func (app *BaseApp) Bootstrap() error {
 	)
 
 	app.authService = service.NewAuthService(app.imageService, app.db, app.config)
-	// TODO(patrik): This should be a worker
-	// go app.authService.CleanRoutine()
 
 	app.searchService = service.NewSearchService(
 		newServiceLogger("search"),
@@ -274,7 +272,11 @@ func (app *BaseApp) Bootstrap() error {
 		app.config,
 	)
 
-	app.mediaService = service.NewMediaService(app.db, dataDir)
+	app.mediaService = service.NewMediaService(
+		newServiceLogger("media"),
+		app.db, 
+		dataDir,
+	)
 
 	app.libraryService = service.NewLibraryService(
 		newServiceLogger("library"),

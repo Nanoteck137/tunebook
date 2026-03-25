@@ -15,9 +15,7 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Backend: Search Service: RWLock lock
 - [ ] Backend: Search Service: Add Users
-- [ ] Backend: Search Service: Add more logging
 
 - [ ] Backend: Cleanup: Cleanup user picture code
 

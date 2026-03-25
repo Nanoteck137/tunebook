@@ -184,7 +184,7 @@ func (s *SearchService) indexArtists(ctx context.Context) error {
 		delete: true,
 	})
 	if err != nil {
-		return searchErr.Wrap("index artists: recreate index", err)
+		return fmt.Errorf("recreate index: %w", err)
 	}
 
 	index := s.client.Index(artistIndex)
@@ -207,7 +207,7 @@ func (s *SearchService) indexArtists(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return searchErr.Wrap("index artists: index batches", err)
+		return fmt.Errorf("index batches: %w", err)
 	}
 
 	return nil
@@ -223,7 +223,7 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		delete: true,
 	})
 	if err != nil {
-		return searchErr.Wrap("index albums: recreate index", err)
+		return fmt.Errorf("recreate index: %w", err)
 	}
 
 	index := s.client.Index(albumIndex)
@@ -253,7 +253,7 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return searchErr.Wrap("index albums: index batches", err)
+		return fmt.Errorf("index batches: %w", err)
 	}
 
 	return nil
@@ -269,7 +269,7 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 		delete: true,
 	})
 	if err != nil {
-		return searchErr.Wrap("index tracks: recreate index", err)
+		return fmt.Errorf("recreate index: %w", err)
 	}
 
 	index := s.client.Index(trackIndex)
@@ -301,7 +301,7 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return searchErr.Wrap("index tracks: index batches", err)
+		return fmt.Errorf("index batches: %w", err)
 	}
 
 	return nil
@@ -317,7 +317,7 @@ func (s *SearchService) indexPlaylists(ctx context.Context) error {
 		delete: true,
 	})
 	if err != nil {
-		return searchErr.Wrap("index playlists: recreate index", err)
+		return fmt.Errorf("recreate index: %w", err)
 	}
 
 	index := s.client.Index(playlistIndex)
@@ -340,36 +340,42 @@ func (s *SearchService) indexPlaylists(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return searchErr.Wrap("index playlists: index batches", err)
+		return fmt.Errorf("index batches: %w", err)
 	}
 
 	return nil
 }
 
-func (s *SearchService) Index() error {
+func (s *SearchService) Index(ctx context.Context) error {
 	var err error
 
-	ctx := context.Background()
+	s.logger.Info("starting search index")
 
+	s.logger.Info("indexing artists")
 	err = s.indexArtists(ctx)
 	if err != nil {
-		return err
+		return searchErr.Wrap("index artists", err)
 	}
 
+	s.logger.Info("indexing albums")
 	err = s.indexAlbums(ctx)
 	if err != nil {
-		return err
+		return searchErr.Wrap("index albums", err)
 	}
 
+	s.logger.Info("indexing tracks")
 	err = s.indexTracks(ctx)
 	if err != nil {
-		return err
+		return searchErr.Wrap("index tracks", err)
 	}
 
+	s.logger.Info("indexing playlists")
 	err = s.indexPlaylists(ctx)
 	if err != nil {
-		return err
+		return searchErr.Wrap("index playlists", err)
 	}
+
+	s.logger.Info("search index completed")
 
 	return nil
 }
