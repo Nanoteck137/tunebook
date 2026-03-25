@@ -5,11 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
-	"mime"
-	"net/http"
-	"os"
-	"path"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -22,66 +18,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type ServiceError struct {
-	Service string
-	Message string
-	Err     error
-}
-
-func (e *ServiceError) Error() string {
-	if e.Message != "" {
-		return fmt.Sprintf("%s service: %s: %s", e.Service, e.Message, e.Err)
-	}
-
-	return fmt.Sprintf("%s service: %s", e.Service, e.Err)
-}
-
-func (e *ServiceError) Unwrap() error {
-    return e.Err
-}
-
-type ServiceErrCreator struct {
-	Service string
-}
-
-func NewServiceErrCreator(service string) ServiceErrCreator {
-	return ServiceErrCreator{
-		Service: service,
-	}
-}
-
-func (s *ServiceErrCreator) Wrap(message string, err error) error {
-	return &ServiceError{
-		Service: s.Service,
-		Message: message,
-		Err:     err,
-	}
-}
-
-func (s *ServiceErrCreator) New(text string) error {
-	return &ServiceError{
-		Service: s.Service,
-		Err:     errors.New(text),
-	}
-}
-
-func (s *ServiceErrCreator) Newf(format string, a ...any) error {
-	return &ServiceError{
-		Service: s.Service,
-		Err:     fmt.Errorf(format, a...),
-	}
-}
-
-var authErr = NewServiceErrCreator("auth-service")
+var authErr = NewServiceErrCreator("auth")
 
 var (
 	ErrAuthServiceProviderNotFound = authErr.New("provider not found")
 
 	ErrAuthServiceRequestAlreadyExists = authErr.New("request already exists")
 	ErrAuthServiceRequestNotFound      = authErr.New("request not found")
-	ErrAuthServiceRequestExpired       = authErr.New("request is expired")
-	ErrAuthServiceRequestNotReady      = authErr.New("request is not ready")
-	ErrAuthServiceRequestInvalid       = authErr.New("request is invalid")
+	ErrAuthServiceRequestExpired       = authErr.New("request expired")
+	ErrAuthServiceRequestNotReady      = authErr.New("request not ready")
+	ErrAuthServiceRequestInvalid       = authErr.New("request invalid")
 )
 
 const (
@@ -202,7 +148,7 @@ type providerClaim struct {
 func (p *authProvider) claim(ctx context.Context, code string) (providerClaim, error) {
 	oauth2Token, err := p.oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		return providerClaim{}, err
+		return providerClaim{}, fmt.Errorf("exchange: %w", err)
 	}
 
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
@@ -212,13 +158,13 @@ func (p *authProvider) claim(ctx context.Context, code string) (providerClaim, e
 
 	idToken, err := p.verifier.Verify(ctx, rawIDToken)
 	if err != nil {
-		return providerClaim{}, err
+		return providerClaim{}, fmt.Errorf("verify: %w", err)
 	}
 
 	var claims providerClaim
 	err = idToken.Claims(&claims)
 	if err != nil {
-		return providerClaim{}, err
+		return providerClaim{}, fmt.Errorf("claims: %w", err)
 	}
 
 	return claims, nil
@@ -249,13 +195,15 @@ type authQuickConnectRequest struct {
 }
 
 type AuthService struct {
+	logger *slog.Logger
+
 	// The lock for the service, needs to be claimed when modifing request data
 	mu sync.Mutex
 
-	imageService *ImageService
-
 	// Reference to the database
 	db *database.Database
+
+	imageService *ImageService
 
 	// the jwt secret used to sign user tokens
 	jwtSecret string
@@ -270,7 +218,12 @@ type AuthService struct {
 	quickConnectRequests map[string]*authQuickConnectRequest
 }
 
-func NewAuthService(imageService *ImageService, db *database.Database, config *config.Config) *AuthService {
+func NewAuthService(
+	logger *slog.Logger,
+	db *database.Database,
+	config *config.Config,
+	imageService *ImageService,
+) *AuthService {
 	providers := make(map[string]*authProvider, len(config.OidcProviders))
 
 	for id, providerConfig := range config.OidcProviders {
@@ -284,8 +237,9 @@ func NewAuthService(imageService *ImageService, db *database.Database, config *c
 	}
 
 	return &AuthService{
-		imageService:         imageService,
+		logger:               logger,
 		db:                   db,
+		imageService:         imageService,
 		jwtSecret:            config.JwtSecret,
 		providers:            providers,
 		providerRequests:     make(map[string]*authProviderRequest),
@@ -704,86 +658,16 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				return "", authErr.Newf("create user: %w", err)
 			}
 
-			// TODO(patrik): Cleanup, move to utils
-			getImageExtFromContentType := func(contentType string) (string, error) {
-				mediaType, _, err := mime.ParseMediaType(contentType)
-				if err != nil {
-					return "", fmt.Errorf("failed to parse content type: %w", err)
-				}
-
-				// TODO(patrik): Add support for more exts
-				switch mediaType {
-				case "image/png":
-					return ".png", nil
-				case "image/jpeg":
-					return ".jpeg", nil
-				default:
-					return "", fmt.Errorf("unsupported media type: %s", mediaType)
-				}
-			}
-
 			if oidcClaims.Picture != "" {
-				resp, err := http.Get(oidcClaims.Picture)
+				picture, err := a.imageService.DownloadPictureForUser(
+					ctx,
+					DownloadPictureForUserParams{
+						UserId: user.Id,
+						Url:    oidcClaims.Picture,
+					},
+				)
 				if err != nil {
 					return "", err
-				}
-				defer resp.Body.Close()
-
-				contentType := resp.Header.Get("Content-Type")
-				ext, err := getImageExtFromContentType(contentType)
-				if err != nil {
-					return "", err
-				}
-
-				// TODO(patrik): The tmp dir should be inside the work dir
-				tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
-				if err != nil {
-					return "", fmt.Errorf("failed to create temp file: %w", err)
-				}
-				tmpPath := tmp.Name()
-				defer tmp.Close()
-
-				// always clean up temp file if something goes wrong
-				defer func() {
-					_, err := os.Stat(tmpPath)
-					if err == nil {
-						os.Remove(tmpPath)
-					}
-				}()
-
-				_, err = io.Copy(tmp, resp.Body)
-				if err != nil {
-					return "", err
-				}
-
-				tmp.Close()
-
-				imageType, err := a.imageService.ValidateImage(tmpPath)
-				if err != nil {
-					return "", err
-				}
-
-				// TODO(patrik): I hate this
-				dataDir := a.imageService.dataDir
-				userDir := dataDir.User(user.Id)
-
-				err = utils.CreateDirectories([]string{
-					userDir,
-				})
-				if err != nil {
-					return "", err
-				}
-
-				imageExt, ok := imageType.ToExt()
-				if !ok {
-					return "", errors.New("invalid image type")
-				}
-
-				picture := "uploaded" + imageExt
-				output := path.Join(userDir, picture)
-				err = os.Rename(tmpPath, output)
-				if err != nil {
-					return "", fmt.Errorf("failed to promote temp file: %w", err)
 				}
 
 				err = a.db.UpdateUser(ctx, user.Id, database.UserChanges{

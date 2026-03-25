@@ -263,7 +263,12 @@ func (app *BaseApp) Bootstrap() error {
 		dataDir,
 	)
 
-	app.authService = service.NewAuthService(app.imageService, app.db, app.config)
+	app.authService = service.NewAuthService(
+		newServiceLogger("auth"),
+		app.db, 
+		app.config,
+		app.imageService, 
+	)
 
 	app.searchService = service.NewSearchService(
 		newServiceLogger("search"),

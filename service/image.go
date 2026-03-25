@@ -639,3 +639,96 @@ func (s *ImageService) UploadImageForPlaylist(
 
 	return cover, nil
 }
+
+type DownloadPictureForUserParams struct {
+	UserId string
+	Url    string
+}
+
+// TODO(patrik): Cleanup
+// TODO(patrik): Hash for files
+func (s *ImageService) DownloadPictureForUser(
+	ctx context.Context,
+	params DownloadPictureForUserParams,
+) (string, error) {
+	// TODO(patrik): Cleanup, move to utils
+	getImageExtFromContentType := func(contentType string) (string, error) {
+		mediaType, _, err := mime.ParseMediaType(contentType)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse content type: %w", err)
+		}
+
+		// TODO(patrik): Add support for more exts
+		switch mediaType {
+		case "image/png":
+			return ".png", nil
+		case "image/jpeg":
+			return ".jpeg", nil
+		default:
+			return "", fmt.Errorf("unsupported media type: %s", mediaType)
+		}
+	}
+
+	resp, err := http.Get(params.Url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+	ext, err := getImageExtFromContentType(contentType)
+	if err != nil {
+		return "", err
+	}
+
+	// TODO(patrik): The tmp dir should be inside the work dir
+	tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	defer tmp.Close()
+
+	// always clean up temp file if something goes wrong
+	defer func() {
+		_, err := os.Stat(tmpPath)
+		if err == nil {
+			os.Remove(tmpPath)
+		}
+	}()
+
+	_, err = io.Copy(tmp, resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	tmp.Close()
+
+	imageType, err := s.ValidateImage(tmpPath)
+	if err != nil {
+		return "", err
+	}
+
+	userDir := s.dataDir.User(params.UserId)
+
+	err = utils.CreateDirectories([]string{
+		userDir,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	imageExt, ok := imageType.ToExt()
+	if !ok {
+		return "", errors.New("invalid image type")
+	}
+
+	picture := "uploaded" + imageExt
+	output := path.Join(userDir, picture)
+	err = os.Rename(tmpPath, output)
+	if err != nil {
+		return "", fmt.Errorf("failed to promote temp file: %w", err)
+	}
+
+	return picture, nil
+}
