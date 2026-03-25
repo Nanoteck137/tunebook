@@ -285,12 +285,7 @@ func GenerateCode() (string, error) {
 		return "", err
 	}
 
-	part3, err := randomString(letters, 4)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s-%s-%s", part1, part2, part3), nil
+	return fmt.Sprintf("%s-%s", part1, part2), nil
 }
 
 func GenerateAuthChallenge() (string, error) {
