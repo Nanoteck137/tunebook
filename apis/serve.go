@@ -44,10 +44,7 @@ func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 		},
 	)
 
-	// TODO(patrik): Change this
 	webDir := app.Config().WebDir
-	slog.Info("Web Dir", "dir", webDir)
-
 	if webDir != "" {
 		g.Register(
 			// TODO(patrik): Fix this
