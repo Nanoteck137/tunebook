@@ -15,13 +15,17 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] Backend: Feature: Ability to get all playlist + filters
+- [ ] Backend: Feature: User Tracking
+- [ ] Backend: Feature: Favorites
+- [ ] Backend: Feature: Year over year
+
 - [ ] Backend: Search Service: Add Users
 
 - [ ] Backend: Cleanup: Cleanup user picture code
 
 - [ ] Backend: API: Fix: Media api
 
-- [ ] Backend: Feature: Ability to get all playlist + filters
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
@@ -45,10 +49,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: cancel() on forms on api errors, this makes sure that the form is not reset when error occurs
-
-- [ ] Backend: Feature: User Tracking
-- [ ] Backend: Feature: Favorites
-- [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Cleanup: Figure out how to handle logging through out the project
 - [ ] Backend: Cleanup: Figure out how to handle service errors
@@ -75,7 +75,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Fix: SPA Web handling
 
 - [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
-- [ ] Backend: Fix: When shutting down, we need to wait for all the jobs to finish
 
 - [ ] General: Use nix to build a docker image
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/maruel/natural"
@@ -50,6 +51,8 @@ type JobService struct {
 
 	cron *cron.Cron
 	jobs map[string]*jobEntry
+
+	wg sync.WaitGroup
 
 	updateFunc UpdateFunc
 }
@@ -152,7 +155,14 @@ func (s *JobService) Start() {
 }
 
 func (s *JobService) Stop() {
-	s.cron.Start()
+	ctx := s.cron.Stop()
+	<-ctx.Done()
+
+	s.Wait()
+}
+
+func (s *JobService) Wait() {
+	s.wg.Wait()
 }
 
 func (s *JobService) RunJob(ctx context.Context, name string) {
@@ -171,7 +181,9 @@ func (s *JobService) RunJob(ctx context.Context, name string) {
 	entry.isRunning = true
 	s.update()
 
+	s.wg.Add(1)
 	defer func() {
+		s.wg.Done()
 		entry.isRunning = false
 		s.update()
 	}()
