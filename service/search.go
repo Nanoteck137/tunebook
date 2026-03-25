@@ -84,6 +84,14 @@ type SearchPlaylist struct {
 
 func (s SearchPlaylist) GetID() string { return s.Id }
 
+type SearchUser struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
+func (s SearchUser) GetID() string { return s.Id }
+
 type SearchService struct {
 	logger *slog.Logger
 
@@ -346,6 +354,46 @@ func (s *SearchService) indexPlaylists(ctx context.Context) error {
 	return nil
 }
 
+func (s *SearchService) indexUsers(ctx context.Context) error {
+	s.logger.Debug("recreating users index")
+
+	err := s.recreateIndex(ctx, recreateIndexParams{
+		index: userIndex,
+		settings: &meilisearch.Settings{
+			SearchableAttributes: []string{"name"},
+			FilterableAttributes: []string{"id", "role"},
+		},
+		delete: true,
+	})
+	if err != nil {
+		return fmt.Errorf("recreate index: %w", err)
+	}
+
+	users, err := s.db.GetAllUsers(ctx)
+	if err != nil {
+		return fmt.Errorf("get all users: %w", err)
+	}
+
+	searchUsers := make([]SearchUser, 0, len(users))
+	for _, user := range users {
+		searchUsers = append(searchUsers, SearchUser{
+			Id:   user.Id,
+			Name: user.DisplayName,
+			Role: user.Role,
+		})
+	}
+
+	index := s.client.Index(userIndex)
+	_, err = index.AddDocuments(searchUsers, &meilisearch.DocumentOptions{
+		PrimaryKey: meilisearch.StringPtr("id"),
+	})
+	if err != nil {
+		return fmt.Errorf("add documents: %w", err)
+	}
+
+	return nil
+}
+
 func (s *SearchService) Index(ctx context.Context) error {
 	var err error
 
@@ -373,6 +421,12 @@ func (s *SearchService) Index(ctx context.Context) error {
 	err = s.indexPlaylists(ctx)
 	if err != nil {
 		return searchErr.Wrap("index playlists", err)
+	}
+
+	s.logger.Info("indexing users")
+	err = s.indexUsers(ctx)
+	if err != nil {
+		return searchErr.Wrap("index users", err)
 	}
 
 	s.logger.Info("search index completed")
@@ -483,6 +537,30 @@ func (s *SearchService) SearchPlaylists(
 	}
 
 	return playlists, nil
+}
+
+func (s *SearchService) SearchUsers(
+	ctx context.Context,
+	params SearchParams,
+) ([]database.User, error) {
+	index := s.client.Index(userIndex)
+
+	users, err := search[SearchUser, database.User](
+		ctx,
+		index,
+		params,
+		func(ctx context.Context, ids []string) ([]database.User, error) {
+			return s.db.GetUsersIn(ctx, ids)
+		},
+		func(user database.User) string {
+			return user.Id
+		},
+	)
+	if err != nil {
+		return nil, searchErr.Wrap("search users", err)
+	}
+
+	return users, nil
 }
 
 func search[TDoc hasID, TResult any](

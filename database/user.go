@@ -80,6 +80,13 @@ func (db DB) GetAllUsers(ctx context.Context) ([]User, error) {
 	return ember.Multiple[User](db.db, ctx, query)
 }
 
+func (db DB) GetUsersIn(ctx context.Context, in any) ([]User, error) {
+	query := UserQuery().
+		Where(goqu.I("users.id").In(in))
+
+	return ember.Multiple[User](db.db, ctx, query)
+}
+
 func (db DB) CountUsers(ctx context.Context) (int, error) {
 	query := UserQuery().Select(goqu.COUNT("users.id").As("count"))
 
