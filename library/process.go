@@ -150,7 +150,21 @@ type fetchResult struct {
 	albums  []AlbumMetadata
 }
 
-func fetch(dir string, reporter *Reporter) (*fetchResult, error) {
+func checkIfExcluded(relPath string, excludeDirs []string) bool {
+	for _, exclude := range excludeDirs {
+		if relPath == exclude {
+			return true
+		}
+
+		if strings.HasPrefix(relPath, exclude+string(filepath.Separator)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func fetch(dir string, excludeDirs []string, reporter *Reporter) (*fetchResult, error) {
 	res := &fetchResult{
 		artists: []ArtistMetadata{},
 		albums:  []AlbumMetadata{},
@@ -162,6 +176,15 @@ func fetch(dir string, reporter *Reporter) (*fetchResult, error) {
 		}
 
 		if d.IsDir() {
+			relPath, err := filepath.Rel(dir, p)
+			if err != nil {
+				return err
+			}
+
+			if checkIfExcluded(relPath, excludeDirs) {
+				return filepath.SkipDir
+			}
+
 			return nil
 		}
 
@@ -454,7 +477,7 @@ func ProcessMusicLibrary(dir string) (*Library, error) {
 
 	fmt.Println("fetching files...")
 
-	fetched, err := fetch(lib.Path, &lib.Reporter)
+	fetched, err := fetch(lib.Path, libraryMetadata.ExcludedDirs, &lib.Reporter)
 	if err != nil {
 		return nil, fmt.Errorf("dir walk: %w", err)
 	}
@@ -479,11 +502,11 @@ func ProcessMusicLibrary(dir string) (*Library, error) {
 			artistMap[artist.SearchName] = artist.Id
 
 			lib.Artists = append(lib.Artists, ArtistEntry{
-				Id:         artist.Id,
-				Name:       artist.Name,
-				CoverArt:   artist.Cover,
-				Tags:       artist.Tags,
-				Path:       artist.Path,
+				Id:       artist.Id,
+				Name:     artist.Name,
+				CoverArt: artist.Cover,
+				Tags:     artist.Tags,
+				Path:     artist.Path,
 			})
 		}
 	}
