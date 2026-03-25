@@ -55,11 +55,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Database: Use database indexes
 
-- [ ] Backend: Fix: SPA Web handling
-
 - [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
-
-- [ ] General: Use nix to build a docker image
 
 - [ ] General: Rename Project
     - Musicbook (MB)
