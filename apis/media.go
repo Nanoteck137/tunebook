@@ -99,7 +99,7 @@ func packMediaResult(c pyrin.Context, tracks []database.Track) (GetMedia, error)
 				Id:   track.AlbumId,
 				Name: track.AlbumName,
 			},
-			CoverArt:    ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
+			CoverArt: ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
 		}
 	}
 
@@ -135,6 +135,43 @@ type RecordTrackBody struct {
 	Source string `json:"source"`
 }
 
+func handleMediaServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrMediaServiceTrackNotFound):
+		return TrackNotFound() 
+	case errors.Is(err, service.ErrMediaServiceInvalidFormat):
+		// TODO(patrik): Better error
+		return &pyrin.Error{
+			Code:    400,
+			Type:    "MEDIA_INVALID_FORMAT",
+			Message: "Invalid media format",
+		}
+	case errors.Is(err, service.ErrMediaServiceInvalidQuality):
+		// TODO(patrik): Better error
+		return &pyrin.Error{
+			Code:    400,
+			Type:    "MEDIA_INVALID_QUALITY",
+			Message: "Invalid media quality",
+		}
+	case errors.Is(err, service.ErrMediaServiceInvalidPolicy):
+		// TODO(patrik): Better error
+		return &pyrin.Error{
+			Code:    400,
+			Type:    "MEDIA_INVALID_POLICY",
+			Message: "Invalid media policy",
+		}
+	case errors.Is(err, service.ErrMediaServiceBitrateNotSet):
+		// TODO(patrik): Better error
+		return &pyrin.Error{
+			Code:    400,
+			Type:    "MEDIA_BITRATE_NOT_SET",
+			Message: "Bitrate not set",
+		}
+	}
+
+	return err
+}
+
 func InstallMediaHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.NormalHandler{
@@ -146,15 +183,17 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				query := c.Request().URL.Query()
 
-				filename, err := app.MediaService().GetTrackStream(trackId, service.MediaStreamOptions{
-					Device:  service.Device(query.Get("device")),
-					Policy:  service.Policy(query.Get("policy")),
-					Quality: service.Quality(query.Get("quality")),
-					Format:  types.MediaFormat(query.Get("format")),
-				})
+				filename, err := app.MediaService().GetTrackStream(
+					trackId,
+					service.MediaStreamOptions{
+						Device:  service.Device(query.Get("device")),
+						Policy:  service.Policy(query.Get("policy")),
+						Quality: service.Quality(query.Get("quality")),
+						Format:  types.MediaFormat(query.Get("format")),
+					},
+				)
 				if err != nil {
-					// TODO(patrik): Better error handling
-					return err
+					return handleMediaServiceErrors(err)
 				}
 
 				f := os.DirFS(filepath.Dir(filename))

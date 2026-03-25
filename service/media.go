@@ -19,7 +19,6 @@ import (
 var ErrInternalError = errors.New("internal error")
 
 var (
-	ErrMediaServiceBadRequest     = errors.New("media-service: bad request")
 	ErrMediaServiceTrackNotFound  = errors.New("media-service: track not found")
 	ErrMediaServiceInvalidFormat  = errors.New("media-service: invalid format")
 	ErrMediaServiceInvalidQuality = errors.New("media-service: invalid quality")
@@ -165,7 +164,11 @@ type MediaStreamOptions struct {
 	Format types.MediaFormat
 }
 
-func (s *MediaService) GetTrackStream(trackId string, opts MediaStreamOptions) (string, error) {
+// TODO(patrik): Rename, ProcessTrackStream
+func (s *MediaService) GetTrackStream(
+	trackId string, 
+	opts MediaStreamOptions,
+) (string, error) {
 	// TODO(patrik): Add a lock
 
 	if opts.Policy == PolicyEmpty {
