@@ -44,12 +44,15 @@ func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 		},
 	)
 
-	webDir := app.Config().WebDir
-	if webDir != "" {
-		g.Register(
-			// TODO(patrik): Fix this
-			pyrin.SpaHandler(os.DirFS(webDir), "index.html"),
-		)
+	// TODO(patrik): I don't like this
+	if app != nil {
+		webDir := app.Config().WebDir
+		if webDir != "" {
+			g.Register(
+				// TODO(patrik): Fix this
+				pyrin.SpaHandler(os.DirFS(webDir), "index.html"),
+			)
+		}
 	}
 }
 
