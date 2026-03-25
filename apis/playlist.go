@@ -42,6 +42,7 @@ func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
 }
 
 type GetPlaylists struct {
+	Page      types.Page `json:"page"`
 	Playlists []Playlist `json:"playlists"`
 }
 
@@ -203,6 +204,7 @@ func handlePlaylistServiceErrors(err error) error {
 	case errors.Is(err, service.ErrPlaylistServiceTrackAlreadyAdded):
 		return PlaylistAlreadyHasTrack()
 	case errors.Is(err, service.ErrPlaylistServiceItemNotFound):
+		// TODO(patrik): Replace with its own error
 		return TrackNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceFilterNotFound):
 		return PlaylistFilterNotFound()
@@ -225,22 +227,26 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			ResponseType: GetPlaylists{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
+				q := c.Request().URL.Query()
 
 				ctx := c.Request().Context()
 
-				playlists, err := app.PlaylistService().GetPlaylistsByUser(
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				playlists, page, err := app.PlaylistService().GetPlaylists(
 					ctx,
-					user.Id,
+					service.GetPlaylistsParams{
+						Page:   pageParams,
+						Filter: filterParams,
+					},
 				)
 				if err != nil {
 					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				res := GetPlaylists{
+					Page:      page,
 					Playlists: make([]Playlist, len(playlists)),
 				}
 

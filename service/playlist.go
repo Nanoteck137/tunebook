@@ -49,6 +49,26 @@ func NewPlaylistService(
 	}
 }
 
+type GetPlaylistsParams struct {
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (s *PlaylistService) GetPlaylists(
+	ctx context.Context,
+	params GetPlaylistsParams,
+) ([]database.Playlist, types.Page, error) {
+	playlists, page, err := s.db.GetPlaylists(ctx, database.GetPlaylistsParams{
+		Page:   params.Page,
+		Filter: params.Filter,
+	})
+	if err != nil {
+		return nil, types.Page{}, playlistErr.Wrap("get playlists: db get", err)
+	}
+
+	return playlists, page, nil
+}
+
 func (s *PlaylistService) GetPlaylistsByUser(
 	ctx context.Context,
 	userId string,

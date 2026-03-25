@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/dwebble/database/adapter"
+	"github.com/nanoteck137/dwebble/tools/filter"
 	"github.com/nanoteck137/dwebble/tools/utils"
 	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin/ember"
@@ -66,8 +68,8 @@ func PlaylistQuery() *goqu.SelectDataset {
 }
 
 type GetPlaylistsParams struct {
-	Page types.PageParams
-	// Filter types.FilterParams
+	Page   types.PageParams
+	Filter types.FilterParams
 }
 
 func (db DB) GetPlaylists(
@@ -78,11 +80,11 @@ func (db DB) GetPlaylists(
 
 	var err error
 
-	// a := adapter.TrackResolverAdapter{}
-	// query, err = applyFilterParams(params.Filter, &a, query)
-	// if err != nil {
-	// 	return nil, types.Page{}, err
-	// }
+	a := adapter.PlaylistResolverAdapter{}
+	query, err = applyFilterParams(params.Filter, &a, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
 
 	page, err := buildPage(ctx, db.db, params.Page, query, "playlists.id")
 	if err != nil {
@@ -105,13 +107,13 @@ func (db DB) GetPlaylistsIn(ctx context.Context, in any, sort string) ([]Playlis
 			goqu.I("playlists.id").In(in),
 		)
 
-	// a := adapter.PlaylistResolverAdapter{}
-	// resolver := filter.New(&a)
-	//
-	// query, err := applySort(query, resolver, sort)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	a := adapter.PlaylistResolverAdapter{}
+	resolver := filter.New(&a)
+
+	query, err := applySort(query, resolver, sort)
+	if err != nil {
+		return nil, err
+	}
 
 	return ember.Multiple[Playlist](db.db, ctx, query)
 }
