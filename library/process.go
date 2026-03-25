@@ -498,7 +498,12 @@ func ProcessMusicLibrary(dir string) (*Library, error) {
 		valid := validateArtistMetadata(&artist, &lib.Reporter)
 
 		if valid {
-			// TODO(patrik): HERE we can check for duplicated artists name
+			id, exists := artistMap[artist.SearchName]
+			if exists {
+				lib.Reporter.AddError(artist.Path, fmt.Errorf("duplicate artist: '%s' already exists with id '%s'", artist.Name, id))
+				continue
+			} 
+
 			artistMap[artist.SearchName] = artist.Id
 
 			lib.Artists = append(lib.Artists, ArtistEntry{
