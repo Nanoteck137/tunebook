@@ -760,6 +760,11 @@
       "name": "GetPlaylists",
       "fields": [
         {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
           "name": "playlists",
           "type": "[]Playlist",
           "omitEmpty": false
@@ -815,18 +820,8 @@
       "name": "GetUser",
       "fields": [
         {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "displayName",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "picture",
-          "type": "Images",
+          "name": "user",
+          "type": "UserData",
           "omitEmpty": false
         }
       ]
@@ -1147,6 +1142,16 @@
       ]
     },
     {
+      "name": "SearchUsers",
+      "fields": [
+        {
+          "name": "users",
+          "type": "[]UserData",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Track",
       "fields": [
         {
@@ -1242,22 +1247,37 @@
       ]
     },
     {
-      "name": "TrackId",
-      "fields": [
-        {
-          "name": "trackId",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "UpdateUserSettingsBody",
       "fields": [
         {
           "name": "quickPlaylist",
           "type": "*string",
           "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "UserData",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "picture",
+          "type": "Images",
+          "omitEmpty": false
         }
       ]
     }
@@ -1269,13 +1289,6 @@
       "method": "POST",
       "path": "/api/v1/playlists/:playlistId/items",
       "body": "AddItemToPlaylistBody"
-    },
-    {
-      "type": "api",
-      "name": "AddToUserQuickPlaylist",
-      "method": "POST",
-      "path": "/api/v1/user/quickplaylist",
-      "body": "TrackId"
     },
     {
       "type": "normal",
@@ -1587,7 +1600,7 @@
       "type": "api",
       "name": "GetTrackFilters",
       "method": "GET",
-      "path": "/api/v1/user/tracks/filter",
+      "path": "/api/v1/user/:userId/tracks/filter",
       "response": "GetTrackFilters"
     },
     {
@@ -1623,13 +1636,6 @@
       "method": "POST",
       "path": "/api/v1/media/record/track/:trackId",
       "body": "RecordTrackBody"
-    },
-    {
-      "type": "api",
-      "name": "RemoveItemFromUserQuickPlaylist",
-      "method": "DELETE",
-      "path": "/api/v1/user/quickplaylist",
-      "body": "TrackId"
     },
     {
       "type": "api",
@@ -1678,6 +1684,13 @@
       "method": "GET",
       "path": "/api/v1/search/tracks",
       "response": "SearchTracks"
+    },
+    {
+      "type": "api",
+      "name": "SearchUsers",
+      "method": "GET",
+      "path": "/api/v1/search/users",
+      "response": "SearchUsers"
     },
     {
       "type": "normal",

@@ -595,6 +595,8 @@ export type Playlist = z.infer<typeof Playlist>;
 
 // Name: GetPlaylists
 export const GetPlaylists = z.object({
+  // Name: GetPlaylists.page
+  "page": Page,
   // Name: GetPlaylists.playlists
   "playlists": z.array(Playlist),
 });
@@ -643,14 +645,23 @@ export const GetTracks = z.object({
 });
 export type GetTracks = z.infer<typeof GetTracks>;
 
+// Name: UserData
+export const UserData = z.object({
+  // Name: UserData.id
+  "id": z.string(),
+  // Name: UserData.displayName
+  "displayName": z.string(),
+  // Name: UserData.role
+  "role": z.string(),
+  // Name: UserData.picture
+  "picture": Images,
+});
+export type UserData = z.infer<typeof UserData>;
+
 // Name: GetUser
 export const GetUser = z.object({
-  // Name: GetUser.id
-  "id": z.string(),
-  // Name: GetUser.displayName
-  "displayName": z.string(),
-  // Name: GetUser.picture
-  "picture": Images,
+  // Name: GetUser.user
+  "user": UserData,
 });
 export type GetUser = z.infer<typeof GetUser>;
 
@@ -716,12 +727,12 @@ export const SearchTracks = z.object({
 });
 export type SearchTracks = z.infer<typeof SearchTracks>;
 
-// Name: TrackId
-export const TrackId = z.object({
-  // Name: TrackId.trackId
-  "trackId": z.string(),
+// Name: SearchUsers
+export const SearchUsers = z.object({
+  // Name: SearchUsers.users
+  "users": z.array(UserData),
 });
-export type TrackId = z.infer<typeof TrackId>;
+export type SearchUsers = z.infer<typeof SearchUsers>;
 
 // Name: UpdateUserSettingsBody
 export const UpdateUserSettingsBody = z.object({

@@ -67,10 +67,24 @@ type GetAllApiTokens struct {
 	Tokens []ApiToken `json:"tokens"`
 }
 
-type GetUser struct {
+type UserData struct {
 	Id          string       `json:"id"`
 	DisplayName string       `json:"displayName"`
+	Role        string       `json:"role"`
 	Picture     types.Images `json:"picture"`
+}
+
+type GetUser struct {
+	User UserData `json:"user"`
+}
+
+func ConvertDBUser(c pyrin.Context, user database.User) UserData {
+	return UserData{
+		Id:          user.Id,
+		DisplayName: user.DisplayName,
+		Role:        user.Role,
+		Picture:     ConvertUserPictureURL(c, user.Id, user.Picture),
+	}
 }
 
 type TrackFilter struct {
@@ -144,6 +158,31 @@ func (b EditUserBody) Validate() error {
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
+			Name:         "GetUser",
+			Method:       http.MethodGet,
+			Path:         "/users/:id",
+			ResponseType: GetUser{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				user, err := app.DB().GetUserById(ctx, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, UserNotFound()
+					}
+
+					return nil, err
+				}
+
+				return GetUser{
+					User: ConvertDBUser(c, user),
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
 			Name:     "EditUser",
 			Method:   http.MethodPatch,
 			Path:     "/user",
@@ -176,33 +215,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetUser",
-			Method:       http.MethodGet,
-			Path:         "/users/:id",
-			ResponseType: GetUser{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
-
-				ctx := context.TODO()
-
-				user, err := app.DB().GetUserById(ctx, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, UserNotFound()
-					}
-
-					return nil, err
-				}
-
-				return GetUser{
-					Id:          user.Id,
-					DisplayName: user.DisplayName,
-					Picture:     ConvertUserPictureURL(c, user.Id, user.Picture),
-				}, nil
 			},
 		},
 
@@ -392,17 +404,14 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 		pyrin.ApiHandler{
 			Name:         "GetTrackFilters",
 			Method:       http.MethodGet,
-			Path:         "/user/tracks/filter",
+			Path:         "/user/:userId/tracks/filter",
 			ResponseType: GetTrackFilters{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
+				userId := c.Param("userId")
 
 				ctx := c.Request().Context()
 
-				filters, err := app.DB().GetTrackFiltersByUserId(ctx, user.Id)
+				filters, err := app.DB().GetTrackFiltersByUserId(ctx, userId)
 				if err != nil {
 					return nil, err
 				}

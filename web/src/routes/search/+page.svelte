@@ -186,3 +186,59 @@
     </div>
   {/each}
 {/if}
+
+{#if data.users.length > 0}
+  <div class="flex items-center justify-between">
+    <p class="text-bold">Users</p>
+    <p class="text-xs">{data.users.length} user(s)</p>
+  </div>
+
+  {#each data.users as user}
+    <div class="flex items-center gap-2 border-b py-2 pr-2">
+      <div class="group relative">
+        <Image class="w-14 min-w-14" src={user.picture.small} alt="cover" />
+      </div>
+      <div class="flex flex-grow flex-col">
+        <div class="flex items-center gap-1">
+          <a
+            class="line-clamp-1 w-fit text-sm font-medium hover:underline"
+            title={user.displayName}
+            href="/users/{user.id}"
+          >
+            {user.displayName}
+          </a>
+
+          <!-- <p>•</p> -->
+
+          <!-- <ArtistList artists={album.artists} /> -->
+          <!-- <a
+            class="line-clamp-1 text-xs font-light hover:underline"
+            title={playlist.ownerDisplayName}
+            href={`/artists/${playlist.ownerId}`}
+          >
+            {playlist.ownerDisplayName}
+          </a> -->
+        </div>
+
+        <!-- <div class="flex items-center gap-2">
+          <Image
+            class="w-6 min-w-6"
+            src={playlist.ownerPicture.small}
+            alt="cover"
+          />
+
+          <a
+            class="line-clamp-1 text-xs hover:underline"
+            title={playlist.ownerDisplayName}
+            href={`/artists/${playlist.ownerId}`}
+          >
+            {playlist.ownerDisplayName}
+          </a>
+        </div> -->
+      </div>
+      <div class="flex items-center">
+        <!-- {@render children?.()} -->
+      </div>
+    </div>
+  {/each}
+{/if}

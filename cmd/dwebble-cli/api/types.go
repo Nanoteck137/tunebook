@@ -537,6 +537,8 @@ type Playlist struct {
 
 // Name: GetPlaylists
 type GetPlaylists struct {
+	// Name: GetPlaylists.page
+	Page Page `json:"page"`
 	// Name: GetPlaylists.playlists
 	Playlists []Playlist `json:"playlists"`
 }
@@ -579,14 +581,22 @@ type GetTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
+// Name: UserData
+type UserData struct {
+	// Name: UserData.id
+	Id string `json:"id"`
+	// Name: UserData.displayName
+	DisplayName string `json:"displayName"`
+	// Name: UserData.role
+	Role string `json:"role"`
+	// Name: UserData.picture
+	Picture Images `json:"picture"`
+}
+
 // Name: GetUser
 type GetUser struct {
-	// Name: GetUser.id
-	Id string `json:"id"`
-	// Name: GetUser.displayName
-	DisplayName string `json:"displayName"`
-	// Name: GetUser.picture
-	Picture Images `json:"picture"`
+	// Name: GetUser.user
+	User UserData `json:"user"`
 }
 
 // Name: GetUserQuickPlaylistItemIds
@@ -643,10 +653,10 @@ type SearchTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
-// Name: TrackId
-type TrackId struct {
-	// Name: TrackId.trackId
-	TrackId string `json:"trackId"`
+// Name: SearchUsers
+type SearchUsers struct {
+	// Name: SearchUsers.users
+	Users []UserData `json:"users"`
 }
 
 // Name: UpdateUserSettingsBody

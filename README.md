@@ -15,15 +15,13 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Backend: Feature: API: Implement get users /users
-- [ ] Backend: Feature: API: Implement search users
+- [ ] Backend: Cleanup: API: User APIs
 
-- [ ] Backend: Feature: Ability to get all playlist + filters
 - [ ] Backend: Feature: User Tracking
 - [ ] Backend: Feature: Favorites
 - [ ] Backend: Feature: Year over year
 
-- [ ] Backend: API: Fix: Media api
+- [ ] Backend: Fix: API: Media api
 
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
