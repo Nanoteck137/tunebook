@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/nanoteck137/dwebble/config"
+	"github.com/nanoteck137/tunebook/config"
 )
 
 type Priority int

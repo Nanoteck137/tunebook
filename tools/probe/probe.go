@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook/types"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 

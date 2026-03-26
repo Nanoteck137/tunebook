@@ -59,7 +59,7 @@
 </script>
 
 <svelte:head>
-  <title>Dwebble</title>
+  <title>Tunebook</title>
 </svelte:head>
 
 <Toaster position="bottom-right" />
@@ -76,7 +76,7 @@
       <Menu size="20" />
     </button>
 
-    <a class="text-2xl font-medium text-[--logo-color]" href="/">Dwebble</a>
+    <a class="text-2xl font-medium text-[--logo-color]" href="/">Tunebook</a>
 
     <div class="flex-grow"></div>
 
@@ -148,7 +148,7 @@
           showSideMenu = false;
         }}
       >
-        Dwebble
+        Tunebook
       </a>
     </div>
 

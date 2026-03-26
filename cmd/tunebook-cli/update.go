@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/nanoteck137/dwebble/library"
+	"github.com/nanoteck137/tunebook/library"
 	"github.com/spf13/cobra"
 )
 

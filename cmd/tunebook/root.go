@@ -3,13 +3,13 @@ package main
 import (
 	"os"
 
-	"github.com/nanoteck137/dwebble"
+	"github.com/nanoteck137/tunebook"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:     dwebble.AppName,
-	Version: dwebble.Version,
+	Use:     tunebook.AppName,
+	Version: tunebook.Version,
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
@@ -23,7 +23,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.SetVersionTemplate(dwebble.VersionTemplate(dwebble.AppName))
+	rootCmd.SetVersionTemplate(tunebook.VersionTemplate(tunebook.AppName))
 
 	rootCmd.PersistentFlags().StringP("config", "c", "", "Config File")
 }

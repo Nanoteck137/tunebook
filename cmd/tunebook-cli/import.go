@@ -8,7 +8,7 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/kr/pretty"
-	"github.com/nanoteck137/dwebble/cmd/dwebble-cli/api"
+	"github.com/nanoteck137/tunebook/cmd/tunebook-cli/api"
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/spf13/cobra"
 )

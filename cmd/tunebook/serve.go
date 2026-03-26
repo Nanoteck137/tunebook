@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/nanoteck137/dwebble/apis"
-	"github.com/nanoteck137/dwebble/config"
-	"github.com/nanoteck137/dwebble/core"
+	"github.com/nanoteck137/tunebook/apis"
+	"github.com/nanoteck137/tunebook/config"
+	"github.com/nanoteck137/tunebook/core"
 	"github.com/spf13/cobra"
 )
 

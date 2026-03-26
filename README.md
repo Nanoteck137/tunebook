@@ -1,4 +1,4 @@
-# dwebble
+# tunebook
 
 ```bash
 # Useful command to find every TODO in the project, and then use gF in 
@@ -14,6 +14,8 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 ```go
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
+
+- [ ] Frontend: Rename from frontend to web
 
 - [ ] Backend: Cleanup: API: User APIs
 
@@ -62,7 +64,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
     - Tunebook (TB)
     - Need some ideas
 
-- [ ] General: Use new logo from dwebble_app
+- [ ] General: Use new logo from tunebook_app
 
 - [ ] Backend: Cleanup: Database: Database code
 - [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)

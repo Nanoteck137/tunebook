@@ -1,4 +1,4 @@
-module github.com/nanoteck137/dwebble
+module github.com/nanoteck137/tunebook
 
 go 1.24.0
 

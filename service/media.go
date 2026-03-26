@@ -10,10 +10,10 @@ import (
 	"path"
 	"slices"
 
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/tools/probe"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/tools/probe"
+	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 var ErrInternalError = errors.New("internal error")

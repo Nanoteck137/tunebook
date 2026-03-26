@@ -1,11 +1,11 @@
 { self }:
 { config, lib, pkgs, ... }:
 with lib; let
-  cfg = config.services.dwebble-web;
+  cfg = config.services.tunebook-web;
 in
 {
-  options.services.dwebble-web = {
-    enable = mkEnableOption "Enable the dwebble-web service";
+  options.services.tunebook-web = {
+    enable = mkEnableOption "Enable the tunebook-web service";
 
     port = mkOption {
       type = types.port;
@@ -32,13 +32,13 @@ in
 
     user = mkOption {
       type = types.str;
-      default = "dwebble-web";
+      default = "tunebook-web";
       description = lib.mdDoc "user to use for this service";
     };
 
     group = mkOption {
       type = types.str;
-      default = "dwebble-web";
+      default = "tunebook-web";
       description = lib.mdDoc "group to use for this service";
     };
 
@@ -50,8 +50,8 @@ in
   };
 
   config = mkIf cfg.enable {
-    systemd.services.dwebble-web = {
-      description = "Frontend for dwebble";
+    systemd.services.tunebook-web = {
+      description = "Frontend for tunebook";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
 
@@ -67,7 +67,7 @@ in
         User = cfg.user;
         Group = cfg.group;
 
-        ExecStart = "${cfg.package}/bin/dwebble-web";
+        ExecStart = "${cfg.package}/bin/tunebook-web";
 
         Restart = "on-failure";
         RestartSec = "5s";
@@ -90,15 +90,15 @@ in
       allowedTCPPorts = [ cfg.port ];
     };
 
-    users.users = mkIf (cfg.user == "dwebble-web") {
-      dwebble-web = {
+    users.users = mkIf (cfg.user == "tunebook-web") {
+      tunebook-web = {
         group = cfg.group;
         isSystemUser = true;
       };
     };
 
-    users.groups = mkIf (cfg.group == "dwebble-web") {
-      dwebble-web = {};
+    users.groups = mkIf (cfg.group == "tunebook-web") {
+      tunebook-web = {};
     };
   };
 }

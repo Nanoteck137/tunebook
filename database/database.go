@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nanoteck137/dwebble/database/migrations"
+	"github.com/nanoteck137/tunebook/database/migrations"
 	"github.com/nanoteck137/pyrin/ember"
 
 	"github.com/mattn/go-sqlite3"

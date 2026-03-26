@@ -1,4 +1,4 @@
-package dwebble
+package tunebook
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/nanoteck137/pyrin/trail"
 )
 
-var AppName = "dwebble"
+var AppName = "tunebook"
 var CliAppName = AppName + "-cli"
 
 var Version = "no-version"

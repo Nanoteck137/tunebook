@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/pyrin/ember"
 )
 

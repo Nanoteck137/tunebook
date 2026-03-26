@@ -3,8 +3,8 @@ package adapter
 import (
 	"go/ast"
 
-	"github.com/nanoteck137/dwebble/tools/filter"
-	"github.com/nanoteck137/dwebble/tools/utils"
+	"github.com/nanoteck137/tunebook/tools/filter"
+	"github.com/nanoteck137/tunebook/tools/utils"
 )
 
 var _ filter.ResolverAdapter = (*PlaylistResolverAdapter)(nil)

@@ -5,12 +5,12 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/nanoteck137/dwebble/config"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/service"
-	"github.com/nanoteck137/dwebble/tools/broker"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook/config"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/tools/broker"
+	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 // TODO(patrik): Move to it's own file

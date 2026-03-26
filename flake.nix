@@ -1,5 +1,5 @@
 {
-  description = "Devshell for dwebble";
+  description = "Devshell for tunebook";
 
   inputs = {
     nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
@@ -24,14 +24,14 @@
         fullVersion = ''${version}-${self.dirtyShortRev or self.shortRev or "dirty"}'';
 
         backend = pkgs.buildGoModule {
-          pname = "dwebble";
+          pname = "tunebook";
           version = fullVersion;
           src = ./.;
-          subPackages = ["cmd/dwebble" "cmd/dwebble-cli"];
+          subPackages = ["cmd/tunebook" "cmd/tunebook-cli"];
 
           ldflags = [
-            "-X github.com/nanoteck137/dwebble.Version=${version}"
-            "-X github.com/nanoteck137/dwebble.Commit=${self.dirtyRev or self.rev or "no-commit"}"
+            "-X github.com/nanoteck137/tunebook.Version=${version}"
+            "-X github.com/nanoteck137/tunebook.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
           vendorHash = "sha256-0bNFL1iIrtG+siWbHu3ipTX3U9essxR7xnaR7BpAUyw=";
@@ -39,13 +39,13 @@
           nativeBuildInputs = [ pkgs.makeWrapper ];
 
           postFixup = ''
-            wrapProgram $out/bin/dwebble --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
-            wrapProgram $out/bin/dwebble-cli --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
+            wrapProgram $out/bin/tunebook --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
+            wrapProgram $out/bin/tunebook-cli --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
           '';
         };
 
         frontend = pkgs.buildNpmPackage {
-          name = "dwebble-web";
+          name = "tunebook-web";
           version = fullVersion;
 
           src = gitignore.lib.gitignoreSource ./web;
@@ -63,7 +63,7 @@
         };
 
         docker = pkgs.dockerTools.buildLayeredImage {
-          name = "dwebble";
+          name = "tunebook";
           tag  = fullVersion;
 
           contents = [
@@ -81,7 +81,7 @@
           '';
 
           config = {
-            Entrypoint   = [ "/bin/dwebble" ];
+            Entrypoint   = [ "/bin/tunebook" ];
             Cmd = [ "serve" ];
             ExposedPorts = { "3000/tcp" = {}; };
             Env = [

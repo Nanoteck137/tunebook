@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/nanoteck137/dwebble"
+	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/validate"
 	"github.com/spf13/viper"
 )
@@ -76,7 +76,7 @@ func Load(cfgFile string) (*Config, error) {
 		v.SetConfigName("config")
 	}
 
-	v.SetEnvPrefix(dwebble.AppName)
+	v.SetEnvPrefix(tunebook.AppName)
 	v.AutomaticEnv()
 
 	err := v.ReadInConfig()

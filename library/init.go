@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nanoteck137/dwebble/tools/probe"
-	"github.com/nanoteck137/dwebble/tools/utils"
+	"github.com/nanoteck137/tunebook/tools/probe"
+	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/pelletier/go-toml/v2"
 )
 

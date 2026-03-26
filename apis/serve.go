@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/core"
+	"github.com/nanoteck137/tunebook"
+	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/pyrin"
 )
 
@@ -66,7 +66,7 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 
 func Server(app core.App) (*pyrin.Server, error) {
 	s := pyrin.NewServer(&pyrin.ServerConfig{
-		LogName: dwebble.AppName,
+		LogName: tunebook.AppName,
 		ErrorCallback: func(err error) {
 			// TODO(patrik): Handle this better
 			slog.Error("API Error", "err", err)

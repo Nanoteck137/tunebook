@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/nanoteck137/dwebble/core"
+	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/pyrin"
 )
 

@@ -11,13 +11,13 @@ import (
 	"path"
 	"time"
 
-	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/config"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/library"
-	"github.com/nanoteck137/dwebble/tools/broker"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook"
+	"github.com/nanoteck137/tunebook/config"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/library"
+	"github.com/nanoteck137/tunebook/tools/broker"
+	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
@@ -651,8 +651,8 @@ func (s *LibraryService) Sync() error {
 
 	// TODO(patrik): Replace with s.logger
 	slog.Info("starting library sync...")
-	s.norificationService.SendSimple(dwebble.AppName+": "+"Starting library sync", "Starting to sync the library", SimpleNotificationOptions{
-		Tags: []string{utils.Slug(dwebble.AppName), "library", "syncing"},
+	s.norificationService.SendSimple(tunebook.AppName+": "+"Starting library sync", "Starting to sync the library", SimpleNotificationOptions{
+		Tags: []string{utils.Slug(tunebook.AppName), "library", "syncing"},
 	})
 
 	defer func() {
@@ -666,13 +666,13 @@ func (s *LibraryService) Sync() error {
 			utils.PrettyDuration(s.totalSyncDuration),
 		)
 
-		tags := []string{utils.Slug(dwebble.AppName), "library", "syncing"}
+		tags := []string{utils.Slug(tunebook.AppName), "library", "syncing"}
 
 		if len(s.errors) > 0 {
 			tags = append(tags, "warning")
 		}
 
-		s.norificationService.SendSimple(dwebble.AppName+": "+"Stopped library sync", message, SimpleNotificationOptions{
+		s.norificationService.SendSimple(tunebook.AppName+": "+"Stopped library sync", message, SimpleNotificationOptions{
 			Tags: tags,
 		})
 	}()

@@ -3,7 +3,7 @@ package adapter
 import (
 	"go/ast"
 
-	"github.com/nanoteck137/dwebble/tools/filter"
+	"github.com/nanoteck137/tunebook/tools/filter"
 )
 
 var _ filter.ResolverAdapter = (*TrackResolverAdapter)(nil)

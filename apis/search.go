@@ -3,8 +3,8 @@ package apis
 import (
 	"net/http"
 
-	"github.com/nanoteck137/dwebble/core"
-	"github.com/nanoteck137/dwebble/service"
+	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/pyrin"
 )
 

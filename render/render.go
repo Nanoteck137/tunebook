@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"io"
 
-	"github.com/nanoteck137/dwebble"
+	"github.com/nanoteck137/tunebook"
 )
 
 //go:embed templates
@@ -24,16 +24,16 @@ var templates = template.Must(template.New("index").ParseFS(embedFS, "templates/
 func RenderCallbackSuccess(w io.Writer) error {
 	return templates.ExecuteTemplate(w, "base", Data{
 		Icon:    "success",
-		AppName: dwebble.AppName,
+		AppName: tunebook.AppName,
 		Header:  "Login Successful!",
-		Content: template.HTML(fmt.Sprintf("You have been authenticated to <strong>%s</strong> successfully.<br>You can now close this tab.", dwebble.AppName)),
+		Content: template.HTML(fmt.Sprintf("You have been authenticated to <strong>%s</strong> successfully.<br>You can now close this tab.", tunebook.AppName)),
 	})
 }
 
 func RenderCallbackRequestExpired(w io.Writer) error {
 	return templates.ExecuteTemplate(w, "base", Data{
 		Icon:    "error",
-		AppName: dwebble.AppName,
+		AppName: tunebook.AppName,
 		Header:  "Request Expired!",
 		Content: template.HTML("This request is expired. Please retry.<br>You can now close this tab."),
 	})
@@ -42,7 +42,7 @@ func RenderCallbackRequestExpired(w io.Writer) error {
 func RenderCallbackError(w io.Writer) error {
 	return templates.ExecuteTemplate(w, "base", Data{
 		Icon:    "error",
-		AppName: dwebble.AppName,
+		AppName: tunebook.AppName,
 		Header:  "Error!",
 		Content: template.HTML("An unknown error occurred. Please retry<br>You can now close this tab."),
 	})

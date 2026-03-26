@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/dwebble/database/adapter"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook/database/adapter"
+	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/pyrin/ember"
 )
 

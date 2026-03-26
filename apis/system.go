@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/core"
+	"github.com/nanoteck137/tunebook"
+	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/pyrin"
 )
 
@@ -22,7 +22,7 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 			ResponseType: GetSystemInfo{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				return GetSystemInfo{
-					Version: dwebble.Version,
+					Version: tunebook.Version,
 				}, nil
 			},
 		},
