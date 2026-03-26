@@ -108,6 +108,9 @@ export class MusicManager {
 
   currentItem = $state<MediaItem | null>(null);
 
+  private currentTrackId: string | null = null;
+  private trackEventSent: boolean = false;
+
   constructor(apiClient: ApiClient) {
     this.audio = new Audio();
 
@@ -208,6 +211,46 @@ export class MusicManager {
     //     audio.play();
     //   }
     // });
+  }
+
+  private resetTrackEventTracking(trackId: string) {
+    this.currentTrackId = trackId;
+    this.trackEventSent = false;
+    console.log("resetTrackEventTracking", trackId);
+  }
+
+  private checkTrackProgress() {
+    if (!this.currentTrackId || this.trackEventSent) return;
+
+    const progressPercent = (this.currentTime / this.duration) * 100;
+    if (progressPercent >= 80) {
+      this.sendTrackEvent();
+    }
+  }
+
+  private async sendTrackEvent() {
+    if (this.trackEventSent) return;
+    if (!this.currentTrackId) return;
+
+    const progressPercent = (this.currentTime / this.duration) * 100;
+    if (progressPercent < 10) {
+      return;
+    }
+
+    const res = await this.apiClient.addTrackEvent(this.currentTrackId, {
+      position: this.currentTime,
+      source: "web-player",
+    });
+    if (!res.success) {
+      console.log("failed to add track event", res.error);
+      return;
+    }
+
+    this.trackEventSent = true;
+  }
+
+  setPosition(position: number) {
+    this.audio.currentTime = position;
   }
 
   async clearQueue() {
@@ -342,6 +385,8 @@ export class MusicManager {
     if (mediaItem) {
       if (this.currentItem?.trackId === mediaItem.trackId) return;
 
+      this.resetTrackEventTracking(mediaItem.trackId);
+
       const src = this.apiClient.url.streamTrack(mediaItem.trackId).toString();
       console.log(src);
       this.audio.src = src;
@@ -358,11 +403,13 @@ export class MusicManager {
   }
 
   async nextTrack() {
+    await this.sendTrackEvent();
     await this.setQueueIndex(this.queue.index + 1);
     this.play();
   }
 
   async previousTrack() {
+    await this.sendTrackEvent();
     await this.setQueueIndex(this.queue.index - 1);
     this.play();
   }

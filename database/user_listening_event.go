@@ -16,9 +16,10 @@ type UserListeningEvent struct {
 	UserId  string `db:"user_id"`
 	TrackId string `db:"track_id"`
 
-	ListenedAt int64  `db:"listened_at"`
-	DurationMs int64  `db:"duration_ms"`
-	Source     string `db:"source"`
+	ListenedAt int64   `db:"listened_at"`
+	Percent    float64 `db:"percent"`
+	PositionMs int64   `db:"position_ms"`
+	Source     string  `db:"source"`
 }
 
 func UserListeningEventQuery() *goqu.SelectDataset {
@@ -32,7 +33,8 @@ func UserListeningEventQuery() *goqu.SelectDataset {
 			"user_listening_events.track_id",
 
 			"user_listening_events.listened_at",
-			"user_listening_events.duration_ms",
+			"user_listening_events.percent",
+			"user_listening_events.position_ms",
 			"user_listening_events.source",
 		)
 
@@ -55,7 +57,8 @@ type CreateUserListeningEventParams struct {
 	TrackId string
 
 	ListenedAt int64
-	DurationMs int64
+	Percent    float64
+	PositionMs int64
 	Source     string
 }
 
@@ -71,7 +74,8 @@ func (db DB) CreateUserListeningEvent(ctx context.Context, params CreateUserList
 		"track_id": params.TrackId,
 
 		"listened_at": params.ListenedAt,
-		"duration_ms": params.DurationMs,
+		"percent":     params.Percent,
+		"position_ms": params.PositionMs,
 		"source":      params.Source,
 	}).
 		Returning("id")

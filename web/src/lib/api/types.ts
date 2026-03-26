@@ -24,6 +24,15 @@ export const AddPlaylistFilterBody = z.object({
 });
 export type AddPlaylistFilterBody = z.infer<typeof AddPlaylistFilterBody>;
 
+// Name: AddTrackEventBody
+export const AddTrackEventBody = z.object({
+  // Name: AddTrackEventBody.position
+  "position": z.number(),
+  // Name: AddTrackEventBody.source
+  "source": z.string(),
+});
+export type AddTrackEventBody = z.infer<typeof AddTrackEventBody>;
+
 // Name: Images
 export const Images = z.object({
   // Name: Images.original
@@ -671,15 +680,6 @@ export const GetUserQuickPlaylistItemIds = z.object({
   "trackIds": z.array(z.string()),
 });
 export type GetUserQuickPlaylistItemIds = z.infer<typeof GetUserQuickPlaylistItemIds>;
-
-// Name: RecordTrackBody
-export const RecordTrackBody = z.object({
-  // Name: RecordTrackBody.duration
-  "duration": z.number(),
-  // Name: RecordTrackBody.source
-  "source": z.string(),
-});
-export type RecordTrackBody = z.infer<typeof RecordTrackBody>;
 
 // Name: RemovePlaylistItemBody
 export const RemovePlaylistItemBody = z.object({

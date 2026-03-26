@@ -107,6 +107,7 @@
     <Slider
       value={musicManager.currentTime / musicManager.duration}
       onValue={(p) => {
+        musicManager.setPosition(p * musicManager.duration);
         // onSeek(p * musicManager.duration);
       }}
     />

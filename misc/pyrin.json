@@ -37,6 +37,21 @@
       ]
     },
     {
+      "name": "AddTrackEventBody",
+      "fields": [
+        {
+          "name": "position",
+          "type": "float",
+          "omitEmpty": false
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Album",
       "fields": [
         {
@@ -1057,21 +1072,6 @@
       ]
     },
     {
-      "name": "RecordTrackBody",
-      "fields": [
-        {
-          "name": "duration",
-          "type": "float",
-          "omitEmpty": false
-        },
-        {
-          "name": "source",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "RemovePlaylistItemBody",
       "fields": [
         {
@@ -1289,6 +1289,13 @@
       "method": "POST",
       "path": "/api/v1/playlists/:playlistId/items",
       "body": "AddItemToPlaylistBody"
+    },
+    {
+      "type": "api",
+      "name": "AddTrackEvent",
+      "method": "POST",
+      "path": "/api/v1/media/event/track/:trackId",
+      "body": "AddTrackEventBody"
     },
     {
       "type": "normal",
@@ -1629,13 +1636,6 @@
       "method": "GET",
       "path": "/api/v1/user/quickplaylist",
       "response": "GetUserQuickPlaylistItemIds"
-    },
-    {
-      "type": "api",
-      "name": "RecordTrack",
-      "method": "POST",
-      "path": "/api/v1/media/record/track/:trackId",
-      "body": "RecordTrackBody"
     },
     {
       "type": "api",

@@ -15,6 +15,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  addTrackEvent(trackId: string, body: api.AddTrackEventBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/event/track/${trackId}`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   
   authClaimQuickConnectCode(body: api.AuthClaimQuickConnectCodeBody, options?: ExtraOptions) {
     return this.request("/api/v1/auth/quick-connect/claim", "POST", z.undefined(), z.any(), body, options)
@@ -192,10 +196,6 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/quickplaylist", "GET", api.GetUserQuickPlaylistItemIds, z.any(), undefined, options)
   }
   
-  recordTrack(trackId: string, body: api.RecordTrackBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/record/track/${trackId}`, "POST", z.undefined(), z.any(), body, options)
-  }
-  
   removePlaylistItem(playlistId: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "DELETE", z.undefined(), z.any(), body, options)
   }
@@ -248,6 +248,10 @@ export class ClientUrls {
   
   addItemToPlaylist(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
+  }
+  
+  addTrackEvent(trackId: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/event/track/${trackId}`)
   }
   
   authCallback() {
@@ -440,10 +444,6 @@ export class ClientUrls {
   
   getUserQuickPlaylistItemIds() {
     return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
-  }
-  
-  recordTrack(trackId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/record/track/${trackId}`)
   }
   
   removePlaylistItem(playlistId: string) {

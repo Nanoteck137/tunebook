@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"errors"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -129,8 +130,8 @@ type GetMediaSettings struct {
 	DeviceSpecs []MediaDeviceSpec `json:"deviceSpecs"`
 }
 
-type RecordTrackBody struct {
-	Duration float32 `json:"duration"`
+type AddTrackEventBody struct {
+	Position float64 `json:"position"`
 	// TODO(patrik): Validate
 	Source string `json:"source"`
 }
@@ -138,7 +139,7 @@ type RecordTrackBody struct {
 func handleMediaServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrMediaServiceTrackNotFound):
-		return TrackNotFound() 
+		return TrackNotFound()
 	case errors.Is(err, service.ErrMediaServiceInvalidFormat):
 		// TODO(patrik): Better error
 		return &pyrin.Error{
@@ -202,15 +203,15 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "RecordTrack",
+			Name:         "AddTrackEvent",
 			Method:       http.MethodPost,
-			Path:         "/media/record/track/:trackId",
+			Path:         "/media/event/track/:trackId",
 			ResponseType: nil,
-			BodyType:     RecordTrackBody{},
+			BodyType:     AddTrackEventBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				trackId := c.Param("trackId")
 
-				body, err := pyrin.Body[RecordTrackBody](c)
+				body, err := pyrin.Body[AddTrackEventBody](c)
 				if err != nil {
 					return nil, err
 				}
@@ -229,13 +230,20 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				_, err = app.DB().CreateUserListeningEvent(ctx, database.CreateUserListeningEventParams{
-					UserId:     user.Id,
-					TrackId:    track.Id,
-					ListenedAt: time.Now().UnixMilli(),
-					DurationMs: int64(body.Duration * 1000),
-					Source:     body.Source,
-				})
+				percent := math.Min(body.Position/float64(track.Duration), 1.0)
+				percent = math.Round(percent*100) / 100
+
+				_, err = app.DB().CreateUserListeningEvent(
+					ctx,
+					database.CreateUserListeningEventParams{
+						UserId:     user.Id,
+						TrackId:    track.Id,
+						ListenedAt: time.Now().UnixMilli(),
+						Percent:    percent,
+						PositionMs: int64(body.Position * 1000),
+						Source:     body.Source,
+					},
+				)
 				if err != nil {
 					return nil, err
 				}

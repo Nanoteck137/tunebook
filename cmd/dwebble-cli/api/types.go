@@ -21,6 +21,14 @@ type AddPlaylistFilterBody struct {
 	Filter string `json:"filter"`
 }
 
+// Name: AddTrackEventBody
+type AddTrackEventBody struct {
+	// Name: AddTrackEventBody.position
+	Position float32 `json:"position"`
+	// Name: AddTrackEventBody.source
+	Source string `json:"source"`
+}
+
 // Name: Images
 type Images struct {
 	// Name: Images.original
@@ -603,14 +611,6 @@ type GetUser struct {
 type GetUserQuickPlaylistItemIds struct {
 	// Name: GetUserQuickPlaylistItemIds.trackIds
 	TrackIds []string `json:"trackIds"`
-}
-
-// Name: RecordTrackBody
-type RecordTrackBody struct {
-	// Name: RecordTrackBody.duration
-	Duration float32 `json:"duration"`
-	// Name: RecordTrackBody.source
-	Source string `json:"source"`
 }
 
 // Name: RemovePlaylistItemBody

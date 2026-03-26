@@ -18,6 +18,22 @@ func (c *Client) AddItemToPlaylist(playlistId string, body AddItemToPlaylistBody
 	return Request[any](data, body)
 }
 
+func (c *Client) AddTrackEvent(trackId string, body AddTrackEventBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/event/track/%v", trackId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 
 func (c *Client) AuthClaimQuickConnectCode(body AuthClaimQuickConnectCodeBody, options Options) (*any, error) {
 	path := "/api/v1/auth/quick-connect/claim"
@@ -711,22 +727,6 @@ func (c *Client) GetUserQuickPlaylistItemIds(options Options) (*GetUserQuickPlay
 	return Request[GetUserQuickPlaylistItemIds](data, nil)
 }
 
-func (c *Client) RecordTrack(trackId string, body RecordTrackBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/record/track/%v", trackId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
 func (c *Client) RemovePlaylistItem(playlistId string, body RemovePlaylistItemBody, options Options) (*any, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", playlistId)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -891,6 +891,11 @@ func (c *Client) UploadPlaylistImage(playlistId string, boundary string, body Re
 
 func (c *ClientUrls) AddItemToPlaylist(playlistId string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", playlistId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AddTrackEvent(trackId string) (*URL, error) {
+	path := Sprintf("/api/v1/media/event/track/%v", trackId)
 	return c.getUrl(path)
 }
 
@@ -1131,11 +1136,6 @@ func (c *ClientUrls) GetUserImage(userId string, image string) (*URL, error) {
 
 func (c *ClientUrls) GetUserQuickPlaylistItemIds() (*URL, error) {
 	path := "/api/v1/user/quickplaylist"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) RecordTrack(trackId string) (*URL, error) {
-	path := Sprintf("/api/v1/media/record/track/%v", trackId)
 	return c.getUrl(path)
 }
 
