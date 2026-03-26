@@ -17,7 +17,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Cleanup: API: User APIs
 
-- [ ] Backend: Feature: User Tracking
 - [ ] Backend: Feature: Favorites
 - [ ] Backend: Feature: Year over year
 
@@ -80,3 +79,17 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Add back migrate command, maybe only for dev
 - [ ] Pyrin: Generate Structures for SSE events
+
+```sql
+CREATE TABLE user_listening_stats (
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    track_id    INTEGER NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    period      TEXT NOT NULL,  -- '2024', '2024-Q1', '2024-03'
+
+    play_count  INTEGER NOT NULL DEFAULT 0,
+    skip_count  INTEGER NOT NULL DEFAULT 0,
+    total_ms    INTEGER NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (user_id, track_id, period)
+);
+```

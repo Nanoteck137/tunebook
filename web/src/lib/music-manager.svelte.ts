@@ -108,8 +108,7 @@ export class MusicManager {
 
   currentItem = $state<MediaItem | null>(null);
 
-  private currentTrackId: string | null = null;
-  private trackEventSent: boolean = false;
+  private trackEventSent = $state(false);
 
   constructor(apiClient: ApiClient) {
     this.audio = new Audio();
@@ -213,31 +212,28 @@ export class MusicManager {
     // });
   }
 
-  private resetTrackEventTracking(trackId: string) {
-    this.currentTrackId = trackId;
+  private resetTrackEventTracking() {
+    console.log("resetTrackEventTracking");
     this.trackEventSent = false;
-    console.log("resetTrackEventTracking", trackId);
-  }
 
-  private checkTrackProgress() {
-    if (!this.currentTrackId || this.trackEventSent) return;
-
-    const progressPercent = (this.currentTime / this.duration) * 100;
-    if (progressPercent >= 80) {
-      this.sendTrackEvent();
-    }
+    console.log("after resetTrackEventTracking", this.trackEventSent);
   }
 
   private async sendTrackEvent() {
-    if (this.trackEventSent) return;
-    if (!this.currentTrackId) return;
+    console.log("sendTrackEvent", this.currentItem?.name, this.trackEventSent);
 
-    const progressPercent = (this.currentTime / this.duration) * 100;
-    if (progressPercent < 10) {
+    if (this.trackEventSent) {
+      console.log("sendTrackEvent already sent", this.currentItem?.trackId);
       return;
     }
 
-    const res = await this.apiClient.addTrackEvent(this.currentTrackId, {
+    if (!this.currentItem) {
+      console.log("sendTrackEvent no current item");
+      return;
+    }
+
+    console.log("SENDING EVENT");
+    const res = await this.apiClient.addTrackEvent(this.currentItem.trackId, {
       position: this.currentTime,
       source: "web-player",
     });
@@ -253,142 +249,32 @@ export class MusicManager {
     this.audio.currentTime = position;
   }
 
-  async clearQueue() {
-    await this.queue.clearQueue();
-    this.queueUpdate();
-  }
+  async clearQueue(update = true) {
+    await this.sendTrackEvent();
 
-  /*
-  async queueRequest(request: QueueRequest, options: QueueRequestOptions) {
-    // onPlay={async (shuffle) => {
-    //   await musicManager.clearQueue();
-    //   await musicManager.addFromPlaylist(data.playlist.id, { shuffle });
-    //   musicManager.requestPlay();
-    // }}
-    // onTrackPlay={async (trackId) => {
-    //   await musicManager.clearQueue();
-    //   await musicManager.addFromPlaylist(data.playlist.id);
-    //   await musicManager.setQueueIndex(
-    //     musicManager.queue.items.findIndex((t) => t.track.id === trackId),
-    //   );
-    //   musicManager.requestPlay();
-    // }}
-
-    if (!options.append) {
-      await this.clearQueue();
-    }
-
-    switch (request.type) {
-      case "addPlaylist": {
-        await this.addFromPlaylist(request.playlistId, request.filterId, {
-          shuffle: options.shuffle,
-          front: options.append === "front",
-        });
-        break;
-      }
-      case "addAlbum": {
-        await this.addFromAlbum(request.albumId, {
-          shuffle: options.shuffle,
-          front: options.append === "front",
-        });
-        break;
-      }
-      case "addArtist": {
-        await this.addFromArtist(request.artistId, {
-          shuffle: options.shuffle,
-          front: options.append === "front",
-        });
-        break;
-      }
-      case "addTaglist": {
-        await this.addFromTaglist(request.taglistId, {
-          shuffle: options.shuffle,
-          front: options.append === "front",
-        });
-        break;
-      }
-      case "addFilter": {
-        await this.addFromFilter(request.filter, {
-          shuffle: options.shuffle,
-          front: options.append === "front",
-        });
-        break;
-      }
-    }
-
-    if (options.queueIndex) {
-      await this.setQueueIndex(options.queueIndex);
-    }
-
-    if (options.queueIndexToTrackId) {
-      await this.setQueueIndex(
-        this.queue.items.findIndex(
-          (t) => t.trackId === options.queueIndexToTrackId,
-        ),
-      );
-    }
-
-    if (!options.skipPlay) {
-      this.requestPlay();
+    this.queue.clearQueue();
+    if (update) {
+      this.queueUpdate();
     }
   }
-    */
-
-  /*
-  async addFromPlaylist(
-    playlistId: string,
-    filterId?: string,
-    settings?: AddToQueueSettings,
-  ) {
-    await this.queue.addFromPlaylist(playlistId, filterId, settings);
-    this.emitter.emit("onQueueUpdated");
-  }
-
-  async addFromTaglist(taglistId: string, settings?: AddToQueueSettings) {
-    await this.queue.addFromTaglist(taglistId, settings);
-    this.emitter.emit("onQueueUpdated");
-  }
-
-  async addFromFilter(filter: string, settings?: AddToQueueSettings) {
-    await this.queue.addFromFilter(filter, settings);
-    this.emitter.emit("onQueueUpdated");
-  }
-
-  async addFromArtist(artistId: string, settings?: AddToQueueSettings) {
-    await this.queue.addFromArtist(artistId, settings);
-    this.emitter.emit("onQueueUpdated");
-  }
-
-  async addFromAlbum(albumId: string, settings?: AddToQueueSettings) {
-    await this.queue.addFromAlbum(albumId, settings);
-    this.emitter.emit("onQueueUpdated");
-  }
-
-  async addFromIds(trackIds: string[], settings?: AddToQueueSettings) {
-    await this.queue.addFromIds(trackIds, settings);
-    this.emitter.emit("onQueueUpdated");
-  }
-    */
 
   async setQueueIndex(index: number) {
-    await this.markTrack();
+    await this.sendTrackEvent();
 
     this.queue.setQueueIndex(index);
     this.queueUpdate();
   }
 
   queueUpdate() {
-    console.log("update");
     this.showPlayer = !this.queue.isQueueEmpty();
     const mediaItem = this.queue.getCurrentMediaItem();
 
     if (mediaItem) {
-      if (this.currentItem?.trackId === mediaItem.trackId) return;
-
-      this.resetTrackEventTracking(mediaItem.trackId);
+      if (mediaItem?.trackId !== this.currentItem?.trackId) {
+        this.resetTrackEventTracking();
+      }
 
       const src = this.apiClient.url.streamTrack(mediaItem.trackId).toString();
-      console.log(src);
       this.audio.src = src;
 
       this.currentItem = mediaItem;
@@ -398,18 +284,12 @@ export class MusicManager {
     }
   }
 
-  async markTrack() {
-    // this.queue.markTrack(this.getPlayerPosition());
-  }
-
   async nextTrack() {
-    await this.sendTrackEvent();
     await this.setQueueIndex(this.queue.index + 1);
     this.play();
   }
 
   async previousTrack() {
-    await this.sendTrackEvent();
     await this.setQueueIndex(this.queue.index - 1);
     this.play();
   }
@@ -422,15 +302,11 @@ export class MusicManager {
     this.audio.pause();
   }
 
-  requestPlayPause() {
-    if (this.playing) {
-      this.pause();
-    } else {
-      this.play();
-    }
-  }
-
   async addTracks(params: { clear?: boolean; trackId?: string }) {
+    if (params.clear) {
+      await this.clearQueue(false);
+    }
+
     const res = await this.apiClient.getMediaFromFilter({
       filter: "",
     });

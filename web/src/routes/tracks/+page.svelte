@@ -84,8 +84,7 @@
   userPlaylists={data.userPlaylists}
   quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
-    musicManager.addTracks({ trackId });
-    musicManager.play();
+    await musicManager.addTracks({ trackId, clear: true });
 
     // await musicManager.queueRequest(
     //   {
