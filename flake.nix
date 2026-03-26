@@ -44,12 +44,12 @@
           '';
         };
 
-        frontend = pkgs.buildNpmPackage {
+        web = pkgs.buildNpmPackage {
           name = "tunebook-web";
           version = fullVersion;
 
           src = gitignore.lib.gitignoreSource ./web;
-          npmDepsHash = "sha256-sWnyOEp+fxjCJbdn2uwp45ExFwblTMZY+rfzWZpFHnQ=";
+          npmDepsHash = "sha256-XAvjKjkNWIqPObCcL9d3MNSFbZO6U6O5QcXaHcPQfA0=";
 
           PUBLIC_VERSION=version;
           PUBLIC_COMMIT=self.dirtyRev or self.rev or "no-commit";
@@ -68,7 +68,7 @@
 
           contents = [
             pkgs.dockerTools.caCertificates
-            frontend   # ← add this so the frontend store path is present in the image
+            web
             backend
           ];
 
@@ -85,7 +85,7 @@
             Cmd = [ "serve" ];
             ExposedPorts = { "3000/tcp" = {}; };
             Env = [
-              "DWEBBLE_WEB=${frontend}"  # resolves to the frontend's /nix/store/... path at build time
+              "DWEBBLE_WEB=${web}"
             ];
           };
         };
@@ -95,7 +95,7 @@
       {
         packages = {
           default = backend;
-          inherit backend frontend docker;
+          inherit backend web docker;
         };
 
         devShells.default = pkgs.mkShell {
@@ -113,11 +113,9 @@
       }
     ) // {
       nixosModules.backend = import ./nix/backend.nix { inherit self; };
-      nixosModules.frontend = import ./nix/frontend.nix { inherit self; };
       nixosModules.default = { ... }: {
         imports = [
           self.nixosModules.backend
-          self.nixosModules.frontend
         ];
       };
     };

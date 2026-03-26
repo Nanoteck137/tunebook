@@ -8,7 +8,7 @@ clean:
 
 test-build:
 	nix build --no-link .#backend
-	nix build --no-link .#frontend
+	nix build --no-link .#web
 
 publish: test-build
 	publish-version

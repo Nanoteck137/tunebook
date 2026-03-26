@@ -17,8 +17,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Frontend: Rename from frontend to web
-
 - [ ] Backend: Cleanup: API: User APIs
 
 - [ ] Backend: Feature: Favorites
