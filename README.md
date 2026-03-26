@@ -61,13 +61,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
 
-- [ ] General: Rename Project
-    - Musicbook (MB)
-    - Tunebook (TB)
-    - Need some ideas
-
-- [ ] General: Use new logo from tunebook_app
-
 - [ ] Backend: Cleanup: Database: Database code
 - [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
 - [ ] Backend: Cleanup: Media Service: Code Cleanup
