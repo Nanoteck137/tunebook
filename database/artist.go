@@ -107,6 +107,7 @@ func applyFilterParams(
 	return query, nil
 }
 
+// TODO(patrik): Remove and make better
 func applyFilterParamsCustom(
 	params types.FilterParams,
 	adapter filter.ResolverAdapter,
