@@ -19,6 +19,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/event/track/${trackId}`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  addUserFavorite(trackId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/user/favorites/${trackId}`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   
   authClaimQuickConnectCode(body: api.AuthClaimQuickConnectCodeBody, options?: ExtraOptions) {
     return this.request("/api/v1/auth/quick-connect/claim", "POST", z.undefined(), z.any(), body, options)
@@ -191,6 +195,14 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/${id}`, "GET", api.GetUser, z.any(), undefined, options)
   }
   
+  getUserFavorites(options?: ExtraOptions) {
+    return this.request("/api/v1/user/favorites", "GET", api.GetUserFavorites, z.any(), undefined, options)
+  }
+  
+  getUserFavoritesIds(options?: ExtraOptions) {
+    return this.request("/api/v1/user/favorites/ids", "GET", api.GetUserFavoritesIds, z.any(), undefined, options)
+  }
+  
   
   getUserQuickPlaylistItemIds(options?: ExtraOptions) {
     return this.request("/api/v1/user/quickplaylist", "GET", api.GetUserQuickPlaylistItemIds, z.any(), undefined, options)
@@ -198,6 +210,10 @@ export class ApiClient extends BaseApiClient {
   
   removePlaylistItem(playlistId: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "DELETE", z.undefined(), z.any(), body, options)
+  }
+  
+  removeUserFavorite(trackId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/user/favorites/${trackId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   reorderPlaylistItems(playlistId: string, body: api.ReorderPlaylistItemsBody, options?: ExtraOptions) {
@@ -252,6 +268,10 @@ export class ClientUrls {
   
   addTrackEvent(trackId: string) {
     return createUrl(this.baseUrl, `/api/v1/media/event/track/${trackId}`)
+  }
+  
+  addUserFavorite(trackId: string) {
+    return createUrl(this.baseUrl, `/api/v1/user/favorites/${trackId}`)
   }
   
   authCallback() {
@@ -438,6 +458,14 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/users/${id}`)
   }
   
+  getUserFavorites() {
+    return createUrl(this.baseUrl, "/api/v1/user/favorites")
+  }
+  
+  getUserFavoritesIds() {
+    return createUrl(this.baseUrl, "/api/v1/user/favorites/ids")
+  }
+  
   getUserImage(userId: string, image: string) {
     return createUrl(this.baseUrl, `/files/users/images/${userId}/${image}`)
   }
@@ -448,6 +476,10 @@ export class ClientUrls {
   
   removePlaylistItem(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
+  }
+  
+  removeUserFavorite(trackId: string) {
+    return createUrl(this.baseUrl, `/api/v1/user/favorites/${trackId}`)
   }
   
   reorderPlaylistItems(playlistId: string) {

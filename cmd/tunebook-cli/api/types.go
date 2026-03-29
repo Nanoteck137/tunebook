@@ -607,6 +607,20 @@ type GetUser struct {
 	User UserData `json:"user"`
 }
 
+// Name: GetUserFavorites
+type GetUserFavorites struct {
+	// Name: GetUserFavorites.page
+	Page Page `json:"page"`
+	// Name: GetUserFavorites.items
+	Items []Track `json:"items"`
+}
+
+// Name: GetUserFavoritesIds
+type GetUserFavoritesIds struct {
+	// Name: GetUserFavoritesIds.trackIds
+	TrackIds []string `json:"trackIds"`
+}
+
 // Name: GetUserQuickPlaylistItemIds
 type GetUserQuickPlaylistItemIds struct {
 	// Name: GetUserQuickPlaylistItemIds.trackIds

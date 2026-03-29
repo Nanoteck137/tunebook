@@ -6,11 +6,12 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/nanoteck137/tunebook/core"
-	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
+	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/validate"
 )
 
@@ -155,6 +156,15 @@ func (b EditUserBody) Validate() error {
 	)
 }
 
+type GetUserFavoritesIds struct {
+	TrackIds []string `json:"trackIds"`
+}
+
+type GetUserFavorites struct {
+	Page  types.Page `json:"page"`
+	Items []Track    `json:"items"`
+}
+
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -295,6 +305,140 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				// TODO(patrik): Better error
 				return nil, errors.New("No Quick Playlist set")
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserFavoritesIds",
+			Method:       http.MethodGet,
+			Path:         "/user/favorites/ids",
+			ResponseType: GetUserFavoritesIds{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+
+				items, err := app.DB().GetUserFavoritesIds(ctx, user.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetUserFavoritesIds{
+					TrackIds: []string{},
+				}
+
+				if items != nil {
+					res.TrackIds = items
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserFavorites",
+			Method:       http.MethodGet,
+			Path:         "/user/favorites",
+			ResponseType: GetUserFavorites{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+
+				// TODO(patrik): Add filterId
+
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				items, page, err := app.DB().GetUserFavoriteTracks(
+					ctx,
+					database.GetUserFavoriteTracksParams{
+						UserId: user.Id,
+						Page:   pageParams,
+						Filter: filterParams,
+					},
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetUserFavorites{
+					Page:  page,
+					Items: make([]Track, len(items)),
+				}
+
+				for i, item := range items {
+					item.Track.Order = utils.IntPtr((i + 1) + (page.Page * page.PerPage))
+					res.Items[i] = ConvertDBTrack(c, item.Track)
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "AddUserFavorite",
+			Method: http.MethodPost,
+			Path:   "/user/favorites/:trackId",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				trackId := c.Param("trackId")
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+
+				track, err := app.DB().GetTrackById(ctx, trackId)
+				if err != nil {
+					// TODO(patrik): Handle error
+					return nil, err
+				}
+
+				err = app.DB().CreateUserFavorite(
+					ctx,
+					database.CreateUserFavoriteParams{
+						UserId:  user.Id,
+						TrackId: track.Id,
+					},
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "RemoveUserFavorite",
+			Method: http.MethodDelete,
+			Path:   "/user/favorites/:trackId",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				trackId := c.Param("trackId")
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+
+				err = app.DB().DeleteUserFavorite(ctx, user.Id, trackId)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
 			},
 		},
 

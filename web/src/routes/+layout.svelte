@@ -25,12 +25,15 @@
   import { goto, invalidateAll } from "$app/navigation";
   import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
+  import { setFavorites } from "$lib/favorites.svelte";
 
   let { children, data } = $props();
 
   let apiClient = setApiClientRaw(data.apiClient);
 
   setMusicManager(apiClient);
+
+  let favorites = setFavorites(apiClient, data.favoriteIds);
 
   let quickPlaylist = setQuickPlaylist(
     apiClient,
@@ -41,6 +44,10 @@
   $effect(() => {
     quickPlaylist.playlistId = data.user?.quickPlaylist ?? "";
     quickPlaylist.ids = data.quickPlaylistIds;
+  });
+
+  $effect(() => {
+    favorites.ids = data.favoriteIds;
   });
 
   let showSideMenu = $state(false);

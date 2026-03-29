@@ -34,6 +34,22 @@ func (c *Client) AddTrackEvent(trackId string, body AddTrackEventBody, options O
 	return Request[any](data, body)
 }
 
+func (c *Client) AddUserFavorite(trackId string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/user/favorites/%v", trackId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 
 func (c *Client) AuthClaimQuickConnectCode(body AuthClaimQuickConnectCodeBody, options Options) (*any, error) {
 	path := "/api/v1/auth/quick-connect/claim"
@@ -710,6 +726,38 @@ func (c *Client) GetUser(id string, options Options) (*GetUser, error) {
 	return Request[GetUser](data, nil)
 }
 
+func (c *Client) GetUserFavorites(options Options) (*GetUserFavorites, error) {
+	path := "/api/v1/user/favorites"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetUserFavorites](data, nil)
+}
+
+func (c *Client) GetUserFavoritesIds(options Options) (*GetUserFavoritesIds, error) {
+	path := "/api/v1/user/favorites/ids"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetUserFavoritesIds](data, nil)
+}
+
 
 func (c *Client) GetUserQuickPlaylistItemIds(options Options) (*GetUserQuickPlaylistItemIds, error) {
 	path := "/api/v1/user/quickplaylist"
@@ -741,6 +789,22 @@ func (c *Client) RemovePlaylistItem(playlistId string, body RemovePlaylistItemBo
 		Headers: options.Header,
 	}
 	return Request[any](data, body)
+}
+
+func (c *Client) RemoveUserFavorite(trackId string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/user/favorites/%v", trackId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
 }
 
 func (c *Client) ReorderPlaylistItems(playlistId string, body ReorderPlaylistItemsBody, options Options) (*any, error) {
@@ -896,6 +960,11 @@ func (c *ClientUrls) AddItemToPlaylist(playlistId string) (*URL, error) {
 
 func (c *ClientUrls) AddTrackEvent(trackId string) (*URL, error) {
 	path := Sprintf("/api/v1/media/event/track/%v", trackId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AddUserFavorite(trackId string) (*URL, error) {
+	path := Sprintf("/api/v1/user/favorites/%v", trackId)
 	return c.getUrl(path)
 }
 
@@ -1129,6 +1198,16 @@ func (c *ClientUrls) GetUser(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) GetUserFavorites() (*URL, error) {
+	path := "/api/v1/user/favorites"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetUserFavoritesIds() (*URL, error) {
+	path := "/api/v1/user/favorites/ids"
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) GetUserImage(userId string, image string) (*URL, error) {
 	path := Sprintf("/files/users/images/%v/%v", userId, image)
 	return c.getUrl(path)
@@ -1141,6 +1220,11 @@ func (c *ClientUrls) GetUserQuickPlaylistItemIds() (*URL, error) {
 
 func (c *ClientUrls) RemovePlaylistItem(playlistId string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", playlistId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RemoveUserFavorite(trackId string) (*URL, error) {
+	path := Sprintf("/api/v1/user/favorites/%v", trackId)
 	return c.getUrl(path)
 }
 

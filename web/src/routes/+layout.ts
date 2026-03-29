@@ -31,10 +31,19 @@ export const load: LayoutLoad = async ({ url }) => {
     }
   }
 
+  let favoriteIds = [] as string[];
   let quickPlaylistIds = [] as string[];
   let userPlaylists: Playlist[] | null = null;
 
   if (user) {
+    const res = await apiClient.getUserFavoritesIds();
+    if (!res.success) {
+      // TODO(patrik): Better handling of this error
+      throw error(res.error.code, { message: res.error.message });
+    }
+
+    favoriteIds = res.data.trackIds;
+
     if (user.quickPlaylist) {
       const res = await apiClient.getUserQuickPlaylistItemIds();
       if (!res.success) {
@@ -59,6 +68,7 @@ export const load: LayoutLoad = async ({ url }) => {
   return {
     apiClient,
     user,
+    favoriteIds,
     quickPlaylistIds,
     userPlaylists,
   };

@@ -842,6 +842,31 @@
       ]
     },
     {
+      "name": "GetUserFavorites",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "items",
+          "type": "[]Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserFavoritesIds",
+      "fields": [
+        {
+          "name": "trackIds",
+          "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetUserQuickPlaylistItemIds",
       "fields": [
         {
@@ -1298,6 +1323,12 @@
       "body": "AddTrackEventBody"
     },
     {
+      "type": "api",
+      "name": "AddUserFavorite",
+      "method": "POST",
+      "path": "/api/v1/user/favorites/:trackId"
+    },
+    {
       "type": "normal",
       "name": "AuthCallback",
       "method": "GET",
@@ -1625,6 +1656,20 @@
       "response": "GetUser"
     },
     {
+      "type": "api",
+      "name": "GetUserFavorites",
+      "method": "GET",
+      "path": "/api/v1/user/favorites",
+      "response": "GetUserFavorites"
+    },
+    {
+      "type": "api",
+      "name": "GetUserFavoritesIds",
+      "method": "GET",
+      "path": "/api/v1/user/favorites/ids",
+      "response": "GetUserFavoritesIds"
+    },
+    {
       "type": "normal",
       "name": "GetUserImage",
       "method": "GET",
@@ -1643,6 +1688,12 @@
       "method": "DELETE",
       "path": "/api/v1/playlists/:playlistId/items",
       "body": "RemovePlaylistItemBody"
+    },
+    {
+      "type": "api",
+      "name": "RemoveUserFavorite",
+      "method": "DELETE",
+      "path": "/api/v1/user/favorites/:trackId"
     },
     {
       "type": "api",

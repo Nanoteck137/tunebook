@@ -674,6 +674,22 @@ export const GetUser = z.object({
 });
 export type GetUser = z.infer<typeof GetUser>;
 
+// Name: GetUserFavorites
+export const GetUserFavorites = z.object({
+  // Name: GetUserFavorites.page
+  "page": Page,
+  // Name: GetUserFavorites.items
+  "items": z.array(Track),
+});
+export type GetUserFavorites = z.infer<typeof GetUserFavorites>;
+
+// Name: GetUserFavoritesIds
+export const GetUserFavoritesIds = z.object({
+  // Name: GetUserFavoritesIds.trackIds
+  "trackIds": z.array(z.string()),
+});
+export type GetUserFavoritesIds = z.infer<typeof GetUserFavoritesIds>;
+
 // Name: GetUserQuickPlaylistItemIds
 export const GetUserQuickPlaylistItemIds = z.object({
   // Name: GetUserQuickPlaylistItemIds.trackIds

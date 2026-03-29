@@ -19,6 +19,7 @@
   import type { Playlist, Track } from "$lib/api/types";
   import QuickAddButton from "$lib/components/QuickAddButton.svelte";
   import { goto, invalidateAll } from "$app/navigation";
+  import FavoriteButton from "$lib/components/FavoriteButton.svelte";
 
   type Props = {
     totalTracks: number;
@@ -124,6 +125,7 @@
           {/if}
 
           {#if selectedTracks.length <= 0}
+            <FavoriteButton show trackId={track.id} />
             <QuickAddButton show={!!quickPlaylist} trackId={track.id} />
 
             <DropdownMenu.Root>
