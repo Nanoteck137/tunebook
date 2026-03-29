@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
