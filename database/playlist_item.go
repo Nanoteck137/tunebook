@@ -3,11 +3,12 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
 type PlaylistItem struct {
@@ -115,22 +116,23 @@ func (db DB) GetPlaylistTracks(
 
 	var err error
 
-	// TODO(patrik): Fix this, using order for playlist_items
-
-	a := adapter.TrackResolverAdapter{}
-	tracks, err = applyFilterParams(params.Filter, &a, tracks)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
 	query := dialect.From("playlist_items").
 		Select("tracks.*", "playlist_items.order_num").
 		Join(
 			tracks.As("tracks"),
 			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-		).
-		Where(goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId)).
-		Order(goqu.I("playlist_items.order_num").Asc())
+		)
+
+	a := adapter.PlaylistTrackResolverAdapter{}
+	query, err = applyFilterParamsCustom(
+		params.Filter,
+		&a,
+		query,
+		goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId),
+	)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
 
 	page, err := buildPage(ctx, db.db, params.Page, query, "tracks.id")
 	if err != nil {

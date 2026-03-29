@@ -36,6 +36,26 @@ func applyFilter(query *goqu.SelectDataset, resolver *filter.Resolver, filterStr
 	return query.Where(expr), nil
 }
 
+// TODO(patrik): Remove and make better
+func applyFilterCustom(
+	query *goqu.SelectDataset, 
+	resolver *filter.Resolver, 
+	filterStr string, 
+	where exp.Expression,
+) (*goqu.SelectDataset, error) {
+	if filterStr == "" {
+		return query.Where(where), nil
+	}
+
+	// TODO(patrik): Better errors
+	expr, err := fullParseFilter(resolver, filterStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return query.Where(where, expr), nil
+}
+
 func applySort(query *goqu.SelectDataset, resolver *filter.Resolver, sortStr string) (*goqu.SelectDataset, error) {
 	sortExpr, err := filter.ParseSort(sortStr)
 	if err != nil {
