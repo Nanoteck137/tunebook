@@ -387,16 +387,6 @@
       ]
     },
     {
-      "name": "CreateTrackFilter",
-      "fields": [
-        {
-          "name": "filterId",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "CreateTrackFilterBody",
       "fields": [
         {
@@ -442,31 +432,6 @@
       ]
     },
     {
-      "name": "EditTrackFilterBody",
-      "fields": [
-        {
-          "name": "name",
-          "type": "*string",
-          "omitEmpty": true
-        },
-        {
-          "name": "filter",
-          "type": "*string",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "EditUserBody",
-      "fields": [
-        {
-          "name": "displayName",
-          "type": "*string",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
       "name": "GetAlbumById",
       "fields": [
         {
@@ -502,7 +467,7 @@
       ]
     },
     {
-      "name": "GetAllApiTokens",
+      "name": "GetApiTokens",
       "fields": [
         {
           "name": "tokens",
@@ -552,6 +517,16 @@
         {
           "name": "providers",
           "type": "[]AuthProvider",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetFavoriteTrackIds",
+      "fields": [
+        {
+          "name": "ids",
+          "type": "[]string",
           "omitEmpty": false
         }
       ]
@@ -787,6 +762,16 @@
       ]
     },
     {
+      "name": "GetQuickPlaylistIds",
+      "fields": [
+        {
+          "name": "ids",
+          "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetSystemInfo",
       "fields": [
         {
@@ -852,26 +837,6 @@
         {
           "name": "items",
           "type": "[]Track",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetUserFavoritesIds",
-      "fields": [
-        {
-          "name": "trackIds",
-          "type": "[]string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetUserQuickPlaylistItemIds",
-      "fields": [
-        {
-          "name": "trackIds",
-          "type": "[]string",
           "omitEmpty": false
         }
       ]
@@ -1177,6 +1142,16 @@
       ]
     },
     {
+      "name": "SetQuickPlaylistBody",
+      "fields": [
+        {
+          "name": "playlistId",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Track",
       "fields": [
         {
@@ -1272,10 +1247,25 @@
       ]
     },
     {
-      "name": "UpdateUserSettingsBody",
+      "name": "UpdateMeBody",
       "fields": [
         {
-          "name": "quickPlaylist",
+          "name": "displayName",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "UpdateTrackFilterBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "filter",
           "type": "*string",
           "omitEmpty": true
         }
@@ -1321,12 +1311,6 @@
       "method": "POST",
       "path": "/api/v1/media/event/track/:trackId",
       "body": "AddTrackEventBody"
-    },
-    {
-      "type": "api",
-      "name": "AddUserFavorite",
-      "method": "POST",
-      "path": "/api/v1/user/favorites/:trackId"
     },
     {
       "type": "normal",
@@ -1399,7 +1383,7 @@
       "type": "api",
       "name": "CreateApiToken",
       "method": "POST",
-      "path": "/api/v1/user/apitoken",
+      "path": "/api/v1/me/apitokens",
       "response": "CreateApiToken",
       "body": "CreateApiTokenBody"
     },
@@ -1423,15 +1407,14 @@
       "type": "api",
       "name": "CreateTrackFilter",
       "method": "POST",
-      "path": "/api/v1/user/tracks/filter",
-      "response": "CreateTrackFilter",
+      "path": "/api/v1/me/filters/tracks",
       "body": "CreateTrackFilterBody"
     },
     {
       "type": "api",
       "name": "DeleteApiToken",
       "method": "DELETE",
-      "path": "/api/v1/user/apitoken/:id"
+      "path": "/api/v1/me/apitokens/:tokenId"
     },
     {
       "type": "api",
@@ -1443,7 +1426,7 @@
       "type": "api",
       "name": "DeleteTrackFilter",
       "method": "DELETE",
-      "path": "/api/v1/user/tracks/filter/:filterId"
+      "path": "/api/v1/me/filters/tracks/:filterId"
     },
     {
       "type": "api",
@@ -1461,17 +1444,9 @@
     },
     {
       "type": "api",
-      "name": "EditTrackFilter",
-      "method": "PATCH",
-      "path": "/api/v1/user/tracks/filter/:filterId",
-      "body": "EditTrackFilterBody"
-    },
-    {
-      "type": "api",
-      "name": "EditUser",
-      "method": "PATCH",
-      "path": "/api/v1/user",
-      "body": "EditUserBody"
+      "name": "FavoriteTrack",
+      "method": "POST",
+      "path": "/api/v1/me/favorites/tracks/:trackId"
     },
     {
       "type": "api",
@@ -1508,10 +1483,10 @@
     },
     {
       "type": "api",
-      "name": "GetAllApiTokens",
+      "name": "GetApiTokens",
       "method": "GET",
-      "path": "/api/v1/user/apitoken",
-      "response": "GetAllApiTokens"
+      "path": "/api/v1/me/apitokens",
+      "response": "GetApiTokens"
     },
     {
       "type": "api",
@@ -1539,6 +1514,13 @@
       "method": "GET",
       "path": "/api/v1/artists",
       "response": "GetArtists"
+    },
+    {
+      "type": "api",
+      "name": "GetFavoriteTrackIds",
+      "method": "GET",
+      "path": "/api/v1/me/favorites/tracks/ids",
+      "response": "GetFavoriteTrackIds"
     },
     {
       "type": "api",
@@ -1622,6 +1604,13 @@
     },
     {
       "type": "api",
+      "name": "GetQuickPlaylistIds",
+      "method": "GET",
+      "path": "/api/v1/me/quickplaylist",
+      "response": "GetQuickPlaylistIds"
+    },
+    {
+      "type": "api",
       "name": "GetSystemInfo",
       "method": "GET",
       "path": "/api/v1/system/info",
@@ -1636,13 +1625,6 @@
     },
     {
       "type": "api",
-      "name": "GetTrackFilters",
-      "method": "GET",
-      "path": "/api/v1/user/:userId/tracks/filter",
-      "response": "GetTrackFilters"
-    },
-    {
-      "type": "api",
       "name": "GetTracks",
       "method": "GET",
       "path": "/api/v1/tracks",
@@ -1652,22 +1634,8 @@
       "type": "api",
       "name": "GetUser",
       "method": "GET",
-      "path": "/api/v1/users/:id",
+      "path": "/api/v1/users/:userId",
       "response": "GetUser"
-    },
-    {
-      "type": "api",
-      "name": "GetUserFavorites",
-      "method": "GET",
-      "path": "/api/v1/user/favorites",
-      "response": "GetUserFavorites"
-    },
-    {
-      "type": "api",
-      "name": "GetUserFavoritesIds",
-      "method": "GET",
-      "path": "/api/v1/user/favorites/ids",
-      "response": "GetUserFavoritesIds"
     },
     {
       "type": "normal",
@@ -1677,10 +1645,17 @@
     },
     {
       "type": "api",
-      "name": "GetUserQuickPlaylistItemIds",
+      "name": "GetUserTrackFavorites",
       "method": "GET",
-      "path": "/api/v1/user/quickplaylist",
-      "response": "GetUserQuickPlaylistItemIds"
+      "path": "/api/v1/users/:userId/favorites/tracks",
+      "response": "GetUserFavorites"
+    },
+    {
+      "type": "api",
+      "name": "GetUserTrackFilters",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/filters/tracks",
+      "response": "GetTrackFilters"
     },
     {
       "type": "api",
@@ -1688,12 +1663,6 @@
       "method": "DELETE",
       "path": "/api/v1/playlists/:playlistId/items",
       "body": "RemovePlaylistItemBody"
-    },
-    {
-      "type": "api",
-      "name": "RemoveUserFavorite",
-      "method": "DELETE",
-      "path": "/api/v1/user/favorites/:trackId"
     },
     {
       "type": "api",
@@ -1744,6 +1713,13 @@
       "response": "SearchUsers"
     },
     {
+      "type": "api",
+      "name": "SetQuickPlaylist",
+      "method": "POST",
+      "path": "/api/v1/me/quickplaylist",
+      "body": "SetQuickPlaylistBody"
+    },
+    {
       "type": "normal",
       "name": "SseHandler",
       "method": "GET",
@@ -1757,10 +1733,23 @@
     },
     {
       "type": "api",
-      "name": "UpdateUserSettings",
+      "name": "UnfavoriteTrack",
+      "method": "DELETE",
+      "path": "/api/v1/me/favorites/tracks/:trackId"
+    },
+    {
+      "type": "api",
+      "name": "UpdateMe",
       "method": "PATCH",
-      "path": "/api/v1/user/settings",
-      "body": "UpdateUserSettingsBody"
+      "path": "/api/v1/me",
+      "body": "UpdateMeBody"
+    },
+    {
+      "type": "api",
+      "name": "UpdateTrackFilter",
+      "method": "PATCH",
+      "path": "/api/v1/me/filters/tracks/:filterId",
+      "body": "UpdateTrackFilterBody"
     },
     {
       "type": "form",

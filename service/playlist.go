@@ -86,6 +86,7 @@ func (s *PlaylistService) checkOwnership(playlist database.Playlist, userId stri
 
 type GetPlaylistByIdParams struct {
 	PlaylistId string
+	// TODO(patrik): Remove
 	UserId     string
 }
 

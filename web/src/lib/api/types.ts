@@ -243,13 +243,6 @@ export const CreatePlaylistBody = z.object({
 });
 export type CreatePlaylistBody = z.infer<typeof CreatePlaylistBody>;
 
-// Name: CreateTrackFilter
-export const CreateTrackFilter = z.object({
-  // Name: CreateTrackFilter.filterId
-  "filterId": z.string(),
-});
-export type CreateTrackFilter = z.infer<typeof CreateTrackFilter>;
-
 // Name: CreateTrackFilterBody
 export const CreateTrackFilterBody = z.object({
   // Name: CreateTrackFilterBody.name
@@ -276,22 +269,6 @@ export const EditPlaylistFilterBody = z.object({
   "filter": z.string().nullable().optional(),
 });
 export type EditPlaylistFilterBody = z.infer<typeof EditPlaylistFilterBody>;
-
-// Name: EditTrackFilterBody
-export const EditTrackFilterBody = z.object({
-  // Name: EditTrackFilterBody.name
-  "name": z.string().nullable().optional(),
-  // Name: EditTrackFilterBody.filter
-  "filter": z.string().nullable().optional(),
-});
-export type EditTrackFilterBody = z.infer<typeof EditTrackFilterBody>;
-
-// Name: EditUserBody
-export const EditUserBody = z.object({
-  // Name: EditUserBody.displayName
-  "displayName": z.string().nullable().optional(),
-});
-export type EditUserBody = z.infer<typeof EditUserBody>;
 
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
@@ -360,12 +337,12 @@ export const GetAlbums = z.object({
 });
 export type GetAlbums = z.infer<typeof GetAlbums>;
 
-// Name: GetAllApiTokens
-export const GetAllApiTokens = z.object({
-  // Name: GetAllApiTokens.tokens
+// Name: GetApiTokens
+export const GetApiTokens = z.object({
+  // Name: GetApiTokens.tokens
   "tokens": z.array(ApiToken),
 });
-export type GetAllApiTokens = z.infer<typeof GetAllApiTokens>;
+export type GetApiTokens = z.infer<typeof GetApiTokens>;
 
 // Name: GetArtistAlbumsById
 export const GetArtistAlbumsById = z.object({
@@ -396,6 +373,13 @@ export const GetAuthProviders = z.object({
   "providers": z.array(AuthProvider),
 });
 export type GetAuthProviders = z.infer<typeof GetAuthProviders>;
+
+// Name: GetFavoriteTrackIds
+export const GetFavoriteTrackIds = z.object({
+  // Name: GetFavoriteTrackIds.ids
+  "ids": z.array(z.string()),
+});
+export type GetFavoriteTrackIds = z.infer<typeof GetFavoriteTrackIds>;
 
 // Name: GetMe
 export const GetMe = z.object({
@@ -611,6 +595,13 @@ export const GetPlaylists = z.object({
 });
 export type GetPlaylists = z.infer<typeof GetPlaylists>;
 
+// Name: GetQuickPlaylistIds
+export const GetQuickPlaylistIds = z.object({
+  // Name: GetQuickPlaylistIds.ids
+  "ids": z.array(z.string()),
+});
+export type GetQuickPlaylistIds = z.infer<typeof GetQuickPlaylistIds>;
+
 // Name: GetSystemInfo
 export const GetSystemInfo = z.object({
   // Name: GetSystemInfo.version
@@ -683,20 +674,6 @@ export const GetUserFavorites = z.object({
 });
 export type GetUserFavorites = z.infer<typeof GetUserFavorites>;
 
-// Name: GetUserFavoritesIds
-export const GetUserFavoritesIds = z.object({
-  // Name: GetUserFavoritesIds.trackIds
-  "trackIds": z.array(z.string()),
-});
-export type GetUserFavoritesIds = z.infer<typeof GetUserFavoritesIds>;
-
-// Name: GetUserQuickPlaylistItemIds
-export const GetUserQuickPlaylistItemIds = z.object({
-  // Name: GetUserQuickPlaylistItemIds.trackIds
-  "trackIds": z.array(z.string()),
-});
-export type GetUserQuickPlaylistItemIds = z.infer<typeof GetUserQuickPlaylistItemIds>;
-
 // Name: RemovePlaylistItemBody
 export const RemovePlaylistItemBody = z.object({
   // Name: RemovePlaylistItemBody.trackId
@@ -750,10 +727,26 @@ export const SearchUsers = z.object({
 });
 export type SearchUsers = z.infer<typeof SearchUsers>;
 
-// Name: UpdateUserSettingsBody
-export const UpdateUserSettingsBody = z.object({
-  // Name: UpdateUserSettingsBody.quickPlaylist
-  "quickPlaylist": z.string().nullable().optional(),
+// Name: SetQuickPlaylistBody
+export const SetQuickPlaylistBody = z.object({
+  // Name: SetQuickPlaylistBody.playlistId
+  "playlistId": z.string(),
 });
-export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
+export type SetQuickPlaylistBody = z.infer<typeof SetQuickPlaylistBody>;
+
+// Name: UpdateMeBody
+export const UpdateMeBody = z.object({
+  // Name: UpdateMeBody.displayName
+  "displayName": z.string().nullable().optional(),
+});
+export type UpdateMeBody = z.infer<typeof UpdateMeBody>;
+
+// Name: UpdateTrackFilterBody
+export const UpdateTrackFilterBody = z.object({
+  // Name: UpdateTrackFilterBody.name
+  "name": z.string().nullable().optional(),
+  // Name: UpdateTrackFilterBody.filter
+  "filter": z.string().nullable().optional(),
+});
+export type UpdateTrackFilterBody = z.infer<typeof UpdateTrackFilterBody>;
 

@@ -139,6 +139,7 @@ type BaseApp struct {
 	config *config.Config
 
 	authService         *service.AuthService
+	userService         *service.UserService
 	jobService          *service.JobService
 	notificationService *service.NotificationService
 	searchService       *service.SearchService
@@ -152,6 +153,10 @@ type BaseApp struct {
 	playlistService *service.PlaylistService
 
 	broker *broker.Broker
+}
+
+func (app *BaseApp) UserService() *service.UserService {
+	return app.userService
 }
 
 func (app *BaseApp) ArtistService() *service.ArtistService {
@@ -265,9 +270,15 @@ func (app *BaseApp) Bootstrap() error {
 
 	app.authService = service.NewAuthService(
 		newServiceLogger("auth"),
-		app.db, 
+		app.db,
 		app.config,
-		app.imageService, 
+		app.imageService,
+	)
+
+	app.userService = service.NewUserService(
+		newServiceLogger("user"),
+		app.db,
+		app.imageService,
 	)
 
 	app.searchService = service.NewSearchService(
@@ -279,7 +290,7 @@ func (app *BaseApp) Bootstrap() error {
 
 	app.mediaService = service.NewMediaService(
 		newServiceLogger("media"),
-		app.db, 
+		app.db,
 		dataDir,
 	)
 

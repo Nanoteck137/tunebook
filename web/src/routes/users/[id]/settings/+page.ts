@@ -4,7 +4,7 @@ import type { PageLoad } from "./$types";
 export const load: PageLoad = async ({ parent }) => {
   const data = await parent();
 
-  const res = await data.apiClient.getAllApiTokens();
+  const res = await data.apiClient.getApiTokens();
   if (!res.success) {
     throw error(res.error.code, { message: res.error.message });
   }

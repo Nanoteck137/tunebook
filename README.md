@@ -17,16 +17,13 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] CLI: Fix the import command
+
 - [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
 
-- [ ] Backend: Feature: Favorites
 - [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Fix: API: Media api
-
-- [ ] Backend: Cleanup: API: User APIs
-
-- [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
@@ -55,8 +52,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Job Service: Locking
 
-- [ ] Backend: Library Service: Multi-threaded syncing
-
 - [ ] Backend: Database: Use database indexes
 
 - [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
@@ -70,12 +65,16 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Cleanup: API: Better way to log the API Errors
 
-- [ ] Backend: API: Add Compression for Static file routes (SPA Routes)
-
 ## Future
 
 - [ ] Backend: Add back migrate command, maybe only for dev
 - [ ] Pyrin: Generate Structures for SSE events
+
+- [ ] Backend: API: Add Compression for Static file routes (SPA Routes)
+
+- [ ] Backend: Library Service: Multi-threaded syncing
+
+- [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
 
 ```sql
 CREATE TABLE user_listening_stats (

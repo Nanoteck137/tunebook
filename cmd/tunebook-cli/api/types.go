@@ -217,12 +217,6 @@ type CreatePlaylistBody struct {
 	Name string `json:"name"`
 }
 
-// Name: CreateTrackFilter
-type CreateTrackFilter struct {
-	// Name: CreateTrackFilter.filterId
-	FilterId string `json:"filterId"`
-}
-
 // Name: CreateTrackFilterBody
 type CreateTrackFilterBody struct {
 	// Name: CreateTrackFilterBody.name
@@ -245,20 +239,6 @@ type EditPlaylistFilterBody struct {
 	Name *string `json:"name,omitempty"`
 	// Name: EditPlaylistFilterBody.filter
 	Filter *string `json:"filter,omitempty"`
-}
-
-// Name: EditTrackFilterBody
-type EditTrackFilterBody struct {
-	// Name: EditTrackFilterBody.name
-	Name *string `json:"name,omitempty"`
-	// Name: EditTrackFilterBody.filter
-	Filter *string `json:"filter,omitempty"`
-}
-
-// Name: EditUserBody
-type EditUserBody struct {
-	// Name: EditUserBody.displayName
-	DisplayName *string `json:"displayName,omitempty"`
 }
 
 // Name: GetAlbumById
@@ -323,9 +303,9 @@ type GetAlbums struct {
 	Albums []Album `json:"albums"`
 }
 
-// Name: GetAllApiTokens
-type GetAllApiTokens struct {
-	// Name: GetAllApiTokens.tokens
+// Name: GetApiTokens
+type GetApiTokens struct {
+	// Name: GetApiTokens.tokens
 	Tokens []ApiToken `json:"tokens"`
 }
 
@@ -353,6 +333,12 @@ type GetArtists struct {
 type GetAuthProviders struct {
 	// Name: GetAuthProviders.providers
 	Providers []AuthProvider `json:"providers"`
+}
+
+// Name: GetFavoriteTrackIds
+type GetFavoriteTrackIds struct {
+	// Name: GetFavoriteTrackIds.ids
+	Ids []string `json:"ids"`
 }
 
 // Name: GetMe
@@ -551,6 +537,12 @@ type GetPlaylists struct {
 	Playlists []Playlist `json:"playlists"`
 }
 
+// Name: GetQuickPlaylistIds
+type GetQuickPlaylistIds struct {
+	// Name: GetQuickPlaylistIds.ids
+	Ids []string `json:"ids"`
+}
+
 // Name: GetSystemInfo
 type GetSystemInfo struct {
 	// Name: GetSystemInfo.version
@@ -615,18 +607,6 @@ type GetUserFavorites struct {
 	Items []Track `json:"items"`
 }
 
-// Name: GetUserFavoritesIds
-type GetUserFavoritesIds struct {
-	// Name: GetUserFavoritesIds.trackIds
-	TrackIds []string `json:"trackIds"`
-}
-
-// Name: GetUserQuickPlaylistItemIds
-type GetUserQuickPlaylistItemIds struct {
-	// Name: GetUserQuickPlaylistItemIds.trackIds
-	TrackIds []string `json:"trackIds"`
-}
-
 // Name: RemovePlaylistItemBody
 type RemovePlaylistItemBody struct {
 	// Name: RemovePlaylistItemBody.trackId
@@ -673,9 +653,23 @@ type SearchUsers struct {
 	Users []UserData `json:"users"`
 }
 
-// Name: UpdateUserSettingsBody
-type UpdateUserSettingsBody struct {
-	// Name: UpdateUserSettingsBody.quickPlaylist
-	QuickPlaylist *string `json:"quickPlaylist,omitempty"`
+// Name: SetQuickPlaylistBody
+type SetQuickPlaylistBody struct {
+	// Name: SetQuickPlaylistBody.playlistId
+	PlaylistId string `json:"playlistId"`
+}
+
+// Name: UpdateMeBody
+type UpdateMeBody struct {
+	// Name: UpdateMeBody.displayName
+	DisplayName *string `json:"displayName,omitempty"`
+}
+
+// Name: UpdateTrackFilterBody
+type UpdateTrackFilterBody struct {
+	// Name: UpdateTrackFilterBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: UpdateTrackFilterBody.filter
+	Filter *string `json:"filter,omitempty"`
 }
 

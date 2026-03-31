@@ -97,8 +97,8 @@
           playlists={data.userPlaylists}
           currentQuickPlaylistId={data.user?.quickPlaylist ?? undefined}
           onResult={async (playlistId) => {
-            const res = await apiClient.updateUserSettings({
-              quickPlaylist: playlistId.toString(),
+            const res = await apiClient.setQuickPlaylist({
+              playlistId: playlistId,
             });
             if (!res.success) {
               handleApiError(res.error);

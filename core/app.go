@@ -19,6 +19,7 @@ type App interface {
 	NotificationService() *service.NotificationService
 	JobService() *service.JobService
 	AuthService() *service.AuthService
+	UserService() *service.UserService
 	SearchService() *service.SearchService
 	LibraryService() *service.LibraryService
 	ImageService() *service.ImageService
