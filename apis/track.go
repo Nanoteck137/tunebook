@@ -3,8 +3,6 @@ package apis
 import (
 	"errors"
 	"net/http"
-	"net/url"
-	"strconv"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
@@ -59,7 +57,7 @@ func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
 		Duration:  track.Duration,
 		Number:    utils.SqlNullToInt64Ptr(track.Number),
 		Year:      utils.SqlNullToInt64Ptr(track.Year),
-		CoverArt:  ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
+		CoverArt:  ConvertAlbumCoverURL(c, track.AlbumId),
 		AlbumId:   track.AlbumId,
 		AlbumName: track.AlbumName,
 		Artists:   artists,
@@ -76,31 +74,6 @@ type GetTracks struct {
 
 type GetTrackById struct {
 	Track Track `json:"track"`
-}
-
-// TODO(patrik): Remove after PlaylistService
-func getPageOptions(q url.Values) database.FetchOptions {
-	perPage := 100
-	page := 0
-
-	if s := q.Get("perPage"); s != "" {
-		i, _ := strconv.Atoi(s)
-		if i > 0 {
-			perPage = i
-		}
-	}
-
-	if s := q.Get("page"); s != "" {
-		i, _ := strconv.Atoi(s)
-		page = i
-	}
-
-	return database.FetchOptions{
-		Filter:  q.Get("filter"),
-		Sort:    q.Get("sort"),
-		PerPage: perPage,
-		Page:    page,
-	}
 }
 
 func handleTrackServiceErrors(err error) error {

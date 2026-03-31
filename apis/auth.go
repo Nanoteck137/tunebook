@@ -387,7 +387,7 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					Email:         user.Email,
 					DisplayName:   user.DisplayName,
 					Role:          user.Role,
-					Picture:       ConvertUserPictureURL(c, user.Id, user.Picture),
+					Picture:       ConvertUserPictureURL(c, user.Id),
 					QuickPlaylist: utils.SqlNullToStringPtr(user.QuickPlaylist),
 				}, nil
 			},

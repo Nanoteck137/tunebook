@@ -30,7 +30,7 @@ func ConvertDBUser(c pyrin.Context, user database.User) UserData {
 		Id:          user.Id,
 		DisplayName: user.DisplayName,
 		Role:        user.Role,
-		Picture:     ConvertUserPictureURL(c, user.Id, user.Picture),
+		Picture:     ConvertUserPictureURL(c, user.Id),
 		Created:     formatTime(user.Created),
 	}
 }

@@ -46,7 +46,7 @@ func ConvertDBAlbum(c pyrin.Context, album database.Album) Album {
 		Id:       album.Id,
 		Name:     album.Name,
 		Year:     utils.SqlNullToInt64Ptr(album.Year),
-		CoverArt: ConvertAlbumCoverURL(c, album.Id, album.CoverArt),
+		CoverArt: ConvertAlbumCoverURL(c, album.Id),
 		Artists:  allArtists,
 		Tags:     utils.SplitString(album.Tags.String),
 		Created:  formatTime(album.Created),

@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
 type Track struct {
@@ -135,11 +135,11 @@ func TrackQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db DB) GetAllTracksByArtistId(ctx context.Context, artistId string) ([]Track, error) {
+func (db DB) GetTrackById(ctx context.Context, id string) (Track, error) {
 	query := TrackQuery().
-		Where(goqu.I("tracks.artist_id").Eq(artistId))
+		Where(goqu.I("tracks.id").Eq(id))
 
-	return ember.Multiple[Track](db.db, ctx, query)
+	return ember.Single[Track](db.db, ctx, query)
 }
 
 func (db DB) GetTracksByIds(ctx context.Context, ids []string) ([]Track, error) {
@@ -148,49 +148,11 @@ func (db DB) GetTracksByIds(ctx context.Context, ids []string) ([]Track, error) 
 	return ember.Multiple[Track](db.db, ctx, query)
 }
 
-func (db DB) GetTracksByAlbumForPlay(ctx context.Context, albumId string) ([]NewTrackQueryItem, error) {
-	query := NewTrackQuery().
-		Where(goqu.I("tracks.album_id").Eq(albumId)).
-		Order(goqu.I("tracks.number").Asc().NullsLast(), goqu.I("tracks.name").Asc()).
-		As("tracks")
-
-	return ember.Multiple[NewTrackQueryItem](db.db, ctx, query)
-}
-
 func (db DB) GetAllTrackIds(ctx context.Context) ([]string, error) {
 	query := dialect.From("tracks").
 		Select("tracks.id")
 
 	return ember.Multiple[string](db.db, ctx, query)
-}
-
-// TODO(patrik): Move
-type FetchOptions struct {
-	Filter  string
-	Sort    string
-	PerPage int
-	Page    int
-}
-
-func (db DB) GetAllTracks(ctx context.Context, filterStr, sortStr string) ([]Track, error) {
-	query := TrackQuery()
-
-	var err error
-
-	a := adapter.TrackResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err = applyFilter(query, resolver, filterStr)
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = applySort(query, resolver, sortStr)
-	if err != nil {
-		return nil, err
-	}
-
-	return ember.Multiple[Track](db.db, ctx, query)
 }
 
 type GetTracksParams struct {
@@ -293,25 +255,6 @@ func (db DB) GetTracksIn(ctx context.Context, in any, sort string) ([]Track, err
 	return ember.Multiple[Track](db.db, ctx, query)
 }
 
-func (db DB) GetTrackById(ctx context.Context, id string) (Track, error) {
-	query := TrackQuery().
-		Where(goqu.I("tracks.id").Eq(id))
-
-	return ember.Single[Track](db.db, ctx, query)
-}
-
-func (db DB) GetTrackByNameAndAlbum(ctx context.Context, name string, albumId string) (Track, error) {
-	query := TrackQuery().
-		Where(
-			goqu.And(
-				goqu.I("tracks.name").Eq(name),
-				goqu.I("tracks.album_id").Eq(albumId),
-			),
-		)
-
-	return ember.Single[Track](db.db, ctx, query)
-}
-
 type CreateTrackParams struct {
 	Id string
 
@@ -376,7 +319,7 @@ type TrackChanges struct {
 	ModifiedTime types.Change[int64]
 	MediaFormat  types.Change[types.MediaFormat]
 
-	Name      types.Change[string]
+	Name types.Change[string]
 
 	AlbumId  types.Change[string]
 	ArtistId types.Change[string]

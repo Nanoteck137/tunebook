@@ -100,7 +100,7 @@ func packMediaResult(c pyrin.Context, tracks []database.Track) (GetMedia, error)
 				Id:   track.AlbumId,
 				Name: track.AlbumName,
 			},
-			CoverArt: ConvertAlbumCoverURL(c, track.AlbumId, track.AlbumCoverArt),
+			CoverArt: ConvertAlbumCoverURL(c, track.AlbumId),
 		}
 	}
 
@@ -314,19 +314,21 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			ResponseType: GetMedia{},
 			BodyType:     GetMediaFromFilterBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.TODO()
+				panic("TODO")
+				// ctx := context.TODO()
+				//
+				// body, err := pyrin.Body[GetMediaFromFilterBody](c)
+				// if err != nil {
+				// 	return nil, err
+				// }
 
-				body, err := pyrin.Body[GetMediaFromFilterBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				tracks, err := app.DB().GetAllTracks(ctx, body.Filter, "")
-				if err != nil {
-					return nil, err
-				}
-
-				return packMediaResult(c, tracks)
+				// tracks, err := app.DB().GetAllTracks(ctx, body.Filter, "")
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// return packMediaResult(c, tracks)
+				return nil, nil
 			},
 		},
 

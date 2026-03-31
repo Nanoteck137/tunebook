@@ -36,10 +36,10 @@ func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
 	return Playlist{
 		Id:               playlist.Id,
 		Name:             playlist.Name,
-		CoverArt:         ConvertPlaylistCoverURL(c, playlist.Id, playlist.CoverArt),
+		CoverArt:         ConvertPlaylistCoverURL(c, playlist.Id),
 		OwnerId:          playlist.OwnerId,
 		OwnerDisplayName: playlist.OwnerDisplayName,
-		OwnerPicture:     ConvertUserPictureURL(c, playlist.OwnerId, playlist.OwnerPicture),
+		OwnerPicture:     ConvertUserPictureURL(c, playlist.OwnerId),
 		TrackCount:       playlist.TrackCount.Int64,
 		Created:          formatTime(playlist.Created),
 		Updated:          formatTime(playlist.Updated),

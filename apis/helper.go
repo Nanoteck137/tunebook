@@ -1,8 +1,6 @@
 package apis
 
 import (
-	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"net/url"
@@ -43,10 +41,12 @@ func User(app core.App, c pyrin.Context, checks ...UserCheckFunc) (*database.Use
 	return user, nil
 }
 
+// TODO(patrik): Cleanup
 func getUser(app core.App, c pyrin.Context) (*database.User, error) {
+	ctx := c.Request().Context()
+
 	apiTokenHeader := c.Request().Header.Get("X-Api-Token")
 	if apiTokenHeader != "" {
-		ctx := context.TODO()
 		token, err := app.DB().GetApiTokenById(ctx, apiTokenHeader)
 		if err != nil {
 			if errors.Is(err, database.ErrItemNotFound) {
@@ -56,7 +56,7 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 			return nil, err
 		}
 
-		user, err := app.DB().GetUserById(c.Request().Context(), token.UserId)
+		user, err := app.DB().GetUserById(ctx, token.UserId)
 		if err != nil {
 			return nil, InvalidAuth("invalid api token")
 		}
@@ -91,7 +91,7 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 		}
 
 		userId := claims["userId"].(string)
-		user, err := app.DB().GetUserById(c.Request().Context(), userId)
+		user, err := app.DB().GetUserById(ctx, userId)
 		if err != nil {
 			return nil, InvalidAuth("invalid authorization token")
 		}
@@ -122,8 +122,7 @@ const (
 	IMAGE_LARGE    = "512.png"
 )
 
-// TODO(patrik): Cleanup, remove val
-func ConvertArtistCoverURL(c pyrin.Context, artistId string, val sql.NullString) types.Images {
+func ConvertArtistCoverURL(c pyrin.Context, artistId string) types.Images {
 	first := "/files/artists/images/" + artistId + "/"
 	return types.Images{
 		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
@@ -133,8 +132,7 @@ func ConvertArtistCoverURL(c pyrin.Context, artistId string, val sql.NullString)
 	}
 }
 
-// TODO(patrik): Cleanup, remove val
-func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) types.Images {
+func ConvertAlbumCoverURL(c pyrin.Context, albumId string) types.Images {
 	first := "/files/albums/images/" + albumId + "/"
 	return types.Images{
 		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
@@ -144,8 +142,7 @@ func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) t
 	}
 }
 
-// TODO(patrik): Cleanup, remove val
-func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string, val sql.NullString) types.Images {
+func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string) types.Images {
 	first := "/files/playlists/images/" + playlistId + "/"
 	return types.Images{
 		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
@@ -155,8 +152,7 @@ func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string, val sql.NullStr
 	}
 }
 
-// TODO(patrik): Cleanup, remove val
-func ConvertUserPictureURL(c pyrin.Context, userId string, val sql.NullString) types.Images {
+func ConvertUserPictureURL(c pyrin.Context, userId string) types.Images {
 	first := "/files/users/images/" + userId + "/"
 	return types.Images{
 		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
@@ -196,5 +192,5 @@ func getFilterParams(q url.Values) types.FilterParams {
 }
 
 func formatTime(ms int64) string {
-    return time.UnixMilli(ms).UTC().Format(time.RFC3339)
+	return time.UnixMilli(ms).UTC().Format(time.RFC3339)
 }
