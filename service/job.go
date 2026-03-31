@@ -53,6 +53,7 @@ type JobService struct {
 	jobs map[string]*jobEntry
 
 	wg sync.WaitGroup
+	mu sync.RWMutex
 
 	updateFunc UpdateFunc
 }
@@ -72,7 +73,8 @@ func (s *JobService) Init() error {
 }
 
 func (s *JobService) GetSyncStateEvent() JobSyncStateEvent {
-	// TODO(patrik): Lock
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	res := JobSyncStateEvent{
 		Jobs: []JobSyncStateEventJob{},
@@ -103,6 +105,9 @@ func (s *JobService) update() {
 }
 
 func (s *JobService) AddJob(job Job) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	_, exists := s.jobs[job.Name()]
 	if exists {
 		s.logger.Error("job with name already exists",
@@ -142,6 +147,9 @@ func (s *JobService) AddJob(job Job) error {
 }
 
 func (s *JobService) DisplayJobs() {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	for _, job := range s.jobs {
 		s.logger.Info("registered job",
 			"name", job.job.Name(),
@@ -166,25 +174,33 @@ func (s *JobService) Wait() {
 }
 
 func (s *JobService) RunJob(ctx context.Context, name string) {
-	// TODO(patrik): Add lock
+	s.mu.Lock()
 	entry, exists := s.jobs[name]
 	if !exists {
+		s.mu.Unlock()
 		s.logger.Error("no job with name", "name", name)
 		return
 	}
 
 	if entry.isRunning {
+		s.mu.Unlock()
 		s.logger.Error("job already running", "name", name)
 		return
 	}
 
 	entry.isRunning = true
+	s.mu.Unlock()
+
 	s.update()
 
 	s.wg.Add(1)
 	defer func() {
 		s.wg.Done()
+
+		s.mu.Lock()
 		entry.isRunning = false
+		s.mu.Unlock()
+
 		s.update()
 	}()
 
@@ -195,6 +211,7 @@ func (s *JobService) RunJob(ctx context.Context, name string) {
 
 	err := entry.job.Run(ctx)
 
+	s.mu.Lock()
 	dur := timer.Stop()
 	entry.lastRunTime = &dur
 
@@ -207,4 +224,5 @@ func (s *JobService) RunJob(ctx context.Context, name string) {
 		entry.lastRunError = nil
 		entry.lastRunSuccess = true
 	}
+	s.mu.Unlock()
 }

@@ -31,8 +31,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Media Service: Locking
 - [ ] Backend: Media Service: Logging
 
-- [ ] Backend: Job Service: Locking
-
 - [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
 - [ ] Backend: Cleanup: Media Service: Code Cleanup
 - [ ] Backend: Cleanup: Job Service: Code Cleanup
