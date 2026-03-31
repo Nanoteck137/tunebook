@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin"
 )
 
 type UserCheckFunc func(user *database.User) error
@@ -192,4 +193,8 @@ func getFilterParams(q url.Values) types.FilterParams {
 		Filter: q.Get("filter"),
 		Sort:   q.Get("sort"),
 	}
+}
+
+func formatTime(ms int64) string {
+    return time.UnixMilli(ms).UTC().Format(time.RFC3339)
 }

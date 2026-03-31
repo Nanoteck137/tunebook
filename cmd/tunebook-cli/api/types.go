@@ -64,9 +64,9 @@ type Album struct {
 	// Name: Album.tags
 	Tags []string `json:"tags"`
 	// Name: Album.created
-	Created int `json:"created"`
+	Created string `json:"created"`
 	// Name: Album.updated
-	Updated int `json:"updated"`
+	Updated string `json:"updated"`
 }
 
 // Name: ApiToken
@@ -75,6 +75,10 @@ type ApiToken struct {
 	Id string `json:"id"`
 	// Name: ApiToken.name
 	Name string `json:"name"`
+	// Name: ApiToken.created
+	Created string `json:"created"`
+	// Name: ApiToken.updated
+	Updated string `json:"updated"`
 }
 
 // Name: Artist
@@ -88,9 +92,9 @@ type Artist struct {
 	// Name: Artist.tags
 	Tags []string `json:"tags"`
 	// Name: Artist.created
-	Created int `json:"created"`
+	Created string `json:"created"`
 	// Name: Artist.updated
-	Updated int `json:"updated"`
+	Updated string `json:"updated"`
 }
 
 // Name: AuthClaimQuickConnectCodeBody
@@ -272,9 +276,9 @@ type Track struct {
 	// Name: Track.tags
 	Tags []string `json:"tags"`
 	// Name: Track.created
-	Created int `json:"created"`
+	Created string `json:"created"`
 	// Name: Track.updated
-	Updated int `json:"updated"`
+	Updated string `json:"updated"`
 }
 
 // Name: GetAlbumTracks
@@ -483,6 +487,10 @@ type GetPlaylistById struct {
 	OwnerPicture Images `json:"ownerPicture"`
 	// Name: GetPlaylistById.trackCount
 	TrackCount int `json:"trackCount"`
+	// Name: GetPlaylistById.created
+	Created string `json:"created"`
+	// Name: GetPlaylistById.updated
+	Updated string `json:"updated"`
 }
 
 // Name: PlaylistFilter
@@ -495,6 +503,10 @@ type PlaylistFilter struct {
 	Name string `json:"name"`
 	// Name: PlaylistFilter.filter
 	Filter string `json:"filter"`
+	// Name: PlaylistFilter.created
+	Created string `json:"created"`
+	// Name: PlaylistFilter.updated
+	Updated string `json:"updated"`
 }
 
 // Name: GetPlaylistFilters
@@ -527,6 +539,10 @@ type Playlist struct {
 	OwnerPicture Images `json:"ownerPicture"`
 	// Name: Playlist.trackCount
 	TrackCount int `json:"trackCount"`
+	// Name: Playlist.created
+	Created string `json:"created"`
+	// Name: Playlist.updated
+	Updated string `json:"updated"`
 }
 
 // Name: GetPlaylists
@@ -565,6 +581,10 @@ type TrackFilter struct {
 	Name string `json:"name"`
 	// Name: TrackFilter.filter
 	Filter string `json:"filter"`
+	// Name: TrackFilter.created
+	Created string `json:"created"`
+	// Name: TrackFilter.updated
+	Updated string `json:"updated"`
 }
 
 // Name: GetTrackFilters
@@ -591,6 +611,8 @@ type UserData struct {
 	Role string `json:"role"`
 	// Name: UserData.picture
 	Picture Images `json:"picture"`
+	// Name: UserData.created
+	Created string `json:"created"`
 }
 
 // Name: GetUser

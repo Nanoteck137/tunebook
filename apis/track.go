@@ -6,12 +6,12 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin"
 )
 
 type Track struct {
@@ -33,8 +33,8 @@ type Track struct {
 
 	Tags []string `json:"tags"`
 
-	Created int64 `json:"created"`
-	Updated int64 `json:"updated"`
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
@@ -55,6 +55,7 @@ func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
 	return Track{
 		Id:        track.Id,
 		Name:      track.Name,
+		Order:     track.Order,
 		Duration:  track.Duration,
 		Number:    utils.SqlNullToInt64Ptr(track.Number),
 		Year:      utils.SqlNullToInt64Ptr(track.Year),
@@ -63,9 +64,8 @@ func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
 		AlbumName: track.AlbumName,
 		Artists:   artists,
 		Tags:      utils.SplitString(track.Tags.String),
-		Created:   track.Created,
-		Updated:   track.Updated,
-		Order:     track.Order,
+		Created:   formatTime(track.Created),
+		Updated:   formatTime(track.Updated),
 	}
 }
 

@@ -70,9 +70,9 @@ export const Album = z.object({
   // Name: Album.tags
   "tags": z.array(z.string()),
   // Name: Album.created
-  "created": z.number(),
+  "created": z.string(),
   // Name: Album.updated
-  "updated": z.number(),
+  "updated": z.string(),
 });
 export type Album = z.infer<typeof Album>;
 
@@ -82,6 +82,10 @@ export const ApiToken = z.object({
   "id": z.string(),
   // Name: ApiToken.name
   "name": z.string(),
+  // Name: ApiToken.created
+  "created": z.string(),
+  // Name: ApiToken.updated
+  "updated": z.string(),
 });
 export type ApiToken = z.infer<typeof ApiToken>;
 
@@ -96,9 +100,9 @@ export const Artist = z.object({
   // Name: Artist.tags
   "tags": z.array(z.string()),
   // Name: Artist.created
-  "created": z.number(),
+  "created": z.string(),
   // Name: Artist.updated
-  "updated": z.number(),
+  "updated": z.string(),
 });
 export type Artist = z.infer<typeof Artist>;
 
@@ -302,9 +306,9 @@ export const Track = z.object({
   // Name: Track.tags
   "tags": z.array(z.string()),
   // Name: Track.created
-  "created": z.number(),
+  "created": z.string(),
   // Name: Track.updated
-  "updated": z.number(),
+  "updated": z.string(),
 });
 export type Track = z.infer<typeof Track>;
 
@@ -535,6 +539,10 @@ export const GetPlaylistById = z.object({
   "ownerPicture": Images,
   // Name: GetPlaylistById.trackCount
   "trackCount": z.number(),
+  // Name: GetPlaylistById.created
+  "created": z.string(),
+  // Name: GetPlaylistById.updated
+  "updated": z.string(),
 });
 export type GetPlaylistById = z.infer<typeof GetPlaylistById>;
 
@@ -548,6 +556,10 @@ export const PlaylistFilter = z.object({
   "name": z.string(),
   // Name: PlaylistFilter.filter
   "filter": z.string(),
+  // Name: PlaylistFilter.created
+  "created": z.string(),
+  // Name: PlaylistFilter.updated
+  "updated": z.string(),
 });
 export type PlaylistFilter = z.infer<typeof PlaylistFilter>;
 
@@ -583,6 +595,10 @@ export const Playlist = z.object({
   "ownerPicture": Images,
   // Name: Playlist.trackCount
   "trackCount": z.number(),
+  // Name: Playlist.created
+  "created": z.string(),
+  // Name: Playlist.updated
+  "updated": z.string(),
 });
 export type Playlist = z.infer<typeof Playlist>;
 
@@ -626,6 +642,10 @@ export const TrackFilter = z.object({
   "name": z.string(),
   // Name: TrackFilter.filter
   "filter": z.string(),
+  // Name: TrackFilter.created
+  "created": z.string(),
+  // Name: TrackFilter.updated
+  "updated": z.string(),
 });
 export type TrackFilter = z.infer<typeof TrackFilter>;
 
@@ -655,6 +675,8 @@ export const UserData = z.object({
   "role": z.string(),
   // Name: UserData.picture
   "picture": Images,
+  // Name: UserData.created
+  "created": z.string(),
 });
 export type UserData = z.infer<typeof UserData>;
 

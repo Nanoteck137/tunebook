@@ -86,12 +86,12 @@
         },
         {
           "name": "created",
-          "type": "int",
+          "type": "string",
           "omitEmpty": false
         },
         {
           "name": "updated",
-          "type": "int",
+          "type": "string",
           "omitEmpty": false
         }
       ]
@@ -106,6 +106,16 @@
         },
         {
           "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
           "type": "string",
           "omitEmpty": false
         }
@@ -136,12 +146,12 @@
         },
         {
           "name": "created",
-          "type": "int",
+          "type": "string",
           "omitEmpty": false
         },
         {
           "name": "updated",
-          "type": "int",
+          "type": "string",
           "omitEmpty": false
         }
       ]
@@ -718,6 +728,16 @@
           "name": "trackCount",
           "type": "int",
           "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "string",
+          "omitEmpty": false
         }
       ]
     },
@@ -1033,6 +1053,16 @@
           "name": "trackCount",
           "type": "int",
           "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "string",
+          "omitEmpty": false
         }
       ]
     },
@@ -1056,6 +1086,16 @@
         },
         {
           "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
           "type": "string",
           "omitEmpty": false
         }
@@ -1211,12 +1251,12 @@
         },
         {
           "name": "created",
-          "type": "int",
+          "type": "string",
           "omitEmpty": false
         },
         {
           "name": "updated",
-          "type": "int",
+          "type": "string",
           "omitEmpty": false
         }
       ]
@@ -1241,6 +1281,16 @@
         },
         {
           "name": "filter",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
           "type": "string",
           "omitEmpty": false
         }
@@ -1292,6 +1342,11 @@
         {
           "name": "picture",
           "type": "Images",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
           "omitEmpty": false
         }
       ]

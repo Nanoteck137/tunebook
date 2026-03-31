@@ -15,10 +15,14 @@ import (
 )
 
 type UserData struct {
-	Id          string       `json:"id"`
-	DisplayName string       `json:"displayName"`
-	Role        string       `json:"role"`
-	Picture     types.Images `json:"picture"`
+	Id string `json:"id"`
+
+	DisplayName string `json:"displayName"`
+	Role        string `json:"role"`
+
+	Picture types.Images `json:"picture"`
+
+	Created string `json:"created"`
 }
 
 func ConvertDBUser(c pyrin.Context, user database.User) UserData {
@@ -27,6 +31,7 @@ func ConvertDBUser(c pyrin.Context, user database.User) UserData {
 		DisplayName: user.DisplayName,
 		Role:        user.Role,
 		Picture:     ConvertUserPictureURL(c, user.Id, user.Picture),
+		Created:     formatTime(user.Created),
 	}
 }
 
@@ -41,7 +46,8 @@ type TrackFilter struct {
 	Name   string `json:"name"`
 	Filter string `json:"filter"`
 
-	// TODO(patrik): Created, Updated
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 type GetTrackFilters struct {
@@ -122,6 +128,9 @@ func (b UpdateTrackFilterBody) Validate() error {
 type ApiToken struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 type GetApiTokens struct {
@@ -258,6 +267,8 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 						UserId:   filter.UserId,
 						Name:     filter.Name,
 						Filter:   filter.Filter,
+						Created:  formatTime(filter.Created),
+						Updated:  formatTime(filter.Updated),
 					}
 				}
 
@@ -573,8 +584,10 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				for i, token := range tokens {
 					res.Tokens[i] = ApiToken{
-						Id:   token.Id,
-						Name: token.Name,
+						Id:      token.Id,
+						Name:    token.Name,
+						Created: formatTime(token.Created),
+						Updated: formatTime(token.Updated),
 					}
 				}
 

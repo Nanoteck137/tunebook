@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
 )
 
@@ -27,6 +27,9 @@ type Playlist struct {
 	OwnerPicture     types.Images `json:"ownerPicture"`
 
 	TrackCount int64 `json:"trackCount"`
+
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
@@ -38,6 +41,8 @@ func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
 		OwnerDisplayName: playlist.OwnerDisplayName,
 		OwnerPicture:     ConvertUserPictureURL(c, playlist.OwnerId, playlist.OwnerPicture),
 		TrackCount:       playlist.TrackCount.Int64,
+		Created:          formatTime(playlist.Created),
+		Updated:          formatTime(playlist.Updated),
 	}
 }
 
@@ -104,7 +109,8 @@ type PlaylistFilter struct {
 	Name   string `json:"name"`
 	Filter string `json:"filter"`
 
-	// TODO(patrik): Created, Updated
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 type GetPlaylistFilters struct {
@@ -637,6 +643,8 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 						PlaylistId: filter.PlaylistId,
 						Name:       filter.Name,
 						Filter:     filter.Filter,
+						Created:    formatTime(filter.Created),
+						Updated:    formatTime(filter.Updated),
 					}
 				}
 

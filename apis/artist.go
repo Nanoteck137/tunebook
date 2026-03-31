@@ -25,8 +25,8 @@ type Artist struct {
 
 	Tags []string `json:"tags"`
 
-	Created int64 `json:"created"`
-	Updated int64 `json:"updated"`
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 func ConvertDBArtist(c pyrin.Context, artist database.Artist) Artist {
@@ -35,8 +35,8 @@ func ConvertDBArtist(c pyrin.Context, artist database.Artist) Artist {
 		Name:     artist.Name,
 		CoverArt: ConvertArtistCoverURL(c, artist.Id, artist.CoverArt),
 		Tags:     utils.SplitString(artist.Tags.String),
-		Created:  artist.Created,
-		Updated:  artist.Updated,
+		Created:  formatTime(artist.Created),
+		Updated:  formatTime(artist.Updated),
 	}
 }
 
