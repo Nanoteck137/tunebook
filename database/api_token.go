@@ -35,14 +35,20 @@ func ApiTokenQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db DB) GetApiTokenById(ctx context.Context, id string) (ApiToken, error) {
+func (db DB) GetApiTokenById(
+	ctx context.Context,
+	tokenId string,
+) (ApiToken, error) {
 	query := ApiTokenQuery().
-		Where(goqu.I("api_tokens.id").Eq(id))
+		Where(goqu.I("api_tokens.id").Eq(tokenId))
 
 	return ember.Single[ApiToken](db.db, ctx, query)
 }
 
-func (db DB) GetAllApiTokensForUser(ctx context.Context, userId string) ([]ApiToken, error) {
+func (db DB) GetAllApiTokensForUser(
+	ctx context.Context,
+	userId string,
+) ([]ApiToken, error) {
 	query := ApiTokenQuery().
 		Where(goqu.I("api_tokens.user_id").Eq(userId))
 
@@ -58,7 +64,10 @@ type CreateApiTokenParams struct {
 	Updated int64
 }
 
-func (db DB) CreateApiToken(ctx context.Context, params CreateApiTokenParams) (string, error) {
+func (db DB) CreateApiToken(
+	ctx context.Context,
+	params CreateApiTokenParams,
+) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -87,9 +96,9 @@ func (db DB) CreateApiToken(ctx context.Context, params CreateApiTokenParams) (s
 	return params.Id, nil
 }
 
-func (db DB) DeleteApiToken(ctx context.Context, id string) error {
+func (db DB) DeleteApiToken(ctx context.Context, tokenId string) error {
 	query := dialect.Delete("api_tokens").
-		Where(goqu.I("api_tokens.id").Eq(id))
+		Where(goqu.I("api_tokens.id").Eq(tokenId))
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {

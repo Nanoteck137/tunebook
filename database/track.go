@@ -41,7 +41,7 @@ type Track struct {
 
 	Tags sql.NullString `db:"tags"`
 
-	FeaturingArtists FeaturingArtists `db:"featuring_artists"`
+	FeaturingArtists ember.JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 
 	Order *int
 }

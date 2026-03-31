@@ -17,22 +17,21 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Backend: Cleanup: Database: Database code
+- [ ] Pyrin: Rename ember.JsonColumn.Data to Value
+
+- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
+- [ ] Backend: Cleanup: Job Service: Code Cleanup
+- [ ] Backend: Cleanup: Library Service: Code Cleanup
+- [ ] Backend: Cleanup: Auth Service: Code Cleanup
 
 - [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
 
 - [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Fix: API: Media api
-
 - [ ] Backend: Media Service: Locking
 - [ ] Backend: Media Service: Logging
-
-- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
 - [ ] Backend: Cleanup: Media Service: Code Cleanup
-- [ ] Backend: Cleanup: Job Service: Code Cleanup
-- [ ] Backend: Cleanup: Library Service: Code Cleanup
-- [ ] Backend: Cleanup: Auth Service: Code Cleanup
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
@@ -59,6 +58,8 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Database: Use database indexes
 
 ## Future
+
+- [ ] Backend: Cleanup: Database: Database code
 
 - [ ] Backend: Add back migrate command, maybe only for dev
 - [ ] Pyrin: Generate Structures for SSE events

@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
 type Album struct {
@@ -32,8 +32,7 @@ type Album struct {
 
 	Tags sql.NullString `db:"tags"`
 
-	// TODO(patrik): Change to JsonColumn
-	FeaturingArtists FeaturingArtists `db:"featuring_artists"`
+	FeaturingArtists ember.JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 }
 
 func AlbumQuery() *goqu.SelectDataset {
@@ -95,27 +94,6 @@ func (db DB) GetAllAlbumIds(ctx context.Context) ([]string, error) {
 	return ember.Multiple[string](db.db, ctx, query)
 }
 
-func (db DB) GetAllAlbums(ctx context.Context, filterStr string, sortStr string) ([]Album, error) {
-	query := AlbumQuery()
-
-	var err error
-
-	a := adapter.AlbumResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err = applyFilter(query, resolver, filterStr)
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = applySort(query, resolver, sortStr)
-	if err != nil {
-		return nil, err
-	}
-
-	return ember.Multiple[Album](db.db, ctx, query)
-}
-
 type GetAlbumsParams struct {
 	Page   types.PageParams
 	Filter types.FilterParams
@@ -151,28 +129,28 @@ func (db DB) GetAlbums(
 	return items, page, nil
 }
 
-func (db DB) GetAlbumsByArtist(ctx context.Context, artistId string) ([]Album, error) {
+func (db DB) GetAlbumsByArtist(
+	ctx context.Context,
+	artistId string,
+) ([]Album, error) {
 	query := AlbumQuery().
 		Where(goqu.I("albums.artist_id").Eq(artistId))
 
 	return ember.Multiple[Album](db.db, ctx, query)
 }
 
-func (db DB) GetAlbumById(ctx context.Context, id string) (Album, error) {
+func (db DB) GetAlbumById(ctx context.Context, albumId string) (Album, error) {
 	query := AlbumQuery().
-		Where(goqu.I("albums.id").Eq(id))
+		Where(goqu.I("albums.id").Eq(albumId))
 
 	return ember.Single[Album](db.db, ctx, query)
 }
 
-func (db DB) GetAlbumByName(ctx context.Context, name string) (Album, error) {
-	query := AlbumQuery().
-		Where(goqu.I("albums.name").Eq(name))
-
-	return ember.Single[Album](db.db, ctx, query)
-}
-
-func (db DB) GetAlbumsIn(ctx context.Context, in any, sort string) ([]Album, error) {
+func (db DB) GetAlbumsIn(
+	ctx context.Context,
+	in any,
+	sort string,
+) ([]Album, error) {
 	query := AlbumQuery().
 		Where(
 			goqu.I("albums.id").In(in),
@@ -203,7 +181,10 @@ type CreateAlbumParams struct {
 	Updated int64
 }
 
-func (db DB) CreateAlbum(ctx context.Context, params CreateAlbumParams) (string, error) {
+func (db DB) CreateAlbum(
+	ctx context.Context,
+	params CreateAlbumParams,
+) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -237,20 +218,8 @@ func (db DB) CreateAlbum(ctx context.Context, params CreateAlbumParams) (string,
 	return params.Id, nil
 }
 
-func (db DB) DeleteAlbum(ctx context.Context, id string) error {
-	query := dialect.Delete("albums").
-		Where(goqu.I("albums.id").Eq(id))
-
-	_, err := db.db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type AlbumChanges struct {
-	Name      types.Change[string]
+	Name types.Change[string]
 
 	ArtistId types.Change[string]
 
@@ -260,7 +229,11 @@ type AlbumChanges struct {
 	Created types.Change[int64]
 }
 
-func (db DB) UpdateAlbum(ctx context.Context, id string, changes AlbumChanges) error {
+func (db DB) UpdateAlbum(
+	ctx context.Context,
+	albumId string,
+	changes AlbumChanges,
+) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)
@@ -280,9 +253,21 @@ func (db DB) UpdateAlbum(ctx context.Context, id string, changes AlbumChanges) e
 
 	ds := dialect.Update("albums").
 		Set(record).
-		Where(goqu.I("albums.id").Eq(id))
+		Where(goqu.I("albums.id").Eq(albumId))
 
 	_, err := db.db.Exec(ctx, ds)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db DB) DeleteAlbum(ctx context.Context, albumId string) error {
+	query := dialect.Delete("albums").
+		Where(goqu.I("albums.id").Eq(albumId))
+
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

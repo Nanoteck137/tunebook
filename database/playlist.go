@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
-	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
-var CreatePlaylistId = utils.CreateIdGenerator(16)
+var createPlaylistId = createIdGenerator(16)
 
 type Playlist struct {
 	Id       string         `db:"id"`
@@ -101,11 +100,13 @@ func (db DB) GetPlaylists(
 	return items, page, nil
 }
 
-func (db DB) GetPlaylistsIn(ctx context.Context, in any, sort string) ([]Playlist, error) {
+func (db DB) GetPlaylistsIn(
+	ctx context.Context,
+	in any,
+	sort string,
+) ([]Playlist, error) {
 	query := PlaylistQuery().
-		Where(
-			goqu.I("playlists.id").In(in),
-		)
+		Where(goqu.I("playlists.id").In(in))
 
 	a := adapter.PlaylistResolverAdapter{}
 	resolver := filter.New(&a)
@@ -118,40 +119,14 @@ func (db DB) GetPlaylistsIn(ctx context.Context, in any, sort string) ([]Playlis
 	return ember.Multiple[Playlist](db.db, ctx, query)
 }
 
-func (db DB) GetAllPlaylists(ctx context.Context) ([]Playlist, error) {
-	query := PlaylistQuery()
-	return ember.Multiple[Playlist](db.db, ctx, query)
-}
-
-func (db DB) GetPlaylistsByUser(ctx context.Context, userId string) ([]Playlist, error) {
+func (db DB) GetPlaylistById(
+	ctx context.Context,
+	playlistId string,
+) (Playlist, error) {
 	query := PlaylistQuery().
-		Where(goqu.I("playlists.owner_id").Eq(userId))
-
-	return ember.Multiple[Playlist](db.db, ctx, query)
-}
-
-func (db DB) GetPlaylistById(ctx context.Context, id string) (Playlist, error) {
-	query := PlaylistQuery().
-		Where(goqu.I("playlists.id").Eq(id))
+		Where(goqu.I("playlists.id").Eq(playlistId))
 
 	return ember.Single[Playlist](db.db, ctx, query)
-}
-
-func (db DB) GetPlaylistTrackImages(ctx context.Context, playlistId string, numImages int) ([]sql.NullString, error) {
-	tracks := TrackQuery()
-
-	query := dialect.From("playlist_items").
-		Select("tracks.album_cover_art").
-		Join(
-			tracks.As("tracks"),
-			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-		).
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		GroupBy(goqu.I("tracks.album_id")).
-		Order(goqu.I("playlist_items.order_num").Asc()).
-		Limit(uint(numImages))
-
-	return ember.Multiple[sql.NullString](db.db, ctx, query)
 }
 
 type CreatePlaylistParams struct {
@@ -171,13 +146,12 @@ func (db DB) CreatePlaylist(
 ) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
-
 		params.Created = t
 		params.Updated = t
 	}
 
 	if params.Id == "" {
-		params.Id = CreatePlaylistId()
+		params.Id = createPlaylistId()
 	}
 
 	query := dialect.Insert("playlists").
@@ -212,7 +186,7 @@ type PlaylistChanges struct {
 
 func (db DB) UpdatePlaylist(
 	ctx context.Context,
-	id string,
+	playlistId string,
 	changes PlaylistChanges,
 ) error {
 	record := goqu.Record{}
@@ -233,7 +207,7 @@ func (db DB) UpdatePlaylist(
 
 	ds := dialect.Update("playlists").
 		Set(record).
-		Where(goqu.I("playlists.id").Eq(id))
+		Where(goqu.I("playlists.id").Eq(playlistId))
 
 	_, err := db.db.Exec(ctx, ds)
 	if err != nil {
@@ -243,9 +217,9 @@ func (db DB) UpdatePlaylist(
 	return nil
 }
 
-func (db DB) DeletePlaylist(ctx context.Context, id string) error {
+func (db DB) DeletePlaylist(ctx context.Context, playlistId string) error {
 	query := dialect.Delete("playlists").
-		Where(goqu.I("playlists.id").Eq(id))
+		Where(goqu.I("playlists.id").Eq(playlistId))
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {

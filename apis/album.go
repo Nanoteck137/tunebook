@@ -29,14 +29,14 @@ type Album struct {
 }
 
 func ConvertDBAlbum(c pyrin.Context, album database.Album) Album {
-	allArtists := make([]ArtistInfo, len(album.FeaturingArtists)+1)
+	allArtists := make([]ArtistInfo, len(album.FeaturingArtists.Data)+1)
 
 	allArtists[0] = ArtistInfo{
 		Id:   album.ArtistId,
 		Name: album.ArtistName,
 	}
 
-	for i, v := range album.FeaturingArtists {
+	for i, v := range album.FeaturingArtists.Data {
 		allArtists[i+1] = ArtistInfo{
 			Id:   v.Id,
 			Name: v.Name,

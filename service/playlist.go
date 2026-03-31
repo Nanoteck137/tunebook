@@ -69,13 +69,6 @@ func (s *PlaylistService) GetPlaylists(
 	return playlists, page, nil
 }
 
-func (s *PlaylistService) GetPlaylistsByUser(
-	ctx context.Context,
-	userId string,
-) ([]database.Playlist, error) {
-	return s.db.GetPlaylistsByUser(ctx, userId)
-}
-
 func (s *PlaylistService) checkOwnership(playlist database.Playlist, userId string) error {
 	if playlist.OwnerId != userId {
 		return ErrPlaylistServiceNotAuthorized

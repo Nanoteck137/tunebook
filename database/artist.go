@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -63,27 +62,6 @@ func ArtistQuery() *goqu.SelectDataset {
 		)
 
 	return query
-}
-
-type GetAllArtistsParams struct {
-	Filter types.FilterParams
-}
-
-func (db DB) GetAllArtists(
-	ctx context.Context,
-	params GetAllArtistsParams,
-) ([]Artist, error) {
-	query := ArtistQuery()
-
-	var err error
-
-	a := adapter.ArtistResolverAdapter{}
-	query, err = applyFilterParams(params.Filter, &a, query)
-	if err != nil {
-		return nil, err
-	}
-
-	return ember.Multiple[Artist](db.db, ctx, query)
 }
 
 // TODO(patrik): Move
@@ -196,21 +174,21 @@ func (db DB) GetArtists(
 	return items, page, nil
 }
 
-func (db DB) GetArtistById(ctx context.Context, id string) (Artist, error) {
+func (db DB) GetArtistById(
+	ctx context.Context,
+	artistId string,
+) (Artist, error) {
 	query := ArtistQuery().
-		Where(goqu.I("artists.id").Eq(id))
+		Where(goqu.I("artists.id").Eq(artistId))
 
 	return ember.Single[Artist](db.db, ctx, query)
 }
 
-func (db DB) GetArtistByName(ctx context.Context, name string) (Artist, error) {
-	query := ArtistQuery().
-		Where(goqu.Func("LOWER", goqu.I("artists.name")).Eq(strings.ToLower(name)))
-
-	return ember.Single[Artist](db.db, ctx, query)
-}
-
-func (db DB) GetArtistsIn(ctx context.Context, in any, sort string) ([]Artist, error) {
+func (db DB) GetArtistsIn(
+	ctx context.Context,
+	in any,
+	sort string,
+) ([]Artist, error) {
 	query := ArtistQuery().
 		Where(
 			goqu.I("artists.id").In(in),
@@ -243,7 +221,10 @@ type CreateArtistParams struct {
 	Updated int64
 }
 
-func (db DB) CreateArtist(ctx context.Context, params CreateArtistParams) (string, error) {
+func (db DB) CreateArtist(
+	ctx context.Context,
+	params CreateArtistParams,
+) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -281,7 +262,11 @@ type ArtistChanges struct {
 	Created types.Change[int64]
 }
 
-func (db DB) UpdateArtist(ctx context.Context, id string, changes ArtistChanges) error {
+func (db DB) UpdateArtist(
+	ctx context.Context,
+	artistId string,
+	changes ArtistChanges,
+) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)
@@ -298,7 +283,7 @@ func (db DB) UpdateArtist(ctx context.Context, id string, changes ArtistChanges)
 
 	ds := dialect.Update("artists").
 		Set(record).
-		Where(goqu.I("artists.id").Eq(id))
+		Where(goqu.I("artists.id").Eq(artistId))
 
 	_, err := db.db.Exec(ctx, ds)
 	if err != nil {
@@ -308,9 +293,9 @@ func (db DB) UpdateArtist(ctx context.Context, id string, changes ArtistChanges)
 	return nil
 }
 
-func (db DB) DeleteArtist(ctx context.Context, id string) error {
+func (db DB) DeleteArtist(ctx context.Context, artistId string) error {
 	query := dialect.Delete("artists").
-		Where(goqu.I("artists.id").Eq(id))
+		Where(goqu.I("artists.id").Eq(artistId))
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {

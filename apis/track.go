@@ -38,14 +38,14 @@ type Track struct {
 }
 
 func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
-	artists := make([]ArtistInfo, len(track.FeaturingArtists)+1)
+	artists := make([]ArtistInfo, len(track.FeaturingArtists.Data)+1)
 
 	artists[0] = ArtistInfo{
 		Id:   track.ArtistId,
 		Name: track.ArtistName,
 	}
 
-	for i, v := range track.FeaturingArtists {
+	for i, v := range track.FeaturingArtists.Data {
 		artists[i+1] = ArtistInfo{
 			Id:   v.Id,
 			Name: v.Name,

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/doug-martin/goqu/v9"
@@ -50,6 +51,27 @@ func (db DB) GetPlaylistItems(ctx context.Context, playlistId string) ([]Playlis
 		Order(goqu.I("playlist_items.order_num").Asc())
 
 	return ember.Multiple[PlaylistItem](db.db, ctx, query)
+}
+
+func (db DB) GetPlaylistTrackImages(
+	ctx context.Context,
+	playlistId string,
+	numImages int,
+) ([]sql.NullString, error) {
+	tracks := TrackQuery()
+
+	query := dialect.From("playlist_items").
+		Select("tracks.album_cover_art").
+		Join(
+			tracks.As("tracks"),
+			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+		).
+		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
+		GroupBy(goqu.I("tracks.album_id")).
+		Order(goqu.I("playlist_items.order_num").Asc()).
+		Limit(uint(numImages))
+
+	return ember.Multiple[sql.NullString](db.db, ctx, query)
 }
 
 func (db DB) GetNextPlaylistItemIndex(ctx context.Context, playlistId string) (int, error) {

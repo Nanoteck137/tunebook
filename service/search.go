@@ -246,7 +246,7 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		},
 		func(item database.Album) SearchAlbum {
 			artists := []string{item.ArtistName}
-			for _, a := range item.FeaturingArtists {
+			for _, a := range item.FeaturingArtists.Data {
 				artists = append(artists, a.Name)
 			}
 
@@ -292,7 +292,7 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 		},
 		func(item database.Track) SearchTrack {
 			artists := []string{item.ArtistName}
-			for _, a := range item.FeaturingArtists {
+			for _, a := range item.FeaturingArtists.Data {
 				artists = append(artists, a.Name)
 			}
 

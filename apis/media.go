@@ -78,14 +78,14 @@ func packMediaResult(c pyrin.Context, tracks []database.Track) (GetMedia, error)
 	}
 
 	for i, track := range tracks {
-		artists := make([]MediaRef, len(track.FeaturingArtists)+1)
+		artists := make([]MediaRef, len(track.FeaturingArtists.Data)+1)
 
 		artists[0] = MediaRef{
 			Id:   track.ArtistId,
 			Name: track.ArtistName,
 		}
 
-		for i, v := range track.FeaturingArtists {
+		for i, v := range track.FeaturingArtists.Data {
 			artists[i+1] = MediaRef{
 				Id:   v.Id,
 				Name: v.Name,
