@@ -9,7 +9,6 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 
 	"github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var ErrItemNotFound = errors.New("database: item not found")
