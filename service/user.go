@@ -222,6 +222,10 @@ func (s *UserService) FavoriteTrack(
 		},
 	)
 	if err != nil {
+		if errors.Is(err, database.ErrItemAlreadyExists) {
+			return nil
+		}
+
 		return userErr.Wrap("favorite track: db create", err)
 	}
 
