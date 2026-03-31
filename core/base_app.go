@@ -1,136 +1,16 @@
 package core
 
 import (
-	"context"
 	"log/slog"
-	"os"
 
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/job"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tools/broker"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
-
-// TODO(patrik): Move to it's own file
-const (
-	jobAuthCleanup    = "auth-cleanup"
-	jobCacheCleanup   = "cache-cleanup"
-	jobLibrarySync    = "library-sync"
-	jobLibraryCleanup = "library-cleanup"
-	jobSearchIndex    = "search-index"
-)
-
-// TODO(patrik): Move to it's own file
-var _ service.Job = (*AuthCleanupJob)(nil)
-
-type AuthCleanupJob struct {
-	authService *service.AuthService
-}
-
-func (j *AuthCleanupJob) Name() string {
-	return jobAuthCleanup
-}
-
-func (j *AuthCleanupJob) Schedule() string {
-	return "@every 30m"
-}
-
-func (j *AuthCleanupJob) Run(ctx context.Context) error {
-	j.authService.Cleanup()
-	return nil
-}
-
-// TODO(patrik): Move to it's own file
-var _ service.Job = (*CacheCleanupJob)(nil)
-
-type CacheCleanupJob struct {
-	dataDir types.DataDir
-}
-
-func (j *CacheCleanupJob) Name() string {
-	return jobCacheCleanup
-}
-
-func (j *CacheCleanupJob) Schedule() string {
-	return ""
-}
-
-func (j *CacheCleanupJob) Run(ctx context.Context) error {
-	cacheDir := j.dataDir.Cache()
-
-	err := os.RemoveAll(cacheDir.String())
-	if err != nil {
-		return err
-	}
-
-	err = utils.CreateDirectories([]string{
-		cacheDir.String(),
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// TODO(patrik): Move to it's own file
-var _ service.Job = (*LibrarySyncJob)(nil)
-
-type LibrarySyncJob struct {
-	libraryService *service.LibraryService
-}
-
-func (j *LibrarySyncJob) Name() string {
-	return jobLibrarySync
-}
-
-func (j *LibrarySyncJob) Schedule() string {
-	return ""
-}
-
-func (j *LibrarySyncJob) Run(ctx context.Context) error {
-	return j.libraryService.Sync()
-}
-
-// TODO(patrik): Move to it's own file
-var _ service.Job = (*LibraryCleanupJob)(nil)
-
-type LibraryCleanupJob struct {
-	libraryService *service.LibraryService
-}
-
-func (j *LibraryCleanupJob) Name() string {
-	return jobLibraryCleanup
-}
-
-func (j *LibraryCleanupJob) Schedule() string {
-	return ""
-}
-
-func (j *LibraryCleanupJob) Run(ctx context.Context) error {
-	return j.libraryService.Cleanup(ctx)
-}
-
-// TODO(patrik): Move to it's own file
-var _ service.Job = (*SearchIndexJob)(nil)
-
-type SearchIndexJob struct {
-	searchService *service.SearchService
-}
-
-func (j *SearchIndexJob) Name() string {
-	return jobSearchIndex
-}
-
-func (j *SearchIndexJob) Schedule() string {
-	return ""
-}
-
-func (j *SearchIndexJob) Run(ctx context.Context) error {
-	return j.searchService.Index(ctx)
-}
 
 var _ App = (*BaseApp)(nil)
 
@@ -340,37 +220,27 @@ func (app *BaseApp) Bootstrap() error {
 		app.broker.EmitEvent(app.jobService.GetSyncStateEvent())
 	})
 
-	err = app.jobService.AddJob(&AuthCleanupJob{
-		authService: app.authService,
-	})
+	err = app.jobService.AddJob(job.NewAuthCleanupJob(app.authService))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(&CacheCleanupJob{
-		dataDir: dataDir,
-	})
+	err = app.jobService.AddJob(job.NewCacheCleanupJob(dataDir))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(&LibrarySyncJob{
-		libraryService: app.libraryService,
-	})
+	err = app.jobService.AddJob(job.NewLibrarySyncJob(app.libraryService))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(&LibraryCleanupJob{
-		libraryService: app.libraryService,
-	})
+	err = app.jobService.AddJob(job.NewLibraryCleanupJob(app.libraryService))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(&SearchIndexJob{
-		searchService: app.searchService,
-	})
+	err = app.jobService.AddJob(job.NewSearchIndexJob(app.searchService))
 	if err != nil {
 		return err
 	}

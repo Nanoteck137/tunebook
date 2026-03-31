@@ -17,7 +17,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
 - [ ] Backend: Cleanup: Database: Database code
 
 - [ ] CLI: Fix the import command
