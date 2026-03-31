@@ -17,6 +17,9 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
+- [ ] Backend: Cleanup: Database: Database code
+
 - [ ] CLI: Fix the import command
 
 - [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
@@ -24,6 +27,17 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Fix: API: Media api
+
+- [ ] Backend: Media Service: Locking
+- [ ] Backend: Media Service: Logging
+
+- [ ] Backend: Job Service: Locking
+
+- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
+- [ ] Backend: Cleanup: Media Service: Code Cleanup
+- [ ] Backend: Cleanup: Job Service: Code Cleanup
+- [ ] Backend: Cleanup: Library Service: Code Cleanup
+- [ ] Backend: Cleanup: Auth Service: Code Cleanup
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
@@ -47,23 +61,7 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: cancel() on forms on api errors, this makes sure that the form is not reset when error occurs
 
-- [ ] Backend: Media Service: Locking
-- [ ] Backend: Media Service: Logging
-
-- [ ] Backend: Job Service: Locking
-
 - [ ] Backend: Database: Use database indexes
-
-- [ ] Backend: Cleanup: Cleanup Jobs from base_app.go
-
-- [ ] Backend: Cleanup: Database: Database code
-- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
-- [ ] Backend: Cleanup: Media Service: Code Cleanup
-- [ ] Backend: Cleanup: Job Service: Code Cleanup
-- [ ] Backend: Cleanup: Library Service: Code Cleanup
-- [ ] Backend: Cleanup: Auth Service: Code Cleanup
-
-- [ ] Backend: Cleanup: API: Better way to log the API Errors
 
 ## Future
 
@@ -75,6 +73,8 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Library Service: Multi-threaded syncing
 
 - [ ] Backend: Fix: Database: Figure out how to handle playlist items/tracks
+
+- [ ] Backend: Cleanup: API: Better way to log the API Errors
 
 ```sql
 CREATE TABLE user_listening_stats (
