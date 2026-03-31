@@ -19,8 +19,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Cleanup: Database: Database code
 
-- [ ] CLI: Fix the import command
-
 - [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
 
 - [ ] Backend: Feature: Year over year
