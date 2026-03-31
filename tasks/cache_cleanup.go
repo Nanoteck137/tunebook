@@ -1,4 +1,4 @@
-package job
+package tasks
 
 import (
 	"context"
@@ -9,27 +9,27 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
-var _ service.Job = (*CacheCleanupJob)(nil)
+var _ service.Task = (*CacheCleanupTask)(nil)
 
-type CacheCleanupJob struct {
+type CacheCleanupTask struct {
 	dataDir types.DataDir
 }
 
-func NewCacheCleanupJob(dataDir types.DataDir) *CacheCleanupJob {
-	return &CacheCleanupJob{
+func NewCacheCleanupTask(dataDir types.DataDir) *CacheCleanupTask {
+	return &CacheCleanupTask{
 		dataDir: dataDir,
 	}
 }
 
-func (j *CacheCleanupJob) Name() string {
+func (j *CacheCleanupTask) Name() string {
 	return CacheCleanup
 }
 
-func (j *CacheCleanupJob) Schedule() string {
+func (j *CacheCleanupTask) Schedule() string {
 	return ""
 }
 
-func (j *CacheCleanupJob) Run(ctx context.Context) error {
+func (j *CacheCleanupTask) Run(ctx context.Context) error {
 	cacheDir := j.dataDir.Cache()
 
 	err := os.RemoveAll(cacheDir.String())

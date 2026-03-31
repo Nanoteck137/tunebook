@@ -5,8 +5,8 @@ import (
 
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/job"
 	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/tasks"
 	"github.com/nanoteck137/tunebook/tools/broker"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
@@ -20,7 +20,7 @@ type BaseApp struct {
 
 	authService         *service.AuthService
 	userService         *service.UserService
-	jobService          *service.JobService
+	taskService         *service.TaskService
 	notificationService *service.NotificationService
 	searchService       *service.SearchService
 	libraryService      *service.LibraryService
@@ -55,8 +55,8 @@ func (app *BaseApp) PlaylistService() *service.PlaylistService {
 	return app.playlistService
 }
 
-func (app *BaseApp) JobService() *service.JobService {
-	return app.jobService
+func (app *BaseApp) TaskService() *service.TaskService {
+	return app.taskService
 }
 
 func (app *BaseApp) NotificationService() *service.NotificationService {
@@ -136,11 +136,7 @@ func (app *BaseApp) Bootstrap() error {
 		app.config,
 	)
 
-	app.jobService = service.NewJobService(newServiceLogger("job"))
-	err = app.jobService.Init()
-	if err != nil {
-		return err
-	}
+	app.taskService = service.NewTaskService(newServiceLogger("task"))
 
 	app.imageService = service.NewImageService(
 		newServiceLogger("image"),
@@ -208,7 +204,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.broker = broker.NewBroker(func() []broker.Event {
 		return []broker.Event{
 			app.libraryService.GetSyncStateEvent(),
-			app.jobService.GetSyncStateEvent(),
+			app.taskService.GetSyncStateEvent(),
 		}
 	})
 
@@ -216,38 +212,38 @@ func (app *BaseApp) Bootstrap() error {
 		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
 	})
 
-	app.jobService.SetUpdateFunc(func() {
-		app.broker.EmitEvent(app.jobService.GetSyncStateEvent())
+	app.taskService.SetUpdateFunc(func() {
+		app.broker.EmitEvent(app.taskService.GetSyncStateEvent())
 	})
 
-	err = app.jobService.AddJob(job.NewAuthCleanupJob(app.authService))
+	err = app.taskService.AddTask(tasks.NewAuthCleanupTask(app.authService))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(job.NewCacheCleanupJob(dataDir))
+	err = app.taskService.AddTask(tasks.NewCacheCleanupTask(dataDir))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(job.NewLibrarySyncJob(app.libraryService))
+	err = app.taskService.AddTask(tasks.NewLibrarySyncTask(app.libraryService))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(job.NewLibraryCleanupJob(app.libraryService))
+	err = app.taskService.AddTask(tasks.NewLibraryCleanupTask(app.libraryService))
 	if err != nil {
 		return err
 	}
 
-	err = app.jobService.AddJob(job.NewSearchIndexJob(app.searchService))
+	err = app.taskService.AddTask(tasks.NewSearchIndexTask(app.searchService))
 	if err != nil {
 		return err
 	}
 
 	// TODO(patrik): This should not be in bootstrap
-	app.jobService.DisplayJobs()
-	app.jobService.Start()
+	app.taskService.DisplayTasks()
+	app.taskService.Start()
 
 	// TODO(patrik): This should not be in bootstrap
 	go app.broker.Listen()
@@ -256,7 +252,7 @@ func (app *BaseApp) Bootstrap() error {
 }
 
 func (app *BaseApp) Shutdown() error {
-	app.jobService.Stop()
+	app.taskService.Stop()
 
 	err := app.db.Close()
 	if err != nil {

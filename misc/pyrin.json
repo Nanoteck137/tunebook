@@ -1728,9 +1728,9 @@
     },
     {
       "type": "api",
-      "name": "RunJob",
+      "name": "RunTask",
       "method": "POST",
-      "path": "/api/v1/system/job/:jobName"
+      "path": "/api/v1/system/task/:taskName"
     },
     {
       "type": "api",

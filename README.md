@@ -19,10 +19,9 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Pyrin: Rename ember.JsonColumn.Data to Value
 
-- [ ] Backend: Cleanup: API: Go through all API structures and add all the fields (i.e created, updated, more)
-- [ ] Backend: Cleanup: Job Service: Code Cleanup
 - [ ] Backend: Cleanup: Library Service: Code Cleanup
 - [ ] Backend: Cleanup: Auth Service: Code Cleanup
+- [ ] Backend: Cleanup: Image Service: Code Cleanup
 
 - [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
 

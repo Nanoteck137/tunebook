@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/tunebook/core"
-	"github.com/nanoteck137/pyrin"
 )
 
 type GetSystemInfo struct {
@@ -28,11 +28,11 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:   "RunJob",
+			Name:   "RunTask",
 			Method: http.MethodPost,
-			Path:   "/system/job/:jobName",
+			Path:   "/system/task/:taskName",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				jobName := c.Param("jobName")
+				taskName := c.Param("taskName")
 
 				_, err := User(app, c, RequireAdmin)
 				if err != nil {
@@ -40,7 +40,7 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 				}
 
 				go func() {
-					app.JobService().RunJob(context.Background(), jobName)
+					app.TaskService().RunTask(context.Background(), taskName)
 				}()
 
 				return nil, nil

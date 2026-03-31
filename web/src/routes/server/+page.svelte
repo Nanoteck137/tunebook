@@ -48,17 +48,17 @@
     totalSyncDurationMs: z.number(),
   });
 
-  const JobSyncStateEventJob = z.object({
+  const TaskSyncStateEventTask = z.object({
     name: z.string(),
     isRunning: z.boolean(),
   });
-  type JobSyncStateEventJobTy = z.infer<typeof JobSyncStateEventJob>;
+  type TaskSyncStateEventTaskTy = z.infer<typeof TaskSyncStateEventTask>;
 
-  const JobSyncStateEvent = z.object({
-    jobs: z.array(JobSyncStateEventJob),
+  const TaskSyncStateEvent = z.object({
+    tasks: z.array(TaskSyncStateEventTask),
   });
 
-  let jobs = $state<JobSyncStateEventJobTy[]>([]);
+  let tasks = $state<TaskSyncStateEventTaskTy[]>([]);
 
   onMount(() => {
     const eventSource = new EventSource(apiClient.url.sseHandler());
@@ -88,11 +88,11 @@
       totalSyncTime = data.totalSyncDurationMs;
     });
 
-    eventSource.addEventListener("job-sync-state", (e) => {
-      const data = JobSyncStateEvent.parse(JSON.parse(e.data));
+    eventSource.addEventListener("task-sync-state", (e) => {
+      const data = TaskSyncStateEvent.parse(JSON.parse(e.data));
 
-      console.log("jobs state", data);
-      jobs = data.jobs;
+      console.log("tasks state", data);
+      tasks = data.tasks;
 
       // isSyncing = data.isRunning;
       // errors = data.errors;
@@ -117,20 +117,20 @@
 <p>Version: {PUBLIC_VERSION}</p>
 <p>Commit: {PUBLIC_COMMIT}</p>
 
-{#each jobs as job}
+{#each tasks as task}
   <div class="flex items-center gap-2">
-    <p>{job.name} - Running: {job.isRunning}</p>
-    {#if !job.isRunning}
+    <p>{task.name} - Running: {task.isRunning}</p>
+    {#if !task.isRunning}
       <Button
         variant="ghost"
         size="icon"
         onclick={async () => {
-          const res = await apiClient.runJob(job.name);
+          const res = await apiClient.runTask(task.name);
           if (!res.success) {
             return handleApiError(res.error);
           }
 
-          toast.success("Dispatched job");
+          toast.success("Dispatched task");
         }}
       >
         <Play />

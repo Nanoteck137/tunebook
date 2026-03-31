@@ -775,8 +775,8 @@ func (c *Client) ReorderPlaylistItems(playlistId string, body ReorderPlaylistIte
 	return Request[any](data, body)
 }
 
-func (c *Client) RunJob(jobName string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/system/job/%v", jobName)
+func (c *Client) RunTask(taskName string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/system/task/%v", taskName)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -1218,8 +1218,8 @@ func (c *ClientUrls) ReorderPlaylistItems(playlistId string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) RunJob(jobName string) (*URL, error) {
-	path := Sprintf("/api/v1/system/job/%v", jobName)
+func (c *ClientUrls) RunTask(taskName string) (*URL, error) {
+	path := Sprintf("/api/v1/system/task/%v", taskName)
 	return c.getUrl(path)
 }
 

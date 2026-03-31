@@ -1,4 +1,4 @@
-package job
+package tasks
 
 const (
 	AuthCleanup    = "auth-cleanup"

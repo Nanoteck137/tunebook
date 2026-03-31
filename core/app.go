@@ -17,7 +17,7 @@ type App interface {
 	DataDir() types.DataDir
 
 	NotificationService() *service.NotificationService
-	JobService() *service.JobService
+	TaskService() *service.TaskService
 	AuthService() *service.AuthService
 	UserService() *service.UserService
 	SearchService() *service.SearchService

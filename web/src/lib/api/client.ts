@@ -208,8 +208,8 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  runJob(jobName: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/system/job/${jobName}`, "POST", z.undefined(), z.any(), undefined, options)
+  runTask(taskName: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/system/task/${taskName}`, "POST", z.undefined(), z.any(), undefined, options)
   }
   
   searchAlbums(options?: ExtraOptions) {
@@ -474,8 +474,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items/reorder`)
   }
   
-  runJob(jobName: string) {
-    return createUrl(this.baseUrl, `/api/v1/system/job/${jobName}`)
+  runTask(taskName: string) {
+    return createUrl(this.baseUrl, `/api/v1/system/task/${taskName}`)
   }
   
   searchAlbums() {
