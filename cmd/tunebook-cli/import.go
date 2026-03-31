@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strconv"
+	"strings"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/kr/pretty"
-	"github.com/nanoteck137/tunebook/cmd/tunebook-cli/api"
 	"github.com/nanoteck137/pyrin/ember"
+	"github.com/nanoteck137/tunebook/cmd/tunebook-cli/api"
 	"github.com/spf13/cobra"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var importCmd = &cobra.Command{
@@ -19,15 +22,15 @@ var importCmd = &cobra.Command{
 
 var dialect = ember.SqliteDialect()
 
-func runImport(dbFile string) error {
+func runImport(dbFile, apiAddr, apiToken string) error {
 	dbUrl := fmt.Sprintf("file:%s?_busy_timeout=5000&_journal_mode=WAL&_foreign_keys=ON&_serialized=1&_synchronous=NORMAL", dbFile)
 	db, err := ember.OpenDatabase("sqlite3", dbUrl)
 	if err != nil {
 		return err
 	}
 
-	client := api.New("http://localhost:3000")
-	client.Headers.Set("X-Api-Token", "m1gag7ugduqfj2mbk9jxsj5006qcwzop")
+	client := api.New(apiAddr)
+	client.Headers.Set("X-Api-Token", apiToken)
 
 	ctx := context.Background()
 
@@ -47,14 +50,79 @@ func runImport(dbFile string) error {
 		return err
 	}
 
-	pretty.Println(playlists)
+	fmt.Println("Found playlists:")
+	for i, playlist := range playlists {
+		fmt.Printf("[%d] %s\n", i+1, playlist.Name)
+	}
+
+	fmt.Println("\nEnter playlist numbers to import (comma separated, e.g. 1,3,5) or 'all':")
+	var input string
+	fmt.Scanln(&input)
+
+	var selectedIndices []int
+	if input == "all" {
+		for i := range playlists {
+			selectedIndices = append(selectedIndices, i)
+		}
+	} else {
+		for part := range strings.SplitSeq(input, ",") {
+			part = strings.TrimSpace(part)
+			num, err := strconv.Atoi(part)
+			if err != nil {
+				return fmt.Errorf("invalid input: %s", part)
+			}
+			if num < 1 || num > len(playlists) {
+				return fmt.Errorf("invalid playlist number: %d", num)
+			}
+			selectedIndices = append(selectedIndices, num-1)
+		}
+	}
+
+	type ImportMode int
+	const (
+		ImportModePlaylist ImportMode = iota
+		ImportModeFavorites
+	)
+
+	type SelectedPlaylist struct {
+		Index int
+		Mode  ImportMode
+	}
+
+	selectedPlaylists := make([]SelectedPlaylist, 0, len(selectedIndices))
+	for _, idx := range selectedIndices {
+		playlist := playlists[idx]
+		fmt.Printf("\nPlaylist: %s\n", playlist.Name)
+		fmt.Println("How do you want to import?")
+		fmt.Println("  [p] - Create a new playlist")
+		fmt.Println("  [f] - Add tracks to favorites")
+		fmt.Printf("Choice: ")
+
+		var choice string
+		fmt.Scanln(&choice)
+		choice = strings.TrimSpace(strings.ToLower(choice))
+
+		mode := ImportModePlaylist
+		if choice == "f" {
+			mode = ImportModeFavorites
+		}
+
+		selectedPlaylists = append(selectedPlaylists, SelectedPlaylist{
+			Index: idx,
+			Mode:  mode,
+		})
+	}
 
 	type PlaylistItem struct {
 		TrackId   string `db:"track_id"`
 		TrackName string `db:"track_name"`
 	}
 
-	for _, playlist := range playlists {
+	for _, sp := range selectedPlaylists {
+		playlist := playlists[sp.Index]
+
+		fmt.Printf("\nImporting playlist: %s\n", playlist.Name)
+
 		query := dialect.From("playlist_items").
 			Select(
 				"playlist_items.track_id",
@@ -72,60 +140,59 @@ func runImport(dbFile string) error {
 			return err
 		}
 
-		pretty.Println(items)
+		if sp.Mode == ImportModeFavorites {
+			for _, item := range items {
+				slog.Info("Favoriting track", "track", item.TrackName, "trackId", item.TrackId)
 
-		serverPlaylist, err := client.CreatePlaylist(api.CreatePlaylistBody{
-			Name: playlist.Name,
-		}, api.Options{})
-		if err != nil {
-			return err
-		}
-
-		// serverItems, err := client.GetPlaylistItems(server, api.Options{
-		// 	Query: url.Values{
-		// 		"perPage": {"999999"},
-		// 	},
-		// })
-		// if err != nil {
-		// 	return err
-		// }
-		//
-		// pretty.Println(serverItems)
-		//
-		// for _, item := range serverItems.Items {
-		// 	_, err := client.RemovePlaylistItem(serverPlaylistId, api.RemovePlaylistItemBody{
-		// 		TrackId: item.Id,
-		// 	}, api.Options{})
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// }
-
-		// client.RemovePlaylistItem()
-
-		for _, item := range items {
-			// client.GetTrackById()
-			slog.Info("Trying to add track", "track", item.TrackName, "trackId", item.TrackId)
-
-			_, err := client.AddItemToPlaylist(serverPlaylist.Id, api.AddItemToPlaylistBody{
-				TrackId: item.TrackId,
-			}, api.Options{})
-			if err != nil {
-				var apiErr *api.ApiError[any]
-				if errors.As(err, &apiErr) {
-					if apiErr.Type == "TRACK_NOT_FOUND" {
-						slog.Warn("Track not found", "track", item.TrackName, "trackId", item.TrackId)
-						continue
+				_, err := client.FavoriteTrack(item.TrackId, api.Options{})
+				if err != nil {
+					var apiErr *api.ApiError[any]
+					if errors.As(err, &apiErr) {
+						if apiErr.Type == "TRACK_NOT_FOUND" {
+							slog.Warn("Track not found", "track", item.TrackName, "trackId", item.TrackId)
+							continue
+						}
 					}
+
+					return err
 				}
 
+				slog.Info("Success", "track", item.TrackName, "trackId", item.TrackId)
+			}
+		} else {
+			serverPlaylist, err := client.CreatePlaylist(api.CreatePlaylistBody{
+				Name: playlist.Name,
+			}, api.Options{})
+			if err != nil {
 				return err
 			}
 
-			slog.Info("Success", "track", item.TrackName, "trackId", item.TrackId)
+			for _, item := range items {
+				slog.Info("Trying to add track", "track", item.TrackName, "trackId", item.TrackId)
+
+				_, err := client.AddItemToPlaylist(serverPlaylist.Id, api.AddItemToPlaylistBody{
+					TrackId: item.TrackId,
+				}, api.Options{})
+				if err != nil {
+					var apiErr *api.ApiError[any]
+					if errors.As(err, &apiErr) {
+						if apiErr.Type == "TRACK_NOT_FOUND" {
+							slog.Warn("Track not found", "track", item.TrackName, "trackId", item.TrackId)
+							continue
+						}
+					}
+
+					return err
+				}
+
+				slog.Info("Success", "track", item.TrackName, "trackId", item.TrackId)
+			}
 		}
+
+		fmt.Printf("Imported playlist: %s\n", playlist.Name)
 	}
 
+	fmt.Println("\nDone!")
 	return nil
 }
 
@@ -133,7 +200,10 @@ var importPlaylistCmd = &cobra.Command{
 	Use:  "playlist <OLD_DATABASE>",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		err := runImport(args[0])
+		apiAddr, _ := cmd.Flags().GetString("api-addr")
+		apiToken, _ := cmd.Flags().GetString("api-token")
+
+		err := runImport(args[0], apiAddr, apiToken)
 		if err != nil {
 			slog.Error("failed to import", "err", err)
 			return
@@ -142,6 +212,12 @@ var importPlaylistCmd = &cobra.Command{
 }
 
 func init() {
+	importPlaylistCmd.Flags().String("api-addr", "", "API address")
+	importPlaylistCmd.MarkFlagRequired("api-addr")
+
+	importPlaylistCmd.Flags().String("api-token", "", "API token")
+	importPlaylistCmd.MarkFlagRequired("api-token")
+
 	importCmd.AddCommand(importPlaylistCmd)
 
 	rootCmd.AddCommand(importCmd)
