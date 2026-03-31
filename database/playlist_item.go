@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
@@ -17,13 +18,16 @@ type PlaylistItem struct {
 	PlaylistId string `db:"playlist_id"`
 	TrackId    string `db:"track_id"`
 
-	Order int `db:"order_num"`
+	Position int `db:"position"`
+
+	Created int64 `db:"created"`
+	Updated int64 `db:"updated"`
 }
 
-type OrderedTrack struct {
+type PlaylistItemTrack struct {
 	Track
 
-	Order int `db:"order_num"`
+	Position int `db:"position"`
 }
 
 func PlaylistItemQuery() *goqu.SelectDataset {
@@ -34,7 +38,10 @@ func PlaylistItemQuery() *goqu.SelectDataset {
 			"playlist_items.playlist_id",
 			"playlist_items.track_id",
 
-			"playlist_items.order_num",
+			"playlist_items.position",
+
+			"playlist_items.created",
+			"playlist_items.updated",
 		)
 
 	return query
@@ -48,7 +55,7 @@ func (db DB) GetAllPlaylistItems(ctx context.Context) ([]PlaylistItem, error) {
 func (db DB) GetPlaylistItems(ctx context.Context, playlistId string) ([]PlaylistItem, error) {
 	query := PlaylistItemQuery().
 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		Order(goqu.I("playlist_items.order_num").Asc())
+		Order(goqu.I("playlist_items.position").Asc())
 
 	return ember.Multiple[PlaylistItem](db.db, ctx, query)
 }
@@ -68,7 +75,7 @@ func (db DB) GetPlaylistTrackImages(
 		).
 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
 		GroupBy(goqu.I("tracks.album_id")).
-		Order(goqu.I("playlist_items.order_num").Asc()).
+		Order(goqu.I("playlist_items.position").Asc()).
 		Limit(uint(numImages))
 
 	return ember.Multiple[sql.NullString](db.db, ctx, query)
@@ -76,9 +83,9 @@ func (db DB) GetPlaylistTrackImages(
 
 func (db DB) GetNextPlaylistItemIndex(ctx context.Context, playlistId string) (int, error) {
 	query := dialect.From("playlist_items").
-		Select("playlist_items.order_num").
+		Select("playlist_items.position").
 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		Order(goqu.I("playlist_items.order_num").Desc()).
+		Order(goqu.I("playlist_items.position").Desc()).
 		Limit(1)
 
 	res, err := ember.Single[int](db.db, ctx, query)
@@ -93,36 +100,6 @@ func (db DB) GetNextPlaylistItemIndex(ctx context.Context, playlistId string) (i
 	return res + 1, nil
 }
 
-// func (db DB) GetPlaylistTracks(ctx context.Context, playlistId, filterStr string) ([]OrderedTrack, error) {
-// 	tracks := TrackQuery()
-//
-// 	var err error
-//
-// 	a := adapter.TrackResolverAdapter{}
-// 	resolver := filter.New(&a)
-//
-// 	tracks, err = applyFilter(tracks, resolver, filterStr)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	// tracks, err = applySort(tracks, resolver, sortStr)
-// 	// if err != nil {
-// 	// 	return nil, err
-// 	// }
-//
-// 	query := dialect.From("playlist_items").
-// 		Select("tracks.*", "playlist_items.order_num").
-// 		Join(
-// 			tracks.As("tracks"),
-// 			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-// 		).
-// 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-// 		Order(goqu.I("playlist_items.order_num").Asc())
-//
-// 	return ember.Multiple[OrderedTrack](db.db, ctx, query)
-// }
-
 type GetPlaylistTracksParams struct {
 	PlaylistId string
 	Page       types.PageParams
@@ -132,13 +109,13 @@ type GetPlaylistTracksParams struct {
 func (db DB) GetPlaylistTracks(
 	ctx context.Context,
 	params GetPlaylistTracksParams,
-) ([]OrderedTrack, types.Page, error) {
+) ([]PlaylistItemTrack, types.Page, error) {
 	tracks := TrackQuery()
 
 	var err error
 
 	query := dialect.From("playlist_items").
-		Select("tracks.*", "playlist_items.order_num").
+		Select("tracks.*", "playlist_items.position").
 		Join(
 			tracks.As("tracks"),
 			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
@@ -162,7 +139,7 @@ func (db DB) GetPlaylistTracks(
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := ember.Multiple[OrderedTrack](db.db, ctx, query)
+	items, err := ember.Multiple[PlaylistItemTrack](db.db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -174,16 +151,28 @@ type CreatePlaylistItemParams struct {
 	PlaylistId string
 	TrackId    string
 
-	Order int
+	Position int
+
+	Created int64
+	Updated int64
 }
 
 func (db DB) CreatePlaylistItem(ctx context.Context, params CreatePlaylistItemParams) error {
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
+	}
+
 	query := dialect.Insert("playlist_items").
 		Rows(goqu.Record{
 			"playlist_id": params.PlaylistId,
 			"track_id":    params.TrackId,
 
-			"order_num": params.Order,
+			"position": params.Position,
+
+			"created": params.Created,
+			"updated": params.Updated,
 		})
 
 	_, err := db.db.Exec(ctx, query)
@@ -195,17 +184,23 @@ func (db DB) CreatePlaylistItem(ctx context.Context, params CreatePlaylistItemPa
 }
 
 type PlaylistItemChanges struct {
-	Order types.Change[int]
+	Position types.Change[int]
+
+	Created types.Change[int64]
 }
 
 func (db DB) UpdatePlaylistItem(ctx context.Context, playlistId, trackId string, changes PlaylistItemChanges) error {
 	record := goqu.Record{}
 
-	addToRecord(record, "order_num", changes.Order)
+	addToRecord(record, "position", changes.Position)
+
+	addToRecord(record, "created", changes.Created)
 
 	if len(record) == 0 {
 		return nil
 	}
+
+	record["updated"] = time.Now().UnixMilli()
 
 	query := dialect.Update("playlist_items").
 		Set(record).
@@ -247,14 +242,14 @@ func (db DB) GetPlaylistItemByTrackId(ctx context.Context, playlistId, trackId s
 	return ember.Single[PlaylistItem](db.db, ctx, query)
 }
 
-func (db DB) ReorderPlaylistItemsAfterDelete(ctx context.Context, playlistId string, deletedOrder int) error {
+func (db DB) ReorderPlaylistItemsAfterDelete(ctx context.Context, playlistId string, deletedPosition int) error {
 	query := goqu.Update("playlist_items").
 		Set(goqu.Record{
-			"order_num": goqu.L("order_num - 1"),
+			"position": goqu.L("position - 1"),
 		}).
 		Where(
 			goqu.I("playlist_items.playlist_id").Eq(playlistId),
-			goqu.I("order_num").Gt(deletedOrder),
+			goqu.I("position").Gt(deletedPosition),
 		)
 
 	_, err := db.db.Exec(ctx, query)

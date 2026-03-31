@@ -80,7 +80,7 @@ func (s *PlaylistService) checkOwnership(playlist database.Playlist, userId stri
 type GetPlaylistByIdParams struct {
 	PlaylistId string
 	// TODO(patrik): Remove
-	UserId     string
+	UserId string
 }
 
 func (s *PlaylistService) GetPlaylistById(
@@ -351,7 +351,7 @@ type GetPlaylistItemsParams struct {
 func (s *PlaylistService) GetPlaylistItems(
 	ctx context.Context,
 	params GetPlaylistItemsParams,
-) ([]database.OrderedTrack, types.Page, error) {
+) ([]database.PlaylistItemTrack, types.Page, error) {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
 		UserId:     params.UserId,
@@ -383,7 +383,7 @@ func (s *PlaylistService) GetPlaylistItems(
 	}
 
 	for i, track := range tracks {
-		tracks[i].Track.Order = utils.Pointer(track.Order + 1)
+		tracks[i].Track.Order = utils.Pointer(track.Position + 1)
 	}
 
 	return tracks, page, nil
@@ -432,7 +432,7 @@ func (s *PlaylistService) AddItemToPlaylist(
 	err = s.db.CreatePlaylistItem(ctx, database.CreatePlaylistItemParams{
 		PlaylistId: playlist.Id,
 		TrackId:    track.Id,
-		Order:      index,
+		Position:   index,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrItemAlreadyExists) {
@@ -489,7 +489,7 @@ func (s *PlaylistService) RemovePlaylistItem(
 		return playlistErr.Wrap("remove item: db delete item", err)
 	}
 
-	err = tx.ReorderPlaylistItemsAfterDelete(ctx, playlist.Id, item.Order)
+	err = tx.ReorderPlaylistItemsAfterDelete(ctx, playlist.Id, item.Position)
 	if err != nil {
 		return playlistErr.Wrap("remove item: db reorder items", err)
 	}
@@ -597,9 +597,9 @@ func (s *PlaylistService) ReorderPlaylistItems(
 			item.PlaylistId,
 			item.TrackId,
 			database.PlaylistItemChanges{
-				Order: types.Change[int]{
+				Position: types.Change[int]{
 					Value:   i,
-					Changed: i != item.Order,
+					Changed: i != item.Position,
 				},
 			},
 		)
