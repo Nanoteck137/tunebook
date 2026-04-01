@@ -116,7 +116,7 @@ var _ filter.ResolverAdapter = (*PlaylistTrackResolverAdapter)(nil)
 type PlaylistTrackResolverAdapter struct{}
 
 func (a *PlaylistTrackResolverAdapter) DefaultSort() (string, filter.SortType) {
-	return "playlist_items.order_num", filter.SortTypeAsc
+	return "playlist_items.position", filter.SortTypeAsc
 }
 
 func (a *PlaylistTrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
@@ -189,10 +189,10 @@ func (a *PlaylistTrackResolverAdapter) ResolveVariableName(name string) (filter.
 			Kind: filter.NameKindString,
 			Name: "playlist_items.track_id",
 		}, true
-	case "order":
+	case "position":
 		return filter.Name{
 			Kind: filter.NameKindNumber,
-			Name: "playlist_items.order_num",
+			Name: "playlist_items.position",
 		}, true
 	}
 
