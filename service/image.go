@@ -159,7 +159,7 @@ func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, i
 		return "", err
 	}
 
-	cacheDir := s.dataDir.Cache()
+	cacheDir := s.dataDir.CacheImages()
 	albumCache := cacheDir.Album(album.Id)
 
 	// Make sure that the cache directory is setup
@@ -218,7 +218,7 @@ func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string,
 		return "", err
 	}
 
-	cacheDir := s.dataDir.Cache()
+	cacheDir := s.dataDir.CacheImages()
 	artistCache := cacheDir.Artist(artist.Id)
 
 	// Make sure that the cache directory is setup
@@ -277,7 +277,7 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 		return "", err
 	}
 
-	cacheDir := s.dataDir.Cache()
+	cacheDir := s.dataDir.CacheImages()
 	playlistCache := cacheDir.Playlist(playlist.Id)
 
 	// Make sure that the cache directory is setup
@@ -338,7 +338,7 @@ func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, ima
 		return "", err
 	}
 
-	cacheDir := s.dataDir.Cache()
+	cacheDir := s.dataDir.CacheImages()
 	userCache := cacheDir.User(user.Id)
 
 	// Make sure that the cache directory is setup

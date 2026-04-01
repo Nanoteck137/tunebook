@@ -797,7 +797,8 @@ func (s *LibraryService) Sync() error {
 	s.tracksSyncDuration = trackTimer.Duration()
 	s.totalSyncDuration = s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
 
-	dir := s.dataDir.Cache().String()
+	// TODO(patrik): Make this better
+	dir := s.dataDir.Cache()
 	s.logger.Info("clearing the cache", "path", dir)
 
 	err = os.RemoveAll(dir)

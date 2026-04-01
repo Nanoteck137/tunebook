@@ -28,53 +28,61 @@ func (d DataDir) User(id string) string {
 	return path.Join(d.Users(), id)
 }
 
-func (d DataDir) Cache() CacheDir {
-	return CacheDir(path.Join(d.String(), "cache"))
+func (d DataDir) Cache() string {
+	return path.Join(d.String(), "cache")
 }
 
-type CacheDir string
+func (d DataDir) CacheImages() ImageCacheDir {
+	return ImageCacheDir(path.Join(d.Cache(), "images"))
+}
 
-func (d CacheDir) String() string {
+func (d DataDir) CacheTranscoding() string {
+	return path.Join(d.Cache(), "transcoding")
+}
+
+type ImageCacheDir string
+
+func (d ImageCacheDir) String() string {
 	return string(d)
 }
 
-func (d CacheDir) Artists() string {
+func (d ImageCacheDir) Artists() string {
 	return path.Join(d.String(), "artists")
 }
 
-func (d CacheDir) Artist(id string) string {
+func (d ImageCacheDir) Artist(id string) string {
 	return path.Join(d.Artists(), id)
 }
 
-func (d CacheDir) Albums() string {
+func (d ImageCacheDir) Albums() string {
 	return path.Join(d.String(), "albums")
 }
 
-func (d CacheDir) Album(id string) string {
+func (d ImageCacheDir) Album(id string) string {
 	return path.Join(d.Albums(), id)
 }
 
-func (d CacheDir) Tracks() string {
+func (d ImageCacheDir) Tracks() string {
 	return path.Join(d.String(), "tracks")
 }
 
-func (d CacheDir) Track(id string) string {
+func (d ImageCacheDir) Track(id string) string {
 	return path.Join(d.Tracks(), id)
 }
 
-func (d CacheDir) Playlists() string {
+func (d ImageCacheDir) Playlists() string {
 	return path.Join(d.String(), "playlists")
 }
 
-func (d CacheDir) Playlist(id string) string {
+func (d ImageCacheDir) Playlist(id string) string {
 	return path.Join(d.Playlists(), id)
 }
 
-func (d CacheDir) Users() string {
+func (d ImageCacheDir) Users() string {
 	return path.Join(d.String(), "users")
 }
 
-func (d CacheDir) User(id string) string {
+func (d ImageCacheDir) User(id string) string {
 	return path.Join(d.Users(), id)
 }
 

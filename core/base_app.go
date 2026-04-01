@@ -107,7 +107,7 @@ func (app *BaseApp) Bootstrap() error {
 	err = utils.CreateDirectories([]string{
 		dataDir.Users(),
 		dataDir.Playlists(),
-		dataDir.Cache().String(),
+		dataDir.Cache(),
 	})
 	if err != nil {
 		return err

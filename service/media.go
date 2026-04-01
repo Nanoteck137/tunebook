@@ -254,13 +254,13 @@ func (s *MediaService) GetTrackStream(
 		return track.Filename, nil
 	}
 
-	cacheDir := s.dataDir.Cache()
-	trackCache := cacheDir.Track(track.Id)
+	// TODO(patrik): Is this right?
+	cacheDir := s.dataDir.CacheTranscoding()
+	trackCache := path.Join(cacheDir, track.Id)
 
 	// Make sure that the cache directory is setup
 	err = utils.CreateDirectories([]string{
-		cacheDir.String(),
-		cacheDir.Tracks(),
+		cacheDir,
 		trackCache,
 	})
 	if err != nil {

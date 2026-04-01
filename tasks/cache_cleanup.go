@@ -32,13 +32,13 @@ func (j *CacheCleanupTask) Schedule() string {
 func (j *CacheCleanupTask) Run(ctx context.Context) error {
 	cacheDir := j.dataDir.Cache()
 
-	err := os.RemoveAll(cacheDir.String())
+	err := os.RemoveAll(cacheDir)
 	if err != nil {
 		return err
 	}
 
 	err = utils.CreateDirectories([]string{
-		cacheDir.String(),
+		cacheDir,
 	})
 	if err != nil {
 		return err

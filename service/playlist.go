@@ -181,7 +181,8 @@ func (s *PlaylistService) EditPlaylist(
 		return playlistErr.Wrap("edit: db update", err)
 	}
 
-	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
+	// TODO(patrik): Make this better
+	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("edit: remove cache", err)
 	}
@@ -221,7 +222,8 @@ func (s *PlaylistService) DeletePlaylist(
 		return playlistErr.Wrap("delete: remove dir", err)
 	}
 
-	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
+	// TODO(patrik): Make this better
+	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("delete: remove cache", err)
 	}
@@ -277,7 +279,8 @@ func (s *PlaylistService) UploadPlaylistImage(
 		return playlistErr.Wrap("upload image: db update", err)
 	}
 
-	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
+	// TODO(patrik): Make this better
+	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("upload image: remove cache", err)
 	}
@@ -330,7 +333,8 @@ func (s *PlaylistService) GeneratePlaylistImage(
 		return playlistErr.Wrap("gen image: db update", err)
 	}
 
-	err = os.RemoveAll(s.dataDir.Cache().Playlist(playlist.Id))
+	// TODO(patrik): Make this better
+	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("gen image: remove cache", err)
 	}
@@ -361,7 +365,9 @@ func (s *PlaylistService) GetPlaylistItems(
 	}
 
 	if params.FilterId != "" {
-		filter, err := s.db.GetPlaylistFilterById(ctx, params.FilterId, playlist.Id)
+		filter, err := s.db.GetPlaylistFilterById(
+			ctx, params.FilterId, playlist.Id,
+		)
 		if err != nil {
 			if errors.Is(err, database.ErrItemNotFound) {
 				return nil, types.Page{}, ErrPlaylistServiceFilterNotFound
@@ -373,13 +379,16 @@ func (s *PlaylistService) GetPlaylistItems(
 		params.Filter.Filter = filter.Filter
 	}
 
-	tracks, page, err := s.db.GetPlaylistTracks(ctx, database.GetPlaylistTracksParams{
-		PlaylistId: playlist.Id,
-		Page:       params.Page,
-		Filter:     params.Filter,
-	})
+	tracks, page, err := s.db.GetPlaylistTracks(
+		ctx,
+		database.GetPlaylistTracksParams{
+			PlaylistId: playlist.Id,
+			Page:       params.Page,
+			Filter:     params.Filter,
+		},
+	)
 	if err != nil {
-		return nil, types.Page{}, playlistErr.Wrap("get items: db", err)
+		return nil, types.Page{}, playlistErr.Wrap("get items: db get", err)
 	}
 
 	for i, track := range tracks {
