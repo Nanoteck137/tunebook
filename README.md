@@ -17,16 +17,14 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Pyrin: Rename ember.JsonColumn.Data to Value
+- [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
+
+- [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Cleanup: Image Service: Code Cleanup
 - [ ] Backend: Cleanup: Library Service: Code Cleanup
 - [ ] Backend: Cleanup: Auth Service: Code Cleanup
 - [ ] Backend: Cleanup: Media Service: Code Cleanup
-
-- [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
-
-- [ ] Backend: Feature: Year over year
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
