@@ -134,22 +134,6 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/auth/me", "GET", api.GetMe, z.any(), undefined, options)
   }
   
-  getMediaFromAlbum(albumId: string, body: api.GetMediaFromAlbumBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/album/${albumId}`, "POST", api.GetMedia, z.any(), body, options)
-  }
-  
-  getMediaFromArtist(artistId: string, body: api.GetMediaFromArtistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/artist/${artistId}`, "POST", api.GetMedia, z.any(), body, options)
-  }
-  
-  getMediaFromFilter(body: api.GetMediaFromFilterBody, options?: ExtraOptions) {
-    return this.request("/api/v1/media/filter", "POST", api.GetMedia, z.any(), body, options)
-  }
-  
-  getMediaFromIds(body: api.GetMediaFromIdsBody, options?: ExtraOptions) {
-    return this.request("/api/v1/media/ids", "POST", api.GetMedia, z.any(), body, options)
-  }
-  
   getMediaSettings(options?: ExtraOptions) {
     return this.request("/api/v1/media/settings", "GET", api.GetMediaSettings, z.any(), undefined, options)
   }
@@ -392,22 +376,6 @@ export class ClientUrls {
   
   getMe() {
     return createUrl(this.baseUrl, "/api/v1/auth/me")
-  }
-  
-  getMediaFromAlbum(albumId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/album/${albumId}`)
-  }
-  
-  getMediaFromArtist(artistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/artist/${artistId}`)
-  }
-  
-  getMediaFromFilter() {
-    return createUrl(this.baseUrl, "/api/v1/media/filter")
-  }
-  
-  getMediaFromIds() {
-    return createUrl(this.baseUrl, "/api/v1/media/ids")
   }
   
   getMediaSettings() {

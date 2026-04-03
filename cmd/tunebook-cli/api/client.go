@@ -485,70 +485,6 @@ func (c *Client) GetMe(options Options) (*GetMe, error) {
 	return Request[GetMe](data, nil)
 }
 
-func (c *Client) GetMediaFromAlbum(albumId string, body GetMediaFromAlbumBody, options Options) (*GetMedia, error) {
-	path := Sprintf("/api/v1/media/album/%v", albumId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetMedia](data, body)
-}
-
-func (c *Client) GetMediaFromArtist(artistId string, body GetMediaFromArtistBody, options Options) (*GetMedia, error) {
-	path := Sprintf("/api/v1/media/artist/%v", artistId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetMedia](data, body)
-}
-
-func (c *Client) GetMediaFromFilter(body GetMediaFromFilterBody, options Options) (*GetMedia, error) {
-	path := "/api/v1/media/filter"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetMedia](data, body)
-}
-
-func (c *Client) GetMediaFromIds(body GetMediaFromIdsBody, options Options) (*GetMedia, error) {
-	path := "/api/v1/media/ids"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetMedia](data, body)
-}
-
 func (c *Client) GetMediaSettings(options Options) (*GetMediaSettings, error) {
 	path := "/api/v1/media/settings"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -1115,26 +1051,6 @@ func (c *ClientUrls) GetFavoriteTrackIds() (*URL, error) {
 
 func (c *ClientUrls) GetMe() (*URL, error) {
 	path := "/api/v1/auth/me"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetMediaFromAlbum(albumId string) (*URL, error) {
-	path := Sprintf("/api/v1/media/album/%v", albumId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetMediaFromArtist(artistId string) (*URL, error) {
-	path := Sprintf("/api/v1/media/artist/%v", artistId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetMediaFromFilter() (*URL, error) {
-	path := "/api/v1/media/filter"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetMediaFromIds() (*URL, error) {
-	path := "/api/v1/media/ids"
 	return c.getUrl(path)
 }
 

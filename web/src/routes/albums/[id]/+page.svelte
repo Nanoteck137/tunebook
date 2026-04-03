@@ -46,20 +46,21 @@
   artists={data.album.artists}
   tags={data.album.tags}
   onPlay={async (shuffle) => {
-    await musicManager.queueRequest(
-      { type: "addAlbum", albumId: data.album.id },
-      { shuffle },
-    );
+    await musicManager.addAlbumTracks({ albumId: data.album.id, clear: true });
+    // await musicManager.queueRequest(
+    //   { type: "addAlbum", albumId: data.album.id },
+    //   { shuffle },
+    // );
   }}
 >
   {#snippet more()}
     <DropdownMenu.Group>
       <DropdownMenu.Item
         onSelect={async () => {
-          await musicManager.queueRequest(
-            { type: "addAlbum", albumId: data.album.id },
-            { append: "back" },
-          );
+          // await musicManager.queueRequest(
+          //   { type: "addAlbum", albumId: data.album.id },
+          //   { append: "back" },
+          // );
         }}
       >
         <ListPlus />
@@ -97,10 +98,10 @@
         <Button
           variant="outline"
           onclick={async () => {
-            await musicManager.queueRequest(
-              { type: "addAlbum", albumId: data.album.id },
-              {},
-            );
+            // await musicManager.queueRequest(
+            //   { type: "addAlbum", albumId: data.album.id },
+            //   {},
+            // );
           }}
         >
           <Play />
@@ -129,9 +130,9 @@
   userPlaylists={data.userPlaylists}
   quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
-    await musicManager.queueRequest(
-      { type: "addAlbum", albumId: data.album.id },
-      { queueIndexToTrackId: trackId },
-    );
+    // await musicManager.queueRequest(
+    //   { type: "addAlbum", albumId: data.album.id },
+    //   { queueIndexToTrackId: trackId },
+    // );
   }}
 />

@@ -577,106 +577,6 @@
       ]
     },
     {
-      "name": "GetMedia",
-      "fields": [
-        {
-          "name": "items",
-          "type": "[]MediaItem",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetMediaCommonBody",
-      "fields": [
-        {
-          "name": "limit",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "GetMediaFromAlbumBody",
-      "fields": [
-        {
-          "name": "limit",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "GetMediaFromArtistBody",
-      "fields": [
-        {
-          "name": "limit",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "GetMediaFromFilterBody",
-      "fields": [
-        {
-          "name": "limit",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "filter",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetMediaFromIdsBody",
-      "fields": [
-        {
-          "name": "limit",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "omitEmpty": true
-        },
-        {
-          "name": "trackIds",
-          "type": "[]string",
-          "omitEmpty": false
-        },
-        {
-          "name": "keepOrder",
-          "type": "bool",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
       "name": "GetMediaSettings",
       "fields": [
         {
@@ -942,51 +842,6 @@
         {
           "name": "order",
           "type": "int",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "MediaItem",
-      "fields": [
-        {
-          "name": "trackId",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "artists",
-          "type": "[]MediaRef",
-          "omitEmpty": false
-        },
-        {
-          "name": "album",
-          "type": "MediaRef",
-          "omitEmpty": false
-        },
-        {
-          "name": "coverArt",
-          "type": "Images",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "MediaRef",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
           "omitEmpty": false
         }
       ]
@@ -1583,38 +1438,6 @@
       "method": "GET",
       "path": "/api/v1/auth/me",
       "response": "GetMe"
-    },
-    {
-      "type": "api",
-      "name": "GetMediaFromAlbum",
-      "method": "POST",
-      "path": "/api/v1/media/album/:albumId",
-      "response": "GetMedia",
-      "body": "GetMediaFromAlbumBody"
-    },
-    {
-      "type": "api",
-      "name": "GetMediaFromArtist",
-      "method": "POST",
-      "path": "/api/v1/media/artist/:artistId",
-      "response": "GetMedia",
-      "body": "GetMediaFromArtistBody"
-    },
-    {
-      "type": "api",
-      "name": "GetMediaFromFilter",
-      "method": "POST",
-      "path": "/api/v1/media/filter",
-      "response": "GetMedia",
-      "body": "GetMediaFromFilterBody"
-    },
-    {
-      "type": "api",
-      "name": "GetMediaFromIds",
-      "method": "POST",
-      "path": "/api/v1/media/ids",
-      "response": "GetMedia",
-      "body": "GetMediaFromIdsBody"
     },
     {
       "type": "api",

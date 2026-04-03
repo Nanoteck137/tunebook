@@ -9,16 +9,13 @@
     Play,
     SkipBack,
     SkipForward,
-    TestTube,
     Volume2,
     VolumeX,
   } from "lucide-svelte";
-  import { getMusicManager } from "$lib/music-manager.svelte";
+  import { getMusicManager, type MediaItem } from "$lib/music-manager.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
-  import type { MediaItem } from "$lib/api/types";
   import Image from "$lib/components/Image.svelte";
-  import { getApiClient, handleApiError } from "$lib";
-  import toast from "svelte-5-french-toast";
+  import { getApiClient } from "$lib";
 
   const musicManager = getMusicManager();
   const apiClient = getApiClient();
@@ -59,7 +56,7 @@
               <div class="group relative">
                 <Image
                   class="w-12 min-w-12"
-                  src={mediaItem?.coverArt.small}
+                  src={mediaItem?.coverArt}
                   alt="cover"
                 />
                 {#if i == musicManager.queue.index}
@@ -181,7 +178,7 @@
       <div class="flex items-center justify-center gap-2 align-middle">
         <Image
           class="w-12 min-w-12"
-          src={currentMediaItem?.coverArt.small}
+          src={currentMediaItem?.coverArt}
           alt="cover"
           loading="eager"
         />

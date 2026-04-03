@@ -1,10 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import LargePlayer from "$lib/components/audio/LargePlayer.svelte";
   import SmallPlayer from "$lib/components/audio/SmallPlayer.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
-  import { browser } from "$app/environment";
-  import type { MediaItem } from "$lib/api/types";
 
   const musicManager = getMusicManager();
 

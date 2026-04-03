@@ -17,95 +17,12 @@ import (
 	"github.com/nanoteck137/pyrin"
 )
 
-type MediaRef struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type MediaItem struct {
-	TrackId string `json:"trackId"`
-	Name    string `json:"name"`
-
-	Artists []MediaRef `json:"artists"`
-	Album   MediaRef   `json:"album"`
-
-	CoverArt types.Images `json:"coverArt"`
-}
-
-type GetMedia struct {
-	Items []MediaItem `json:"items"`
-}
-
-type GetMediaCommonBody struct {
-	Limit  int `json:"limit,omitempty"`
-	Offset int `json:"offset,omitempty"`
-}
-
-type GetMediaFromPlaylistBody struct {
-	GetMediaCommonBody
-
-	FilterId string `json:"filterId"`
-}
-
-type GetMediaFromTaglistBody struct {
-	GetMediaCommonBody
-}
-
-type GetMediaFromFilterBody struct {
-	GetMediaCommonBody
-
-	Filter string `json:"filter"`
-}
-
-type GetMediaFromArtistBody struct {
-	GetMediaCommonBody
-}
-
-type GetMediaFromAlbumBody struct {
-	GetMediaCommonBody
-}
-
-type GetMediaFromIdsBody struct {
-	GetMediaCommonBody
-
-	TrackIds  []string `json:"trackIds"`
-	KeepOrder bool     `json:"keepOrder,omitempty"`
-}
-
-func packMediaResult(c pyrin.Context, tracks []database.Track) (GetMedia, error) {
-	res := GetMedia{
-		Items: make([]MediaItem, len(tracks)),
-	}
-
-	for i, track := range tracks {
-		artists := make([]MediaRef, len(track.FeaturingArtists.Data)+1)
-
-		artists[0] = MediaRef{
-			Id:   track.ArtistId,
-			Name: track.ArtistName,
-		}
-
-		for i, v := range track.FeaturingArtists.Data {
-			artists[i+1] = MediaRef{
-				Id:   v.Id,
-				Name: v.Name,
-			}
-		}
-
-		res.Items[i] = MediaItem{
-			TrackId: track.Id,
-			Name:    track.Name,
-			Artists: artists,
-			Album: MediaRef{
-				Id:   track.AlbumId,
-				Name: track.AlbumName,
-			},
-			CoverArt: ConvertAlbumCoverURL(c, track.AlbumId),
-		}
-	}
-
-	return res, nil
-}
+// type GetMediaFromIdsBody struct {
+// 	GetMediaCommonBody
+//
+// 	TrackIds  []string `json:"trackIds"`
+// 	KeepOrder bool     `json:"keepOrder,omitempty"`
+// }
 
 type MediaFormat struct {
 	Name   string `json:"name"`
@@ -307,144 +224,44 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
-		pyrin.ApiHandler{
-			Name:         "GetMediaFromFilter",
-			Method:       http.MethodPost,
-			Path:         "/media/filter",
-			ResponseType: GetMedia{},
-			BodyType:     GetMediaFromFilterBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				panic("TODO")
-				// ctx := context.TODO()
-				//
-				// body, err := pyrin.Body[GetMediaFromFilterBody](c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-
-				// tracks, err := app.DB().GetAllTracks(ctx, body.Filter, "")
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// return packMediaResult(c, tracks)
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetMediaFromArtist",
-			Method:       http.MethodPost,
-			Path:         "/media/artist/:artistId",
-			ResponseType: GetMedia{},
-			BodyType:     GetMediaFromArtistBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				artistId := c.Param("artistId")
-
-				ctx := context.TODO()
-
-				// body, err := pyrin.Body[GetMediaFromArtistBody](c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-
-				artist, err := app.DB().GetArtistById(ctx, artistId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, ArtistNotFound()
-					}
-
-					return nil, err
-				}
-
-				subquery := database.ArtistTrackSubquery(artist.Id)
-				tracks, err := app.DB().GetTracksIn(ctx, subquery, "")
-				if err != nil {
-					return nil, err
-				}
-
-				return packMediaResult(c, tracks)
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetMediaFromAlbum",
-			Method:       http.MethodPost,
-			Path:         "/media/album/:albumId",
-			ResponseType: GetMedia{},
-			BodyType:     GetMediaFromAlbumBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				albumId := c.Param("albumId")
-
-				ctx := context.TODO()
-
-				// body, err := pyrin.Body[GetMediaFromAlbumBody](c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-
-				album, err := app.DB().GetAlbumById(ctx, albumId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AlbumNotFound()
-					}
-
-					return nil, err
-				}
-
-				// sort := body.Sort
-				// if sort == "" {
-				// 	sort = "sort=number,name"
-				// }
-
-				subquery := database.AlbumTrackSubquery(album.Id)
-				tracks, err := app.DB().GetTracksIn(ctx, subquery, "")
-				if err != nil {
-					return nil, err
-				}
-
-				return packMediaResult(c, tracks)
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetMediaFromIds",
-			Method:       http.MethodPost,
-			Path:         "/media/ids",
-			ResponseType: GetMedia{},
-			BodyType:     GetMediaFromIdsBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.TODO()
-
-				body, err := pyrin.Body[GetMediaFromIdsBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				tracks, err := app.DB().GetTracksIn(ctx, body.TrackIds, "")
-				if err != nil {
-					return nil, err
-				}
-
-				if body.KeepOrder {
-					trackMap := make(map[string]database.Track)
-					for _, t := range tracks {
-						trackMap[t.Id] = t
-					}
-
-					tracks = make([]database.Track, 0, len(body.TrackIds))
-					for _, v := range body.TrackIds {
-						track, exists := trackMap[v]
-						if !exists {
-							continue
-						}
-
-						tracks = append(tracks, track)
-					}
-				}
-
-				return packMediaResult(c, tracks)
-			},
-		},
+		// pyrin.ApiHandler{
+		// 	Name:         "GetMediaFromIds",
+		// 	Method:       http.MethodPost,
+		// 	Path:         "/media/ids",
+		// 	ResponseType: GetMedia{},
+		// 	BodyType:     GetMediaFromIdsBody{},
+		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
+		// 		ctx := context.TODO()
+		//
+		// 		body, err := pyrin.Body[GetMediaFromIdsBody](c)
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		//
+		// 		tracks, err := app.DB().GetTracksIn(ctx, body.TrackIds, "")
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		//
+		// 		if body.KeepOrder {
+		// 			trackMap := make(map[string]database.Track)
+		// 			for _, t := range tracks {
+		// 				trackMap[t.Id] = t
+		// 			}
+		//
+		// 			tracks = make([]database.Track, 0, len(body.TrackIds))
+		// 			for _, v := range body.TrackIds {
+		// 				track, exists := trackMap[v]
+		// 				if !exists {
+		// 					continue
+		// 				}
+		//
+		// 				tracks = append(tracks, track)
+		// 			}
+		// 		}
+		//
+		// 		return packMediaResult(c, tracks)
+		// 	},
+		// },
 	)
 }

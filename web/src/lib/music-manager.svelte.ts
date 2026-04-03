@@ -1,7 +1,19 @@
 /* eslint-disable no-unused-vars */
 import type { ApiClient } from "$lib/api/client";
-import type { MediaItem } from "$lib/api/types";
 import { getContext, setContext } from "svelte";
+
+export type MediaRef = {
+  id: string;
+  name: string;
+};
+
+export type MediaItem = {
+  trackId: string;
+  name: string;
+  album: MediaRef;
+  artists: MediaRef[];
+  coverArt: string;
+};
 
 type SavedQueue = {
   items: string[];
@@ -303,6 +315,7 @@ export class MusicManager {
   }
 
   async addTracks(params: { clear?: boolean; trackId?: string }) {
+    /*
     if (params.clear) {
       await this.clearQueue(false);
     }
@@ -316,6 +329,46 @@ export class MusicManager {
     }
 
     this.queue.items.push(...res.data.items);
+    if (params.trackId) {
+      this.queue.index = this.queue.items.findIndex(
+        (item) => item.trackId == params.trackId,
+      );
+    } else {
+      this.queue.index = 0;
+    }
+    this.queueUpdate();
+
+    this.play();
+    */
+  }
+
+  async addAlbumTracks(params: {
+    albumId: string;
+    clear?: boolean;
+    trackId?: string;
+  }) {
+    if (params.clear) {
+      await this.clearQueue(false);
+    }
+
+    const res = await this.apiClient.getAlbumTracks(params.albumId);
+    if (!res.success) {
+      console.log("error getting media", res.error);
+      return;
+    }
+
+    const items: MediaItem[] = res.data.tracks.map(
+      (t) =>
+        ({
+          trackId: t.id,
+          name: t.name,
+          album: { id: t.albumId, name: t.albumName },
+          artists: t.artists.map((a) => ({ id: a.id, name: a.name })),
+          coverArt: t.coverArt.small,
+        }) as MediaItem,
+    );
+
+    this.queue.items.push(...items);
     if (params.trackId) {
       this.queue.index = this.queue.items.findIndex(
         (item) => item.trackId == params.trackId,
