@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"slices"
+	"sync"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/probe"
@@ -122,6 +123,8 @@ type MediaService struct {
 	// quality specs set
 	QualityMapping map[types.MediaFormat]QualitySpec
 	DeviceSpecs    map[Device]DeviceSpec
+
+	transcodeLocks sync.Map
 }
 
 func NewMediaService(
@@ -166,10 +169,13 @@ type MediaStreamOptions struct {
 
 // TODO(patrik): Rename, ProcessTrackStream
 func (s *MediaService) GetTrackStream(
-	trackId string, 
+	trackId string,
 	opts MediaStreamOptions,
 ) (string, error) {
-	// TODO(patrik): Add a lock
+	lock, _ := s.transcodeLocks.LoadOrStore(trackId, &sync.Mutex{})
+	mu := lock.(*sync.Mutex)
+	mu.Lock()
+	defer mu.Unlock()
 
 	if opts.Policy == PolicyEmpty {
 		opts.Policy = PolicyOriginal
