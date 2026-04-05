@@ -15,16 +15,14 @@
   } from "@nanoteck137/nano-ui";
   import { Pencil, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
-  import NewFilterModal from "./NewFilterModal.svelte";
   import EditPlaylistModal from "./EditPlaylistModal.svelte";
-  import FilterButton from "./FilterButton.svelte";
   import UploadPlaylistCoverModal from "./UploadPlaylistCoverModal.svelte";
 
   const { data } = $props();
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   const musicManager = getMusicManager();
   const apiClient = getApiClient();
 
-  let openNewFilterModal = $state(false);
   let openConfirmDeleteAlbum = $state(false);
   let openEditPlaylistModal = $state(false);
   let openUploadCoverModal = $state(false);
@@ -57,14 +55,6 @@
 
 <Button
   onclick={async () => {
-    openNewFilterModal = true;
-  }}
->
-  New Virtual Playlist
-</Button>
-
-<Button
-  onclick={async () => {
     openEditPlaylistModal = true;
   }}
 >
@@ -85,11 +75,11 @@
   name={data.playlist.name}
   image={data.playlist.coverArt.medium}
   onPlay={async (shuffle) => {
-    const filterId = $page.url.searchParams.get("filterId") ?? "";
-    await musicManager.queueRequest(
-      { type: "addPlaylist", playlistId: data.playlist.id, filterId },
-      { shuffle },
-    );
+    // const filterId = $page.url.searchParams.get("filterId") ?? "";
+    // await musicManager.queueRequest(
+    //   { type: "addPlaylist", playlistId: data.playlist.id, filterId },
+    //   { shuffle },
+    // );
   }}
 >
   {#snippet more()}
@@ -113,12 +103,6 @@
 
 <Spacer size="md" />
 
-{#each data.filters as filter}
-  <FilterButton {filter} />
-{/each}
-
-<Spacer size="md" />
-
 <TrackList
   displayOrder
   totalTracks={data.page.totalItems}
@@ -126,10 +110,10 @@
   userPlaylists={data.userPlaylists}
   quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
-    await musicManager.queueRequest(
-      { type: "addPlaylist", playlistId: data.playlist.id },
-      { queueIndexToTrackId: trackId },
-    );
+    // await musicManager.queueRequest(
+    //   { type: "addPlaylist", playlistId: data.playlist.id },
+    //   { queueIndexToTrackId: trackId },
+    // );
   }}
   onReorder={async (items, anchor) => {
     const res = await apiClient.reorderPlaylistItems(data.playlist.id, {
@@ -188,8 +172,6 @@
     </Pagination.Content>
   {/snippet}
 </Pagination.Root>
-
-<NewFilterModal bind:open={openNewFilterModal} playlistId={data.playlist.id} />
 
 <ConfirmModal
   bind:open={openConfirmDeleteAlbum}

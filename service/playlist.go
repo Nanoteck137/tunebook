@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -365,15 +364,13 @@ func (s *PlaylistService) GetPlaylistItems(
 	}
 
 	if params.FilterId != "" {
-		filter, err := s.db.GetPlaylistFilterById(
-			ctx, params.FilterId, playlist.Id,
-		)
+		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err != nil {
 			if errors.Is(err, database.ErrItemNotFound) {
 				return nil, types.Page{}, ErrPlaylistServiceFilterNotFound
 			}
 
-			return nil, types.Page{}, playlistErr.Wrap("get items: get filter", err)
+			return nil, types.Page{}, playlistErr.Wrap("get items: db get filter", err)
 		}
 
 		params.Filter.Filter = filter.Filter
@@ -620,145 +617,6 @@ func (s *PlaylistService) ReorderPlaylistItems(
 	err = tx.Commit()
 	if err != nil {
 		return playlistErr.Wrap("reorder items: db commit", err)
-	}
-
-	return nil
-}
-
-type GetPlaylistFiltersParams struct {
-	PlaylistId string
-	UserId     string
-}
-
-func (s *PlaylistService) GetPlaylistFilters(
-	ctx context.Context,
-	params GetPlaylistFiltersParams,
-) ([]database.PlaylistFilter, error) {
-	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
-		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	filters, err := s.db.GetPlaylistFiltersByPlaylistId(ctx, playlist.Id)
-	if err != nil {
-		return nil, playlistErr.Wrap("get filters: db get", err)
-	}
-
-	return filters, nil
-}
-
-func (s *PlaylistService) testFilter(filterStr string) error {
-	// TODO(patrik): Change to PlaylistResolverAdapter when that exists
-	return database.TestFilter(filterStr, &adapter.TrackResolverAdapter{})
-}
-
-type CreatePlaylistFilterParams struct {
-	PlaylistId string
-	UserId     string
-
-	Name   string
-	Filter string
-}
-
-func (s *PlaylistService) CreatePlaylistFilter(
-	ctx context.Context,
-	params CreatePlaylistFilterParams,
-) (string, error) {
-	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
-		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	err = s.checkOwnership(playlist, params.UserId)
-	if err != nil {
-		return "", err
-	}
-
-	err = s.testFilter(params.Filter)
-	if err != nil {
-		return "", playlistErr.Wrap("create filter: test filter", err)
-	}
-
-	filterId, err := s.db.CreatePlaylistFilter(
-		ctx,
-		database.CreatePlaylistFilterParams{
-			PlaylistId: playlist.Id,
-			Name:       params.Name,
-			Filter:     params.Filter,
-		},
-	)
-	if err != nil {
-		return "", playlistErr.Wrap("create filter: db create", err)
-	}
-
-	return filterId, nil
-}
-
-type EditPlaylistFilterParams struct {
-	PlaylistId string
-	UserId     string
-	FilterId   string
-
-	Name   *string
-	Filter *string
-}
-
-func (s *PlaylistService) EditPlaylistFilter(
-	ctx context.Context,
-	params EditPlaylistFilterParams,
-) error {
-	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
-		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = s.checkOwnership(playlist, params.UserId)
-	if err != nil {
-		return err
-	}
-
-	filter, err := s.db.GetPlaylistFilterById(ctx, params.FilterId, playlist.Id)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return ErrPlaylistServiceFilterNotFound
-		}
-
-		return err
-	}
-
-	changes := database.PlaylistFilterChanges{}
-
-	if params.Name != nil {
-		changes.Name = types.Change[string]{
-			Value:   *params.Name,
-			Changed: *params.Name != filter.Name,
-		}
-	}
-
-	if params.Filter != nil {
-		err := s.testFilter(*params.Filter)
-		if err != nil {
-			return playlistErr.Wrap("edit filter: test filter", err)
-		}
-
-		changes.Filter = types.Change[string]{
-			Value:   *params.Filter,
-			Changed: *params.Filter != filter.Filter,
-		}
-	}
-
-	err = s.db.UpdatePlaylistFilter(ctx, filter.Id, playlist.Id, changes)
-	if err != nil {
-		return playlistErr.Wrap("edit filter: db update", err)
 	}
 
 	return nil

@@ -245,14 +245,14 @@ export class MusicManager {
     }
 
     console.log("SENDING EVENT");
-    const res = await this.apiClient.addTrackEvent(this.currentItem.trackId, {
-      position: this.currentTime,
-      source: "web-player",
-    });
-    if (!res.success) {
-      console.log("failed to add track event", res.error);
-      return;
-    }
+    // const res = await this.apiClient.addTrackEvent(this.currentItem.trackId, {
+    //   position: this.currentTime,
+    //   source: "web-player",
+    // });
+    // if (!res.success) {
+    //   console.log("failed to add track event", res.error);
+    //   return;
+    // }
 
     this.trackEventSent = true;
   }

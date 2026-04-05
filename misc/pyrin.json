@@ -12,46 +12,6 @@
       ]
     },
     {
-      "name": "AddPlaylistFilter",
-      "fields": [
-        {
-          "name": "filterId",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "AddPlaylistFilterBody",
-      "fields": [
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "filter",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "AddTrackEventBody",
-      "fields": [
-        {
-          "name": "position",
-          "type": "float",
-          "omitEmpty": false
-        },
-        {
-          "name": "source",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "Album",
       "fields": [
         {
@@ -427,21 +387,6 @@
       ]
     },
     {
-      "name": "EditPlaylistFilterBody",
-      "fields": [
-        {
-          "name": "name",
-          "type": "*string",
-          "omitEmpty": true
-        },
-        {
-          "name": "filter",
-          "type": "*string",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
       "name": "GetAlbumById",
       "fields": [
         {
@@ -637,16 +582,6 @@
         {
           "name": "updated",
           "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetPlaylistFilters",
-      "fields": [
-        {
-          "name": "filters",
-          "type": "[]PlaylistFilter",
           "omitEmpty": false
         }
       ]
@@ -922,41 +857,6 @@
       ]
     },
     {
-      "name": "PlaylistFilter",
-      "fields": [
-        {
-          "name": "filterId",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "playlistId",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "filter",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "created",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "updated",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "RemovePlaylistItemBody",
       "fields": [
         {
@@ -1216,13 +1116,6 @@
       "body": "AddItemToPlaylistBody"
     },
     {
-      "type": "api",
-      "name": "AddTrackEvent",
-      "method": "POST",
-      "path": "/api/v1/media/event/track/:trackId",
-      "body": "AddTrackEventBody"
-    },
-    {
       "type": "normal",
       "name": "AuthCallback",
       "method": "GET",
@@ -1307,14 +1200,6 @@
     },
     {
       "type": "api",
-      "name": "CreatePlaylistFilter",
-      "method": "POST",
-      "path": "/api/v1/playlists/:playlistId/filters",
-      "response": "AddPlaylistFilter",
-      "body": "AddPlaylistFilterBody"
-    },
-    {
-      "type": "api",
       "name": "CreateTrackFilter",
       "method": "POST",
       "path": "/api/v1/me/filters/tracks",
@@ -1344,13 +1229,6 @@
       "method": "PATCH",
       "path": "/api/v1/playlists/:playlistId",
       "body": "EditPlaylistBody"
-    },
-    {
-      "type": "api",
-      "name": "EditPlaylistFilter",
-      "method": "PATCH",
-      "path": "/api/v1/playlists/:playlistId/filters/:filterId",
-      "body": "EditPlaylistFilterBody"
     },
     {
       "type": "api",
@@ -1452,13 +1330,6 @@
       "method": "GET",
       "path": "/api/v1/playlists/:playlistId",
       "response": "GetPlaylistById"
-    },
-    {
-      "type": "api",
-      "name": "GetPlaylistFilters",
-      "method": "GET",
-      "path": "/api/v1/playlists/:playlistId/filters",
-      "response": "GetPlaylistFilters"
     },
     {
       "type": "normal",

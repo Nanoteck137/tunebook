@@ -69,22 +69,7 @@ func (b CreatePlaylistBody) Validate() error {
 	)
 }
 
-type PostPlaylistFilterBody struct {
-	Name   string `json:"name"`
-	Filter string `json:"filter"`
-}
-
-func (b *PostPlaylistFilterBody) Transform() {
-	b.Name = anvil.String(b.Name)
-	b.Filter = anvil.String(b.Filter)
-}
-
-func (b PostPlaylistFilterBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Name, validate.Required),
-	)
-}
-
+// TODO(patrik): Change
 type GetPlaylistById struct {
 	Playlist
 }
@@ -100,52 +85,6 @@ type AddItemToPlaylistBody struct {
 
 type RemovePlaylistItemBody struct {
 	TrackId string `json:"trackId"`
-}
-
-type PlaylistFilter struct {
-	FilterId   string `json:"filterId"`
-	PlaylistId string `json:"playlistId"`
-
-	Name   string `json:"name"`
-	Filter string `json:"filter"`
-
-	Created string `json:"created"`
-	Updated string `json:"updated"`
-}
-
-type GetPlaylistFilters struct {
-	Filters []PlaylistFilter `json:"filters"`
-}
-
-type AddPlaylistFilter struct {
-	FilterId string `json:"filterId"`
-}
-
-type AddPlaylistFilterBody struct {
-	Name   string `json:"name"`
-	Filter string `json:"filter"`
-}
-
-func (b *AddPlaylistFilterBody) Transform() {
-	b.Name = anvil.String(b.Name)
-	b.Filter = anvil.String(b.Filter)
-}
-
-func (b AddPlaylistFilterBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Name, validate.Required),
-		validate.Field(&b.Filter, validate.Required, validateFilter),
-	)
-}
-
-type EditPlaylistFilterBody struct {
-	Name   *string `json:"name,omitempty"`
-	Filter *string `json:"filter,omitempty"`
-}
-
-func (b *EditPlaylistFilterBody) Transform() {
-	b.Name = anvil.StringPtr(b.Name)
-	b.Filter = anvil.StringPtr(b.Filter)
 }
 
 func testPlaylistItemFilter(val string) error {
@@ -165,14 +104,6 @@ var validateFilter = validate.By(func(value any) error {
 	}
 
 })
-
-func (b EditPlaylistFilterBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
-
-		validate.Field(&b.Filter, validate.Required.When(b.Filter != nil), validateFilter),
-	)
-}
 
 type EditPlaylistBody struct {
 	Name *string `json:"name,omitempty"`
@@ -213,7 +144,7 @@ func handlePlaylistServiceErrors(err error) error {
 		// TODO(patrik): Replace with its own error
 		return TrackNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceFilterNotFound):
-		return PlaylistFilterNotFound()
+		return FilterNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceAnchorTrackNotFound):
 		// TODO(patrik): Replace with its own error
 		return TrackNotFound()
@@ -601,120 +532,6 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 						TrackIds:      body.TrackIds,
 					},
 				)
-				if err != nil {
-					return nil, handlePlaylistServiceErrors(err)
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetPlaylistFilters",
-			Method:       http.MethodGet,
-			Path:         "/playlists/:playlistId/filters",
-			ResponseType: GetPlaylistFilters{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.Background()
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				filters, err := app.PlaylistService().GetPlaylistFilters(
-					ctx,
-					service.GetPlaylistFiltersParams{
-						PlaylistId: c.Param("playlistId"),
-						UserId:     user.Id,
-					},
-				)
-				if err != nil {
-					return nil, handlePlaylistServiceErrors(err)
-				}
-
-				res := GetPlaylistFilters{
-					Filters: make([]PlaylistFilter, len(filters)),
-				}
-
-				for i, filter := range filters {
-					res.Filters[i] = PlaylistFilter{
-						FilterId:   filter.Id,
-						PlaylistId: filter.PlaylistId,
-						Name:       filter.Name,
-						Filter:     filter.Filter,
-						Created:    formatTime(filter.Created),
-						Updated:    formatTime(filter.Updated),
-					}
-				}
-
-				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "CreatePlaylistFilter",
-			Method:       http.MethodPost,
-			Path:         "/playlists/:playlistId/filters",
-			ResponseType: AddPlaylistFilter{},
-			BodyType:     AddPlaylistFilterBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[AddPlaylistFilterBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.Background()
-
-				filterId, err := app.PlaylistService().CreatePlaylistFilter(
-					ctx,
-					service.CreatePlaylistFilterParams{
-						PlaylistId: c.Param("playlistId"),
-						UserId:     user.Id,
-						Name:       body.Name,
-						Filter:     body.Filter,
-					},
-				)
-				if err != nil {
-					return nil, handlePlaylistServiceErrors(err)
-				}
-
-				return AddPlaylistFilter{
-					FilterId: filterId,
-				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:     "EditPlaylistFilter",
-			Method:   http.MethodPatch,
-			Path:     "/playlists/:playlistId/filters/:filterId",
-			BodyType: EditPlaylistFilterBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[EditPlaylistFilterBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.Background()
-
-				err = app.PlaylistService().EditPlaylistFilter(ctx, service.EditPlaylistFilterParams{
-					PlaylistId: c.Param("playlistId"),
-					UserId:     user.Id,
-					FilterId:   c.Param("filterId"),
-					Name:       body.Name,
-					Filter:     body.Filter,
-				})
 				if err != nil {
 					return nil, handlePlaylistServiceErrors(err)
 				}

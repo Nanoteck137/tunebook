@@ -18,22 +18,6 @@ func (c *Client) AddItemToPlaylist(playlistId string, body AddItemToPlaylistBody
 	return Request[any](data, body)
 }
 
-func (c *Client) AddTrackEvent(trackId string, body AddTrackEventBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/event/track/%v", trackId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
 
 func (c *Client) AuthClaimQuickConnectCode(body AuthClaimQuickConnectCodeBody, options Options) (*any, error) {
 	path := "/api/v1/auth/quick-connect/claim"
@@ -195,22 +179,6 @@ func (c *Client) CreatePlaylist(body CreatePlaylistBody, options Options) (*Crea
 	return Request[CreatePlaylist](data, body)
 }
 
-func (c *Client) CreatePlaylistFilter(playlistId string, body AddPlaylistFilterBody, options Options) (*AddPlaylistFilter, error) {
-	path := Sprintf("/api/v1/playlists/%v/filters", playlistId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[AddPlaylistFilter](data, body)
-}
-
 func (c *Client) CreateTrackFilter(body CreateTrackFilterBody, options Options) (*any, error) {
 	path := "/api/v1/me/filters/tracks"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -277,22 +245,6 @@ func (c *Client) DeleteTrackFilter(filterId string, options Options) (*any, erro
 
 func (c *Client) EditPlaylist(playlistId string, body EditPlaylistBody, options Options) (*any, error) {
 	path := Sprintf("/api/v1/playlists/%v", playlistId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) EditPlaylistFilter(playlistId string, filterId string, body EditPlaylistFilterBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/playlists/%v/filters/%v", playlistId, filterId)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -515,22 +467,6 @@ func (c *Client) GetPlaylistById(playlistId string, options Options) (*GetPlayli
 		Headers: options.Header,
 	}
 	return Request[GetPlaylistById](data, nil)
-}
-
-func (c *Client) GetPlaylistFilters(playlistId string, options Options) (*GetPlaylistFilters, error) {
-	path := Sprintf("/api/v1/playlists/%v/filters", playlistId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetPlaylistFilters](data, nil)
 }
 
 
@@ -894,11 +830,6 @@ func (c *ClientUrls) AddItemToPlaylist(playlistId string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) AddTrackEvent(trackId string) (*URL, error) {
-	path := Sprintf("/api/v1/media/event/track/%v", trackId)
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) AuthCallback() (*URL, error) {
 	path := "/api/v1/auth/providers/callback"
 	return c.getUrl(path)
@@ -954,11 +885,6 @@ func (c *ClientUrls) CreatePlaylist() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) CreatePlaylistFilter(playlistId string) (*URL, error) {
-	path := Sprintf("/api/v1/playlists/%v/filters", playlistId)
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) CreateTrackFilter() (*URL, error) {
 	path := "/api/v1/me/filters/tracks"
 	return c.getUrl(path)
@@ -981,11 +907,6 @@ func (c *ClientUrls) DeleteTrackFilter(filterId string) (*URL, error) {
 
 func (c *ClientUrls) EditPlaylist(playlistId string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v", playlistId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditPlaylistFilter(playlistId string, filterId string) (*URL, error) {
-	path := Sprintf("/api/v1/playlists/%v/filters/%v", playlistId, filterId)
 	return c.getUrl(path)
 }
 
@@ -1061,11 +982,6 @@ func (c *ClientUrls) GetMediaSettings() (*URL, error) {
 
 func (c *ClientUrls) GetPlaylistById(playlistId string) (*URL, error) {
 	path := Sprintf("/api/v1/playlists/%v", playlistId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetPlaylistFilters(playlistId string) (*URL, error) {
-	path := Sprintf("/api/v1/playlists/%v/filters", playlistId)
 	return c.getUrl(path)
 }
 

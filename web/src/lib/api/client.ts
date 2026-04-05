@@ -15,10 +15,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  addTrackEvent(trackId: string, body: api.AddTrackEventBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/event/track/${trackId}`, "POST", z.undefined(), z.any(), body, options)
-  }
-  
   
   authClaimQuickConnectCode(body: api.AuthClaimQuickConnectCodeBody, options?: ExtraOptions) {
     return this.request("/api/v1/auth/quick-connect/claim", "POST", z.undefined(), z.any(), body, options)
@@ -60,10 +56,6 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/playlists", "POST", api.CreatePlaylist, z.any(), body, options)
   }
   
-  createPlaylistFilter(playlistId: string, body: api.AddPlaylistFilterBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${playlistId}/filters`, "POST", api.AddPlaylistFilter, z.any(), body, options)
-  }
-  
   createTrackFilter(body: api.CreateTrackFilterBody, options?: ExtraOptions) {
     return this.request("/api/v1/me/filters/tracks", "POST", z.undefined(), z.any(), body, options)
   }
@@ -82,10 +74,6 @@ export class ApiClient extends BaseApiClient {
   
   editPlaylist(playlistId: string, body: api.EditPlaylistBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
-  editPlaylistFilter(playlistId: string, filterId: string, body: api.EditPlaylistFilterBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${playlistId}/filters/${filterId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   favoriteTrack(trackId: string, options?: ExtraOptions) {
@@ -140,10 +128,6 @@ export class ApiClient extends BaseApiClient {
   
   getPlaylistById(playlistId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
-  }
-  
-  getPlaylistFilters(playlistId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${playlistId}/filters`, "GET", api.GetPlaylistFilters, z.any(), undefined, options)
   }
   
   
@@ -250,10 +234,6 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
-  addTrackEvent(trackId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/event/track/${trackId}`)
-  }
-  
   authCallback() {
     return createUrl(this.baseUrl, "/api/v1/auth/providers/callback")
   }
@@ -298,10 +278,6 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/playlists")
   }
   
-  createPlaylistFilter(playlistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters`)
-  }
-  
   createTrackFilter() {
     return createUrl(this.baseUrl, "/api/v1/me/filters/tracks")
   }
@@ -320,10 +296,6 @@ export class ClientUrls {
   
   editPlaylist(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
-  }
-  
-  editPlaylistFilter(playlistId: string, filterId: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters/${filterId}`)
   }
   
   favoriteTrack(trackId: string) {
@@ -384,10 +356,6 @@ export class ClientUrls {
   
   getPlaylistById(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
-  }
-  
-  getPlaylistFilters(playlistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/filters`)
   }
   
   getPlaylistImage(playlistId: string, image: string) {

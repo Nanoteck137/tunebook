@@ -7,28 +7,6 @@ type AddItemToPlaylistBody struct {
 	TrackId string `json:"trackId"`
 }
 
-// Name: AddPlaylistFilter
-type AddPlaylistFilter struct {
-	// Name: AddPlaylistFilter.filterId
-	FilterId string `json:"filterId"`
-}
-
-// Name: AddPlaylistFilterBody
-type AddPlaylistFilterBody struct {
-	// Name: AddPlaylistFilterBody.name
-	Name string `json:"name"`
-	// Name: AddPlaylistFilterBody.filter
-	Filter string `json:"filter"`
-}
-
-// Name: AddTrackEventBody
-type AddTrackEventBody struct {
-	// Name: AddTrackEventBody.position
-	Position float32 `json:"position"`
-	// Name: AddTrackEventBody.source
-	Source string `json:"source"`
-}
-
 // Name: Images
 type Images struct {
 	// Name: Images.original
@@ -237,14 +215,6 @@ type EditPlaylistBody struct {
 	CoverUrl *string `json:"coverUrl,omitempty"`
 }
 
-// Name: EditPlaylistFilterBody
-type EditPlaylistFilterBody struct {
-	// Name: EditPlaylistFilterBody.name
-	Name *string `json:"name,omitempty"`
-	// Name: EditPlaylistFilterBody.filter
-	Filter *string `json:"filter,omitempty"`
-}
-
 // Name: GetAlbumById
 type GetAlbumById struct {
 	// Name: GetAlbumById.album
@@ -417,28 +387,6 @@ type GetPlaylistById struct {
 	Created string `json:"created"`
 	// Name: GetPlaylistById.updated
 	Updated string `json:"updated"`
-}
-
-// Name: PlaylistFilter
-type PlaylistFilter struct {
-	// Name: PlaylistFilter.filterId
-	FilterId string `json:"filterId"`
-	// Name: PlaylistFilter.playlistId
-	PlaylistId string `json:"playlistId"`
-	// Name: PlaylistFilter.name
-	Name string `json:"name"`
-	// Name: PlaylistFilter.filter
-	Filter string `json:"filter"`
-	// Name: PlaylistFilter.created
-	Created string `json:"created"`
-	// Name: PlaylistFilter.updated
-	Updated string `json:"updated"`
-}
-
-// Name: GetPlaylistFilters
-type GetPlaylistFilters struct {
-	// Name: GetPlaylistFilters.filters
-	Filters []PlaylistFilter `json:"filters"`
 }
 
 // Name: GetPlaylistItems

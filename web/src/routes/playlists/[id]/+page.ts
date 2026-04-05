@@ -10,13 +10,6 @@ export const load: PageLoad = async ({ parent, params, url }) => {
     throw error(playlist.error.code, { message: playlist.error.message });
   }
 
-  const filters = await data.apiClient.getPlaylistFilters(params.id);
-  if (!filters.success) {
-    throw error(filters.error.code, {
-      message: filters.error.message,
-    });
-  }
-
   // TODO(patrik): Change getPagedQueryOptions?
   const query = getPagedQueryOptions(url.searchParams);
   const filterId = url.searchParams.get("filterId");
@@ -34,7 +27,6 @@ export const load: PageLoad = async ({ parent, params, url }) => {
   return {
     ...data,
     playlist: playlist.data,
-    filters: filters.data.filters,
     page: items.data.page,
     items: items.data.items,
   };
