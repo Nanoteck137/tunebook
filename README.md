@@ -17,8 +17,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
-
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
 - [ ] Frontend: Design: Re-design the album items on /albums
