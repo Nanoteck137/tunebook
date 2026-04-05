@@ -26,6 +26,8 @@ export const load: LayoutLoad = async ({ url }) => {
     if (!res.success) {
       console.error("Get Me API Error", res.error.message);
       user = null;
+
+      throw error(res.error.code, { message: res.error.message });
     } else {
       user = res.data;
     }
