@@ -19,13 +19,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 
 - [ ] Backend: Fix: Maybe remove playlist_filters and replace with the global filters?
 
-- [ ] Backend: Feature: Year over year
-
-- [ ] Backend: Cleanup: Image Service: Code Cleanup
-- [ ] Backend: Cleanup: Library Service: Code Cleanup
-- [ ] Backend: Cleanup: Auth Service: Code Cleanup
-- [ ] Backend: Cleanup: Media Service: Code Cleanup
-
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
 - [ ] Frontend: Design: Re-design the album items on /albums
@@ -48,9 +41,17 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: cancel() on forms on api errors, this makes sure that the form is not reset when error occurs
 
+- [ ] Backend: Cleanup: Image Service: Code Cleanup
+- [ ] Backend: Cleanup: Library Service: Code Cleanup
+- [ ] Backend: Cleanup: Auth Service: Code Cleanup
+- [ ] Backend: Cleanup: Media Service: Code Cleanup
+
 - [ ] Backend: Database: Use database indexes
 
 ## Future
+
+- [ ] Backend: Feature: User History
+- [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Cleanup: Database: Database code
 
@@ -77,4 +78,20 @@ CREATE TABLE user_listening_stats (
 
     PRIMARY KEY (user_id, track_id, period)
 );
+
+
+CREATE TABLE user_listening_events (
+    id          TEXT PRIMARY KEY,
+
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    track_id    TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+
+    listened_at INTEGER NOT NULL,
+    percent REAL NOT NULL,
+    position_ms INTEGER NOT NULL, 
+    source TEXT NOT NULL
+);
+
+-- CREATE INDEX idx_listen_events_user_time ON listen_events(user_id, listened_at);
+-- CREATE INDEX idx_listen_events_track ON listen_events(track_id);
 ```

@@ -1,20 +1,16 @@
 package apis
 
 import (
-	"context"
 	"errors"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
-	"time"
 
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
-	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin"
 )
 
 // type GetMediaFromIdsBody struct {
@@ -119,55 +115,55 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
-		pyrin.ApiHandler{
-			Name:         "AddTrackEvent",
-			Method:       http.MethodPost,
-			Path:         "/media/event/track/:trackId",
-			ResponseType: nil,
-			BodyType:     AddTrackEventBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				trackId := c.Param("trackId")
-
-				body, err := pyrin.Body[AddTrackEventBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.Background()
-
-				user, err := User(app, c)
-				if err != nil {
-					// NOTE(patrik): This is expected behavior
-					return nil, nil
-				}
-
-				track, err := app.DB().GetTrackById(ctx, trackId)
-				if err != nil {
-					// TODO(patrik): Handle error
-					return nil, err
-				}
-
-				percent := math.Min(body.Position/float64(track.Duration), 1.0)
-				percent = math.Round(percent*100) / 100
-
-				_, err = app.DB().CreateUserListeningEvent(
-					ctx,
-					database.CreateUserListeningEventParams{
-						UserId:     user.Id,
-						TrackId:    track.Id,
-						ListenedAt: time.Now().UnixMilli(),
-						Percent:    percent,
-						PositionMs: int64(body.Position * 1000),
-						Source:     body.Source,
-					},
-				)
-				if err != nil {
-					return nil, err
-				}
-
-				return nil, nil
-			},
-		},
+		// pyrin.ApiHandler{
+		// 	Name:         "AddTrackEvent",
+		// 	Method:       http.MethodPost,
+		// 	Path:         "/media/event/track/:trackId",
+		// 	ResponseType: nil,
+		// 	BodyType:     AddTrackEventBody{},
+		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
+		// 		trackId := c.Param("trackId")
+		//
+		// 		body, err := pyrin.Body[AddTrackEventBody](c)
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		//
+		// 		ctx := context.Background()
+		//
+		// 		user, err := User(app, c)
+		// 		if err != nil {
+		// 			// NOTE(patrik): This is expected behavior
+		// 			return nil, nil
+		// 		}
+		//
+		// 		track, err := app.DB().GetTrackById(ctx, trackId)
+		// 		if err != nil {
+		// 			// TODO(patrik): Handle error
+		// 			return nil, err
+		// 		}
+		//
+		// 		percent := math.Min(body.Position/float64(track.Duration), 1.0)
+		// 		percent = math.Round(percent*100) / 100
+		//
+		// 		_, err = app.DB().CreateUserListeningEvent(
+		// 			ctx,
+		// 			database.CreateUserListeningEventParams{
+		// 				UserId:     user.Id,
+		// 				TrackId:    track.Id,
+		// 				ListenedAt: time.Now().UnixMilli(),
+		// 				Percent:    percent,
+		// 				PositionMs: int64(body.Position * 1000),
+		// 				Source:     body.Source,
+		// 			},
+		// 		)
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+		//
+		// 		return nil, nil
+		// 	},
+		// },
 
 		pyrin.ApiHandler{
 			Name:         "GetMediaSettings",
