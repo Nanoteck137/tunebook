@@ -17,7 +17,7 @@
   import Link from "$lib/components/Link.svelte";
   import { browser } from "$app/environment";
   import { fade, fly } from "svelte/transition";
-  import { Button, buttonVariants } from "@nanoteck137/nano-ui";
+  import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
   import toast, { Toaster } from "svelte-5-french-toast";
   import { handleApiError, setApiClientRaw } from "$lib";
   import { setMusicManager } from "$lib/music-manager.svelte";
@@ -116,6 +116,50 @@
       <Button href="/search" size="icon" variant="ghost">
         <Search />
       </Button>
+
+      {#if data.user}
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <img
+              class="w-8 rounded-full"
+              src={data.user.picture.small}
+              alt=""
+            />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content class="w-56" align="end">
+            <DropdownMenu.Group>
+              <DropdownMenu.GroupHeading>
+                {data.user.displayName}
+              </DropdownMenu.GroupHeading>
+
+              <DropdownMenu.Separator />
+
+              <DropdownMenu.Item
+                onSelect={() => {
+                  if (!data.user) return;
+
+                  goto(`/users/${data.user.id}`);
+                }}
+              >
+                <User />
+                Account
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Separator />
+
+              <DropdownMenu.Item
+                onSelect={() => {
+                  localStorage.removeItem("token");
+                  goto("/", { invalidateAll: true });
+                }}
+              >
+                <LogOut />
+                Logout
+              </DropdownMenu.Item>
+            </DropdownMenu.Group>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      {/if}
     </div>
   </div>
 </header>
