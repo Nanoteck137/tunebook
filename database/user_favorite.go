@@ -73,8 +73,7 @@ func (db DB) GetUserFavoriteTracks(
 			goqu.On(goqu.I("user_favorites.track_id").Eq(goqu.I("tracks.id"))),
 		)
 
-	// TODO(patrik): Replace with custom
-	a := adapter.PlaylistTrackResolverAdapter{}
+	a := adapter.UserFavoriteTrackResolverAdapter{}
 	query, err = applyFilterParamsCustom(
 		params.Filter,
 		&a,
