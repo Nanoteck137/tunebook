@@ -125,7 +125,7 @@
 
 <TrackList
   isAlbumShowcase={true}
-  totalTracks={0}
+  totalTracks={data.tracks.length}
   tracks={data.tracks}
   userPlaylists={data.userPlaylists}
   quickPlaylist={data.user?.quickPlaylist}
