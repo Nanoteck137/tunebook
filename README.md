@@ -17,6 +17,8 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] Backend: Fix: Quick Playlist Get ids
+
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
 - [ ] Frontend: Design: Re-design the player UI
 - [ ] Frontend: Design: Re-design the album items on /albums
@@ -24,7 +26,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Frontend: Design: Re-design /users/:id
 - [ ] Frontend: Feature: Lazy load the quick playlist menu
 - [ ] Frontend: Feature: Add showPlaylistModal
-- [ ] Frontend: Design: Home Page
 - [ ] Frontend: Design: Re-design the track list component
 - [ ] Frontend: Feature: Design: Album filtering
 - [ ] Frontend: Feature: Design: Artist filtering
