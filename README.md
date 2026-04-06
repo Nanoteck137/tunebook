@@ -31,11 +31,9 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Frontend: Feature: Design: Artist filtering
 - [ ] Frontend: Feature: Design: Track filtering
 - [ ] Frontend: Feature: Design: Playlist Filtering/Sorting
-- [ ] Frontend: Fix: Album track count
 - [ ] Frontend: Fix: Form errors is hard to see
 - [ ] Frontend: Fix: Handle api errors in a clean way
 - [ ] Frontend: Fix: Music Manager
-- [ ] Frontend: Fix: Small Audio player 
 
 - [ ] Frontend: Cleanup: Modal forms 
 - [ ] Frontend: Fix: cancel() on forms on api errors, this makes sure that the form is not reset when error occurs
