@@ -25,6 +25,7 @@
   import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
   import { setFavorites } from "$lib/favorites.svelte";
+  import { isRoleAdmin } from "$lib/utils.js";
 
   let { children, data } = $props();
 
@@ -144,6 +145,17 @@
                 <User />
                 Account
               </DropdownMenu.Item>
+
+              {#if isRoleAdmin(data.user.role)}
+                <DropdownMenu.Item
+                  onSelect={() => {
+                    goto(`/server`);
+                  }}
+                >
+                  <Server />
+                  Server
+                </DropdownMenu.Item>
+              {/if}
 
               <DropdownMenu.Separator />
 
