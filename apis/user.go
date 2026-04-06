@@ -340,7 +340,9 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				//
 				// // TODO(patrik): Better error
 				// return nil, errors.New("No Quick Playlist set")
-				return nil, nil
+				return GetQuickPlaylistIds{
+					Ids: []string{},
+				}, nil
 			},
 		},
 

@@ -40,13 +40,13 @@ class QuickPlaylist {
       }
     }
 
-    const ids = await this.apiClient.getUserQuickPlaylistItemIds();
+    const ids = await this.apiClient.getQuickPlaylistIds();
     if (!ids.success) {
       handleApiError(ids.error);
       return;
     }
 
-    this.ids = ids.data.trackIds;
+    this.ids = ids.data.ids;
   }
 
   hasTrack(trackId: string) {
