@@ -1,6 +1,11 @@
 <script lang="ts">
   import Spinner from "$lib/components/Spinner.svelte";
-  import { Button } from "@nanoteck137/nano-ui";
+  import AlbumSkeletonTile from "$lib/components/tiles/AlbumSkeletonTile.svelte";
+  import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
+  import PlaylistSkeletonTile from "$lib/components/tiles/PlaylistSkeletonTile.svelte";
+  import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
+  import TrackTile from "$lib/components/tiles/TrackTile.svelte";
+  import { Button, Separator } from "@nanoteck137/nano-ui";
 
   let { data } = $props();
 </script>
@@ -33,53 +38,58 @@
     <Button size="lg" href="/login">Login</Button>
   </div>
 {:else}
-  <div class="flex flex-col gap-8 p-4">
-    <div class="flex items-center gap-4">
+  <div class="flex flex-col gap-8">
+    <div class="flex flex-col items-center gap-4 border-b pb-4">
+      <a
+        class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text px-8 text-2xl font-medium text-transparent"
+        href="/"
+      >
+        Tunebook
+      </a>
+
+      <h1 class="text-center text-2xl font-bold">
+        Welcome, {data.user.displayName}!
+      </h1>
+    </div>
+
+    <!-- <div class="flex items-center gap-4">
       <a
         class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-2xl font-medium text-transparent"
         href="/"
       >
         Tunebook
       </a>
+
       <span class="text-xl font-bold">|</span>
+
       <h1 class="text-2xl font-bold">
-        Welcome{`, ${data.user.displayName}`}!
+        Welcome, {data.user.displayName}!
       </h1>
-    </div>
+    </div> -->
 
     <section>
       <a
-        class="mb-4 text-xl font-semibold hover:cursor-pointer hover:underline"
+        class="text-xl font-semibold hover:cursor-pointer hover:underline"
         href="/playlists"
       >
         Your Playlists
       </a>
 
-      <div class="flex gap-2 overflow-x-auto pb-2">
+      <div class="h-4"></div>
+
+      <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.playlists}
-          <Spinner />
+          {#each Array(5) as _i}
+            <PlaylistSkeletonTile />
+          {/each}
         {:then playlists}
           {#each playlists as playlist}
-            <div class="flex shrink-0 flex-col items-center">
-              <a
-                href="/playlists/{playlist.id}"
-                class="group w-40 cursor-pointer"
-              >
-                <img
-                  class="aspect-square w-40 rounded-lg object-cover"
-                  src={playlist.coverArt.medium}
-                  alt=""
-                />
-                <div
-                  class="mt-2 w-40 truncate text-sm font-medium group-hover:underline"
-                >
-                  {playlist.name}
-                </div>
-                <div class="mt-1 text-xs text-muted-foreground">
-                  {playlist.trackCount} tracks
-                </div>
-              </a>
-            </div>
+            <PlaylistTile
+              id={playlist.id}
+              cover={playlist.coverArt.medium}
+              name={playlist.name}
+              trackCount={playlist.trackCount}
+            />
           {:else}
             <p>No Playlists</p>
           {/each}
@@ -89,69 +99,53 @@
 
     <section>
       <a
-        class="mb-4 text-xl font-semibold hover:cursor-pointer hover:underline"
+        class="text-xl font-semibold hover:cursor-pointer hover:underline"
         href="/users/{data.user.id}/favorites"
       >
         Favorites
       </a>
-      <div class="flex gap-2 overflow-x-auto pb-2">
+
+      <div class="h-4"></div>
+
+      <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.favorites}
           <Spinner />
         {:then favorites}
           {#each favorites as track}
-            <div class="group flex shrink-0 flex-col items-center">
-              <a href="/tracks" class="w-40 cursor-pointer">
-                <img
-                  class="aspect-square w-40 rounded-lg object-cover"
-                  src={track.coverArt.medium}
-                  alt=""
-                />
-                <div
-                  class="mt-2 w-40 truncate text-sm font-medium group-hover:underline"
-                >
-                  {track.name}
-                </div>
-              </a>
-
-              <a
-                href="/artists/{track.artists[0].id}"
-                class="mt-1 w-40 truncate text-xs text-muted-foreground hover:underline"
-              >
-                {track.artists[0].name}
-              </a>
-            </div>
+            <TrackTile
+              id={track.id}
+              cover={track.coverArt.medium}
+              name={track.name}
+              artists={track.artists}
+            />
           {/each}
         {/await}
       </div>
     </section>
 
     <section>
-      <h2 class="mb-4 text-xl font-semibold">Recently Added Albums</h2>
-      <div class="flex gap-2 overflow-x-auto pb-2">
+      <a
+        class="text-xl font-semibold hover:cursor-pointer hover:underline"
+        href="/albums"
+      >
+        Recently Added Albums
+      </a>
+
+      <div class="h-4"></div>
+
+      <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.recentAlbums}
-          <Spinner />
+          {#each Array(5) as _i}
+            <AlbumSkeletonTile />
+          {/each}
         {:then albums}
           {#each albums as album}
-            <div class="group flex shrink-0 flex-col items-center">
-              <a href="/albums/{album.id}" class="w-40 cursor-pointer">
-                <img
-                  class="aspect-square w-40 rounded-lg object-cover"
-                  src={album.coverArt.medium}
-                  alt=""
-                />
-                <div
-                  class="mt-2 w-40 truncate text-sm font-medium group-hover:underline"
-                >
-                  {album.name}
-                </div>
-              </a>
-              <a
-                href="/artists/{album.artists[0].id}"
-                class="mt-1 w-40 truncate text-xs text-muted-foreground hover:underline"
-              >
-                {album.artists[0].name}
-              </a>
-            </div>
+            <AlbumTile
+              id={album.id}
+              cover={album.coverArt.medium}
+              name={album.name}
+              artists={album.artists}
+            />
           {/each}
         {/await}
       </div>

@@ -1,7 +1,10 @@
 import type { ApiClient } from "$lib/api/client";
+import { sleep } from "$lib/utils";
 import type { PageLoad } from "./$types";
 
 async function getPlaylists(apiClient: ApiClient) {
+  await sleep(4000);
+
   const res = await apiClient.getPlaylists();
   if (!res.success) {
     return [];
@@ -11,6 +14,8 @@ async function getPlaylists(apiClient: ApiClient) {
 }
 
 async function getRecentAlbums(apiClient: ApiClient) {
+  await sleep(10000);
+
   const res = await apiClient.getAlbums({
     query: { sort: "sort=-created", perPage: "10" },
   });

@@ -73,3 +73,7 @@ export function convertValue<T>(val: CheckedValue<T>): T | undefined {
 
   return undefined;
 }
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
