@@ -21,6 +21,7 @@
     onclick={() => {
       favorites.toggleTrack(trackId);
     }}
+    title="Favorite"
   >
     {#if favorites.hasTrack(trackId)}
       <Heart class="fill-primary" />

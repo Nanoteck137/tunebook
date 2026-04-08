@@ -4,6 +4,7 @@
   import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
   import PlaylistSkeletonTile from "$lib/components/tiles/PlaylistSkeletonTile.svelte";
   import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
+  import TrackSkeletonTile from "$lib/components/tiles/TrackSkeletonTile.svelte";
   import TrackTile from "$lib/components/tiles/TrackTile.svelte";
   import { Button, Separator } from "@nanoteck137/nano-ui";
 
@@ -109,7 +110,9 @@
 
       <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.favorites}
-          <Spinner />
+          {#each Array(5) as _i}
+            <TrackSkeletonTile />
+          {/each}
         {:then favorites}
           {#each favorites as track}
             <TrackTile
@@ -126,7 +129,7 @@
     <section>
       <a
         class="text-xl font-semibold hover:cursor-pointer hover:underline"
-        href="/albums"
+        href="/albums?sort=created-new"
       >
         Recently Added Albums
       </a>

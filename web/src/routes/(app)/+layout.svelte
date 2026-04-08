@@ -35,15 +35,10 @@
 
   let favorites = setFavorites(apiClient, data.favoriteIds);
 
-  let quickPlaylist = setQuickPlaylist(
-    apiClient,
-    data.user?.quickPlaylist ?? "",
-    data.quickPlaylistIds,
-  );
+  let quickPlaylist = setQuickPlaylist(apiClient);
 
   $effect(() => {
-    quickPlaylist.playlistId = data.user?.quickPlaylist ?? "";
-    quickPlaylist.ids = data.quickPlaylistIds;
+    quickPlaylist.setPlaylistId(data.user?.quickPlaylist ?? null);
   });
 
   $effect(() => {
@@ -176,7 +171,7 @@
   </div>
 </header>
 
-<main class="container py-4">
+<main class="container py-8">
   {@render children()}
 </main>
 

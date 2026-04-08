@@ -26,7 +26,7 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 
   return {
     ...data,
-    playlist: playlist.data,
+    playlist: playlist.data.playlist,
     page: items.data.page,
     items: items.data.items,
   };

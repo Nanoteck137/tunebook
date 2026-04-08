@@ -27,6 +27,8 @@ async function getRecentAlbums(apiClient: ApiClient) {
 }
 
 async function getFavorites(apiClient: ApiClient, userId?: string) {
+  await sleep(4000);
+
   if (!userId) return [];
 
   const res = await apiClient.getUserTrackFavorites(userId, {

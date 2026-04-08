@@ -1,27 +1,59 @@
 import { handleApiError } from "$lib";
 import type { ApiClient } from "$lib/api/client";
+import type { Playlist } from "$lib/api/types";
 import { getContext, setContext } from "svelte";
 import toast from "svelte-5-french-toast";
 
 class QuickPlaylist {
   apiClient: ApiClient;
-  playlistId = $state<string>("");
+  playlist = $state<Playlist | null>(null);
   ids = $state<string[]>([]);
 
-  constructor(apiClient: ApiClient, playlistId: string, ids: string[]) {
+  constructor(apiClient: ApiClient) {
     this.apiClient = apiClient;
-    this.playlistId = playlistId;
-    this.ids = ids;
+  }
+
+  async setPlaylistId(playlistId: string | null) {
+    if (playlistId === null) {
+      this.playlist = null;
+      return;
+    }
+
+    const res = await this.apiClient.getPlaylistById(playlistId);
+    if (!res.success) {
+      // TODO(patrik): Handle error
+      handleApiError(res.error);
+      return;
+    }
+
+    this.playlist = res.data.playlist;
+
+    await this.fetchIds();
+  }
+
+  async fetchIds() {
+    if (this.playlist === null) {
+      this.ids = [];
+      return;
+    }
+
+    const ids = await this.apiClient.getPlaylistItemIds(this.playlist.id);
+    if (!ids.success) {
+      handleApiError(ids.error);
+      return;
+    }
+
+    this.ids = ids.data.ids;
   }
 
   async toggleTrack(trackId: string) {
-    if (this.playlistId === "") {
-      toast.error("No playlist id set for quick playlist");
+    if (this.playlist === null) {
+      toast.error("No playlist set for quick playlist");
       return;
     }
 
     if (this.hasTrack(trackId)) {
-      const res = await this.apiClient.removePlaylistItem(this.playlistId, {
+      const res = await this.apiClient.removePlaylistItem(this.playlist.id, {
         trackId: trackId,
       });
 
@@ -30,7 +62,7 @@ class QuickPlaylist {
         return;
       }
     } else {
-      const res = await this.apiClient.addItemToPlaylist(this.playlistId, {
+      const res = await this.apiClient.addItemToPlaylist(this.playlist.id, {
         trackId: trackId,
       });
 
@@ -40,13 +72,7 @@ class QuickPlaylist {
       }
     }
 
-    const ids = await this.apiClient.getQuickPlaylistIds();
-    if (!ids.success) {
-      handleApiError(ids.error);
-      return;
-    }
-
-    this.ids = ids.data.ids;
+    await this.fetchIds();
   }
 
   hasTrack(trackId: string) {
@@ -56,15 +82,8 @@ class QuickPlaylist {
 
 const QUICK_PLAYLIST_KEY = Symbol("QUICK_PLAYLIST");
 
-export function setQuickPlaylist(
-  apiClient: ApiClient,
-  playlistId: string,
-  ids: string[],
-) {
-  return setContext(
-    QUICK_PLAYLIST_KEY,
-    new QuickPlaylist(apiClient, playlistId, ids),
-  );
+export function setQuickPlaylist(apiClient: ApiClient) {
+  return setContext(QUICK_PLAYLIST_KEY, new QuickPlaylist(apiClient));
 }
 
 export function getQuickPlaylist() {

@@ -48,15 +48,6 @@ export function isRoleAdmin(role: string) {
 
 export function getPagedQueryOptions(searchParams: URLSearchParams) {
   const query: Record<string, string> = {};
-  const filter = searchParams.get("filter");
-  if (filter) {
-    query["filter"] = filter;
-  }
-
-  const sort = searchParams.get("sort");
-  if (sort) {
-    query["sort"] = sort;
-  }
 
   const page = searchParams.get("page");
   if (page) {

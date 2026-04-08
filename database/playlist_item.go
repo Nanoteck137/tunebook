@@ -147,6 +147,26 @@ func (db DB) GetPlaylistTracks(
 	return items, page, nil
 }
 
+type GetPlaylistItemIdsParams struct {
+	PlaylistId string
+}
+
+func (db DB) GetPlaylistItemIds(
+	ctx context.Context,
+	params GetPlaylistItemIdsParams,
+) ([]string, error) {
+	query := dialect.From("playlist_items").
+		Select("playlist_items.track_id").
+		Where(goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
+
+	items, err := ember.Multiple[string](db.db, ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 type CreatePlaylistItemParams struct {
 	PlaylistId string
 	TrackId    string

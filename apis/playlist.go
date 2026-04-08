@@ -69,9 +69,8 @@ func (b CreatePlaylistBody) Validate() error {
 	)
 }
 
-// TODO(patrik): Change
 type GetPlaylistById struct {
-	Playlist
+	Playlist Playlist `json:"playlist"`
 }
 
 type GetPlaylistItems struct {
@@ -129,6 +128,10 @@ type ReorderPlaylistItemsBody struct {
 	Before        bool     `json:"before"`
 	AnchorTrackId string   `json:"anchorTrackId"`
 	TrackIds      []string `json:"trackIds"`
+}
+
+type GetPlaylistItemIds struct {
+	Ids []string `json:"ids"`
 }
 
 // TODO(patrik): Handle filter errors
@@ -201,18 +204,12 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			ResponseType: GetPlaylistById{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
 				ctx := c.Request().Context()
 
 				playlist, err := app.PlaylistService().GetPlaylistById(
 					ctx,
 					service.GetPlaylistByIdParams{
 						PlaylistId: c.Param("playlistId"),
-						UserId:     user.Id,
 					},
 				)
 				if err != nil {
@@ -401,11 +398,6 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
 				pageParams := getPageParams(q, 100)
 				filterParams := getFilterParams(q)
 
@@ -413,7 +405,6 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					ctx,
 					service.GetPlaylistItemsParams{
 						PlaylistId: c.Param("playlistId"),
-						UserId:     user.Id,
 						Page:       pageParams,
 						Filter:     filterParams,
 						FilterId:   q.Get("filterId"),
@@ -430,6 +421,36 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 
 				for i, track := range tracks {
 					res.Items[i] = ConvertDBTrack(c, track.Track)
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetPlaylistItemIds",
+			Path:         "/playlists/:playlistId/ids",
+			Method:       http.MethodGet,
+			ResponseType: GetPlaylistItemIds{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				ids, err := app.PlaylistService().GetPlaylistItemIds(
+					ctx,
+					service.GetPlaylistItemIdsParams{
+						PlaylistId: c.Param("playlistId"),
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
+				}
+
+				res := GetPlaylistItemIds{
+					Ids: []string{},
+				}
+
+				if ids != nil {
+					res.Ids = ids
 				}
 
 				return res, nil

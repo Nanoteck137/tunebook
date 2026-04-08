@@ -3,28 +3,34 @@ package apis
 import (
 	"net/http"
 
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/service"
-	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 type SearchArtists struct {
-	Artists []Artist `json:"artists"`
+	Page    types.Page `json:"page"`
+	Artists []Artist   `json:"artists"`
 }
 
 type SearchAlbums struct {
-	Albums []Album `json:"albums"`
+	Page   types.Page `json:"page"`
+	Albums []Album    `json:"albums"`
 }
 
 type SearchTracks struct {
-	Tracks []Track `json:"tracks"`
+	Page   types.Page `json:"page"`
+	Tracks []Track    `json:"tracks"`
 }
 
 type SearchPlaylists struct {
+	Page      types.Page `json:"page"`
 	Playlists []Playlist `json:"playlists"`
 }
 
 type SearchUsers struct {
+	Page  types.Page `json:"page"`
 	Users []UserData `json:"users"`
 }
 
@@ -40,11 +46,12 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				artists, err := app.SearchService().SearchArtists(
+				pageParams := getPageParams(q, 5)
+				artists, page, err := app.SearchService().SearchArtists(
 					ctx,
 					service.SearchParams{
 						Query: q.Get("query"),
-						Limit: 5,
+						Page:  pageParams,
 					},
 				)
 				if err != nil {
@@ -52,6 +59,7 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 				}
 
 				res := SearchArtists{
+					Page:    page,
 					Artists: make([]Artist, len(artists)),
 				}
 
@@ -73,11 +81,13 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				albums, err := app.SearchService().SearchAlbums(
+				pageParams := getPageParams(q, 5)
+				albums, page, err := app.SearchService().SearchAlbums(
 					ctx,
 					service.SearchParams{
 						Query: q.Get("query"),
-						Limit: 5,
+						Page:  pageParams,
+						Filter: "year = 2008",
 					},
 				)
 				if err != nil {
@@ -85,6 +95,7 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 				}
 
 				res := SearchAlbums{
+					Page:   page,
 					Albums: make([]Album, len(albums)),
 				}
 
@@ -106,11 +117,12 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				tracks, err := app.SearchService().SearchTracks(
+				pageParams := getPageParams(q, 5)
+				tracks, page, err := app.SearchService().SearchTracks(
 					ctx,
 					service.SearchParams{
 						Query: q.Get("query"),
-						Limit: 5,
+						Page:  pageParams,
 					},
 				)
 				if err != nil {
@@ -118,6 +130,7 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 				}
 
 				res := SearchTracks{
+					Page:   page,
 					Tracks: make([]Track, len(tracks)),
 				}
 
@@ -139,11 +152,12 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				playlists, err := app.SearchService().SearchPlaylists(
+				pageParams := getPageParams(q, 5)
+				playlists, page, err := app.SearchService().SearchPlaylists(
 					ctx,
 					service.SearchParams{
 						Query: q.Get("query"),
-						Limit: 5,
+						Page:  pageParams,
 					},
 				)
 				if err != nil {
@@ -151,6 +165,7 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 				}
 
 				res := SearchPlaylists{
+					Page:      page,
 					Playlists: make([]Playlist, len(playlists)),
 				}
 
@@ -172,11 +187,12 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				users, err := app.SearchService().SearchUsers(
+				pageParams := getPageParams(q, 5)
+				users, page, err := app.SearchService().SearchUsers(
 					ctx,
 					service.SearchParams{
 						Query: q.Get("query"),
-						Limit: 5,
+						Page:  pageParams,
 					},
 				)
 				if err != nil {
@@ -184,6 +200,7 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 				}
 
 				res := SearchUsers{
+					Page:  page,
 					Users: make([]UserData, len(users)),
 				}
 

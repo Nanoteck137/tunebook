@@ -28,5 +28,5 @@
     </div>
   </a>
 
-  <ArtistList class="justify-start text-muted-foreground" {artists} />
+  <ArtistList class="w-40 justify-start text-muted-foreground" {artists} />
 </div>

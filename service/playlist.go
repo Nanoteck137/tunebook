@@ -78,8 +78,6 @@ func (s *PlaylistService) checkOwnership(playlist database.Playlist, userId stri
 
 type GetPlaylistByIdParams struct {
 	PlaylistId string
-	// TODO(patrik): Remove
-	UserId string
 }
 
 func (s *PlaylistService) GetPlaylistById(
@@ -131,8 +129,7 @@ func (s *PlaylistService) EditPlaylist(
 	params EditPlaylistParams,
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
-		PlaylistId: params.PlaylistId + "test",
-		UserId:     params.UserId,
+		PlaylistId: params.PlaylistId,
 	})
 	if err != nil {
 		return playlistErr.Wrap("edit: get playlist", err)
@@ -200,7 +197,6 @@ func (s *PlaylistService) DeletePlaylist(
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
 	})
 	if err != nil {
 		return err
@@ -243,7 +239,6 @@ func (s *PlaylistService) UploadPlaylistImage(
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
 	})
 	if err != nil {
 		return err
@@ -298,7 +293,6 @@ func (s *PlaylistService) GeneratePlaylistImage(
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
 	})
 	if err != nil {
 		return err
@@ -343,7 +337,6 @@ func (s *PlaylistService) GeneratePlaylistImage(
 
 type GetPlaylistItemsParams struct {
 	PlaylistId string
-	UserId     string
 
 	Page   types.PageParams
 	Filter types.FilterParams
@@ -357,7 +350,6 @@ func (s *PlaylistService) GetPlaylistItems(
 ) ([]database.PlaylistItemTrack, types.Page, error) {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
 	})
 	if err != nil {
 		return nil, types.Page{}, err
@@ -395,6 +387,34 @@ func (s *PlaylistService) GetPlaylistItems(
 	return tracks, page, nil
 }
 
+type GetPlaylistItemIdsParams struct {
+	PlaylistId string
+}
+
+func (s *PlaylistService) GetPlaylistItemIds(
+	ctx context.Context,
+	params GetPlaylistItemIdsParams,
+) ([]string, error) {
+	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
+		PlaylistId: params.PlaylistId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ids, err := s.db.GetPlaylistItemIds(
+		ctx,
+		database.GetPlaylistItemIdsParams{
+			PlaylistId: playlist.Id,
+		},
+	)
+	if err != nil {
+		return nil, playlistErr.Wrap("get item ids: db get", err)
+	}
+
+	return ids, nil
+}
+
 type AddItemToPlaylistParams struct {
 	PlaylistId string
 	UserId     string
@@ -408,7 +428,6 @@ func (s *PlaylistService) AddItemToPlaylist(
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
 	})
 	if err != nil {
 		return err
@@ -464,7 +483,6 @@ func (s *PlaylistService) RemovePlaylistItem(
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
 	})
 	if err != nil {
 		return err
@@ -523,7 +541,6 @@ func (s *PlaylistService) ReorderPlaylistItems(
 ) error {
 	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
 		PlaylistId: params.PlaylistId,
-		UserId:     params.UserId,
 	})
 	if err != nil {
 		return err

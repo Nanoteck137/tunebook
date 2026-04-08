@@ -131,6 +131,10 @@ export class ApiClient extends BaseApiClient {
   }
   
   
+  getPlaylistItemIds(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/ids`, "GET", api.GetPlaylistItemIds, z.any(), undefined, options)
+  }
+  
   getPlaylistItems(playlistId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "GET", api.GetPlaylistItems, z.any(), undefined, options)
   }
@@ -360,6 +364,10 @@ export class ClientUrls {
   
   getPlaylistImage(playlistId: string, image: string) {
     return createUrl(this.baseUrl, `/files/playlists/images/${playlistId}/${image}`)
+  }
+  
+  getPlaylistItemIds(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/ids`)
   }
   
   getPlaylistItems(playlistId: string) {

@@ -126,7 +126,7 @@
 
           {#if selectedTracks.length <= 0}
             <FavoriteButton show trackId={track.id} />
-            <QuickAddButton show={!!quickPlaylist} trackId={track.id} />
+            <QuickAddButton trackId={track.id} />
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger

@@ -540,48 +540,18 @@
       "name": "GetPlaylistById",
       "fields": [
         {
-          "name": "id",
-          "type": "string",
+          "name": "playlist",
+          "type": "Playlist",
           "omitEmpty": false
-        },
+        }
+      ]
+    },
+    {
+      "name": "GetPlaylistItemIds",
+      "fields": [
         {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "coverArt",
-          "type": "Images",
-          "omitEmpty": false
-        },
-        {
-          "name": "ownerId",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "ownerDisplayName",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "ownerPicture",
-          "type": "Images",
-          "omitEmpty": false
-        },
-        {
-          "name": "trackCount",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "created",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "updated",
-          "type": "string",
+          "name": "ids",
+          "type": "[]string",
           "omitEmpty": false
         }
       ]
@@ -890,6 +860,11 @@
       "name": "SearchAlbums",
       "fields": [
         {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
           "name": "albums",
           "type": "[]Album",
           "omitEmpty": false
@@ -899,6 +874,11 @@
     {
       "name": "SearchArtists",
       "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
         {
           "name": "artists",
           "type": "[]Artist",
@@ -910,6 +890,11 @@
       "name": "SearchPlaylists",
       "fields": [
         {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
           "name": "playlists",
           "type": "[]Playlist",
           "omitEmpty": false
@@ -920,6 +905,11 @@
       "name": "SearchTracks",
       "fields": [
         {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
           "name": "tracks",
           "type": "[]Track",
           "omitEmpty": false
@@ -929,6 +919,11 @@
     {
       "name": "SearchUsers",
       "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
         {
           "name": "users",
           "type": "[]UserData",
@@ -1336,6 +1331,13 @@
       "name": "GetPlaylistImage",
       "method": "GET",
       "path": "/files/playlists/images/:playlistId/:image"
+    },
+    {
+      "type": "api",
+      "name": "GetPlaylistItemIds",
+      "method": "GET",
+      "path": "/api/v1/playlists/:playlistId/ids",
+      "response": "GetPlaylistItemIds"
     },
     {
       "type": "api",

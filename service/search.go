@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/kr/pretty"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
@@ -174,6 +175,8 @@ func (s *SearchService) recreateIndex(
 		return fmt.Errorf("recreate index: update settings: %w", err)
 	}
 
+	pretty.Println(settingsTask)
+
 	err = s.waitForTask(ctx, settingsTask.TaskUID)
 	if err != nil {
 		return fmt.Errorf("recreate index: update settings wait: %w", err)
@@ -226,6 +229,7 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		index: "albums",
 		settings: &meilisearch.Settings{
 			SearchableAttributes: []string{"name", "artists", "tags"},
+			SortableAttributes:   []string{"name", "year"},
 			FilterableAttributes: []string{"id", "name", "year", "artists", "tags"},
 		},
 		delete: true,
@@ -235,6 +239,10 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 	}
 
 	index := s.client.Index(albumIndex)
+
+	settings, err := index.GetSettings()
+	pretty.Println(err)
+	pretty.Println(settings)
 
 	err = indexInBatches[SearchAlbum, database.Album](
 		ctx,
@@ -435,17 +443,19 @@ func (s *SearchService) Index(ctx context.Context) error {
 }
 
 type SearchParams struct {
-	Query string
-	Limit int
+	Query  string
+	Page   types.PageParams
+	Filter string
+	Sort   []string
 }
 
 func (s *SearchService) SearchArtists(
 	ctx context.Context,
 	params SearchParams,
-) ([]database.Artist, error) {
+) ([]database.Artist, types.Page, error) {
 	index := s.client.Index(artistIndex)
 
-	artists, err := search[SearchArtist, database.Artist](
+	artists, page, err := search[SearchArtist, database.Artist](
 		ctx,
 		index,
 		params,
@@ -457,19 +467,19 @@ func (s *SearchService) SearchArtists(
 		},
 	)
 	if err != nil {
-		return nil, searchErr.Wrap("search artists", err)
+		return nil, types.Page{}, searchErr.Wrap("search artists", err)
 	}
 
-	return artists, nil
+	return artists, page, nil
 }
 
 func (s *SearchService) SearchAlbums(
 	ctx context.Context,
 	params SearchParams,
-) ([]database.Album, error) {
+) ([]database.Album, types.Page, error) {
 	index := s.client.Index(albumIndex)
 
-	albums, err := search[SearchAlbum, database.Album](
+	albums, page, err := search[SearchAlbum, database.Album](
 		ctx,
 		index,
 		params,
@@ -481,19 +491,19 @@ func (s *SearchService) SearchAlbums(
 		},
 	)
 	if err != nil {
-		return nil, searchErr.Wrap("search albums", err)
+		return nil, types.Page{}, searchErr.Wrap("search albums", err)
 	}
 
-	return albums, nil
+	return albums, page, nil
 }
 
 func (s *SearchService) SearchTracks(
 	ctx context.Context,
 	params SearchParams,
-) ([]database.Track, error) {
+) ([]database.Track, types.Page, error) {
 	index := s.client.Index(trackIndex)
 
-	tracks, err := search[SearchTrack, database.Track](
+	tracks, page, err := search[SearchTrack, database.Track](
 		ctx,
 		index,
 		params,
@@ -505,23 +515,23 @@ func (s *SearchService) SearchTracks(
 		},
 	)
 	if err != nil {
-		return nil, searchErr.Wrap("search tracks", err)
+		return nil, types.Page{}, searchErr.Wrap("search tracks", err)
 	}
 
 	for i := range tracks {
-		tracks[i].Order = utils.IntPtr(i)
+		tracks[i].Order = utils.IntPtr((i + 1) + (page.Page * page.PerPage))
 	}
 
-	return tracks, nil
+	return tracks, page, nil
 }
 
 func (s *SearchService) SearchPlaylists(
 	ctx context.Context,
 	params SearchParams,
-) ([]database.Playlist, error) {
+) ([]database.Playlist, types.Page, error) {
 	index := s.client.Index(playlistIndex)
 
-	playlists, err := search[SearchPlaylist, database.Playlist](
+	playlists, page, err := search[SearchPlaylist, database.Playlist](
 		ctx,
 		index,
 		params,
@@ -533,19 +543,19 @@ func (s *SearchService) SearchPlaylists(
 		},
 	)
 	if err != nil {
-		return nil, searchErr.Wrap("search playlists", err)
+		return nil, types.Page{}, searchErr.Wrap("search playlists", err)
 	}
 
-	return playlists, nil
+	return playlists, page, nil
 }
 
 func (s *SearchService) SearchUsers(
 	ctx context.Context,
 	params SearchParams,
-) ([]database.User, error) {
+) ([]database.User, types.Page, error) {
 	index := s.client.Index(userIndex)
 
-	users, err := search[SearchUser, database.User](
+	users, page, err := search[SearchUser, database.User](
 		ctx,
 		index,
 		params,
@@ -557,10 +567,10 @@ func (s *SearchService) SearchUsers(
 		},
 	)
 	if err != nil {
-		return nil, searchErr.Wrap("search users", err)
+		return nil, types.Page{}, searchErr.Wrap("search users", err)
 	}
 
-	return users, nil
+	return users, page, nil
 }
 
 func search[TDoc hasID, TResult any](
@@ -569,25 +579,37 @@ func search[TDoc hasID, TResult any](
 	params SearchParams,
 	fetch func(ctx context.Context, ids []string) ([]TResult, error),
 	getID func(TResult) string,
-) ([]TResult, error) {
+) ([]TResult, types.Page, error) {
 	searchResult, err := index.SearchWithContext(
 		ctx,
 		params.Query,
 		&meilisearch.SearchRequest{
-			Limit: int64(params.Limit),
+			Limit:  int64(params.Page.PerPage),
+			Offset: int64(params.Page.Page * params.Page.PerPage),
+			Filter: params.Filter,
+			Sort:   params.Sort,
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("search: %w", err)
+		return nil, types.Page{}, fmt.Errorf("search: %w", err)
+	}
+
+	totalItems := int(searchResult.EstimatedTotalHits)
+
+	page := types.Page{
+		Page:       params.Page.Page,
+		PerPage:    params.Page.PerPage,
+		TotalItems: totalItems,
+		TotalPages: utils.TotalPages(params.Page.PerPage, totalItems),
 	}
 
 	var hits []TDoc
 	if err := searchResult.Hits.DecodeInto(&hits); err != nil {
-		return nil, fmt.Errorf("decode hits: %w", err)
+		return nil, types.Page{}, fmt.Errorf("decode hits: %w", err)
 	}
 
 	if len(hits) == 0 {
-		return []TResult{}, nil
+		return []TResult{}, page, nil
 	}
 
 	ids := make([]string, len(hits))
@@ -597,7 +619,7 @@ func search[TDoc hasID, TResult any](
 
 	results, err := fetch(ctx, ids)
 	if err != nil {
-		return nil, fmt.Errorf("fetch results: %w", err)
+		return nil, types.Page{}, fmt.Errorf("fetch results: %w", err)
 	}
 
 	mapped := make(map[string]TResult, len(results))
@@ -614,7 +636,7 @@ func search[TDoc hasID, TResult any](
 		}
 	}
 
-	return final, nil
+	return final, page, nil
 }
 
 func indexInBatches[TDoc any, TItem any](

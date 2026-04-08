@@ -470,6 +470,22 @@ func (c *Client) GetPlaylistById(playlistId string, options Options) (*GetPlayli
 }
 
 
+func (c *Client) GetPlaylistItemIds(playlistId string, options Options) (*GetPlaylistItemIds, error) {
+	path := Sprintf("/api/v1/playlists/%v/ids", playlistId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetPlaylistItemIds](data, nil)
+}
+
 func (c *Client) GetPlaylistItems(playlistId string, options Options) (*GetPlaylistItems, error) {
 	path := Sprintf("/api/v1/playlists/%v/items", playlistId)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -987,6 +1003,11 @@ func (c *ClientUrls) GetPlaylistById(playlistId string) (*URL, error) {
 
 func (c *ClientUrls) GetPlaylistImage(playlistId string, image string) (*URL, error) {
 	path := Sprintf("/files/playlists/images/%v/%v", playlistId, image)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetPlaylistItemIds(playlistId string) (*URL, error) {
+	path := Sprintf("/api/v1/playlists/%v/ids", playlistId)
 	return c.getUrl(path)
 }
 

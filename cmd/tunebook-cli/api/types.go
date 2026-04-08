@@ -367,36 +367,6 @@ type GetMediaSettings struct {
 	DeviceSpecs []MediaDeviceSpec `json:"deviceSpecs"`
 }
 
-// Name: GetPlaylistById
-type GetPlaylistById struct {
-	// Name: GetPlaylistById.id
-	Id string `json:"id"`
-	// Name: GetPlaylistById.name
-	Name string `json:"name"`
-	// Name: GetPlaylistById.coverArt
-	CoverArt Images `json:"coverArt"`
-	// Name: GetPlaylistById.ownerId
-	OwnerId string `json:"ownerId"`
-	// Name: GetPlaylistById.ownerDisplayName
-	OwnerDisplayName string `json:"ownerDisplayName"`
-	// Name: GetPlaylistById.ownerPicture
-	OwnerPicture Images `json:"ownerPicture"`
-	// Name: GetPlaylistById.trackCount
-	TrackCount int `json:"trackCount"`
-	// Name: GetPlaylistById.created
-	Created string `json:"created"`
-	// Name: GetPlaylistById.updated
-	Updated string `json:"updated"`
-}
-
-// Name: GetPlaylistItems
-type GetPlaylistItems struct {
-	// Name: GetPlaylistItems.page
-	Page Page `json:"page"`
-	// Name: GetPlaylistItems.items
-	Items []Track `json:"items"`
-}
-
 // Name: Playlist
 type Playlist struct {
 	// Name: Playlist.id
@@ -417,6 +387,26 @@ type Playlist struct {
 	Created string `json:"created"`
 	// Name: Playlist.updated
 	Updated string `json:"updated"`
+}
+
+// Name: GetPlaylistById
+type GetPlaylistById struct {
+	// Name: GetPlaylistById.playlist
+	Playlist Playlist `json:"playlist"`
+}
+
+// Name: GetPlaylistItemIds
+type GetPlaylistItemIds struct {
+	// Name: GetPlaylistItemIds.ids
+	Ids []string `json:"ids"`
+}
+
+// Name: GetPlaylistItems
+type GetPlaylistItems struct {
+	// Name: GetPlaylistItems.page
+	Page Page `json:"page"`
+	// Name: GetPlaylistItems.items
+	Items []Track `json:"items"`
 }
 
 // Name: GetPlaylists
@@ -521,30 +511,40 @@ type ReorderPlaylistItemsBody struct {
 
 // Name: SearchAlbums
 type SearchAlbums struct {
+	// Name: SearchAlbums.page
+	Page Page `json:"page"`
 	// Name: SearchAlbums.albums
 	Albums []Album `json:"albums"`
 }
 
 // Name: SearchArtists
 type SearchArtists struct {
+	// Name: SearchArtists.page
+	Page Page `json:"page"`
 	// Name: SearchArtists.artists
 	Artists []Artist `json:"artists"`
 }
 
 // Name: SearchPlaylists
 type SearchPlaylists struct {
+	// Name: SearchPlaylists.page
+	Page Page `json:"page"`
 	// Name: SearchPlaylists.playlists
 	Playlists []Playlist `json:"playlists"`
 }
 
 // Name: SearchTracks
 type SearchTracks struct {
+	// Name: SearchTracks.page
+	Page Page `json:"page"`
 	// Name: SearchTracks.tracks
 	Tracks []Track `json:"tracks"`
 }
 
 // Name: SearchUsers
 type SearchUsers struct {
+	// Name: SearchUsers.page
+	Page Page `json:"page"`
 	// Name: SearchUsers.users
 	Users []UserData `json:"users"`
 }

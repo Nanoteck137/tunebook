@@ -407,38 +407,6 @@ export const GetMediaSettings = z.object({
 });
 export type GetMediaSettings = z.infer<typeof GetMediaSettings>;
 
-// Name: GetPlaylistById
-export const GetPlaylistById = z.object({
-  // Name: GetPlaylistById.id
-  "id": z.string(),
-  // Name: GetPlaylistById.name
-  "name": z.string(),
-  // Name: GetPlaylistById.coverArt
-  "coverArt": Images,
-  // Name: GetPlaylistById.ownerId
-  "ownerId": z.string(),
-  // Name: GetPlaylistById.ownerDisplayName
-  "ownerDisplayName": z.string(),
-  // Name: GetPlaylistById.ownerPicture
-  "ownerPicture": Images,
-  // Name: GetPlaylistById.trackCount
-  "trackCount": z.number(),
-  // Name: GetPlaylistById.created
-  "created": z.string(),
-  // Name: GetPlaylistById.updated
-  "updated": z.string(),
-});
-export type GetPlaylistById = z.infer<typeof GetPlaylistById>;
-
-// Name: GetPlaylistItems
-export const GetPlaylistItems = z.object({
-  // Name: GetPlaylistItems.page
-  "page": Page,
-  // Name: GetPlaylistItems.items
-  "items": z.array(Track),
-});
-export type GetPlaylistItems = z.infer<typeof GetPlaylistItems>;
-
 // Name: Playlist
 export const Playlist = z.object({
   // Name: Playlist.id
@@ -461,6 +429,29 @@ export const Playlist = z.object({
   "updated": z.string(),
 });
 export type Playlist = z.infer<typeof Playlist>;
+
+// Name: GetPlaylistById
+export const GetPlaylistById = z.object({
+  // Name: GetPlaylistById.playlist
+  "playlist": Playlist,
+});
+export type GetPlaylistById = z.infer<typeof GetPlaylistById>;
+
+// Name: GetPlaylistItemIds
+export const GetPlaylistItemIds = z.object({
+  // Name: GetPlaylistItemIds.ids
+  "ids": z.array(z.string()),
+});
+export type GetPlaylistItemIds = z.infer<typeof GetPlaylistItemIds>;
+
+// Name: GetPlaylistItems
+export const GetPlaylistItems = z.object({
+  // Name: GetPlaylistItems.page
+  "page": Page,
+  // Name: GetPlaylistItems.items
+  "items": z.array(Track),
+});
+export type GetPlaylistItems = z.infer<typeof GetPlaylistItems>;
 
 // Name: GetPlaylists
 export const GetPlaylists = z.object({
@@ -576,6 +567,8 @@ export type ReorderPlaylistItemsBody = z.infer<typeof ReorderPlaylistItemsBody>;
 
 // Name: SearchAlbums
 export const SearchAlbums = z.object({
+  // Name: SearchAlbums.page
+  "page": Page,
   // Name: SearchAlbums.albums
   "albums": z.array(Album),
 });
@@ -583,6 +576,8 @@ export type SearchAlbums = z.infer<typeof SearchAlbums>;
 
 // Name: SearchArtists
 export const SearchArtists = z.object({
+  // Name: SearchArtists.page
+  "page": Page,
   // Name: SearchArtists.artists
   "artists": z.array(Artist),
 });
@@ -590,6 +585,8 @@ export type SearchArtists = z.infer<typeof SearchArtists>;
 
 // Name: SearchPlaylists
 export const SearchPlaylists = z.object({
+  // Name: SearchPlaylists.page
+  "page": Page,
   // Name: SearchPlaylists.playlists
   "playlists": z.array(Playlist),
 });
@@ -597,6 +594,8 @@ export type SearchPlaylists = z.infer<typeof SearchPlaylists>;
 
 // Name: SearchTracks
 export const SearchTracks = z.object({
+  // Name: SearchTracks.page
+  "page": Page,
   // Name: SearchTracks.tracks
   "tracks": z.array(Track),
 });
@@ -604,6 +603,8 @@ export type SearchTracks = z.infer<typeof SearchTracks>;
 
 // Name: SearchUsers
 export const SearchUsers = z.object({
+  // Name: SearchUsers.page
+  "page": Page,
   // Name: SearchUsers.users
   "users": z.array(UserData),
 });
