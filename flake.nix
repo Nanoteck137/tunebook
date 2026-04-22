@@ -10,9 +10,11 @@
 
     devtools.url     = "github:nanoteck137/devtools";
     devtools.inputs.nixpkgs.follows = "nixpkgs";
+
+    just.url = "github:casey/just/1.50.0";
   };
 
-  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, ... }:
+  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, just, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [];
@@ -108,6 +110,8 @@
             ffmpeg
 
             tools.publishVersion
+
+            just.packages.${system}.default
           ];
         };
       }
