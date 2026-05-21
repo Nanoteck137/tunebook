@@ -79,7 +79,7 @@
             chmod 1777 tmp
 
             mkdir -p data
-            mkdir -p media
+            mkdir -p library
           '';
 
           config = {
@@ -88,6 +88,8 @@
             ExposedPorts = { "3000/tcp" = {}; };
             Env = [
               "TUNEBOOK_WEB=${web}"
+              "TUNEBOOK_DATA_DIR=/data"
+              "TUNEBOOK_LIBRARY_DIR=/library"
             ];
           };
         };
