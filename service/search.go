@@ -16,7 +16,7 @@ import (
 
 const (
 	artistIndex   = "artists"
-	albumIndex    = "album"
+	albumIndex    = "albums"
 	trackIndex    = "tracks"
 	playlistIndex = "playlists"
 	userIndex     = "users"
@@ -226,7 +226,7 @@ func (s *SearchService) indexArtists(ctx context.Context) error {
 
 func (s *SearchService) indexAlbums(ctx context.Context) error {
 	err := s.recreateIndex(ctx, recreateIndexParams{
-		index: "albums",
+		index: albumIndex,
 		settings: &meilisearch.Settings{
 			SearchableAttributes: []string{"name", "artists", "tags"},
 			SortableAttributes:   []string{"name", "year"},
@@ -239,10 +239,6 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 	}
 
 	index := s.client.Index(albumIndex)
-
-	settings, err := index.GetSettings()
-	pretty.Println(err)
-	pretty.Println(settings)
 
 	err = indexInBatches[SearchAlbum, database.Album](
 		ctx,
