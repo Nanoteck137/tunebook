@@ -63,6 +63,7 @@ func Load(cfgFile string) (*Config, error) {
 	v.SetDefault("run_migrations", "true")
 	v.SetDefault("listen_addr", ":3000")
 	v.BindEnv("data_dir")
+	v.BindEnv("library_dir")
 	v.BindEnv("jwt_secret")
 
 	v.BindEnv("web")
