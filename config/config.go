@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/nanoteck137/tunebook"
@@ -81,7 +82,10 @@ func Load(cfgFile string) (*Config, error) {
 
 	err := v.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("reading config: %w", err)
+		var confErr viper.ConfigFileNotFoundError
+		if !errors.As(err, &confErr) {
+			return nil, fmt.Errorf("reading config: %w", err)
+		}
 	}
 
 	override := v.GetString("config_override")
