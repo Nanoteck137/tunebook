@@ -75,9 +75,6 @@
           ];
 
           extraCommands = ''
-            mkdir -p tmp
-            chmod 1777 tmp
-
             mkdir -p data
             mkdir -p library
           '';
@@ -85,7 +82,12 @@
           config = {
             Entrypoint   = [ "/bin/tunebook" ];
             Cmd = [ "serve" ];
-            ExposedPorts = { "3000/tcp" = {}; };
+            WorkingDir = "/data";
+
+            ExposedPorts = { 
+              "3000/tcp" = {}; 
+            };
+
             Env = [
               "TUNEBOOK_WEB=${web}"
               "TUNEBOOK_DATA_DIR=/data"
