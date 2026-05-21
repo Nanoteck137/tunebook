@@ -1,10 +1,7 @@
 import type { ApiClient } from "$lib/api/client";
-import { sleep } from "$lib/utils";
 import type { PageLoad } from "./$types";
 
 async function getPlaylists(apiClient: ApiClient) {
-  await sleep(4000);
-
   const res = await apiClient.getPlaylists();
   if (!res.success) {
     return [];
@@ -14,8 +11,6 @@ async function getPlaylists(apiClient: ApiClient) {
 }
 
 async function getRecentAlbums(apiClient: ApiClient) {
-  await sleep(10000);
-
   const res = await apiClient.getAlbums({
     query: { sort: "sort=-created", perPage: "10" },
   });
@@ -27,8 +22,6 @@ async function getRecentAlbums(apiClient: ApiClient) {
 }
 
 async function getFavorites(apiClient: ApiClient, userId?: string) {
-  await sleep(4000);
-
   if (!userId) return [];
 
   const res = await apiClient.getUserTrackFavorites(userId, {
