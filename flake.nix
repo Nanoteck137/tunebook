@@ -87,7 +87,7 @@
             Cmd = [ "serve" ];
             ExposedPorts = { "3000/tcp" = {}; };
             Env = [
-              "DWEBBLE_WEB=${web}"
+              "TUNEBOOK_WEB=${web}"
             ];
           };
         };
