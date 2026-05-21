@@ -12,6 +12,10 @@ func (d DataDir) DatabaseFile() string {
 	return path.Join(d.String(), "data.db")
 }
 
+func (d DataDir) Temp() string {
+	return path.Join(d.String(), "temp")
+}
+
 func (d DataDir) Playlists() string {
 	return path.Join(d.String(), "playlists")
 }

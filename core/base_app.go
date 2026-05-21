@@ -108,6 +108,7 @@ func (app *BaseApp) Bootstrap() error {
 		dataDir.Users(),
 		dataDir.Playlists(),
 		dataDir.Cache(),
+		dataDir.Temp(),
 	})
 	if err != nil {
 		return err

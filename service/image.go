@@ -681,8 +681,11 @@ func (s *ImageService) DownloadPictureForUser(
 		return "", err
 	}
 
+	// TODO(patrik): Make sure that temp directory exists
+	tmpDir := s.dataDir.Temp()
+
 	// TODO(patrik): The tmp dir should be inside the work dir
-	tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+	tmp, err := os.CreateTemp(tmpDir, "tmp-image-*"+ext)
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
