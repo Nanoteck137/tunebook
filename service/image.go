@@ -85,7 +85,10 @@ func (s *ImageService) convertSquareImage(input, outputDir, name string) (string
 func (s *ImageService) copyDefaultToTemp(filename string) (string, error) {
 	ext := path.Ext(filename)
 
-	dest, err := os.CreateTemp("", "default*"+ext)
+	// TODO(patrik): Make sure that temp direct
+	tmpDir := s.dataDir.Temp()
+
+	dest, err := os.CreateTemp(tmpDir, "default*"+ext)
 	if err != nil {
 		return "", err
 	}
@@ -471,8 +474,11 @@ func (s *ImageService) DownloadCoverForPlaylist(
 		return "", err
 	}
 
+	// TODO(patrik): Make sure that temp direct
+	tmpDir := s.dataDir.Temp()
+
 	// TODO(patrik): The tmp dir should be inside the work dir
-	tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+	tmp, err := os.CreateTemp(tmpDir, "tmp-image-*"+ext)
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
@@ -583,8 +589,11 @@ func (s *ImageService) UploadImageForPlaylist(
 ) (string, error) {
 	ext := path.Ext(params.File.Filename)
 
+	// TODO(patrik): Make sure that temp direct
+	tmpDir := s.dataDir.Temp()
+
 	// TODO(patrik): The tmp dir should be inside the work dir
-	tmp, err := os.CreateTemp("", "tmp-image-*"+ext)
+	tmp, err := os.CreateTemp(tmpDir, "tmp-image-*"+ext)
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
@@ -681,7 +690,7 @@ func (s *ImageService) DownloadPictureForUser(
 		return "", err
 	}
 
-	// TODO(patrik): Make sure that temp directory exists
+	// TODO(patrik): Make sure that temp direct
 	tmpDir := s.dataDir.Temp()
 
 	// TODO(patrik): The tmp dir should be inside the work dir
