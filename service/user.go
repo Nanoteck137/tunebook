@@ -85,7 +85,7 @@ func (s *UserService) GetFavoriteTracks(
 	}
 
 	for i := range tracks {
-		tracks[i].Track.Order = utils.IntPtr((i + 1) + (page.Page * page.PerPage))
+		tracks[i].Track.Order = utils.Pointer((i + 1) + (page.Page * page.PerPage))
 	}
 
 	return tracks, page, nil

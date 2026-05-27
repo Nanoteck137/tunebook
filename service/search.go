@@ -515,7 +515,7 @@ func (s *SearchService) SearchTracks(
 	}
 
 	for i := range tracks {
-		tracks[i].Order = utils.IntPtr((i + 1) + (page.Page * page.PerPage))
+		tracks[i].Order = utils.Pointer((i + 1) + (page.Page * page.PerPage))
 	}
 
 	return tracks, page, nil

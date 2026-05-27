@@ -43,7 +43,7 @@ func (s *TrackService) LoadTracksFromIds(
 	}
 
 	for i := range tracks {
-		tracks[i].Order = utils.IntPtr((i + 1))
+		tracks[i].Order = utils.Pointer(i + 1)
 	}
 
 	return tracks, nil
@@ -91,7 +91,7 @@ func (s *TrackService) GetTracks(
 	}
 
 	for i := range tracks {
-		tracks[i].Order = utils.IntPtr((i + 1) + (page.Page * page.PerPage))
+		tracks[i].Order = utils.Pointer((i + 1) + (page.Page * page.PerPage))
 	}
 
 	return tracks, page, nil
