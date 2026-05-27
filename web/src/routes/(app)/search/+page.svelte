@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, invalidateAll, onNavigate } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import AlbumListItem from "$lib/components/AlbumListItem.svelte";
   import ArtistListItem from "$lib/components/ArtistListItem.svelte";
   import Image from "$lib/components/Image.svelte";
@@ -36,13 +36,6 @@
       search(current);
     }, 500);
   }
-
-  // NOTE(patrik): Fix for clicking the search button
-  // onNavigate((e) => {
-  //   if (e.type === "link" && e.from?.url.pathname === "/search") {
-  //     invalidateAll();
-  //   }
-  // });
 
   function formatError(err: { type: string; code: number; message: string }) {
     // TODO(patrik): Better error
