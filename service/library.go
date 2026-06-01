@@ -224,7 +224,7 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *library.Ar
 }
 
 func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) error {
-	p := path.Join(libraryDir, ".library", "artists")
+	p := path.Join(libraryDir, "artists")
 	file, err := os.Open(p)
 	if err != nil {
 		return err
@@ -378,7 +378,7 @@ func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.Alb
 }
 
 func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) error {
-	p := path.Join(libraryDir, ".library", "albums")
+	p := path.Join(libraryDir, "albums")
 	file, err := os.Open(p)
 	if err != nil {
 		return err
@@ -603,7 +603,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 }
 
 func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) error {
-	p := path.Join(libraryDir, ".library", "tracks")
+	p := path.Join(libraryDir, "tracks")
 	file, err := os.Open(p)
 	if err != nil {
 		return err
