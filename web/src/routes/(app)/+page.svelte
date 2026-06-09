@@ -7,6 +7,7 @@
   import TrackSkeletonTile from "$lib/components/tiles/TrackSkeletonTile.svelte";
   import TrackTile from "$lib/components/tiles/TrackTile.svelte";
   import { Button, Separator } from "@nanoteck137/nano-ui";
+  import { ChevronRight } from "lucide-svelte";
 
   let { data } = $props();
 </script>
@@ -70,10 +71,11 @@
 
     <section>
       <a
-        class="text-xl font-semibold hover:cursor-pointer hover:underline"
+        class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
         href="/playlists"
       >
         Your Playlists
+        <ChevronRight />
       </a>
 
       <div class="h-4"></div>
@@ -100,10 +102,11 @@
 
     <section>
       <a
-        class="text-xl font-semibold hover:cursor-pointer hover:underline"
+        class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
         href="/users/{data.user.id}/favorites"
       >
         Favorites
+        <ChevronRight />
       </a>
 
       <div class="h-4"></div>
@@ -128,10 +131,11 @@
 
     <section>
       <a
-        class="text-xl font-semibold hover:cursor-pointer hover:underline"
+        class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
         href="/albums?sort=created-new"
       >
         Recently Added Albums
+        <ChevronRight />
       </a>
 
       <div class="h-4"></div>
