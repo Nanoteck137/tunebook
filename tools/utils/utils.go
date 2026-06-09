@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"os/exec"
@@ -41,7 +40,7 @@ var CreateUserListeningEventId = CreateIdGenerator(32)
 func CreateIdGenerator(length int) func() string {
 	res, err := cuid2.Init(cuid2.WithLength(length))
 	if err != nil {
-		log.Fatal("Failed to create id generator", "err", err)
+		panic(err)
 	}
 
 	return res
