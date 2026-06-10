@@ -281,11 +281,11 @@ func (db DB) UpdateArtist(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	ds := dialect.Update("artists").
+	query := dialect.Update("artists").
 		Set(record).
 		Where(goqu.I("artists.id").Eq(artistId))
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

@@ -356,11 +356,11 @@ func (db DB) UpdateTrack(ctx context.Context, id string, changes TrackChanges) e
 
 	record["updated"] = time.Now().UnixMilli()
 
-	ds := dialect.Update("tracks").
+	query := dialect.Update("tracks").
 		Set(record).
 		Where(goqu.I("tracks.id").Eq(id))
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -381,13 +381,13 @@ func (db DB) DeleteTrack(ctx context.Context, id string) error {
 }
 
 func (db DB) AddTagToTrack(ctx context.Context, tagSlug, trackId string) error {
-	ds := dialect.Insert("tracks_tags").
+	query := dialect.Insert("tracks_tags").
 		Rows(goqu.Record{
 			"track_id": trackId,
 			"tag_slug": tagSlug,
 		})
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

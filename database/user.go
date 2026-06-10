@@ -202,11 +202,11 @@ func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) err
 
 	record["updated"] = time.Now().UnixMilli()
 
-	ds := dialect.Update("users").
+	query := dialect.Update("users").
 		Set(record).
 		Where(goqu.I("users.id").Eq(id))
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

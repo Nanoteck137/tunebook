@@ -204,11 +204,11 @@ func (db DB) UpdatePlaylist(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	ds := dialect.Update("playlists").
+	query := dialect.Update("playlists").
 		Set(record).
 		Where(goqu.I("playlists.id").Eq(playlistId))
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

@@ -124,11 +124,11 @@ func (db DB) UpdateTrackFilter(ctx context.Context, id string, changes TrackFilt
 
 	record["updated"] = time.Now().UnixMilli()
 
-	ds := dialect.Update("track_filters").
+	query := dialect.Update("track_filters").
 		Set(record).
 		Where(goqu.I("track_filters.id").Eq(id))
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
