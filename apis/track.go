@@ -61,7 +61,7 @@ func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
 		AlbumId:   track.AlbumId,
 		AlbumName: track.AlbumName,
 		Artists:   artists,
-		Tags:      utils.SplitString(track.Tags.String),
+		Tags:      utils.SplitTagString(track.Tags.String),
 		Created:   formatTime(track.Created),
 		Updated:   formatTime(track.Updated),
 	}

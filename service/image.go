@@ -52,7 +52,7 @@ func (s *ImageService) convertImage(input, outputDir, name string, size int) (st
 	_, err := os.Stat(p)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := utils.CreateResizedImage(input, p, size, size)
+			err := createResizedImage(input, p, size, size)
 			if err != nil {
 				return "", err
 			}
@@ -70,7 +70,7 @@ func (s *ImageService) convertSquareImage(input, outputDir, name string) (string
 	_, err := os.Stat(p)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := utils.CreateSquareImage(input, p)
+			err := createSquareImage(input, p)
 			if err != nil {
 				return "", err
 			}
@@ -566,7 +566,7 @@ func (s *ImageService) GenerateImageForPlaylist(
 
 	cover := "generated.png"
 	out := path.Join(playlistDir, cover)
-	err = utils.GeneratePlaylistCover(imgs, out, 512)
+	err = generatePlaylistCover(imgs, out, 512)
 	if err != nil {
 		// TODO(patrik): Handle error
 		return "", err
@@ -743,4 +743,97 @@ func (s *ImageService) DownloadPictureForUser(
 	}
 
 	return picture, nil
+}
+
+func createSquareImage(src, dest string) error {
+	cmd := exec.Command(
+		"magick", src,
+		"-gravity", "Center",
+		"-extent", "%[fx:min(w,h)]x%[fx:min(w,h)]",
+		dest,
+	)
+	// TODO(patrik): Make this configureble
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createResizedImage(src string, dest string, width, height int) error {
+	args := []string{
+		src,
+		"-resize", fmt.Sprintf("%dx%d^", width, height),
+		"-gravity", "Center",
+		"-extent", fmt.Sprintf("%dx%d", width, height),
+		dest,
+	}
+
+	cmd := exec.Command("magick", args...)
+	// TODO(patrik): Make this configureble
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func generatePlaylistCover(images [4]string, output string, tileSize int) error {
+	if len(images) == 0 {
+		return fmt.Errorf("at least one image is required")
+	}
+
+	size := fmt.Sprintf("%dx%d", tileSize, tileSize)
+
+	buildTile := func(img string) []string {
+		if img == "" {
+			return []string{"(", "xc:black", "-resize", size, ")"}
+		}
+		return []string{"(", img, "-resize", size + "^", "-gravity", "center", "-extent", size, ")"}
+	}
+
+	args := []string{}
+	for _, img := range images {
+		args = append(args, buildTile(img)...)
+	}
+
+	args = append(args,
+		"(", "-clone", "0-1", "+append", ")",
+		"(", "-clone", "2-3", "+append", ")",
+		"-delete", "0-3",
+		"-append",
+		output,
+	)
+
+	cmd := exec.Command("magick", args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func convertImage(src string, dest string) error {
+	args := []string{
+		"convert",
+		src,
+		dest,
+	}
+
+	cmd := exec.Command("magick", args...)
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

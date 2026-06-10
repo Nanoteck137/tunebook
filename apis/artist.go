@@ -34,7 +34,7 @@ func ConvertDBArtist(c pyrin.Context, artist database.Artist) Artist {
 		Id:       artist.Id,
 		Name:     artist.Name,
 		CoverArt: ConvertArtistCoverURL(c, artist.Id),
-		Tags:     utils.SplitString(artist.Tags.String),
+		Tags:     utils.SplitTagString(artist.Tags.String),
 		Created:  formatTime(artist.Created),
 		Updated:  formatTime(artist.Updated),
 	}

@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -13,7 +15,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nrednav/cuid2"
 	"golang.org/x/oauth2"
@@ -286,7 +287,7 @@ func (a *AuthService) CreateProviderRequest(providerId string) (ProviderRequestR
 	}
 
 	// Generate the unique challenge used to check calls to requests
-	challenge, err := utils.GenerateAuthChallenge()
+	challenge, err := generateAuthChallenge()
 	if err != nil {
 		return ProviderRequestResult{}, authErr.Newf("generate auth challenge: %w", err)
 	}
@@ -344,13 +345,13 @@ type QuickConnectRequestResult struct {
 // data about the request so that the user can complete the request
 func (a *AuthService) CreateQuickConnectRequest() (QuickConnectRequestResult, error) {
 	// Generate the unique code for this quick connect request
-	code, err := utils.GenerateCode()
+	code, err := generateCode()
 	if err != nil {
 		return QuickConnectRequestResult{}, fmt.Errorf("failed to generate code: %w", err)
 	}
 
 	// Generate the unique challenge used to check calls to requests
-	challenge, err := utils.GenerateAuthChallenge()
+	challenge, err := generateAuthChallenge()
 	if err != nil {
 		return QuickConnectRequestResult{}, fmt.Errorf("failed to generate challenge: %w", err)
 	}
@@ -769,4 +770,46 @@ func (a *AuthService) Cleanup() {
 			delete(a.quickConnectRequests, k)
 		}
 	}
+}
+
+// TODO(patrik): Move to auth service
+const (
+	letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	digits  = "0123456789"
+)
+
+func randomString(charset string, length int) (string, error) {
+	b := make([]byte, length)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	for i := range b {
+		b[i] = charset[int(b[i])%len(charset)]
+	}
+	return string(b), nil
+}
+
+func generateCode() (string, error) {
+	part1, err := randomString(letters, 4)
+	if err != nil {
+		return "", err
+	}
+
+	part2, err := randomString(digits, 4)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s-%s", part1, part2), nil
+}
+
+func generateAuthChallenge() (string, error) {
+	b := make([]byte, 64)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }

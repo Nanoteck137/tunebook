@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -41,6 +41,19 @@ func User(app core.App, c pyrin.Context, checks ...UserCheckFunc) (*database.Use
 	return user, nil
 }
 
+func parseAuthHeader(authHeader string) string {
+	splits := strings.Split(authHeader, " ")
+	if len(splits) != 2 {
+		return ""
+	}
+
+	if splits[0] != "Bearer" {
+		return ""
+	}
+
+	return splits[1]
+}
+
 // TODO(patrik): Cleanup
 func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	ctx := c.Request().Context()
@@ -65,7 +78,7 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	}
 
 	authHeader := c.Request().Header.Get("Authorization")
-	tokenString := utils.ParseAuthHeader(authHeader)
+	tokenString := parseAuthHeader(authHeader)
 	if tokenString == "" {
 		return nil, InvalidAuth("invalid authorization header")
 	}

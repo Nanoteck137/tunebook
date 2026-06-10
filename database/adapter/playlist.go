@@ -3,8 +3,8 @@ package adapter
 import (
 	"go/ast"
 
+	"github.com/gosimple/slug"
 	"github.com/nanoteck137/tunebook/tools/filter"
-	"github.com/nanoteck137/tunebook/tools/utils"
 )
 
 var _ filter.ResolverAdapter = (*PlaylistResolverAdapter)(nil)
@@ -202,7 +202,7 @@ func (a *PlaylistTrackResolverAdapter) ResolveVariableName(name string) (filter.
 func (a *PlaylistTrackResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
 	switch typ {
 	case "tags":
-		return utils.Slug(name), true
+		return slug.Make(name), true
 	case "featuringArtists":
 		return name, true
 	}

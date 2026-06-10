@@ -10,7 +10,6 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
-	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -128,7 +127,7 @@ func buildPage(
 		Page:       params.Page,
 		PerPage:    params.PerPage,
 		TotalItems: totalItems,
-		TotalPages: utils.TotalPages(params.PerPage, totalItems),
+		TotalPages: totalPages(params.PerPage, totalItems),
 	}, nil
 }
 

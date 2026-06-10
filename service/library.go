@@ -11,6 +11,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/gosimple/slug"
 	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
@@ -154,7 +155,7 @@ func setArtistTags(ctx context.Context, db database.DB, artistId string, tags []
 	}
 
 	for _, tag := range tags {
-		slug := utils.Slug(tag)
+		slug := slug.Make(tag)
 
 		err := db.CreateTag(ctx, slug)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
@@ -280,7 +281,7 @@ func setAlbumTags(ctx context.Context, db database.DB, albumId string, tags []st
 	}
 
 	for _, tag := range tags {
-		slug := utils.Slug(tag)
+		slug := slug.Make(tag)
 
 		err := db.CreateTag(ctx, slug)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
@@ -434,7 +435,7 @@ func setTrackTags(ctx context.Context, db database.DB, trackId string, tags []st
 	}
 
 	for _, tag := range tags {
-		slug := utils.Slug(tag)
+		slug := slug.Make(tag)
 
 		err := db.CreateTag(ctx, slug)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
@@ -652,7 +653,7 @@ func (s *LibraryService) Sync() error {
 	// TODO(patrik): Replace with s.logger
 	slog.Info("starting library sync...")
 	s.norificationService.SendSimple(tunebook.AppName+": "+"Starting library sync", "Starting to sync the library", SimpleNotificationOptions{
-		Tags: []string{utils.Slug(tunebook.AppName), "library", "syncing"},
+		Tags: []string{slug.Make(tunebook.AppName), "library", "syncing"},
 	})
 
 	defer func() {
@@ -666,7 +667,7 @@ func (s *LibraryService) Sync() error {
 			utils.PrettyDuration(s.totalSyncDuration),
 		)
 
-		tags := []string{utils.Slug(tunebook.AppName), "library", "syncing"}
+		tags := []string{slug.Make(tunebook.AppName), "library", "syncing"}
 
 		if len(s.errors) > 0 {
 			tags = append(tags, "warning")
