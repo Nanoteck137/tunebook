@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/types"
 )
 
 var createTrackFilterId = createIdGenerator(8)
@@ -100,12 +99,12 @@ func (db DB) CreateTrackFilter(ctx context.Context, params CreateTrackFilterPara
 }
 
 type TrackFilterChanges struct {
-	UserId types.Change[string]
+	UserId Change[string]
 
-	Name   types.Change[string]
-	Filter types.Change[string]
+	Name   Change[string]
+	Filter Change[string]
 
-	Created types.Change[int64]
+	Created Change[int64]
 }
 
 func (db DB) UpdateTrackFilter(ctx context.Context, id string, changes TrackFilterChanges) error {

@@ -143,7 +143,7 @@ func (s *PlaylistService) EditPlaylist(
 	changes := database.PlaylistChanges{}
 
 	if params.Name != nil {
-		changes.Name = types.Change[string]{
+		changes.Name = database.Change[string]{
 			Value:   *params.Name,
 			Changed: *params.Name != playlist.Name,
 		}
@@ -163,7 +163,7 @@ func (s *PlaylistService) EditPlaylist(
 			return err
 		}
 
-		changes.CoverArt = types.Change[sql.NullString]{
+		changes.CoverArt = database.Change[sql.NullString]{
 			Value: sql.NullString{
 				String: cover,
 				Valid:  cover != "",
@@ -261,7 +261,7 @@ func (s *PlaylistService) UploadPlaylistImage(
 	}
 
 	err = s.db.UpdatePlaylist(ctx, playlist.Id, database.PlaylistChanges{
-		CoverArt: types.Change[sql.NullString]{
+		CoverArt: database.Change[sql.NullString]{
 			Value: sql.NullString{
 				String: cover,
 				Valid:  cover != "",
@@ -314,7 +314,7 @@ func (s *PlaylistService) GeneratePlaylistImage(
 	}
 
 	err = s.db.UpdatePlaylist(ctx, playlist.Id, database.PlaylistChanges{
-		CoverArt: types.Change[sql.NullString]{
+		CoverArt: database.Change[sql.NullString]{
 			Value: sql.NullString{
 				String: cover,
 				Valid:  cover != "",
@@ -620,7 +620,7 @@ func (s *PlaylistService) ReorderPlaylistItems(
 			item.PlaylistId,
 			item.TrackId,
 			database.PlaylistItemChanges{
-				Position: types.Change[int]{
+				Position: database.Change[int]{
 					Value:   i,
 					Changed: i != item.Position,
 				},

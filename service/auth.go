@@ -675,7 +675,7 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				}
 
 				err = a.db.UpdateUser(ctx, user.Id, database.UserChanges{
-					Picture: types.Change[sql.NullString]{
+					Picture: database.Change[sql.NullString]{
 						Value: sql.NullString{
 							String: picture,
 							Valid:  picture != "",

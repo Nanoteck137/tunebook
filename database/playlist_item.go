@@ -203,9 +203,9 @@ func (db DB) CreatePlaylistItem(ctx context.Context, params CreatePlaylistItemPa
 }
 
 type PlaylistItemChanges struct {
-	Position types.Change[int]
+	Position Change[int]
 
-	Created types.Change[int64]
+	Created Change[int64]
 }
 
 func (db DB) UpdatePlaylistItem(ctx context.Context, playlistId, trackId string, changes PlaylistItemChanges) error {

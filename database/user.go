@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/types"
 )
 
 var createUserId = createIdGenerator(10)
@@ -178,12 +177,12 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, err
 }
 
 type UserChanges struct {
-	DisplayName types.Change[string]
-	Role        types.Change[string]
+	DisplayName Change[string]
+	Role        Change[string]
 
-	Picture types.Change[sql.NullString]
+	Picture Change[sql.NullString]
 
-	Created types.Change[int64]
+	Created Change[int64]
 }
 
 func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) error {

@@ -174,13 +174,13 @@ func (db DB) CreatePlaylist(
 }
 
 type PlaylistChanges struct {
-	Name types.Change[string]
+	Name Change[string]
 
-	OwnerId types.Change[string]
+	OwnerId Change[string]
 
-	CoverArt types.Change[sql.NullString]
+	CoverArt Change[sql.NullString]
 
-	Created types.Change[int64]
+	Created Change[int64]
 }
 
 func (db DB) UpdatePlaylist(

@@ -90,11 +90,6 @@ func (d ImageCacheDir) User(id string) string {
 	return path.Join(d.Users(), id)
 }
 
-type Change[T any] struct {
-	Value   T
-	Changed bool
-}
-
 type Error struct {
 	Message string `json:"message"`
 }

@@ -192,12 +192,12 @@ func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *library.Ar
 	} else {
 		changes := database.ArtistChanges{}
 
-		changes.Name = types.Change[string]{
+		changes.Name = database.Change[string]{
 			Value:   entry.Name,
 			Changed: entry.Name != dbArtist.Name,
 		}
 
-		changes.CoverArt = types.Change[sql.NullString]{
+		changes.CoverArt = database.Change[sql.NullString]{
 			Value: sql.NullString{
 				String: coverArt,
 				Valid:  coverArt != "",
@@ -323,17 +323,17 @@ func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.Alb
 	} else {
 		changes := database.AlbumChanges{}
 
-		changes.Name = types.Change[string]{
+		changes.Name = database.Change[string]{
 			Value:   entry.Name,
 			Changed: entry.Name != dbAlbum.Name,
 		}
 
-		changes.ArtistId = types.Change[string]{
+		changes.ArtistId = database.Change[string]{
 			Value:   entry.ArtistId,
 			Changed: entry.ArtistId != dbAlbum.ArtistId,
 		}
 
-		changes.CoverArt = types.Change[sql.NullString]{
+		changes.CoverArt = database.Change[sql.NullString]{
 			Value: sql.NullString{
 				String: coverArt,
 				Valid:  coverArt != "",
@@ -341,7 +341,7 @@ func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.Alb
 			Changed: coverArt != dbAlbum.CoverArt.String,
 		}
 
-		changes.Year = types.Change[sql.NullInt64]{
+		changes.Year = database.Change[sql.NullInt64]{
 			Value: sql.NullInt64{
 				Int64: entry.Year,
 				Valid: entry.Year != 0,
@@ -522,43 +522,43 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 			}
 
 			dur := int64(probeResult.Duration.Seconds())
-			changes.Duration = types.Change[int64]{
+			changes.Duration = database.Change[int64]{
 				Value:   dur,
 				Changed: dur != dbTrack.Duration,
 			}
 
-			changes.MediaFormat = types.Change[types.MediaFormat]{
+			changes.MediaFormat = database.Change[types.MediaFormat]{
 				Value:   probeResult.MediaFormat,
 				Changed: probeResult.MediaFormat != dbTrack.MediaFormat,
 			}
 
-			changes.ModifiedTime = types.Change[int64]{
+			changes.ModifiedTime = database.Change[int64]{
 				Value:   modifiedTime,
 				Changed: modifiedTime != dbTrack.ModifiedTime,
 			}
 		}
 
-		changes.Filename = types.Change[string]{
+		changes.Filename = database.Change[string]{
 			Value:   trackFile,
 			Changed: trackFile != dbTrack.Filename,
 		}
 
-		changes.Name = types.Change[string]{
+		changes.Name = database.Change[string]{
 			Value:   entry.Name,
 			Changed: entry.Name != dbTrack.Name,
 		}
 
-		changes.AlbumId = types.Change[string]{
+		changes.AlbumId = database.Change[string]{
 			Value:   entry.AlbumId,
 			Changed: entry.AlbumId != dbTrack.AlbumId,
 		}
 
-		changes.ArtistId = types.Change[string]{
+		changes.ArtistId = database.Change[string]{
 			Value:   entry.ArtistId,
 			Changed: entry.ArtistId != dbTrack.ArtistId,
 		}
 
-		changes.Number = types.Change[sql.NullInt64]{
+		changes.Number = database.Change[sql.NullInt64]{
 			Value: sql.NullInt64{
 				Int64: entry.Number,
 				Valid: entry.Number != 0,
@@ -566,7 +566,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 			Changed: entry.Number != dbTrack.Number.Int64,
 		}
 
-		changes.Year = types.Change[sql.NullInt64]{
+		changes.Year = database.Change[sql.NullInt64]{
 			Value: sql.NullInt64{
 				Int64: entry.Year,
 				Valid: entry.Year != 0,

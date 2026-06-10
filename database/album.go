@@ -220,14 +220,14 @@ func (db DB) CreateAlbum(
 }
 
 type AlbumChanges struct {
-	Name types.Change[string]
+	Name Change[string]
 
-	ArtistId types.Change[string]
+	ArtistId Change[string]
 
-	CoverArt types.Change[sql.NullString]
-	Year     types.Change[sql.NullInt64]
+	CoverArt Change[sql.NullString]
+	Year     Change[sql.NullInt64]
 
-	Created types.Change[int64]
+	Created Change[int64]
 }
 
 func (db DB) UpdateAlbum(

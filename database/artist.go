@@ -255,11 +255,11 @@ func (db DB) CreateArtist(
 }
 
 type ArtistChanges struct {
-	Name types.Change[string]
+	Name Change[string]
 
-	CoverArt types.Change[sql.NullString]
+	CoverArt Change[sql.NullString]
 
-	Created types.Change[int64]
+	Created Change[int64]
 }
 
 func (db DB) UpdateArtist(

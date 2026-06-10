@@ -316,20 +316,20 @@ func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string,
 }
 
 type TrackChanges struct {
-	Filename     types.Change[string]
-	ModifiedTime types.Change[int64]
-	MediaFormat  types.Change[types.MediaFormat]
+	Filename     Change[string]
+	ModifiedTime Change[int64]
+	MediaFormat  Change[types.MediaFormat]
 
-	Name types.Change[string]
+	Name Change[string]
 
-	AlbumId  types.Change[string]
-	ArtistId types.Change[string]
+	AlbumId  Change[string]
+	ArtistId Change[string]
 
-	Duration types.Change[int64]
-	Number   types.Change[sql.NullInt64]
-	Year     types.Change[sql.NullInt64]
+	Duration Change[int64]
+	Number   Change[sql.NullInt64]
+	Year     Change[sql.NullInt64]
 
-	Created types.Change[int64]
+	Created Change[int64]
 }
 
 func (db DB) UpdateTrack(ctx context.Context, id string, changes TrackChanges) error {

@@ -127,7 +127,7 @@ func (s *UserService) UpdateMe(
 	changes := database.UserChanges{}
 
 	if params.DisplayName != nil {
-		changes.DisplayName = types.Change[string]{
+		changes.DisplayName = database.Change[string]{
 			Value:   *params.DisplayName,
 			Changed: *params.DisplayName != user.DisplayName,
 		}
@@ -305,7 +305,7 @@ func (s *UserService) UpdateTrackFilter(
 	changes := database.TrackFilterChanges{}
 
 	if params.Name != nil {
-		changes.Name = types.Change[string]{
+		changes.Name = database.Change[string]{
 			Value:   *params.Name,
 			Changed: *params.Name != filter.Name,
 		}
@@ -314,7 +314,7 @@ func (s *UserService) UpdateTrackFilter(
 	if params.Filter != nil {
 		// TODO(patrik): Test filter
 
-		changes.Filter = types.Change[string]{
+		changes.Filter = database.Change[string]{
 			Value:   *params.Filter,
 			Changed: *params.Filter != filter.Filter,
 		}
