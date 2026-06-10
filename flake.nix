@@ -29,7 +29,7 @@
           pname = "tunebook";
           version = fullVersion;
           src = ./.;
-          subPackages = ["cmd/tunebook" "cmd/tunebook-cli"];
+          subPackages = ["cmd/tunebook"];
 
           ldflags = [
             "-X github.com/nanoteck137/tunebook.Version=${version}"
@@ -42,7 +42,6 @@
 
           postFixup = ''
             wrapProgram $out/bin/tunebook --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
-            wrapProgram $out/bin/tunebook-cli --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
           '';
         };
 
