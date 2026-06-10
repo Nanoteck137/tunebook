@@ -15,8 +15,11 @@ import (
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nrednav/cuid2"
 	"golang.org/x/oauth2"
 )
+
+var createAuthId, _ = cuid2.Init(cuid2.WithLength(32))
 
 var authErr = NewServiceErrCreator("auth")
 
@@ -289,7 +292,7 @@ func (a *AuthService) CreateProviderRequest(providerId string) (ProviderRequestR
 	}
 
 	// Create a unique id for the request
-	id := utils.CreateId()
+	id := createAuthId()
 
 	// Create the request
 	t := time.Now()

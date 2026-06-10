@@ -9,9 +9,10 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
-	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
+
+var createTrackId = createIdGenerator(32)
 
 type Track struct {
 	RowId int `db:"rowid"`
@@ -283,7 +284,7 @@ func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string,
 	}
 
 	if params.Id == "" {
-		params.Id = utils.CreateId()
+		params.Id = createTrackId()
 	}
 
 	query := dialect.Insert("tracks").Rows(goqu.Record{

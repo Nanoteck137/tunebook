@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/pyrin/ember"
 )
+
+var createUserListeningEventId = createIdGenerator(32)
 
 type UserListeningEvent struct {
 	RowId int `db:"rowid"`
@@ -64,7 +65,7 @@ type CreateUserListeningEventParams struct {
 
 func (db DB) CreateUserListeningEvent(ctx context.Context, params CreateUserListeningEventParams) (string, error) {
 	if params.Id == "" {
-		params.Id = utils.CreateUserListeningEventId()
+		params.Id = createUserListeningEventId()
 	}
 
 	query := dialect.Insert("user_listening_events").Rows(goqu.Record{

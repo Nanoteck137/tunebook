@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/tools/utils"
-	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/pyrin/ember"
+	"github.com/nanoteck137/tunebook/types"
 )
+
+var createUserId = createIdGenerator(10)
 
 type UserSettings struct {
 	Id            string         `db:"id"`
@@ -143,7 +144,7 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, err
 	}
 
 	if params.Id == "" {
-		params.Id = utils.CreateUserId()
+		params.Id = createUserId()
 	}
 
 	query := dialect.

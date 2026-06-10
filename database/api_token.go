@@ -6,8 +6,9 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
-	"github.com/nanoteck137/tunebook/tools/utils"
 )
+
+var createApiTokenId = createIdGenerator(32)
 
 type ApiToken struct {
 	Id     string `db:"id"`
@@ -75,7 +76,7 @@ func (db DB) CreateApiToken(
 	}
 
 	if params.Id == "" {
-		params.Id = utils.CreateApiTokenId()
+		params.Id = createApiTokenId()
 	}
 
 	query := dialect.Insert("api_tokens").Rows(goqu.Record{

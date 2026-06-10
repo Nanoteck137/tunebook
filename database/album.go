@@ -9,9 +9,10 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
-	"github.com/nanoteck137/tunebook/tools/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
+
+var createAlbumId = createIdGenerator(16)
 
 type Album struct {
 	RowId int `db:"rowid"`
@@ -192,7 +193,7 @@ func (db DB) CreateAlbum(
 	}
 
 	if params.Id == "" {
-		params.Id = utils.CreateAlbumId()
+		params.Id = createAlbumId()
 	}
 
 	query := dialect.Insert("albums").

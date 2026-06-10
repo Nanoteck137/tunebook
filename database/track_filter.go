@@ -5,10 +5,11 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/tools/utils"
-	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/pyrin/ember"
+	"github.com/nanoteck137/tunebook/types"
 )
+
+var createTrackFilterId = createIdGenerator(8)
 
 type TrackFilter struct {
 	RowId int `db:"rowid"`
@@ -76,7 +77,7 @@ func (db DB) CreateTrackFilter(ctx context.Context, params CreateTrackFilterPara
 	}
 
 	if params.Id == "" {
-		params.Id = utils.CreateTrackFilterId()
+		params.Id = createTrackFilterId()
 	}
 
 	query := dialect.Insert("track_filters").Rows(goqu.Record{

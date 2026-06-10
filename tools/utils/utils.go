@@ -15,36 +15,7 @@ import (
 	"unicode"
 
 	"github.com/gosimple/slug"
-	"github.com/nrednav/cuid2"
 )
-
-var CreateId = CreateIdGenerator(32)
-var CreateSmallId = CreateIdGenerator(8)
-
-var CreateUserId = CreateIdGenerator(10)
-
-var CreateArtistId = CreateIdGenerator(10)
-var CreateAlbumId = CreateIdGenerator(16)
-var CreateTrackId = CreateIdGenerator(32)
-var CreateTrackMediaId = CreateIdGenerator(32)
-
-var CreatePlaylistFilterId = CreateIdGenerator(8)
-var CreateTrackFilterId = CreateIdGenerator(8)
-
-var CreateVirtualPlaylistId = CreateIdGenerator(16)
-
-var CreateApiTokenId = CreateIdGenerator(32)
-
-var CreateUserListeningEventId = CreateIdGenerator(32)
-
-func CreateIdGenerator(length int) func() string {
-	res, err := cuid2.Init(cuid2.WithLength(length))
-	if err != nil {
-		panic(err)
-	}
-
-	return res
-}
 
 func ParseAuthHeader(authHeader string) string {
 	splits := strings.Split(authHeader, " ")

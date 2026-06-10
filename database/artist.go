@@ -14,6 +14,8 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
+var createArtistId = createIdGenerator(10)
+
 type Artist struct {
 	RowId int `db:"rowid"`
 
@@ -232,7 +234,7 @@ func (db DB) CreateArtist(
 	}
 
 	if params.Id == "" {
-		params.Id = utils.CreateArtistId()
+		params.Id = createArtistId()
 	}
 
 	query := dialect.Insert("artists").Rows(goqu.Record{
