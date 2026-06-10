@@ -92,7 +92,7 @@ func (db DB) GetAllAlbumIds(ctx context.Context) ([]string, error) {
 	query := dialect.From("albums").
 		Select("albums.id")
 
-	return ember.Multiple[string](db.db, ctx, query)
+	return Multiple[string](db, ctx, query)
 }
 
 type GetAlbumsParams struct {
@@ -115,14 +115,14 @@ func (db DB) GetAlbums(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db.db, params.Page, query, "albums.id")
+	page, err := buildPage(ctx, db, params.Page, query, "albums.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := ember.Multiple[Album](db.db, ctx, query)
+	items, err := Multiple[Album](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -137,14 +137,14 @@ func (db DB) GetAlbumsByArtist(
 	query := AlbumQuery().
 		Where(goqu.I("albums.artist_id").Eq(artistId))
 
-	return ember.Multiple[Album](db.db, ctx, query)
+	return Multiple[Album](db, ctx, query)
 }
 
 func (db DB) GetAlbumById(ctx context.Context, albumId string) (Album, error) {
 	query := AlbumQuery().
 		Where(goqu.I("albums.id").Eq(albumId))
 
-	return ember.Single[Album](db.db, ctx, query)
+	return Single[Album](db, ctx, query)
 }
 
 func (db DB) GetAlbumsIn(
@@ -165,7 +165,7 @@ func (db DB) GetAlbumsIn(
 		return nil, err
 	}
 
-	return ember.Multiple[Album](db.db, ctx, query)
+	return Multiple[Album](db, ctx, query)
 }
 
 type CreateAlbumParams struct {
@@ -211,7 +211,7 @@ func (db DB) CreateAlbum(
 			"updated": params.Updated,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return "", err
 	}
@@ -256,7 +256,7 @@ func (db DB) UpdateAlbum(
 		Set(record).
 		Where(goqu.I("albums.id").Eq(albumId))
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (db DB) DeleteAlbum(ctx context.Context, albumId string) error {
 	query := dialect.Delete("albums").
 		Where(goqu.I("albums.id").Eq(albumId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -279,13 +279,13 @@ func (db DB) DeleteAlbum(ctx context.Context, albumId string) error {
 // TODO(patrik): Generalize
 // TODO(patrik): Rename to AddAlbumTag, same with track
 func (db DB) AddTagToAlbum(ctx context.Context, tagSlug, albumId string) error {
-	ds := dialect.Insert("albums_tags").
+	query := dialect.Insert("albums_tags").
 		Rows(goqu.Record{
 			"album_id": albumId,
 			"tag_slug": tagSlug,
 		})
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -299,7 +299,7 @@ func (db DB) RemoveAllTagsFromAlbum(ctx context.Context, albumId string) error {
 	query := dialect.Delete("albums_tags").
 		Where(goqu.I("album_id").Eq(albumId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func (db DB) RemoveAllAlbumFeaturingArtists(ctx context.Context, albumId string)
 			goqu.I("albums_featuring_artists.album_id").Eq(albumId),
 		)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -330,7 +330,7 @@ func (db DB) AddFeaturingArtistToAlbum(ctx context.Context, albumId, artistId st
 			"artist_id": artistId,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -347,7 +347,7 @@ func (db DB) RemoveFeaturingArtistFromAlbum(ctx context.Context, albumId, artist
 			),
 		)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

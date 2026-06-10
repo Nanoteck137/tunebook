@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
 var createUserListeningEventId = createIdGenerator(32)
@@ -48,7 +47,7 @@ func (db DB) GetUserListeningEventById(ctx context.Context, id string) (UserList
 			goqu.I("user_listening_events.id").Eq(id),
 		)
 
-	return ember.Single[UserListeningEvent](db.db, ctx, query)
+	return Single[UserListeningEvent](db, ctx, query)
 }
 
 type CreateUserListeningEventParams struct {
@@ -81,7 +80,7 @@ func (db DB) CreateUserListeningEvent(ctx context.Context, params CreateUserList
 	}).
 		Returning("id")
 
-	return ember.Single[string](db.db, ctx, query)
+	return Single[string](db, ctx, query)
 }
 
 func (db DB) DeleteUserListeningEvent(ctx context.Context, id string) error {
@@ -90,7 +89,7 @@ func (db DB) DeleteUserListeningEvent(ctx context.Context, id string) error {
 			goqu.I("user_listening_events.id").Eq(id),
 		)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

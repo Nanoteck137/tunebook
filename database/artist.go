@@ -7,7 +7,6 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
-	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
 	"github.com/nanoteck137/tunebook/types"
@@ -111,14 +110,14 @@ func applyFilterParamsCustom(
 // TODO(patrik): Move
 func buildPage(
 	ctx context.Context,
-	db ember.DB,
+	db DB,
 	params types.PageParams,
 	query *goqu.SelectDataset,
 	countCol any,
 ) (types.Page, error) {
 	countQuery := query.Select(goqu.COUNT(countCol))
 
-	totalItems, err := ember.Single[int](db, ctx, countQuery)
+	totalItems, err := Single[int](db, ctx, countQuery)
 	if err != nil {
 		return types.Page{}, err
 	}
@@ -160,14 +159,14 @@ func (db DB) GetArtists(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db.db, params.Page, query, "artists.id")
+	page, err := buildPage(ctx, db, params.Page, query, "artists.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := ember.Multiple[Artist](db.db, ctx, query)
+	items, err := Multiple[Artist](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -182,7 +181,7 @@ func (db DB) GetArtistById(
 	query := ArtistQuery().
 		Where(goqu.I("artists.id").Eq(artistId))
 
-	return ember.Single[Artist](db.db, ctx, query)
+	return Single[Artist](db, ctx, query)
 }
 
 func (db DB) GetArtistsIn(
@@ -203,12 +202,12 @@ func (db DB) GetArtistsIn(
 		return nil, err
 	}
 
-	return ember.Multiple[Artist](db.db, ctx, query)
+	return Multiple[Artist](db, ctx, query)
 }
 
 func (db DB) GetAllArtistIds(ctx context.Context) ([]string, error) {
 	query := dialect.From("artists").Select("artists.id")
-	return ember.Multiple[string](db.db, ctx, query)
+	return Multiple[string](db, ctx, query)
 }
 
 type CreateArtistParams struct {
@@ -247,7 +246,7 @@ func (db DB) CreateArtist(
 		"updated": params.Updated,
 	})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return "", err
 	}
@@ -286,7 +285,7 @@ func (db DB) UpdateArtist(
 		Set(record).
 		Where(goqu.I("artists.id").Eq(artistId))
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -298,7 +297,7 @@ func (db DB) DeleteArtist(ctx context.Context, artistId string) error {
 	query := dialect.Delete("artists").
 		Where(goqu.I("artists.id").Eq(artistId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -309,13 +308,13 @@ func (db DB) DeleteArtist(ctx context.Context, artistId string) error {
 // TODO(patrik): Generalize
 // TODO(patrik): Rename to AddArtistTag, same with track
 func (db DB) AddTagToArtist(ctx context.Context, tagSlug, artistId string) error {
-	ds := dialect.Insert("artists_tags").
+	query := dialect.Insert("artists_tags").
 		Rows(goqu.Record{
 			"artist_id": artistId,
 			"tag_slug":  tagSlug,
 		})
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -329,7 +328,7 @@ func (db DB) RemoveAllTagsFromArtist(ctx context.Context, artistId string) error
 	query := dialect.Delete("artists_tags").
 		Where(goqu.I("artist_id").Eq(artistId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

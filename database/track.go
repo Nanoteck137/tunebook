@@ -140,20 +140,20 @@ func (db DB) GetTrackById(ctx context.Context, id string) (Track, error) {
 	query := TrackQuery().
 		Where(goqu.I("tracks.id").Eq(id))
 
-	return ember.Single[Track](db.db, ctx, query)
+	return Single[Track](db, ctx, query)
 }
 
 func (db DB) GetTracksByIds(ctx context.Context, ids []string) ([]Track, error) {
 	query := TrackQuery().Where(goqu.I("tracks.id").In(ids))
 
-	return ember.Multiple[Track](db.db, ctx, query)
+	return Multiple[Track](db, ctx, query)
 }
 
 func (db DB) GetAllTrackIds(ctx context.Context) ([]string, error) {
 	query := dialect.From("tracks").
 		Select("tracks.id")
 
-	return ember.Multiple[string](db.db, ctx, query)
+	return Multiple[string](db, ctx, query)
 }
 
 type GetTracksParams struct {
@@ -175,14 +175,14 @@ func (db DB) GetTracks(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db.db, params.Page, query, "tracks.id")
+	page, err := buildPage(ctx, db, params.Page, query, "tracks.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := ember.Multiple[Track](db.db, ctx, query)
+	items, err := Multiple[Track](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -204,7 +204,7 @@ func (db DB) GetTracksByAlbum(ctx context.Context, albumId string) ([]Track, err
 			goqu.I("tracks.name").Asc(),
 		)
 
-	return ember.Multiple[Track](db.db, ctx, query)
+	return Multiple[Track](db, ctx, query)
 }
 
 func AlbumTrackSubquery(albumId string) *goqu.SelectDataset {
@@ -253,7 +253,7 @@ func (db DB) GetTracksIn(ctx context.Context, in any, sort string) ([]Track, err
 		return nil, err
 	}
 
-	return ember.Multiple[Track](db.db, ctx, query)
+	return Multiple[Track](db, ctx, query)
 }
 
 type CreateTrackParams struct {
@@ -307,7 +307,7 @@ func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string,
 		"updated": params.Updated,
 	})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return "", err
 	}
@@ -360,7 +360,7 @@ func (db DB) UpdateTrack(ctx context.Context, id string, changes TrackChanges) e
 		Set(record).
 		Where(goqu.I("tracks.id").Eq(id))
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func (db DB) DeleteTrack(ctx context.Context, id string) error {
 	query := dialect.Delete("tracks").
 		Where(goqu.I("tracks.id").Eq(id))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -387,7 +387,7 @@ func (db DB) AddTagToTrack(ctx context.Context, tagSlug, trackId string) error {
 			"tag_slug": tagSlug,
 		})
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -399,7 +399,7 @@ func (db DB) RemoveAllTagsFromTrack(ctx context.Context, trackId string) error {
 	query := dialect.Delete("tracks_tags").
 		Where(goqu.I("track_id").Eq(trackId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -412,7 +412,7 @@ func (db DB) RemoveAllTrackFeaturingArtists(ctx context.Context, trackId string)
 	query := dialect.Delete("tracks_featuring_artists").
 		Where(goqu.I("tracks_featuring_artists.track_id").Eq(trackId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -428,7 +428,7 @@ func (db DB) AddFeaturingArtistToTrack(ctx context.Context, trackId, artistId st
 			"artist_id": artistId,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -445,7 +445,7 @@ func (db DB) RemoveFeaturingArtistFromTrack(ctx context.Context, trackId, artist
 			),
 		)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -48,14 +47,14 @@ func (db DB) GetTrackFilterById(ctx context.Context, id string) (TrackFilter, er
 	query := TrackFilterQuery().
 		Where(goqu.I("track_filters.id").Eq(id))
 
-	return ember.Single[TrackFilter](db.db, ctx, query)
+	return Single[TrackFilter](db, ctx, query)
 }
 
 func (db DB) GetTrackFiltersByUserId(ctx context.Context, userId string) ([]TrackFilter, error) {
 	query := TrackFilterQuery().
 		Where(goqu.I("track_filters.user_id").Eq(userId))
 
-	return ember.Multiple[TrackFilter](db.db, ctx, query)
+	return Multiple[TrackFilter](db, ctx, query)
 }
 
 type CreateTrackFilterParams struct {
@@ -92,7 +91,7 @@ func (db DB) CreateTrackFilter(ctx context.Context, params CreateTrackFilterPara
 		"updated": params.Updated,
 	})
 
-	_, err := ember.Single[string](db.db, ctx, query)
+	_, err := Single[string](db, ctx, query)
 	if err != nil {
 		return "", err
 	}
@@ -129,7 +128,7 @@ func (db DB) UpdateTrackFilter(ctx context.Context, id string, changes TrackFilt
 		Set(record).
 		Where(goqu.I("track_filters.id").Eq(id))
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -141,7 +140,7 @@ func (db DB) DeleteTrackFilter(ctx context.Context, id string) error {
 	query := dialect.Delete("track_filters").
 		Where(goqu.I("track_filters.id").Eq(id))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -49,7 +48,7 @@ func PlaylistItemQuery() *goqu.SelectDataset {
 
 func (db DB) GetAllPlaylistItems(ctx context.Context) ([]PlaylistItem, error) {
 	query := PlaylistItemQuery()
-	return ember.Multiple[PlaylistItem](db.db, ctx, query)
+	return Multiple[PlaylistItem](db, ctx, query)
 }
 
 func (db DB) GetPlaylistItems(ctx context.Context, playlistId string) ([]PlaylistItem, error) {
@@ -57,7 +56,7 @@ func (db DB) GetPlaylistItems(ctx context.Context, playlistId string) ([]Playlis
 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
 		Order(goqu.I("playlist_items.position").Asc())
 
-	return ember.Multiple[PlaylistItem](db.db, ctx, query)
+	return Multiple[PlaylistItem](db, ctx, query)
 }
 
 func (db DB) GetPlaylistTrackImages(
@@ -78,7 +77,7 @@ func (db DB) GetPlaylistTrackImages(
 		Order(goqu.I("playlist_items.position").Asc()).
 		Limit(uint(numImages))
 
-	return ember.Multiple[sql.NullString](db.db, ctx, query)
+	return Multiple[sql.NullString](db, ctx, query)
 }
 
 func (db DB) GetNextPlaylistItemIndex(ctx context.Context, playlistId string) (int, error) {
@@ -88,7 +87,7 @@ func (db DB) GetNextPlaylistItemIndex(ctx context.Context, playlistId string) (i
 		Order(goqu.I("playlist_items.position").Desc()).
 		Limit(1)
 
-	res, err := ember.Single[int](db.db, ctx, query)
+	res, err := Single[int](db, ctx, query)
 	if err != nil {
 		if errors.Is(err, ErrItemNotFound) {
 			return 0, nil
@@ -132,14 +131,14 @@ func (db DB) GetPlaylistTracks(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db.db, params.Page, query, "tracks.id")
+	page, err := buildPage(ctx, db, params.Page, query, "tracks.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := ember.Multiple[PlaylistItemTrack](db.db, ctx, query)
+	items, err := Multiple[PlaylistItemTrack](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -159,7 +158,7 @@ func (db DB) GetPlaylistItemIds(
 		Select("playlist_items.track_id").
 		Where(goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
 
-	items, err := ember.Multiple[string](db.db, ctx, query)
+	items, err := Multiple[string](db, ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +194,7 @@ func (db DB) CreatePlaylistItem(ctx context.Context, params CreatePlaylistItemPa
 			"updated": params.Updated,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -229,7 +228,7 @@ func (db DB) UpdatePlaylistItem(ctx context.Context, playlistId, trackId string,
 			goqu.I("playlist_items.track_id").Eq(trackId),
 		)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -244,7 +243,7 @@ func (db DB) DeletePlaylistItem(ctx context.Context, playlistId, trackId string)
 			goqu.I("playlist_items.track_id").Eq(trackId),
 		))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -259,7 +258,7 @@ func (db DB) GetPlaylistItemByTrackId(ctx context.Context, playlistId, trackId s
 			goqu.I("playlist_items.track_id").Eq(trackId),
 		)
 
-	return ember.Single[PlaylistItem](db.db, ctx, query)
+	return Single[PlaylistItem](db, ctx, query)
 }
 
 func (db DB) ReorderPlaylistItemsAfterDelete(ctx context.Context, playlistId string, deletedPosition int) error {
@@ -272,7 +271,7 @@ func (db DB) ReorderPlaylistItemsAfterDelete(ctx context.Context, playlistId str
 			goqu.I("position").Gt(deletedPosition),
 		)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

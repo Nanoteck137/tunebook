@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
 type UserIdentity struct {
@@ -46,7 +45,7 @@ func (db DB) GetUserIdentity(ctx context.Context, provider, providerId string) (
 			goqu.I("user_identities.provider_id").Eq(providerId),
 		)
 
-	return ember.Single[UserIdentity](db.db, ctx, query)
+	return Single[UserIdentity](db, ctx, query)
 }
 
 type CreateUserIdentityParams struct {
@@ -81,7 +80,7 @@ func (db DB) CreateUserIdentity(ctx context.Context, params CreateUserIdentityPa
 			"updated": updated,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

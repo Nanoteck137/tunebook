@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -78,48 +77,48 @@ func UserSettingsQuery() *goqu.SelectDataset {
 func (db DB) GetAllUsers(ctx context.Context) ([]User, error) {
 	query := UserQuery()
 
-	return ember.Multiple[User](db.db, ctx, query)
+	return Multiple[User](db, ctx, query)
 }
 
 func (db DB) GetUsersIn(ctx context.Context, in any) ([]User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.id").In(in))
 
-	return ember.Multiple[User](db.db, ctx, query)
+	return Multiple[User](db, ctx, query)
 }
 
 func (db DB) CountUsers(ctx context.Context) (int, error) {
 	query := UserQuery().Select(goqu.COUNT("users.id").As("count"))
 
-	return ember.Single[int](db.db, ctx, query)
+	return Single[int](db, ctx, query)
 }
 
 func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.id").Eq(id))
 
-	return ember.Single[User](db.db, ctx, query)
+	return Single[User](db, ctx, query)
 }
 
 func (db DB) GetUserByUsername(ctx context.Context, username string) (User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.username").Eq(username))
 
-	return ember.Single[User](db.db, ctx, query)
+	return Single[User](db, ctx, query)
 }
 
 func (db DB) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.email").Eq(email))
 
-	return ember.Single[User](db.db, ctx, query)
+	return Single[User](db, ctx, query)
 }
 
 func (db DB) GetUserSettingsById(ctx context.Context, id string) (UserSettings, error) {
 	query := UserSettingsQuery().
 		Where(goqu.I("users_settings.id").Eq(id))
 
-	return ember.Single[UserSettings](db.db, ctx, query)
+	return Single[UserSettings](db, ctx, query)
 }
 
 type CreateUserParams struct {
@@ -175,7 +174,7 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, err
 			"users.updated",
 		)
 
-	return ember.Single[User](db.db, ctx, query)
+	return Single[User](db, ctx, query)
 }
 
 type UserChanges struct {
@@ -207,7 +206,7 @@ func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) err
 		Set(record).
 		Where(goqu.I("users.id").Eq(id))
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -225,7 +224,7 @@ func (db DB) UpdateUserSettings(ctx context.Context, settings UserSettings) erro
 			"quick_playlist": settings.QuickPlaylist,
 		}))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

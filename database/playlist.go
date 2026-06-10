@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
 	"github.com/nanoteck137/tunebook/types"
@@ -85,14 +84,14 @@ func (db DB) GetPlaylists(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db.db, params.Page, query, "playlists.id")
+	page, err := buildPage(ctx, db, params.Page, query, "playlists.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := ember.Multiple[Playlist](db.db, ctx, query)
+	items, err := Multiple[Playlist](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -116,7 +115,7 @@ func (db DB) GetPlaylistsIn(
 		return nil, err
 	}
 
-	return ember.Multiple[Playlist](db.db, ctx, query)
+	return Multiple[Playlist](db, ctx, query)
 }
 
 func (db DB) GetPlaylistById(
@@ -126,7 +125,7 @@ func (db DB) GetPlaylistById(
 	query := PlaylistQuery().
 		Where(goqu.I("playlists.id").Eq(playlistId))
 
-	return ember.Single[Playlist](db.db, ctx, query)
+	return Single[Playlist](db, ctx, query)
 }
 
 type CreatePlaylistParams struct {
@@ -166,7 +165,7 @@ func (db DB) CreatePlaylist(
 			"updated": params.Updated,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return "", err
 	}
@@ -209,7 +208,7 @@ func (db DB) UpdatePlaylist(
 		Set(record).
 		Where(goqu.I("playlists.id").Eq(playlistId))
 
-	_, err := db.db.Exec(ctx, ds)
+	_, err := db.Exec(ctx, ds)
 	if err != nil {
 		return err
 	}
@@ -221,7 +220,7 @@ func (db DB) DeletePlaylist(ctx context.Context, playlistId string) error {
 	query := dialect.Delete("playlists").
 		Where(goqu.I("playlists.id").Eq(playlistId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

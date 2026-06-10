@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
 var createApiTokenId = createIdGenerator(32)
@@ -43,7 +42,7 @@ func (db DB) GetApiTokenById(
 	query := ApiTokenQuery().
 		Where(goqu.I("api_tokens.id").Eq(tokenId))
 
-	return ember.Single[ApiToken](db.db, ctx, query)
+	return Single[ApiToken](db, ctx, query)
 }
 
 func (db DB) GetAllApiTokensForUser(
@@ -53,7 +52,7 @@ func (db DB) GetAllApiTokensForUser(
 	query := ApiTokenQuery().
 		Where(goqu.I("api_tokens.user_id").Eq(userId))
 
-	return ember.Multiple[ApiToken](db.db, ctx, query)
+	return Multiple[ApiToken](db, ctx, query)
 }
 
 type CreateApiTokenParams struct {
@@ -89,7 +88,7 @@ func (db DB) CreateApiToken(
 		"updated": params.Updated,
 	})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return "", err
 	}
@@ -101,7 +100,7 @@ func (db DB) DeleteApiToken(ctx context.Context, tokenId string) error {
 	query := dialect.Delete("api_tokens").
 		Where(goqu.I("api_tokens.id").Eq(tokenId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

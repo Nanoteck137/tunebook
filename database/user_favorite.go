@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -44,7 +43,7 @@ func (db DB) GetUserFavoritesIds(ctx context.Context, userId string) ([]string, 
 		Select("user_favorites.track_id").
 		Where(goqu.I("user_favorites.user_id").Eq(userId))
 
-	items, err := ember.Multiple[string](db.db, ctx, query)
+	items, err := Multiple[string](db, ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -84,14 +83,14 @@ func (db DB) GetUserFavoriteTracks(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db.db, params.Page, query, "tracks.id")
+	page, err := buildPage(ctx, db, params.Page, query, "tracks.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := ember.Multiple[UserFavoriteTrack](db.db, ctx, query)
+	items, err := Multiple[UserFavoriteTrack](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -119,7 +118,7 @@ func (db DB) CreateUserFavorite(ctx context.Context, params CreateUserFavoritePa
 			"added": params.Added,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -134,7 +133,7 @@ func (db DB) DeleteUserFavorite(ctx context.Context, userId, trackId string) err
 			goqu.I("user_favorites.track_id").Eq(trackId),
 		)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
