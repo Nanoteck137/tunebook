@@ -8,7 +8,7 @@ import (
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
-	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -42,6 +42,7 @@ func ConvertDBAlbum(c pyrin.Context, album database.Album) Album {
 			Name: v.Name,
 		}
 	}
+
 	return Album{
 		Id:       album.Id,
 		Name:     album.Name,

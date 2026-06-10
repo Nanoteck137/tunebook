@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
 )
 
