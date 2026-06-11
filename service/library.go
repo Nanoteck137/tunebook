@@ -508,8 +508,10 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 				},
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("create track: %w", err)
 			}
+		} else {
+			return fmt.Errorf("get track: %w", err)
 		}
 	} else {
 		changes := database.TrackChanges{}
@@ -576,7 +578,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 
 		err = s.db.UpdateTrack(ctx, dbTrack.Id, changes)
 		if err != nil {
-			return err
+			return fmt.Errorf("update track: %w", err)
 		}
 	}
 
@@ -587,7 +589,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 		entry.FeaturingArtistIds,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("set track featuring artists: %w", err)
 	}
 
 	err = setTrackTags(
@@ -597,7 +599,7 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 		entry.Tags,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("set track tags: %w", err)
 	}
 
 	return nil
