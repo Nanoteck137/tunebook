@@ -23,6 +23,8 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 
 	InstallPlaylistHandlers(app, g)
 
+	InstallHistoryHandlers(app, g)
+
 	InstallSearchHandlers(app, g)
 }
 

@@ -29,6 +29,7 @@ type App interface {
 	AlbumService() *service.AlbumService
 	TrackService() *service.TrackService
 	PlaylistService() *service.PlaylistService
+	HistoryService() *service.HistoryService
 
 	Broker() *broker.Broker
 

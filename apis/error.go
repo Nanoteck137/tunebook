@@ -25,6 +25,8 @@ const (
 	ErrTypePlaylistAlreadyHasTrack pyrin.ErrorType = "PLAYLIST_ALREADY_HAS_TRACK"
 
 	ErrTypeFilterNotFound pyrin.ErrorType = "FILTER_NOT_FOUND"
+
+	ErrTypeHistoryNotFound pyrin.ErrorType = "HISTORY_NOT_FOUND"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -136,6 +138,14 @@ func FilterNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeFilterNotFound,
 		Message: "Filter not found",
+	}
+}
+
+func HistoryNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeHistoryNotFound,
+		Message: "History not found",
 	}
 }
 

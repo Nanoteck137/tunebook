@@ -27,10 +27,11 @@ type BaseApp struct {
 	imageService        *service.ImageService
 	mediaService        *service.MediaService
 
-	artistService   *service.ArtistService
-	albumService    *service.AlbumService
-	trackService    *service.TrackService
-	playlistService *service.PlaylistService
+	artistService       *service.ArtistService
+	albumService        *service.AlbumService
+	trackService        *service.TrackService
+	playlistService     *service.PlaylistService
+	historyService  *service.HistoryService
 
 	broker *broker.Broker
 }
@@ -53,6 +54,10 @@ func (app *BaseApp) TrackService() *service.TrackService {
 
 func (app *BaseApp) PlaylistService() *service.PlaylistService {
 	return app.playlistService
+}
+
+func (app *BaseApp) HistoryService() *service.HistoryService {
+	return app.historyService
 }
 
 func (app *BaseApp) TaskService() *service.TaskService {
@@ -200,6 +205,11 @@ func (app *BaseApp) Bootstrap() error {
 		app.db,
 		dataDir,
 		app.imageService,
+	)
+
+	app.historyService = service.NewHistoryService(
+		newServiceLogger("track_history"),
+		app.db,
 	)
 
 	app.broker = broker.NewBroker(func() []broker.Event {
