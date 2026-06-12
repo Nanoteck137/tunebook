@@ -6,17 +6,21 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/tools/filter"
 	"github.com/nanoteck137/tunebook/types"
 )
 
-var createTrackId = createIdGenerator(32)
+var (
+	createTrackId = createIdGenerator(32)
+
+	tracksTbl                 = goqu.T("tracks")
+	tracksTagsTbl             = goqu.T("tracks_tags")
+	tracksFeaturingArtistsTbl = goqu.T("tracks_featuring_artists")
+)
 
 type Track struct {
-	RowId int `db:"rowid"`
-
 	Id string `db:"id"`
 
 	Filename     string            `db:"filename"`
@@ -42,96 +46,35 @@ type Track struct {
 
 	Tags sql.NullString `db:"tags"`
 
-	FeaturingArtists ember.JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
+	FeaturingArtists JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 
 	Order *int
 }
 
-// TODO(patrik): Move
-func FeaturingArtistsQuery(table, idColName string) *goqu.SelectDataset {
-	tbl := goqu.T(table)
-
-	return dialect.From(tbl).
-		Select(
-			tbl.Col(idColName).As("id"),
-			goqu.Func(
-				"json_group_array",
-				goqu.Func(
-					"json_object",
-					"id",
-					goqu.I("artists.id"),
-					"name",
-					goqu.I("artists.name"),
-				),
-			).As("artists"),
-		).
-		Join(
-			goqu.I("artists"),
-			goqu.On(tbl.Col("artist_id").Eq(goqu.I("artists.id"))),
-		).
-		GroupBy(tbl.Col(idColName))
+func SqlGroupConcat(col any, seperator string) exp.SQLFunctionExpression {
+	return goqu.Func("group_concat", col, seperator)
 }
 
-// TODO(patrik): Use goqu.T more
-func TrackQuery() *goqu.SelectDataset {
-	tags := dialect.From("tracks_tags").
+func ObjectTagsQuery(objectTagTable, idCol string) *goqu.SelectDataset {
+	// TODO(patrik): Replace with tagsTable
+	tagsTable := goqu.T("tags")
+	tagsTableSlugCol := tagsTable.Col("slug")
+
+	// table := goqu.T("tracks_tags")
+	table := goqu.T(objectTagTable)
+	tableSlugCol := table.Col("tag_slug")
+	tableIdCol := table.Col(idCol)
+
+	query := dialect.From(table).
 		Select(
-			goqu.I("tracks_tags.track_id").As("track_id"),
-			goqu.Func("group_concat", goqu.I("tags.slug"), ",").As("tags"),
+			tableIdCol.As("id"),
+			SqlGroupConcat(tagsTableSlugCol, ",").As("data"),
 		).
 		Join(
-			goqu.I("tags"),
-			goqu.On(goqu.I("tracks_tags.tag_slug").Eq(goqu.I("tags.slug"))),
+			tagsTable,
+			goqu.On(tableSlugCol.Eq(tagsTableSlugCol)),
 		).
-		GroupBy(goqu.I("tracks_tags.track_id"))
-
-	query := dialect.From("tracks").
-		Select(
-			"tracks.rowid",
-
-			"tracks.id",
-
-			"tracks.filename",
-			"tracks.modified_time",
-			"tracks.media_format",
-
-			"tracks.name",
-
-			"tracks.album_id",
-			"tracks.artist_id",
-
-			"tracks.number",
-			"tracks.duration",
-			"tracks.year",
-
-			"tracks.created",
-			"tracks.updated",
-
-			goqu.I("albums.name").As("album_name"),
-			goqu.I("albums.cover_art").As("album_cover_art"),
-
-			goqu.I("artists.name").As("artist_name"),
-
-			goqu.I("tags.tags").As("tags"),
-
-			goqu.I("featuring_artists.artists").As("featuring_artists"),
-		).
-		Join(
-			goqu.I("albums"),
-			goqu.On(goqu.I("tracks.album_id").Eq(goqu.I("albums.id"))),
-		).
-		Join(
-			goqu.I("artists"),
-			goqu.On(goqu.I("tracks.artist_id").Eq(goqu.I("artists.id"))),
-		).
-		LeftJoin(
-			tags.As("tags"),
-			goqu.On(goqu.I("tracks.id").Eq(goqu.I("tags.track_id"))),
-		).
-		LeftJoin(
-			FeaturingArtistsQuery("tracks_featuring_artists", "track_id").As("featuring_artists"),
-			goqu.On(goqu.I("tracks.id").Eq(goqu.I("featuring_artists.id"))),
-		)
+		GroupBy(tableIdCol)
 
 	return query
 }
@@ -205,38 +148,6 @@ func (db DB) GetTracksByAlbum(ctx context.Context, albumId string) ([]Track, err
 		)
 
 	return Multiple[Track](db, ctx, query)
-}
-
-func AlbumTrackSubquery(albumId string) *goqu.SelectDataset {
-	return goqu.From("tracks").
-		Select("tracks.id").
-		Where(goqu.I("tracks.album_id").Eq(albumId))
-}
-
-func ArtistTrackSubquery(artistId string) *goqu.SelectDataset {
-	tbl := goqu.T("tracks_featuring_artists")
-	return goqu.From("tracks").
-		Select("tracks.id").
-		FullOuterJoin(
-			tbl,
-			goqu.On(
-				goqu.I("tracks.id").Eq(tbl.Col("track_id")),
-			),
-		).
-		Where(
-			goqu.Or(
-				goqu.I("tracks.artist_id").Eq(artistId),
-				tbl.Col("artist_id").Eq(artistId),
-			),
-		)
-}
-
-func PlaylistTrackSubquery(playlistId string) *goqu.SelectDataset {
-	return goqu.From("playlist_items").
-		Select("playlist_items.track_id").
-		Where(
-			goqu.I("playlist_items.playlist_id").Eq(playlistId),
-		)
 }
 
 func (db DB) GetTracksIn(ctx context.Context, in any, sort string) ([]Track, error) {
@@ -381,7 +292,7 @@ func (db DB) DeleteTrack(ctx context.Context, id string) error {
 }
 
 func (db DB) AddTagToTrack(ctx context.Context, tagSlug, trackId string) error {
-	query := dialect.Insert("tracks_tags").
+	query := dialect.Insert(tracksTagsTbl).
 		Rows(goqu.Record{
 			"track_id": trackId,
 			"tag_slug": tagSlug,
@@ -396,7 +307,7 @@ func (db DB) AddTagToTrack(ctx context.Context, tagSlug, trackId string) error {
 }
 
 func (db DB) RemoveAllTagsFromTrack(ctx context.Context, trackId string) error {
-	query := dialect.Delete("tracks_tags").
+	query := dialect.Delete(tracksTagsTbl).
 		Where(goqu.I("track_id").Eq(trackId))
 
 	_, err := db.Exec(ctx, query)
@@ -409,8 +320,8 @@ func (db DB) RemoveAllTagsFromTrack(ctx context.Context, trackId string) error {
 
 // TODO(patrik): Generalize
 func (db DB) RemoveAllTrackFeaturingArtists(ctx context.Context, trackId string) error {
-	query := dialect.Delete("tracks_featuring_artists").
-		Where(goqu.I("tracks_featuring_artists.track_id").Eq(trackId))
+	query := dialect.Delete(tracksFeaturingArtistsTbl).
+		Where(tracksFeaturingArtistsTbl.Col("track_id").Eq(trackId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -422,7 +333,7 @@ func (db DB) RemoveAllTrackFeaturingArtists(ctx context.Context, trackId string)
 
 // TODO(patrik): Generalize
 func (db DB) AddFeaturingArtistToTrack(ctx context.Context, trackId, artistId string) error {
-	query := dialect.Insert("tracks_featuring_artists").
+	query := dialect.Insert(tracksFeaturingArtistsTbl).
 		Rows(goqu.Record{
 			"track_id":  trackId,
 			"artist_id": artistId,
@@ -437,11 +348,11 @@ func (db DB) AddFeaturingArtistToTrack(ctx context.Context, trackId, artistId st
 }
 
 func (db DB) RemoveFeaturingArtistFromTrack(ctx context.Context, trackId, artistId string) error {
-	query := goqu.Delete("tracks_featuring_artists").
+	query := goqu.Delete(tracksFeaturingArtistsTbl).
 		Where(
 			goqu.And(
-				goqu.I("tracks_featuring_artists.track_id").Eq(trackId),
-				goqu.I("tracks_featuring_artists.artist_id").Eq(artistId),
+				tracksFeaturingArtistsTbl.Col("track_id").Eq(trackId),
+				tracksFeaturingArtistsTbl.Col("artist_id").Eq(artistId),
 			),
 		)
 
@@ -451,4 +362,64 @@ func (db DB) RemoveFeaturingArtistFromTrack(ctx context.Context, trackId, artist
 	}
 
 	return nil
+}
+
+func TrackQuery() *goqu.SelectDataset {
+	idCol := tracksTbl.Col("id")
+
+	query := dialect.From(tracksTbl).
+		Select(
+			idCol,
+
+			tracksTbl.Col("filename"),
+			tracksTbl.Col("modified_time"),
+			tracksTbl.Col("media_format"),
+
+			tracksTbl.Col("name"),
+
+			tracksTbl.Col("album_id"),
+			tracksTbl.Col("artist_id"),
+
+			tracksTbl.Col("number"),
+			tracksTbl.Col("duration"),
+			tracksTbl.Col("year"),
+
+			tracksTbl.Col("created"),
+			tracksTbl.Col("updated"),
+
+			// TODO(patrik): Replace with albumsTable.Col("name")
+			goqu.I("albums.name").As("album_name"),
+			// TODO(patrik): Replace with albumsTable.Col("cover_art")
+			goqu.I("albums.cover_art").As("album_cover_art"),
+
+			// TODO(patrik): Replace with artistsTable.Col("name")
+			goqu.I("artists.name").As("artist_name"),
+
+			goqu.I("tags.data").As("tags"),
+			goqu.I("featuring_artists.artists").As("featuring_artists"),
+		).
+		Join(
+			// TODO(patrik): Replace with albumsTable
+			goqu.I("albums"),
+			// TODO(patrik): Replace with albumsTable.Col("id")
+			goqu.On(tracksTbl.Col("album_id").Eq(goqu.I("albums.id"))),
+		).
+		Join(
+			// TODO(patrik): Replace with artistsTable
+			goqu.I("artists"),
+			// TODO(patrik): Replace with artistsTable.Col("id")
+			goqu.On(tracksTbl.Col("artist_id").Eq(goqu.I("artists.id"))),
+		).
+		LeftJoin(
+			// TODO(patrik): Fix
+			ObjectTagsQuery("tracks_tags", "track_id").As("tags"),
+			goqu.On(idCol.Eq(goqu.I("tags.id"))),
+		).
+		LeftJoin(
+			// TODO(patrik): Fix
+			FeaturingArtistsQuery("tracks_featuring_artists", "track_id").As("featuring_artists"),
+			goqu.On(idCol.Eq(goqu.I("featuring_artists.id"))),
+		)
+
+	return query
 }
