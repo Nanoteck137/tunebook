@@ -17,6 +17,9 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
+- [ ] Backend: Feature: User History
+- [ ] Backend: Feature: Year over year
+
 - [ ] Backend: Fix: Quick Playlist Get ids
 
 - [ ] Frontend: Design: Re-design the header, add profile picture + drop down
@@ -46,9 +49,6 @@ api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 - [ ] Backend: Database: Use database indexes
 
 ## Future
-
-- [ ] Backend: Feature: User History
-- [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Cleanup: Database: Database code
 
