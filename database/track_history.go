@@ -51,6 +51,7 @@ func TrackHistoryQuery() *goqu.SelectDataset {
 }
 
 type GetTrackHistoryParams struct {
+	UserId string
 	Page   types.PageParams
 	Filter types.FilterParams
 }
@@ -63,8 +64,13 @@ func (db DB) GetTrackHistory(
 
 	var err error
 
-		a := adapter.TrackHistoryResolverAdapter{}
-	query, err = applyFilterParams(params.Filter, &a, query)
+	a := adapter.TrackHistoryResolverAdapter{}
+	query, err = applyFilterParamsCustom(
+		params.Filter, 
+		&a, 
+		query, 
+		goqu.I("track_history.user_id").Eq(params.UserId),
+	)
 	if err != nil {
 		return nil, types.Page{}, err
 	}

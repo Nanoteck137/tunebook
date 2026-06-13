@@ -50,6 +50,17 @@ type GetHistoryById struct {
 	History TrackHistory `json:"history"`
 }
 
+type PushTrackHistoryBody struct {
+	TrackId      string `json:"trackId"`
+	ListenedAt   int64  `json:"listenedAt"`
+	PlaybackType string `json:"playbackType"`
+	Status       string `json:"status"`
+}
+
+type PushTrackHistory struct {
+	Id string `json:"id"`
+}
+
 func handleHistoryServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrHistoryServiceHistoryNotFound):
@@ -79,11 +90,17 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
 
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
 				ctx := c.Request().Context()
 
 				items, page, err := app.HistoryService().GetTrackHistory(
 					ctx,
 					service.GetTrackHistoryParams{
+						UserId: user.Id,
 						Page:   getPageParams(q, 100),
 						Filter: getFilterParams(q),
 					},
@@ -106,17 +123,62 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
+			Name:         "PushTrackHistory",
+			Method:       http.MethodPost,
+			Path:         "/history/tracks",
+			ResponseType: PushTrackHistory{},
+			BodyType:     PushTrackHistoryBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[PushTrackHistoryBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				id, err := app.HistoryService().PushTrackHistory(
+					ctx,
+					service.PushTrackHistoryParams{
+						UserId:       user.Id,
+						TrackId:      body.TrackId,
+						ListenedAt:   body.ListenedAt,
+						PlaybackType: body.PlaybackType,
+						Status:       body.Status,
+					},
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				return PushTrackHistory{
+					Id: id,
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
 			Name:         "GetTrackHistoryById",
 			Method:       http.MethodGet,
 			Path:         "/history/tracks/:id",
 			ResponseType: GetHistoryById{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
 				ctx := c.Request().Context()
 
 				history, err := app.HistoryService().GetTrackHistoryById(
 					ctx,
 					service.GetTrackHistoryByIdParams{
 						HistoryId: c.Param("id"),
+						UserId:    user.Id,
 					},
 				)
 				if err != nil {
