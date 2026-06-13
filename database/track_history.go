@@ -9,9 +9,9 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
-var createUserTrackHistoryId = createIdGenerator(32)
+var createTrackHistoryId = createIdGenerator(32)
 
-type UserTrackHistory struct {
+type TrackHistory struct {
 	Id string `db:"id"`
 
 	UserId  string `db:"user_id"`
@@ -26,57 +26,57 @@ type UserTrackHistory struct {
 	Updated int64 `db:"updated"`
 }
 
-func UserTrackHistoryQuery() *goqu.SelectDataset {
-	query := dialect.From("user_track_history").
+func TrackHistoryQuery() *goqu.SelectDataset {
+	query := dialect.From("track_history").
 		Select(
-			"user_track_history.id",
+			"track_history.id",
 
-			"user_track_history.user_id",
-			"user_track_history.track_id",
+			"track_history.user_id",
+			"track_history.track_id",
 
-			"user_track_history.listened_at",
+			"track_history.listened_at",
 
-			"user_track_history.playback_type",
-			"user_track_history.status",
+			"track_history.playback_type",
+			"track_history.status",
 
-			"user_track_history.updated",
-			"user_track_history.created",
+			"track_history.updated",
+			"track_history.created",
 		).
 		Join(
 			TrackQuery().As("tracks"),
-			goqu.On(goqu.I("user_track_history.track_id").Eq(goqu.I("tracks.id"))),
+			goqu.On(goqu.I("track_history.track_id").Eq(goqu.I("tracks.id"))),
 		)
 
 	return query
 }
 
-type GetUserTrackHistoryParams struct {
+type GetTrackHistoryParams struct {
 	Page   types.PageParams
 	Filter types.FilterParams
 }
 
-func (db DB) GetUserTrackHistory(
+func (db DB) GetTrackHistory(
 	ctx context.Context,
-	params GetUserTrackHistoryParams,
-) ([]UserTrackHistory, types.Page, error) {
-	query := UserTrackHistoryQuery()
+	params GetTrackHistoryParams,
+) ([]TrackHistory, types.Page, error) {
+	query := TrackHistoryQuery()
 
 	var err error
 
-		a := adapter.UserTrackHistoryResolverAdapter{}
+		a := adapter.TrackHistoryResolverAdapter{}
 	query, err = applyFilterParams(params.Filter, &a, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db, params.Page, query, "user_track_history.id")
+	page, err := buildPage(ctx, db, params.Page, query, "track_history.id")
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
 
-	items, err := Multiple[UserTrackHistory](db, ctx, query)
+	items, err := Multiple[TrackHistory](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -84,17 +84,17 @@ func (db DB) GetUserTrackHistory(
 	return items, page, nil
 }
 
-func (db DB) GetUserTrackHistoryById(
+func (db DB) GetTrackHistoryById(
 	ctx context.Context,
 	id string,
-) (UserTrackHistory, error) {
-	query := UserTrackHistoryQuery().
-		Where(goqu.I("user_track_history.id").Eq(id))
+) (TrackHistory, error) {
+	query := TrackHistoryQuery().
+		Where(goqu.I("track_history.id").Eq(id))
 
-	return Single[UserTrackHistory](db, ctx, query)
+	return Single[TrackHistory](db, ctx, query)
 }
 
-type CreateUserTrackHistoryParams struct {
+type CreateTrackHistoryParams struct {
 	Id string
 
 	UserId  string
@@ -109,9 +109,9 @@ type CreateUserTrackHistoryParams struct {
 	Updated int64
 }
 
-func (db DB) CreateUserTrackHistory(
+func (db DB) CreateTrackHistory(
 	ctx context.Context,
-	params CreateUserTrackHistoryParams,
+	params CreateTrackHistoryParams,
 ) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
@@ -120,10 +120,10 @@ func (db DB) CreateUserTrackHistory(
 	}
 
 	if params.Id == "" {
-		params.Id = createUserTrackHistoryId()
+		params.Id = createTrackHistoryId()
 	}
 
-	query := dialect.Insert("user_track_history").Rows(goqu.Record{
+	query := dialect.Insert("track_history").Rows(goqu.Record{
 		"id": params.Id,
 
 		"user_id":  params.UserId,
@@ -146,9 +146,9 @@ func (db DB) CreateUserTrackHistory(
 	return params.Id, nil
 }
 
-func (db DB) DeleteUserTrackHistory(ctx context.Context, user_track_historyId string) error {
-	query := dialect.Delete("user_track_history").
-		Where(goqu.I("user_track_history.id").Eq(user_track_historyId))
+func (db DB) DeleteTrackHistory(ctx context.Context, track_historyId string) error {
+	query := dialect.Delete("track_history").
+		Where(goqu.I("track_history.id").Eq(track_historyId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {

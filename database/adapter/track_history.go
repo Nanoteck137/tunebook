@@ -7,45 +7,45 @@ import (
 	"github.com/nanoteck137/tunebook/tools/filter"
 )
 
-var _ filter.ResolverAdapter = (*UserTrackHistoryResolverAdapter)(nil)
+var _ filter.ResolverAdapter = (*TrackHistoryResolverAdapter)(nil)
 
-type UserTrackHistoryResolverAdapter struct{}
+type TrackHistoryResolverAdapter struct{}
 
-func (a *UserTrackHistoryResolverAdapter) DefaultSort() (string, filter.SortType) {
-	return "user_track_history.listened_at", filter.SortTypeDesc
+func (a *TrackHistoryResolverAdapter) DefaultSort() (string, filter.SortType) {
+	return "track_history.listened_at", filter.SortTypeDesc
 }
 
-func (a *UserTrackHistoryResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *TrackHistoryResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
 			Kind: filter.NameKindString,
-			Name: "user_track_history.id",
+			Name: "track_history.id",
 		}, true
 	case "userId":
 		return filter.Name{
 			Kind: filter.NameKindString,
-			Name: "user_track_history.user_id",
+			Name: "track_history.user_id",
 		}, true
 	case "trackId":
 		return filter.Name{
 			Kind: filter.NameKindString,
-			Name: "user_track_history.track_id",
+			Name: "track_history.track_id",
 		}, true
 	case "listenedAt":
 		return filter.Name{
 			Kind: filter.NameKindNumber,
-			Name: "user_track_history.listened_at",
+			Name: "track_history.listened_at",
 		}, true
 	case "playbackType":
 		return filter.Name{
 			Kind: filter.NameKindString,
-			Name: "user_track_history.playback_type",
+			Name: "track_history.playback_type",
 		}, true
 	case "status":
 		return filter.Name{
 			Kind: filter.NameKindString,
-			Name: "user_track_history.status",
+			Name: "track_history.status",
 		}, true
 	case "trackName":
 		return filter.Name{
@@ -93,19 +93,19 @@ func (a *UserTrackHistoryResolverAdapter) ResolveVariableName(name string) (filt
 	case "created":
 		return filter.Name{
 			Kind: filter.NameKindNumber,
-			Name: "user_track_history.created",
+			Name: "track_history.created",
 		}, true
 	case "updated":
 		return filter.Name{
 			Kind: filter.NameKindNumber,
-			Name: "user_track_history.updated",
+			Name: "track_history.updated",
 		}, true
 	}
 
 	return filter.Name{}, false
 }
 
-func (a *UserTrackHistoryResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *TrackHistoryResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
 	switch typ {
 	case "tags":
 		return slug.Make(name), true
@@ -116,7 +116,7 @@ func (a *UserTrackHistoryResolverAdapter) ResolveNameToId(typ, name string) (str
 	return "", false
 }
 
-func (a *UserTrackHistoryResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
+func (a *TrackHistoryResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 	switch typ {
 	case "tags":
 		return filter.Table{
@@ -135,7 +135,7 @@ func (a *UserTrackHistoryResolverAdapter) ResolveTable(typ string) (filter.Table
 	return filter.Table{}, false
 }
 
-func (a *UserTrackHistoryResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *TrackHistoryResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "tracks.id", args)

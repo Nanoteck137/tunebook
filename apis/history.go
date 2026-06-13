@@ -11,10 +11,10 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
-type History struct {
-	Id     string `json:"id"`
+type TrackHistory struct {
+	Id string `json:"id"`
 
-	UserId string `json:"userId"`
+	UserId  string `json:"userId"`
 	TrackId string `json:"trackId"`
 
 	ListenedAt   int64  `json:"listenedAt"`
@@ -25,11 +25,11 @@ type History struct {
 	Updated string `json:"updated"`
 }
 
-func ConvertDBHistory(c pyrin.Context, history database.UserTrackHistory) History {
-	return History{
-		Id:     history.Id,
+func ConvertDBTrackHistory(c pyrin.Context, history database.TrackHistory) TrackHistory {
+	return TrackHistory{
+		Id: history.Id,
 
-		UserId: history.UserId,
+		UserId:  history.UserId,
 		TrackId: history.TrackId,
 
 		ListenedAt:   history.ListenedAt,
@@ -41,13 +41,13 @@ func ConvertDBHistory(c pyrin.Context, history database.UserTrackHistory) Histor
 	}
 }
 
-type GetHistory struct {
-	Page    types.Page `json:"page"`
-	History []History  `json:"history"`
+type GetTrackHistory struct {
+	Page    types.Page     `json:"page"`
+	History []TrackHistory `json:"history"`
 }
 
 type GetHistoryById struct {
-	History History `json:"history"`
+	History TrackHistory `json:"history"`
 }
 
 func handleHistoryServiceErrors(err error) error {
@@ -72,36 +72,33 @@ func handleHistoryServiceErrors(err error) error {
 func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
-			Name:         "GetHistory",
+			Name:         "GetTrackHistory",
 			Method:       http.MethodGet,
-			Path:         "/history",
-			ResponseType: GetHistory{},
+			Path:         "/history/tracks",
+			ResponseType: GetTrackHistory{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
 
 				ctx := c.Request().Context()
 
-				pageParams := getPageParams(q, 100)
-				filterParams := getFilterParams(q)
-
-				items, page, err := app.HistoryService().GetHistory(
+				items, page, err := app.HistoryService().GetTrackHistory(
 					ctx,
-					service.GetHistoryParams{
-						Page:   pageParams,
-						Filter: filterParams,
+					service.GetTrackHistoryParams{
+						Page:   getPageParams(q, 100),
+						Filter: getFilterParams(q),
 					},
 				)
 				if err != nil {
 					return nil, handleHistoryServiceErrors(err)
 				}
 
-				res := GetHistory{
+				res := GetTrackHistory{
 					Page:    page,
-					History: make([]History, len(items)),
+					History: make([]TrackHistory, len(items)),
 				}
 
 				for i, item := range items {
-					res.History[i] = ConvertDBHistory(c, item)
+					res.History[i] = ConvertDBTrackHistory(c, item)
 				}
 
 				return res, nil
@@ -109,16 +106,16 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "GetHistoryById",
+			Name:         "GetTrackHistoryById",
 			Method:       http.MethodGet,
-			Path:         "/history/:id",
+			Path:         "/history/tracks/:id",
 			ResponseType: GetHistoryById{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				ctx := c.Request().Context()
 
-				history, err := app.HistoryService().GetHistoryById(
+				history, err := app.HistoryService().GetTrackHistoryById(
 					ctx,
-					service.GetHistoryByIdParams{
+					service.GetTrackHistoryByIdParams{
 						HistoryId: c.Param("id"),
 					},
 				)
@@ -127,7 +124,7 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return GetHistoryById{
-					History: ConvertDBHistory(c, history),
+					History: ConvertDBTrackHistory(c, history),
 				}, nil
 			},
 		},

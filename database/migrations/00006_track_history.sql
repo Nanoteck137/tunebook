@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE user_track_history (
+CREATE TABLE track_history (
     id TEXT NOT NULL PRIMARY KEY,
 
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -15,4 +15,4 @@ CREATE TABLE user_track_history (
 );
 
 -- +goose Down
-DROP TABLE user_track_history;
+DROP TABLE track_history;

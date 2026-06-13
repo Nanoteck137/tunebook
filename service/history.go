@@ -28,30 +28,30 @@ func NewHistoryService(
 	}
 }
 
-type GetHistoryParams struct {
+type GetTrackHistoryParams struct {
 	Page   types.PageParams
 	Filter types.FilterParams
 }
 
-func (s *HistoryService) GetHistory(
+func (s *HistoryService) GetTrackHistory(
 	ctx context.Context,
-	params GetHistoryParams,
-) ([]database.UserTrackHistory, types.Page, error) {
-	items, page, err := 	s.db.GetUserTrackHistory(ctx, database.GetUserTrackHistoryParams{
+	params GetTrackHistoryParams,
+) ([]database.TrackHistory, types.Page, error) {
+	items, page, err := s.db.GetTrackHistory(ctx, database.GetTrackHistoryParams{
 		Page:   params.Page,
 		Filter: params.Filter,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrInvalidFilter) {
 			return nil, types.Page{}, &InvalidFilterError{
-				Service: "user history service",
+				Service: "history service",
 				Message: err.Error(),
 			}
 		}
 
 		if errors.Is(err, database.ErrInvalidSort) {
 			return nil, types.Page{}, &InvalidSortError{
-				Service: "user history service",
+				Service: "history service",
 				Message: err.Error(),
 			}
 		}
@@ -62,21 +62,21 @@ func (s *HistoryService) GetHistory(
 	return items, page, nil
 }
 
-type GetHistoryByIdParams struct {
+type GetTrackHistoryByIdParams struct {
 	HistoryId string
 }
 
-func (s *HistoryService) GetHistoryById(
+func (s *HistoryService) GetTrackHistoryById(
 	ctx context.Context,
-	params GetHistoryByIdParams,
-) (database.UserTrackHistory, error) {
-	history, err := 	s.db.GetUserTrackHistoryById(ctx, params.HistoryId)
+	params GetTrackHistoryByIdParams,
+) (database.TrackHistory, error) {
+	history, err := s.db.GetTrackHistoryById(ctx, params.HistoryId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
-			return database.UserTrackHistory{}, ErrHistoryServiceHistoryNotFound
+			return database.TrackHistory{}, ErrHistoryServiceHistoryNotFound
 		}
 
-		return database.UserTrackHistory{}, err
+		return database.TrackHistory{}, err
 	}
 
 	return history, nil
