@@ -599,8 +599,6 @@ export const PushTrackHistoryBody = z.object({
   "trackId": z.string(),
   // Name: PushTrackHistoryBody.playbackType
   "playbackType": z.string(),
-  // Name: PushTrackHistoryBody.status
-  "status": z.string(),
   // Name: PushTrackHistoryBody.percentPlayed
   "percentPlayed": z.number(),
 });

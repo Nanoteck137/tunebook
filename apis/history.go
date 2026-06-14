@@ -55,10 +55,9 @@ type GetHistoryById struct {
 }
 
 type PushTrackHistoryBody struct {
-	TrackId      string `json:"trackId"`
-	PlaybackType string `json:"playbackType"`
-	Status       string `json:"status"`
-	PercentPlayed int   `json:"percentPlayed"`
+	TrackId       string `json:"trackId"`
+	PlaybackType  string `json:"playbackType"`
+	PercentPlayed int    `json:"percentPlayed"`
 }
 
 type PushTrackHistory struct {
@@ -151,7 +150,6 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 						UserId:         user.Id,
 						TrackId:        body.TrackId,
 						PlaybackType:   body.PlaybackType,
-						Status:         body.Status,
 						PercentPlayed:  body.PercentPlayed,
 					},
 				)

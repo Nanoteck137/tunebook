@@ -75,7 +75,6 @@ type PushTrackHistoryParams struct {
 	TrackId        string
 	ListenedAt     int64
 	PlaybackType   string
-	Status         string
 	PercentPlayed  int
 }
 
@@ -87,15 +86,21 @@ func (s *HistoryService) PushTrackHistory(
 		params.ListenedAt = time.Now().UnixMilli()
 	}
 
-	// TODO(patrik): Move the status calulation from the frontends 
-	// music-manager to here and remove the status from the api body
+	if params.PercentPlayed < 10 {
+		return "", nil
+	}
+
+	status := "skipped"
+	if params.PercentPlayed >= 80 {
+		status = "completed"
+	}
 
 	id, err := s.db.CreateTrackHistory(ctx, database.CreateTrackHistoryParams{
 		UserId:         params.UserId,
 		TrackId:        params.TrackId,
 		ListenedAt:     params.ListenedAt,
 		PlaybackType:   params.PlaybackType,
-		Status:         params.Status,
+		Status:         status,
 		PercentPlayed:  params.PercentPlayed,
 	})
 	if err != nil {

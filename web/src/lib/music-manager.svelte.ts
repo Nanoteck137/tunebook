@@ -237,23 +237,13 @@ export class MusicManager {
       return;
     }
 
-    const HISTORY_MIN_PCT = 0.05;
-    const HISTORY_COMPLETED_PCT = 0.8;
-
     const pct = this.duration > 0 ? this.currentTime / this.duration : 0;
-
-    if (pct < HISTORY_MIN_PCT) {
-      return;
-    }
-
-    const status = pct >= HISTORY_COMPLETED_PCT ? "completed" : "skipped";
 
     const percentPlayed = Math.round(pct * 100);
 
     const res = await this.apiClient.pushTrackHistory({
       trackId: this.currentItem.trackId,
       playbackType: "normal",
-      status,
       percentPlayed,
     });
 
