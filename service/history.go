@@ -71,21 +71,16 @@ type GetTrackHistoryByIdParams struct {
 }
 
 type PushTrackHistoryParams struct {
-	UserId         string
-	TrackId        string
-	ListenedAt     int64
-	PlaybackType   string
-	PercentPlayed  int
+	UserId        string
+	TrackId       string
+	PlaybackType  string
+	PercentPlayed int
 }
 
 func (s *HistoryService) PushTrackHistory(
 	ctx context.Context,
 	params PushTrackHistoryParams,
 ) (string, error) {
-	if params.ListenedAt == 0 {
-		params.ListenedAt = time.Now().UnixMilli()
-	}
-
 	if params.PercentPlayed < 10 {
 		return "", nil
 	}
@@ -96,12 +91,12 @@ func (s *HistoryService) PushTrackHistory(
 	}
 
 	id, err := s.db.CreateTrackHistory(ctx, database.CreateTrackHistoryParams{
-		UserId:         params.UserId,
-		TrackId:        params.TrackId,
-		ListenedAt:     params.ListenedAt,
-		PlaybackType:   params.PlaybackType,
-		Status:         status,
-		PercentPlayed:  params.PercentPlayed,
+		UserId:        params.UserId,
+		TrackId:       params.TrackId,
+		ListenedAt:    time.Now().UnixMilli(),
+		PlaybackType:  params.PlaybackType,
+		Status:        status,
+		PercentPlayed: params.PercentPlayed,
 	})
 	if err != nil {
 		return "", err
