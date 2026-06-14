@@ -4,10 +4,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/nanoteck137/tunebook/apis"
 	"github.com/nanoteck137/pyrin/spark"
-	"github.com/nanoteck137/pyrin/spark/golang"
 	"github.com/nanoteck137/pyrin/spark/typescript"
+	"github.com/nanoteck137/tunebook/apis"
 	"github.com/spf13/cobra"
 )
 
@@ -53,15 +52,15 @@ var genCmd = &cobra.Command{
 			}
 		}
 
-		{
-			gen := golang.GolangGenerator{}
-
-			err = gen.Generate(&serverDef, resolver, "cmd/tunebook-cli/api")
-			if err != nil {
-				slog.Error("failed to generate golang client", "err", err)
-				os.Exit(1)
-			}
-		}
+		// {
+		// 	gen := golang.GolangGenerator{}
+		//
+		// 	err = gen.Generate(&serverDef, resolver, "cmd/tunebook-cli/api")
+		// 	if err != nil {
+		// 		slog.Error("failed to generate golang client", "err", err)
+		// 		os.Exit(1)
+		// 	}
+		// }
 	},
 }
 
