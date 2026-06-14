@@ -90,6 +90,11 @@ func (a *TrackHistoryResolverAdapter) ResolveVariableName(name string) (filter.N
 			Kind: filter.NameKindString,
 			Name: "artists.name",
 		}, true
+	case "percentPlayed":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "track_history.percent_played",
+		}, true
 	case "created":
 		return filter.Name{
 			Kind: filter.NameKindNumber,

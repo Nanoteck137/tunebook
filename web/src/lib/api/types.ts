@@ -351,6 +351,36 @@ export const GetFavoriteTrackIds = z.object({
 });
 export type GetFavoriteTrackIds = z.infer<typeof GetFavoriteTrackIds>;
 
+// Name: TrackHistory
+export const TrackHistory = z.object({
+  // Name: TrackHistory.id
+  "id": z.string(),
+  // Name: TrackHistory.userId
+  "userId": z.string(),
+  // Name: TrackHistory.trackId
+  "trackId": z.string(),
+  // Name: TrackHistory.listenedAt
+  "listenedAt": z.number(),
+  // Name: TrackHistory.playbackType
+  "playbackType": z.string(),
+  // Name: TrackHistory.status
+  "status": z.string(),
+  // Name: TrackHistory.percentPlayed
+  "percentPlayed": z.number(),
+  // Name: TrackHistory.created
+  "created": z.string(),
+  // Name: TrackHistory.updated
+  "updated": z.string(),
+});
+export type TrackHistory = z.infer<typeof TrackHistory>;
+
+// Name: GetHistoryById
+export const GetHistoryById = z.object({
+  // Name: GetHistoryById.history
+  "history": TrackHistory,
+});
+export type GetHistoryById = z.infer<typeof GetHistoryById>;
+
 // Name: GetMe
 export const GetMe = z.object({
   // Name: GetMe.id
@@ -507,6 +537,15 @@ export const GetTrackFilters = z.object({
 });
 export type GetTrackFilters = z.infer<typeof GetTrackFilters>;
 
+// Name: GetTrackHistory
+export const GetTrackHistory = z.object({
+  // Name: GetTrackHistory.page
+  "page": Page,
+  // Name: GetTrackHistory.history
+  "history": z.array(TrackHistory),
+});
+export type GetTrackHistory = z.infer<typeof GetTrackHistory>;
+
 // Name: GetTracks
 export const GetTracks = z.object({
   // Name: GetTracks.page
@@ -546,6 +585,26 @@ export const GetUserFavorites = z.object({
   "items": z.array(Track),
 });
 export type GetUserFavorites = z.infer<typeof GetUserFavorites>;
+
+// Name: PushTrackHistory
+export const PushTrackHistory = z.object({
+  // Name: PushTrackHistory.id
+  "id": z.string(),
+});
+export type PushTrackHistory = z.infer<typeof PushTrackHistory>;
+
+// Name: PushTrackHistoryBody
+export const PushTrackHistoryBody = z.object({
+  // Name: PushTrackHistoryBody.trackId
+  "trackId": z.string(),
+  // Name: PushTrackHistoryBody.playbackType
+  "playbackType": z.string(),
+  // Name: PushTrackHistoryBody.status
+  "status": z.string(),
+  // Name: PushTrackHistoryBody.percentPlayed
+  "percentPlayed": z.number(),
+});
+export type PushTrackHistoryBody = z.infer<typeof PushTrackHistoryBody>;
 
 // Name: RemovePlaylistItemBody
 export const RemovePlaylistItemBody = z.object({

@@ -22,6 +22,8 @@ type TrackHistory struct {
 	PlaybackType string `db:"playback_type"`
 	Status       string `db:"status"`
 
+	PercentPlayed int `db:"percent_played"`
+
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 }
@@ -38,6 +40,8 @@ func TrackHistoryQuery() *goqu.SelectDataset {
 
 			"track_history.playback_type",
 			"track_history.status",
+
+			"track_history.percent_played",
 
 			"track_history.updated",
 			"track_history.created",
@@ -111,6 +115,8 @@ type CreateTrackHistoryParams struct {
 	PlaybackType string
 	Status       string
 
+	PercentPlayed int
+
 	Created int64
 	Updated int64
 }
@@ -139,6 +145,8 @@ func (db DB) CreateTrackHistory(
 
 		"playback_type": params.PlaybackType,
 		"status":        params.Status,
+
+		"percent_played": params.PercentPlayed,
 
 		"created": params.Created,
 		"updated": params.Updated,

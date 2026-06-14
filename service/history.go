@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"time"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
@@ -70,23 +71,32 @@ type GetTrackHistoryByIdParams struct {
 }
 
 type PushTrackHistoryParams struct {
-	UserId       string
-	TrackId      string
-	ListenedAt   int64
-	PlaybackType string
-	Status       string
+	UserId         string
+	TrackId        string
+	ListenedAt     int64
+	PlaybackType   string
+	Status         string
+	PercentPlayed  int
 }
 
 func (s *HistoryService) PushTrackHistory(
 	ctx context.Context,
 	params PushTrackHistoryParams,
 ) (string, error) {
+	if params.ListenedAt == 0 {
+		params.ListenedAt = time.Now().UnixMilli()
+	}
+
+	// TODO(patrik): Move the status calulation from the frontends 
+	// music-manager to here and remove the status from the api body
+
 	id, err := s.db.CreateTrackHistory(ctx, database.CreateTrackHistoryParams{
-		UserId:       params.UserId,
-		TrackId:      params.TrackId,
-		ListenedAt:   params.ListenedAt,
-		PlaybackType: params.PlaybackType,
-		Status:       params.Status,
+		UserId:         params.UserId,
+		TrackId:        params.TrackId,
+		ListenedAt:     params.ListenedAt,
+		PlaybackType:   params.PlaybackType,
+		Status:         params.Status,
+		PercentPlayed:  params.PercentPlayed,
 	})
 	if err != nil {
 		return "", err

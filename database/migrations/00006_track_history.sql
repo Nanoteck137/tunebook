@@ -10,6 +10,8 @@ CREATE TABLE track_history (
     playback_type TEXT NOT NULL,
     status TEXT NOT NULL,
 
+    percent_played INTEGER NOT NULL,
+
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
 );

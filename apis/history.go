@@ -21,13 +21,15 @@ type TrackHistory struct {
 	PlaybackType string `json:"playbackType"`
 	Status       string `json:"status"`
 
+	PercentPlayed int `json:"percentPlayed"`
+
 	Created string `json:"created"`
 	Updated string `json:"updated"`
 }
 
 func ConvertDBTrackHistory(c pyrin.Context, history database.TrackHistory) TrackHistory {
 	return TrackHistory{
-		Id: history.Id,
+		Id:     history.Id,
 
 		UserId:  history.UserId,
 		TrackId: history.TrackId,
@@ -35,6 +37,8 @@ func ConvertDBTrackHistory(c pyrin.Context, history database.TrackHistory) Track
 		ListenedAt:   history.ListenedAt,
 		PlaybackType: history.PlaybackType,
 		Status:       history.Status,
+
+		PercentPlayed: history.PercentPlayed,
 
 		Created: formatTime(history.Created),
 		Updated: formatTime(history.Updated),
@@ -52,9 +56,9 @@ type GetHistoryById struct {
 
 type PushTrackHistoryBody struct {
 	TrackId      string `json:"trackId"`
-	ListenedAt   int64  `json:"listenedAt"`
 	PlaybackType string `json:"playbackType"`
 	Status       string `json:"status"`
+	PercentPlayed int   `json:"percentPlayed"`
 }
 
 type PushTrackHistory struct {
@@ -144,11 +148,11 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 				id, err := app.HistoryService().PushTrackHistory(
 					ctx,
 					service.PushTrackHistoryParams{
-						UserId:       user.Id,
-						TrackId:      body.TrackId,
-						ListenedAt:   body.ListenedAt,
-						PlaybackType: body.PlaybackType,
-						Status:       body.Status,
+						UserId:         user.Id,
+						TrackId:        body.TrackId,
+						PlaybackType:   body.PlaybackType,
+						Status:         body.Status,
+						PercentPlayed:  body.PercentPlayed,
 					},
 				)
 				if err != nil {

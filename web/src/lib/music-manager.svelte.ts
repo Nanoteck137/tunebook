@@ -225,34 +225,42 @@ export class MusicManager {
   }
 
   private resetTrackEventTracking() {
-    console.log("resetTrackEventTracking");
     this.trackEventSent = false;
-
-    console.log("after resetTrackEventTracking", this.trackEventSent);
   }
 
   private async sendTrackEvent() {
-    console.log("sendTrackEvent", this.currentItem?.name, this.trackEventSent);
-
     if (this.trackEventSent) {
-      console.log("sendTrackEvent already sent", this.currentItem?.trackId);
       return;
     }
 
     if (!this.currentItem) {
-      console.log("sendTrackEvent no current item");
       return;
     }
 
-    console.log("SENDING EVENT");
-    // const res = await this.apiClient.addTrackEvent(this.currentItem.trackId, {
-    //   position: this.currentTime,
-    //   source: "web-player",
-    // });
-    // if (!res.success) {
-    //   console.log("failed to add track event", res.error);
-    //   return;
-    // }
+    const HISTORY_MIN_PCT = 0.05;
+    const HISTORY_COMPLETED_PCT = 0.8;
+
+    const pct = this.duration > 0 ? this.currentTime / this.duration : 0;
+
+    if (pct < HISTORY_MIN_PCT) {
+      return;
+    }
+
+    const status = pct >= HISTORY_COMPLETED_PCT ? "completed" : "skipped";
+
+    const percentPlayed = Math.round(pct * 100);
+
+    const res = await this.apiClient.pushTrackHistory({
+      trackId: this.currentItem.trackId,
+      playbackType: "normal",
+      status,
+      percentPlayed,
+    });
+
+    if (!res.success) {
+      console.log("failed to push track history", res.error);
+      return;
+    }
 
     this.trackEventSent = true;
   }

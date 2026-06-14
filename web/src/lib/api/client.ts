@@ -155,6 +155,14 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/tracks/${id}`, "GET", api.GetTrackById, z.any(), undefined, options)
   }
   
+  getTrackHistory(options?: ExtraOptions) {
+    return this.request("/api/v1/history/tracks", "GET", api.GetTrackHistory, z.any(), undefined, options)
+  }
+  
+  getTrackHistoryById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/history/tracks/${id}`, "GET", api.GetHistoryById, z.any(), undefined, options)
+  }
+  
   getTracks(options?: ExtraOptions) {
     return this.request("/api/v1/tracks", "GET", api.GetTracks, z.any(), undefined, options)
   }
@@ -170,6 +178,10 @@ export class ApiClient extends BaseApiClient {
   
   getUserTrackFilters(userId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/users/${userId}/filters/tracks`, "GET", api.GetTrackFilters, z.any(), undefined, options)
+  }
+  
+  pushTrackHistory(body: api.PushTrackHistoryBody, options?: ExtraOptions) {
+    return this.request("/api/v1/history/tracks", "POST", api.PushTrackHistory, z.any(), body, options)
   }
   
   removePlaylistItem(playlistId: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
@@ -390,6 +402,14 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/tracks/${id}`)
   }
   
+  getTrackHistory() {
+    return createUrl(this.baseUrl, "/api/v1/history/tracks")
+  }
+  
+  getTrackHistoryById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/history/tracks/${id}`)
+  }
+  
   getTracks() {
     return createUrl(this.baseUrl, "/api/v1/tracks")
   }
@@ -408,6 +428,10 @@ export class ClientUrls {
   
   getUserTrackFilters(userId: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/filters/tracks`)
+  }
+  
+  pushTrackHistory() {
+    return createUrl(this.baseUrl, "/api/v1/history/tracks")
   }
   
   removePlaylistItem(playlistId: string) {

@@ -487,6 +487,16 @@
       ]
     },
     {
+      "name": "GetHistoryById",
+      "fields": [
+        {
+          "name": "history",
+          "type": "TrackHistory",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetMe",
       "fields": [
         {
@@ -622,6 +632,21 @@
         {
           "name": "filters",
           "type": "[]TrackFilter",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetTrackHistory",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "history",
+          "type": "[]TrackHistory",
           "omitEmpty": false
         }
       ]
@@ -822,6 +847,41 @@
         {
           "name": "updated",
           "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "PushTrackHistory",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "PushTrackHistoryBody",
+      "fields": [
+        {
+          "name": "trackId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "playbackType",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "percentPlayed",
+          "type": "int",
           "omitEmpty": false
         }
       ]
@@ -1032,6 +1092,56 @@
         {
           "name": "filter",
           "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "TrackHistory",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "listenedAt",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playbackType",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "percentPlayed",
+          "type": "int",
           "omitEmpty": false
         },
         {
@@ -1376,6 +1486,20 @@
     },
     {
       "type": "api",
+      "name": "GetTrackHistory",
+      "method": "GET",
+      "path": "/api/v1/history/tracks",
+      "response": "GetTrackHistory"
+    },
+    {
+      "type": "api",
+      "name": "GetTrackHistoryById",
+      "method": "GET",
+      "path": "/api/v1/history/tracks/:id",
+      "response": "GetHistoryById"
+    },
+    {
+      "type": "api",
       "name": "GetTracks",
       "method": "GET",
       "path": "/api/v1/tracks",
@@ -1407,6 +1531,14 @@
       "method": "GET",
       "path": "/api/v1/users/:userId/filters/tracks",
       "response": "GetTrackFilters"
+    },
+    {
+      "type": "api",
+      "name": "PushTrackHistory",
+      "method": "POST",
+      "path": "/api/v1/history/tracks",
+      "response": "PushTrackHistory",
+      "body": "PushTrackHistoryBody"
     },
     {
       "type": "api",
