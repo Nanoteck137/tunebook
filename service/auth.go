@@ -653,7 +653,7 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 			}
 
 			// Create the database entry for the user
-			user, err = a.db.CreateUser(ctx, database.CreateUserParams{
+			userId, err := a.db.CreateUser(ctx, database.CreateUserParams{
 				Email:       oidcClaims.Email,
 				DisplayName: displayName,
 				Role:        role,
@@ -666,7 +666,7 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				picture, err := a.imageService.DownloadPictureForUser(
 					ctx,
 					DownloadPictureForUserParams{
-						UserId: user.Id,
+						UserId: userId,
 						Url:    oidcClaims.Picture,
 					},
 				)
@@ -674,7 +674,7 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 					return "", err
 				}
 
-				err = a.db.UpdateUser(ctx, user.Id, database.UserChanges{
+				err = a.db.UpdateUser(ctx, userId, database.UserChanges{
 					Picture: database.Change[sql.NullString]{
 						Value: sql.NullString{
 							String: picture,
@@ -688,7 +688,7 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 				}
 			}
 
-			return user.Id, nil
+			return userId, nil
 		} else {
 			return "", authErr.Newf("get user by email: %w", err)
 		}

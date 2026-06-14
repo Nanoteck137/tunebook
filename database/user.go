@@ -133,8 +133,7 @@ type CreateUserParams struct {
 	Updated int64
 }
 
-// TODO(patrik): Change to return id
-func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, error) {
+func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -158,22 +157,14 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (User, err
 
 			"created": params.Created,
 			"updated": params.Updated,
-		}).
-		// TODO(patrik): Fix this
-		Returning(
-			"users.id",
-			"users.email",
+		})
 
-			"users.display_name",
-			"users.role",
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return "", err
+	}
 
-			"users.picture",
-
-			"users.created",
-			"users.updated",
-		)
-
-	return Single[User](db, ctx, query)
+	return params.Id, nil
 }
 
 type UserChanges struct {
