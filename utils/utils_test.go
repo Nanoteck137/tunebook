@@ -3,7 +3,7 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/nanoteck137/tunebook/tools/utils"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 func TestExtract(t *testing.T) {
