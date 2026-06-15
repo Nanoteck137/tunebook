@@ -357,8 +357,8 @@ export const TrackHistory = z.object({
   "id": z.string(),
   // Name: TrackHistory.userId
   "userId": z.string(),
-  // Name: TrackHistory.trackId
-  "trackId": z.string(),
+  // Name: TrackHistory.track
+  "track": Track,
   // Name: TrackHistory.listenedAt
   "listenedAt": z.number(),
   // Name: TrackHistory.playbackType

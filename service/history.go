@@ -39,11 +39,14 @@ func (s *HistoryService) GetTrackHistory(
 	ctx context.Context,
 	params GetTrackHistoryParams,
 ) ([]database.TrackHistory, types.Page, error) {
-	items, page, err := s.db.GetTrackHistory(ctx, database.GetTrackHistoryParams{
-		UserId: params.UserId,
-		Page:   params.Page,
-		Filter: params.Filter,
-	})
+	items, page, err := s.db.GetTrackHistory(
+		ctx,
+		database.GetTrackHistoryParams{
+			UserId: params.UserId,
+			Page:   params.Page,
+			Filter: params.Filter,
+		},
+	)
 	if err != nil {
 		if errors.Is(err, database.ErrInvalidFilter) {
 			return nil, types.Page{}, &InvalidFilterError{

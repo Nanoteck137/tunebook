@@ -12,43 +12,49 @@ import (
 var createTrackHistoryId = createIdGenerator(32)
 
 type TrackHistory struct {
-	Id string `db:"id"`
+	Track
 
-	UserId  string `db:"user_id"`
-	TrackId string `db:"track_id"`
+	Id string `db:"history_id"`
 
-	ListenedAt int64 `db:"listened_at"`
+	UserId  string `db:"history_user_id"`
+	TrackId string `db:"history_track_id"`
 
-	PlaybackType string `db:"playback_type"`
-	Status       string `db:"status"`
+	ListenedAt int64 `db:"history_listened_at"`
 
-	PercentPlayed int `db:"percent_played"`
+	PlaybackType string `db:"history_playback_type"`
+	Status       string `db:"history_status"`
 
-	Created int64 `db:"created"`
-	Updated int64 `db:"updated"`
+	PercentPlayed int `db:"history_percent_played"`
+
+	Created int64 `db:"history_created"`
+	Updated int64 `db:"history_updated"`
 }
 
 func TrackHistoryQuery() *goqu.SelectDataset {
-	query := dialect.From("track_history").
+	tbl := goqu.T("track_history")
+
+	query := dialect.From(tbl).
 		Select(
-			"track_history.id",
+			"tracks.*",
 
-			"track_history.user_id",
-			"track_history.track_id",
+			tbl.Col("id").As("history_id"),
 
-			"track_history.listened_at",
+			tbl.Col("user_id").As("history_user_id"),
+			tbl.Col("track_id").As("history_track_id"),
 
-			"track_history.playback_type",
-			"track_history.status",
+			tbl.Col("listened_at").As("history_listened_at"),
 
-			"track_history.percent_played",
+			tbl.Col("playback_type").As("history_playback_type"),
+			tbl.Col("status").As("history_status"),
 
-			"track_history.updated",
-			"track_history.created",
+			tbl.Col("percent_played").As("history_percent_played"),
+
+			tbl.Col("updated").As("history_updated"),
+			tbl.Col("created").As("history_created"),
 		).
 		Join(
 			TrackQuery().As("tracks"),
-			goqu.On(goqu.I("track_history.track_id").Eq(goqu.I("tracks.id"))),
+			goqu.On(tbl.Col("track_id").Eq(goqu.I("tracks.id"))),
 		)
 
 	return query
@@ -70,9 +76,9 @@ func (db DB) GetTrackHistory(
 
 	a := adapter.TrackHistoryResolverAdapter{}
 	query, err = applyFilterParamsCustom(
-		params.Filter, 
-		&a, 
-		query, 
+		params.Filter,
+		&a,
+		query,
 		goqu.I("track_history.user_id").Eq(params.UserId),
 	)
 	if err != nil {

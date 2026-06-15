@@ -110,7 +110,6 @@
               <Checkbox
                 class=""
                 checked={selectedTracks.includes(track.id)}
-                controlledChecked={true}
                 onCheckedChange={(checked) => {
                   if (checked) {
                     selectedTracks.push(track.id);

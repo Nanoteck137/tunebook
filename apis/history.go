@@ -14,8 +14,8 @@ import (
 type TrackHistory struct {
 	Id string `json:"id"`
 
-	UserId  string `json:"userId"`
-	TrackId string `json:"trackId"`
+	UserId string `json:"userId"`
+	Track  Track  `json:"track"`
 
 	ListenedAt   int64  `json:"listenedAt"`
 	PlaybackType string `json:"playbackType"`
@@ -29,10 +29,10 @@ type TrackHistory struct {
 
 func ConvertDBTrackHistory(c pyrin.Context, history database.TrackHistory) TrackHistory {
 	return TrackHistory{
-		Id:     history.Id,
+		Id: history.Id,
 
-		UserId:  history.UserId,
-		TrackId: history.TrackId,
+		UserId: history.UserId,
+		Track:  ConvertDBTrack(c, history.Track),
 
 		ListenedAt:   history.ListenedAt,
 		PlaybackType: history.PlaybackType,
@@ -147,10 +147,10 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 				id, err := app.HistoryService().PushTrackHistory(
 					ctx,
 					service.PushTrackHistoryParams{
-						UserId:         user.Id,
-						TrackId:        body.TrackId,
-						PlaybackType:   body.PlaybackType,
-						PercentPlayed:  body.PercentPlayed,
+						UserId:        user.Id,
+						TrackId:       body.TrackId,
+						PlaybackType:  body.PlaybackType,
+						PercentPlayed: body.PercentPlayed,
 					},
 				)
 				if err != nil {
