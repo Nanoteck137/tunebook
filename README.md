@@ -17,7 +17,6 @@ rg --no-heading -in "TODO" | cut -d: -f1,2
 api.Error(ErrPlaylistNotFound, 400).Message("Hello World")
 ```
 
-- [ ] Backend: Feature: User History
 - [ ] Backend: Feature: Year over year
 
 - [ ] Backend: Fix: Quick Playlist Get ids
