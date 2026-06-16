@@ -1,7 +1,8 @@
 {
-  "name": "dwebble-frontend",
+  "name": "tunebook-web",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -15,20 +16,21 @@
     "@nanoteck137/nano-ui": "^0.0.3",
     "@sveltejs/adapter-auto": "^3.0.0",
     "@sveltejs/adapter-node": "^5.2.0",
+    "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.5.27",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/forms": "^0.5.7",
     "@types/eslint": "^9.6.0",
     "@types/node": "^22.5.4",
     "autoprefixer": "^10.4.20",
-    "bits-ui": "^1.0.0-next.63",
+    "class-validator": "^0.14.4",
     "clsx": "^2.1.1",
+    "effect": "^3.19.19",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.45.1",
     "globals": "^15.0.0",
     "lucide-svelte": "^0.424.0",
-    "nanoevents": "^9.0.0",
     "postcss": "^8.4.40",
     "prettier": "^3.1.1",
     "prettier-plugin-organize-imports": "^3.2.4",
@@ -49,5 +51,7 @@
     "vite": "^5.4.4",
     "zod": "^3.23.8"
   },
-  "type": "module"
+  "overrides": {
+    "bits-ui": "2.17.2"
+  }
 }

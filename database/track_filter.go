@@ -1,0 +1,148 @@
+package database
+
+import (
+	"context"
+	"time"
+
+	"github.com/doug-martin/goqu/v9"
+)
+
+var createTrackFilterId = createIdGenerator(8)
+
+type TrackFilter struct {
+	RowId int `db:"rowid"`
+
+	Id     string `db:"id"`
+
+	UserId string `db:"user_id"`
+
+	Name   string `db:"name"`
+	Filter string `db:"filter"`
+
+	Created int64 `db:"created"`
+	Updated int64 `db:"updated"`
+}
+
+func TrackFilterQuery() *goqu.SelectDataset {
+	query := dialect.From("track_filters").
+		Select(
+			"track_filters.rowid",
+
+			"track_filters.id",
+
+			"track_filters.user_id",
+
+			"track_filters.name",
+			"track_filters.filter",
+
+			"track_filters.created",
+			"track_filters.updated",
+		)
+
+	return query
+}
+
+func (db DB) GetTrackFilterById(ctx context.Context, id string) (TrackFilter, error) {
+	query := TrackFilterQuery().
+		Where(goqu.I("track_filters.id").Eq(id))
+
+	return Single[TrackFilter](db, ctx, query)
+}
+
+func (db DB) GetTrackFiltersByUserId(ctx context.Context, userId string) ([]TrackFilter, error) {
+	query := TrackFilterQuery().
+		Where(goqu.I("track_filters.user_id").Eq(userId))
+
+	return Multiple[TrackFilter](db, ctx, query)
+}
+
+type CreateTrackFilterParams struct {
+	Id     string
+	UserId string
+
+	Name   string
+	Filter string
+
+	Created int64
+	Updated int64
+}
+
+func (db DB) CreateTrackFilter(ctx context.Context, params CreateTrackFilterParams) (string, error) {
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
+	}
+
+	if params.Id == "" {
+		params.Id = createTrackFilterId()
+	}
+
+	query := dialect.Insert("track_filters").Rows(goqu.Record{
+		"id":      params.Id,
+
+		"user_id": params.UserId,
+
+		"name":   params.Name,
+		"filter": params.Filter,
+
+		"created": params.Created,
+		"updated": params.Updated,
+	})
+
+	_, err := Single[string](db, ctx, query)
+	if err != nil {
+		return "", err
+	}
+
+	return params.Id, nil
+}
+
+type TrackFilterChanges struct {
+	UserId Change[string]
+
+	Name   Change[string]
+	Filter Change[string]
+
+	Created Change[int64]
+}
+
+func (db DB) UpdateTrackFilter(ctx context.Context, id string, changes TrackFilterChanges) error {
+	record := goqu.Record{}
+
+	addToRecord(record, "user_id", changes.UserId)
+
+	addToRecord(record, "name", changes.Name)
+	addToRecord(record, "filter", changes.Filter)
+
+	addToRecord(record, "created", changes.Created)
+
+	if len(record) == 0 {
+		return nil
+	}
+
+	record["updated"] = time.Now().UnixMilli()
+
+	query := dialect.Update("track_filters").
+		Set(record).
+		Where(goqu.I("track_filters.id").Eq(id))
+
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db DB) DeleteTrackFilter(ctx context.Context, id string) error {
+	query := dialect.Delete("track_filters").
+		Where(goqu.I("track_filters.id").Eq(id))
+
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

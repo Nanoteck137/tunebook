@@ -3,28 +3,56 @@ package apis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
-	"github.com/nanoteck137/dwebble/core"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
+	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/database/adapter"
+	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/validate"
 )
 
 type Playlist struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
-	// TODO(patrik): Add all fields
+
+	CoverArt types.Images `json:"coverArt"`
+
+	OwnerId          string       `json:"ownerId"`
+	OwnerDisplayName string       `json:"ownerDisplayName"`
+	OwnerPicture     types.Images `json:"ownerPicture"`
+
+	TrackCount int64 `json:"trackCount"`
+
+	Created string `json:"created"`
+	Updated string `json:"updated"`
+}
+
+func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
+	return Playlist{
+		Id:               playlist.Id,
+		Name:             playlist.Name,
+		CoverArt:         ConvertPlaylistCoverURL(c, playlist.Id),
+		OwnerId:          playlist.OwnerId,
+		OwnerDisplayName: playlist.OwnerDisplayName,
+		OwnerPicture:     ConvertUserPictureURL(c, playlist.OwnerId),
+		TrackCount:       playlist.TrackCount.Int64,
+		Created:          formatTime(playlist.Created),
+		Updated:          formatTime(playlist.Updated),
+	}
 }
 
 type GetPlaylists struct {
+	Page      types.Page `json:"page"`
 	Playlists []Playlist `json:"playlists"`
 }
 
 type CreatePlaylist struct {
-	Playlist
+	Id string `json:"id"`
 }
 
 type CreatePlaylistBody struct {
@@ -41,24 +69,8 @@ func (b CreatePlaylistBody) Validate() error {
 	)
 }
 
-type PostPlaylistFilterBody struct {
-	Name   string `json:"name"`
-	Filter string `json:"filter"`
-}
-
-func (b *PostPlaylistFilterBody) Transform() {
-	b.Name = anvil.String(b.Name)
-	b.Filter = anvil.String(b.Filter)
-}
-
-func (b PostPlaylistFilterBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Name, validate.Required),
-	)
-}
-
 type GetPlaylistById struct {
-	Playlist
+	Playlist Playlist `json:"playlist"`
 }
 
 type GetPlaylistItems struct {
@@ -74,6 +86,79 @@ type RemovePlaylistItemBody struct {
 	TrackId string `json:"trackId"`
 }
 
+func testPlaylistItemFilter(val string) error {
+	// TODO(patrik): Replace with PlaylistResolverAdapter when it exists
+	return database.TestFilter(val, &adapter.TrackResolverAdapter{})
+}
+
+// TODO(patrik): Move
+var validateFilter = validate.By(func(value any) error {
+	switch value := value.(type) {
+	case *string:
+		return testPlaylistItemFilter(*value)
+	case string:
+		return testPlaylistItemFilter(value)
+	default:
+		panic(fmt.Sprintf("validateFilter: Unknown type: %T", value))
+	}
+
+})
+
+type EditPlaylistBody struct {
+	Name *string `json:"name,omitempty"`
+
+	CoverUrl *string `json:"coverUrl,omitempty"`
+}
+
+func (b *EditPlaylistBody) Transform() {
+	b.Name = anvil.StringPtr(b.Name)
+
+	b.CoverUrl = anvil.StringPtr(b.CoverUrl)
+}
+
+func (b EditPlaylistBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+
+		validate.Field(&b.CoverUrl, validate.Required.When(b.CoverUrl != nil)),
+	)
+}
+
+type ReorderPlaylistItemsBody struct {
+	Before        bool     `json:"before"`
+	AnchorTrackId string   `json:"anchorTrackId"`
+	TrackIds      []string `json:"trackIds"`
+}
+
+type GetPlaylistItemIds struct {
+	Ids []string `json:"ids"`
+}
+
+// TODO(patrik): Handle filter errors
+func handlePlaylistServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrPlaylistServicePlaylistNotFound):
+		return PlaylistNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceTrackNotFound):
+		return TrackNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceTrackAlreadyAdded):
+		return PlaylistAlreadyHasTrack()
+	case errors.Is(err, service.ErrPlaylistServiceItemNotFound):
+		// TODO(patrik): Replace with its own error
+		return TrackNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceFilterNotFound):
+		return FilterNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceAnchorTrackNotFound):
+		// TODO(patrik): Replace with its own error
+		return TrackNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceNotAuthorized):
+		// TODO(patrik): Replace with its own error
+		return PlaylistNotFound()
+	}
+
+	return err
+}
+
 func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -82,28 +167,58 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			ResponseType: GetPlaylists{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
+				q := c.Request().URL.Query()
 
-				playlists, err := app.DB().GetPlaylistsByUser(c.Request().Context(), user.Id)
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				playlists, page, err := app.PlaylistService().GetPlaylists(
+					ctx,
+					service.GetPlaylistsParams{
+						Page:   pageParams,
+						Filter: filterParams,
+					},
+				)
 				if err != nil {
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				res := GetPlaylists{
+					Page:      page,
 					Playlists: make([]Playlist, len(playlists)),
 				}
 
 				for i, playlist := range playlists {
-					res.Playlists[i] = Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					}
+					res.Playlists[i] = ConvertDBPlaylist(c, playlist)
 				}
 
 				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetPlaylistById",
+			Path:         "/playlists/:playlistId",
+			Method:       http.MethodGet,
+			ResponseType: GetPlaylistById{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				playlist, err := app.PlaylistService().GetPlaylistById(
+					ctx,
+					service.GetPlaylistByIdParams{
+						PlaylistId: c.Param("playlistId"),
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
+				}
+
+				return GetPlaylistById{
+					Playlist: ConvertDBPlaylist(c, playlist),
+				}, nil
 			},
 		},
 
@@ -114,127 +229,65 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			ResponseType: CreatePlaylist{},
 			BodyType:     CreatePlaylistBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
 				body, err := pyrin.Body[CreatePlaylistBody](c)
 				if err != nil {
 					return nil, err
 				}
 
-				playlist, err := app.DB().CreatePlaylist(c.Request().Context(), database.CreatePlaylistParams{
-					Name:    body.Name,
-					OwnerId: user.Id,
-				})
-				if err != nil {
-					return nil, err
-				}
-
-				return CreatePlaylist{
-					Playlist: Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					},
-				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "CreatePlaylistFromFilter",
-			Path:         "/playlists/filter",
-			Method:       http.MethodPost,
-			ResponseType: CreatePlaylist{},
-			BodyType:     PostPlaylistFilterBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
 
-				body, err := pyrin.Body[PostPlaylistFilterBody](c)
+				ctx := c.Request().Context()
+
+				playlistId, err := app.PlaylistService().CreatePlaylist(
+					ctx,
+					service.CreatePlaylistParams{
+						Name:    body.Name,
+						OwnerId: user.Id,
+					},
+				)
 				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.TODO()
-
-				tx, err := app.DB().Begin()
-				if err != nil {
-					return nil, err
-				}
-				defer tx.Rollback()
-
-				playlist, err := tx.CreatePlaylist(ctx, database.CreatePlaylistParams{
-					Name:    body.Name,
-					OwnerId: user.Id,
-				})
-				if err != nil {
-					return nil, err
-				}
-
-				tracks, err := tx.GetAllTracks(ctx, body.Filter, "")
-				if err != nil {
-					if errors.Is(err, database.ErrInvalidFilter) {
-						return nil, InvalidFilter(err)
-					}
-
-					return nil, err
-				}
-
-				for _, track := range tracks {
-					err = tx.AddItemToPlaylist(ctx, playlist.Id, track.Id)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				err = tx.Commit()
-				if err != nil {
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				return CreatePlaylist{
-					Playlist: Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					},
+					Id: playlistId,
 				}, nil
 			},
 		},
 
 		pyrin.ApiHandler{
-			Name:     "DeletePlaylist",
-			Path:     "/playlists/:id",
-			Method:   http.MethodDelete,
-			Errors:   []pyrin.ErrorType{ErrTypePlaylistNotFound},
+			Name:     "EditPlaylist",
+			Method:   http.MethodPatch,
+			Path:     "/playlists/:playlistId",
+			BodyType: EditPlaylistBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("id")
-
-				ctx := context.TODO()
+				body, err := pyrin.Body[EditPlaylistBody](c)
+				if err != nil {
+					return nil, err
+				}
 
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
 
-				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				ctx := context.Background()
+
+				err = app.PlaylistService().EditPlaylist(
+					ctx,
+					service.EditPlaylistParams{
+						PlaylistId: c.Param("playlistId"),
+						UserId:     user.Id,
+
+						Name:     body.Name,
+						CoverUrl: body.CoverUrl,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				err = app.DB().DeletePlaylist(ctx, playlist.Id)
-				if err != nil {
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				return nil, nil
@@ -242,51 +295,10 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "GetPlaylistById",
-			Path:         "/playlists/:id",
-			Method:       http.MethodGet,
-			ResponseType: GetPlaylistById{},
-			Errors:       []pyrin.ErrorType{ErrTypePlaylistNotFound},
+			Name:   "DeletePlaylist",
+			Path:   "/playlists/:playlistId",
+			Method: http.MethodDelete,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("id")
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				return GetPlaylistById{
-					Playlist: Playlist{
-						Id:   playlist.Id,
-						Name: playlist.Name,
-					},
-				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetPlaylistItems",
-			Path:         "/playlists/:id/items",
-			Method:       http.MethodGet,
-			ResponseType: GetPlaylistItems{},
-			Errors:       []pyrin.ErrorType{ErrTypePlaylistNotFound},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-				playlistId := c.Param("id")
-
 				ctx := context.TODO()
 
 				user, err := User(app, c)
@@ -294,33 +306,151 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				err = app.PlaylistService().DeletePlaylist(
+					ctx,
+					service.DeletePlaylistParams{
+						PlaylistId: c.Param("playlistId"),
+						UserId:     user.Id,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
+					return nil, handlePlaylistServiceErrors(err)
+				}
 
+				return nil, nil
+			},
+		},
+
+		pyrin.FormApiHandler{
+			Name:   "UploadPlaylistImage",
+			Method: http.MethodPost,
+			Path:   "/playlists/:playlistId/image/upload",
+			Spec: pyrin.FormSpec{
+				Files: map[string]pyrin.FormFileSpec{
+					"image": {
+						NumExpected: 1,
+					},
+				},
+			},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
 					return nil, err
 				}
 
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
+				ctx := context.Background()
 
-				opts := getPageOptions(q)
-
-				tracks, pageInfo, err := app.DB().GetPlaylistTracksPaged(ctx, playlist.Id, opts)
+				files, err := pyrin.FormFiles(c, "image")
 				if err != nil {
 					return nil, err
+				}
+
+				err = app.PlaylistService().UploadPlaylistImage(
+					ctx,
+					service.UploadPlaylistImageParams{
+						PlaylistId: c.Param("playlistId"),
+						UserId:     user.Id,
+						File:       files[0],
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "GeneratePlaylistImage",
+			Method: http.MethodPost,
+			Path:   "/playlists/:playlistId/images/generate",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.PlaylistService().GeneratePlaylistImage(
+					ctx,
+					service.GeneratePlaylistImageParams{
+						PlaylistId: c.Param("playlistId"),
+						UserId:     user.Id,
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetPlaylistItems",
+			Path:         "/playlists/:playlistId/items",
+			Method:       http.MethodGet,
+			ResponseType: GetPlaylistItems{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				tracks, page, err := app.PlaylistService().GetPlaylistItems(
+					ctx,
+					service.GetPlaylistItemsParams{
+						PlaylistId: c.Param("playlistId"),
+						Page:       pageParams,
+						Filter:     filterParams,
+						FilterId:   q.Get("filterId"),
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				res := GetPlaylistItems{
-					Page:  pageInfo,
+					Page:  page,
 					Items: make([]Track, len(tracks)),
 				}
 
 				for i, track := range tracks {
-					res.Items[i] = ConvertDBTrack(c, track)
+					res.Items[i] = ConvertDBTrack(c, track.Track)
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetPlaylistItemIds",
+			Path:         "/playlists/:playlistId/ids",
+			Method:       http.MethodGet,
+			ResponseType: GetPlaylistItemIds{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				ids, err := app.PlaylistService().GetPlaylistItemIds(
+					ctx,
+					service.GetPlaylistItemIdsParams{
+						PlaylistId: c.Param("playlistId"),
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
+				}
+
+				res := GetPlaylistItemIds{
+					Ids: []string{},
+				}
+
+				if ids != nil {
+					res.Ids = ids
 				}
 
 				return res, nil
@@ -329,44 +459,32 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:     "AddItemToPlaylist",
-			Path:     "/playlists/:id/items",
+			Path:     "/playlists/:playlistId/items",
 			Method:   http.MethodPost,
 			BodyType: AddItemToPlaylistBody{},
-			Errors:   []pyrin.ErrorType{ErrTypePlaylistNotFound, ErrTypePlaylistAlreadyHasTrack},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("id")
-
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
+
+				ctx := context.Background()
 
 				body, err := pyrin.Body[AddItemToPlaylistBody](c)
 				if err != nil {
 					return nil, err
 				}
 
-				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
+				err = app.PlaylistService().AddItemToPlaylist(
+					ctx,
+					service.AddItemToPlaylistParams{
+						PlaylistId: c.Param("playlistId"),
+						UserId:     user.Id,
+						TrackId:    body.TrackId,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				// TODO(patrik): Check for trackId exists?
-				err = app.DB().AddItemToPlaylist(c.Request().Context(), playlist.Id, body.TrackId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemAlreadyExists) {
-						return nil, PlaylistAlreadyHasTrack()
-					}
-
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				return nil, nil
@@ -375,40 +493,32 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:     "RemovePlaylistItem",
-			Path:     "/playlists/:id/items",
+			Path:     "/playlists/:playlistId/items",
 			Method:   http.MethodDelete,
 			BodyType: RemovePlaylistItemBody{},
-			Errors:   []pyrin.ErrorType{ErrTypePlaylistNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("id")
-
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
+
+				ctx := context.Background()
 
 				body, err := pyrin.Body[RemovePlaylistItemBody](c)
 				if err != nil {
 					return nil, err
 				}
 
-				playlist, err := app.DB().GetPlaylistById(c.Request().Context(), playlistId)
+				err = app.PlaylistService().RemovePlaylistItem(
+					ctx,
+					service.RemovePlaylistItemParams{
+						PlaylistId: c.Param("playlistId"),
+						UserId:     user.Id,
+						TrackId:    body.TrackId,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				// TODO(patrik): Check for trackId exists?
-				err = app.DB().RemovePlaylistItem(c.Request().Context(), playlist.Id, body.TrackId)
-				if err != nil {
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				return nil, nil
@@ -416,36 +526,35 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:     "ClearPlaylist",
-			Path:     "/playlists/:id/items/all",
-			Method:   http.MethodDelete,
-			Errors:   []pyrin.ErrorType{ErrTypePlaylistNotFound},
+			Name:     "ReorderPlaylistItems",
+			Path:     "/playlists/:playlistId/items/reorder",
+			Method:   http.MethodPost,
+			BodyType: ReorderPlaylistItemsBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				playlistId := c.Param("id")
-
-				ctx := context.TODO()
+				body, err := pyrin.Body[ReorderPlaylistItemsBody](c)
+				if err != nil {
+					return nil, err
+				}
 
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
 
-				playlist, err := app.DB().GetPlaylistById(ctx, playlistId)
+				ctx := context.Background()
+
+				err = app.PlaylistService().ReorderPlaylistItems(
+					ctx,
+					service.ReorderPlaylistItemsParams{
+						PlaylistId:    c.Param("playlistId"),
+						UserId:        user.Id,
+						Before:        body.Before,
+						AnchorTrackId: body.AnchorTrackId,
+						TrackIds:      body.TrackIds,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, PlaylistNotFound()
-					}
-
-					return nil, err
-				}
-
-				if playlist.OwnerId != user.Id {
-					return nil, PlaylistNotFound()
-				}
-
-				err = app.DB().RemoveAllPlaylistItem(ctx, playlist.Id)
-				if err != nil {
-					return nil, err
+					return nil, handlePlaylistServiceErrors(err)
 				}
 
 				return nil, nil

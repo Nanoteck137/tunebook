@@ -11,52 +11,77 @@ export class ApiClient extends BaseApiClient {
     this.url = new ClientUrls(baseUrl);
   }
   
-  addItemToPlaylist(id: string, body: api.AddItemToPlaylistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items`, "POST", z.undefined(), z.any(), body, options)
+  addItemToPlaylist(playlistId: string, body: api.AddItemToPlaylistBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  addToUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
-    return this.request("/api/v1/user/quickplaylist", "POST", z.undefined(), z.any(), body, options)
+  
+  authClaimQuickConnectCode(body: api.AuthClaimQuickConnectCodeBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/claim", "POST", z.undefined(), z.any(), body, options)
   }
   
-  changePassword(body: api.ChangePasswordBody, options?: ExtraOptions) {
-    return this.request("/api/v1/auth/password", "PATCH", z.undefined(), z.any(), body, options)
+  authFinishProvider(body: api.AuthFinishProviderBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/providers/finish", "POST", api.AuthFinishProvider, z.any(), body, options)
   }
   
-  cleanupLibrary(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library/cleanup", "POST", z.undefined(), z.any(), undefined, options)
+  authFinishQuickConnect(body: api.AuthFinishQuickConnectBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/finish", "POST", api.AuthFinishQuickConnect, z.any(), body, options)
   }
   
-  clearPlaylist(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items/all`, "DELETE", z.undefined(), z.any(), undefined, options)
+  authGetProviderStatus(body: api.AuthGetProviderStatusBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/provider/status", "POST", api.AuthGetProviderStatus, z.any(), body, options)
+  }
+  
+  authGetProviders(options?: ExtraOptions) {
+    return this.request("/api/v1/auth/providers", "GET", api.GetAuthProviders, z.any(), undefined, options)
+  }
+  
+  authGetQuickConnectStatus(body: api.AuthGetQuickConnectStatusBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/status", "POST", api.AuthGetQuickConnectStatus, z.any(), body, options)
+  }
+  
+  authProviderInitiate(body: api.AuthInitiateBody, options?: ExtraOptions) {
+    return this.request("/api/v1/auth/providers/initiate", "POST", api.AuthInitiate, z.any(), body, options)
+  }
+  
+  authQuickConnectInitiate(options?: ExtraOptions) {
+    return this.request("/api/v1/auth/quick-connect/initiate", "POST", api.AuthQuickConnectInitiate, z.any(), undefined, options)
   }
   
   createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
-    return this.request("/api/v1/user/apitoken", "POST", api.CreateApiToken, z.any(), body, options)
+    return this.request("/api/v1/me/apitokens", "POST", api.CreateApiToken, z.any(), body, options)
   }
   
   createPlaylist(body: api.CreatePlaylistBody, options?: ExtraOptions) {
     return this.request("/api/v1/playlists", "POST", api.CreatePlaylist, z.any(), body, options)
   }
   
-  createPlaylistFromFilter(body: api.PostPlaylistFilterBody, options?: ExtraOptions) {
-    return this.request("/api/v1/playlists/filter", "POST", api.CreatePlaylist, z.any(), body, options)
+  createTrackFilter(body: api.CreateTrackFilterBody, options?: ExtraOptions) {
+    return this.request("/api/v1/me/filters/tracks", "POST", z.undefined(), z.any(), body, options)
   }
   
-  createTaglist(body: api.CreateTaglistBody, options?: ExtraOptions) {
-    return this.request("/api/v1/taglists", "POST", api.CreateTaglist, z.any(), body, options)
+  deleteApiToken(tokenId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/me/apitokens/${tokenId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  deleteApiToken(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/user/apitoken/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  deletePlaylist(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  deletePlaylist(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  deleteTrackFilter(filterId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/me/filters/tracks/${filterId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  deleteTaglist(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  editPlaylist(playlistId: string, body: api.EditPlaylistBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  favoriteTrack(trackId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/me/favorites/tracks/${trackId}`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
+  generatePlaylistImage(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/images/generate`, "POST", z.undefined(), z.any(), undefined, options)
   }
   
   getAlbumById(id: string, options?: ExtraOptions) {
@@ -72,8 +97,8 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/albums", "GET", api.GetAlbums, z.any(), undefined, options)
   }
   
-  getAllApiTokens(options?: ExtraOptions) {
-    return this.request("/api/v1/user/apitoken", "GET", api.GetAllApiTokens, z.any(), undefined, options)
+  getApiTokens(options?: ExtraOptions) {
+    return this.request("/api/v1/me/apitokens", "GET", api.GetApiTokens, z.any(), undefined, options)
   }
   
   getArtistAlbums(id: string, options?: ExtraOptions) {
@@ -89,127 +114,128 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/artists", "GET", api.GetArtists, z.any(), undefined, options)
   }
   
-  
-  getLibraryPaths(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library/paths", "GET", api.GetLibraryPaths, z.any(), undefined, options)
+  getFavoriteTrackIds(options?: ExtraOptions) {
+    return this.request("/api/v1/me/favorites/tracks/ids", "GET", api.GetFavoriteTrackIds, z.any(), undefined, options)
   }
   
   getMe(options?: ExtraOptions) {
     return this.request("/api/v1/auth/me", "GET", api.GetMe, z.any(), undefined, options)
   }
   
-  getMediaFromAlbum(albumId: string, body: api.GetMediaFromAlbumBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/album/${albumId}`, "POST", api.GetMedia, z.any(), body, options)
+  getMediaSettings(options?: ExtraOptions) {
+    return this.request("/api/v1/media/settings", "GET", api.GetMediaSettings, z.any(), undefined, options)
   }
   
-  getMediaFromArtist(artistId: string, body: api.GetMediaFromArtistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/artist/${artistId}`, "POST", api.GetMedia, z.any(), body, options)
+  getPlaylistById(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
   }
   
-  getMediaFromFilter(body: api.GetMediaFromFilterBody, options?: ExtraOptions) {
-    return this.request("/api/v1/media/filter", "POST", api.GetMedia, z.any(), body, options)
+  
+  getPlaylistItemIds(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/ids`, "GET", api.GetPlaylistItemIds, z.any(), undefined, options)
   }
   
-  getMediaFromIds(body: api.GetMediaFromIdsBody, options?: ExtraOptions) {
-    return this.request("/api/v1/media/ids", "POST", api.GetMedia, z.any(), body, options)
-  }
-  
-  getMediaFromPlaylist(playlistId: string, body: api.GetMediaFromPlaylistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/playlist/${playlistId}`, "POST", api.GetMedia, z.any(), body, options)
-  }
-  
-  getMediaFromTaglist(taglistId: string, body: api.GetMediaFromTaglistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/taglist/${taglistId}`, "POST", api.GetMedia, z.any(), body, options)
-  }
-  
-  getPlaylistById(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}`, "GET", api.GetPlaylistById, z.any(), undefined, options)
-  }
-  
-  getPlaylistItems(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items`, "GET", api.GetPlaylistItems, z.any(), undefined, options)
+  getPlaylistItems(playlistId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items`, "GET", api.GetPlaylistItems, z.any(), undefined, options)
   }
   
   getPlaylists(options?: ExtraOptions) {
     return this.request("/api/v1/playlists", "GET", api.GetPlaylists, z.any(), undefined, options)
   }
   
+  getQuickPlaylistIds(options?: ExtraOptions) {
+    return this.request("/api/v1/me/quickplaylist", "GET", api.GetQuickPlaylistIds, z.any(), undefined, options)
+  }
+  
   getSystemInfo(options?: ExtraOptions) {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
-  }
-  
-  getTaglistById(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}`, "GET", api.GetTaglistById, z.any(), undefined, options)
-  }
-  
-  getTaglistTracks(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}/tracks`, "GET", api.GetTaglistTracks, z.any(), undefined, options)
-  }
-  
-  getTaglists(options?: ExtraOptions) {
-    return this.request("/api/v1/taglists", "GET", api.GetTaglists, z.any(), undefined, options)
   }
   
   getTrackById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/tracks/${id}`, "GET", api.GetTrackById, z.any(), undefined, options)
   }
   
+  getTrackHistory(options?: ExtraOptions) {
+    return this.request("/api/v1/history/tracks", "GET", api.GetTrackHistory, z.any(), undefined, options)
+  }
+  
+  getTrackHistoryById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/history/tracks/${id}`, "GET", api.GetHistoryById, z.any(), undefined, options)
+  }
   
   getTracks(options?: ExtraOptions) {
     return this.request("/api/v1/tracks", "GET", api.GetTracks, z.any(), undefined, options)
   }
   
-  getUserQuickPlaylistItemIds(options?: ExtraOptions) {
-    return this.request("/api/v1/user/quickplaylist", "GET", api.GetUserQuickPlaylistItemIds, z.any(), undefined, options)
+  getUser(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}`, "GET", api.GetUser, z.any(), undefined, options)
   }
   
-  refillSearch(options?: ExtraOptions) {
-    return this.request("/api/v1/system/search", "POST", z.undefined(), z.any(), undefined, options)
+  
+  getUserTrackFavorites(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/favorites/tracks`, "GET", api.GetUserFavorites, z.any(), undefined, options)
   }
   
-  removeItemFromUserQuickPlaylist(body: api.TrackId, options?: ExtraOptions) {
-    return this.request("/api/v1/user/quickplaylist", "DELETE", z.undefined(), z.any(), body, options)
+  getUserTrackFilters(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/filters/tracks`, "GET", api.GetTrackFilters, z.any(), undefined, options)
   }
   
-  removePlaylistItem(id: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/playlists/${id}/items`, "DELETE", z.undefined(), z.any(), body, options)
+  pushTrackHistory(body: api.PushTrackHistoryBody, options?: ExtraOptions) {
+    return this.request("/api/v1/history/tracks", "POST", api.PushTrackHistory, z.any(), body, options)
   }
   
-  retrivePaths(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library/paths", "POST", z.undefined(), z.any(), undefined, options)
+  removePlaylistItem(playlistId: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items`, "DELETE", z.undefined(), z.any(), body, options)
+  }
+  
+  reorderPlaylistItems(playlistId: string, body: api.ReorderPlaylistItemsBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/playlists/${playlistId}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  runTask(taskName: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/system/task/${taskName}`, "POST", z.undefined(), z.any(), undefined, options)
   }
   
   searchAlbums(options?: ExtraOptions) {
-    return this.request("/api/v1/albums/search", "GET", api.GetAlbums, z.any(), undefined, options)
+    return this.request("/api/v1/search/albums", "GET", api.SearchAlbums, z.any(), undefined, options)
   }
   
   searchArtists(options?: ExtraOptions) {
-    return this.request("/api/v1/artists/search", "GET", api.GetArtists, z.any(), undefined, options)
+    return this.request("/api/v1/search/artists", "GET", api.SearchArtists, z.any(), undefined, options)
+  }
+  
+  searchPlaylists(options?: ExtraOptions) {
+    return this.request("/api/v1/search/playlists", "GET", api.SearchPlaylists, z.any(), undefined, options)
   }
   
   searchTracks(options?: ExtraOptions) {
-    return this.request("/api/v1/tracks/search", "GET", api.GetTracks, z.any(), undefined, options)
+    return this.request("/api/v1/search/tracks", "GET", api.SearchTracks, z.any(), undefined, options)
   }
   
-  signin(body: api.SigninBody, options?: ExtraOptions) {
-    return this.request("/api/v1/auth/signin", "POST", api.Signin, z.any(), body, options)
+  searchUsers(options?: ExtraOptions) {
+    return this.request("/api/v1/search/users", "GET", api.SearchUsers, z.any(), undefined, options)
   }
   
-  signup(body: api.SignupBody, options?: ExtraOptions) {
-    return this.request("/api/v1/auth/signup", "POST", api.Signup, z.any(), body, options)
+  setQuickPlaylist(body: api.SetQuickPlaylistBody, options?: ExtraOptions) {
+    return this.request("/api/v1/me/quickplaylist", "POST", z.undefined(), z.any(), body, options)
   }
   
   
-  syncLibrary(body: api.SyncLibraryBody, options?: ExtraOptions) {
-    return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), body, options)
+  
+  unfavoriteTrack(trackId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/me/favorites/tracks/${trackId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  updateTaglist(id: string, body: api.UpdateTaglistBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/taglists/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  updateMe(body: api.UpdateMeBody, options?: ExtraOptions) {
+    return this.request("/api/v1/me", "PATCH", z.undefined(), z.any(), body, options)
   }
   
-  updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
-    return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
+  updateTrackFilter(filterId: string, body: api.UpdateTrackFilterBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/me/filters/tracks/${filterId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  uploadPlaylistImage(playlistId: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/playlists/${playlistId}/image/upload`, "POST", z.undefined(), z.any(), body, options)
   }
 }
 
@@ -220,52 +246,80 @@ export class ClientUrls {
     this.baseUrl = baseUrl;
   }
   
-  addItemToPlaylist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
+  addItemToPlaylist(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
-  addToUserQuickPlaylist() {
-    return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
+  authCallback() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers/callback")
   }
   
-  changePassword() {
-    return createUrl(this.baseUrl, "/api/v1/auth/password")
+  authClaimQuickConnectCode() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/claim")
   }
   
-  cleanupLibrary() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/cleanup")
+  authFinishProvider() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers/finish")
   }
   
-  clearPlaylist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items/all`)
+  authFinishQuickConnect() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/finish")
+  }
+  
+  authGetProviderStatus() {
+    return createUrl(this.baseUrl, "/api/v1/auth/provider/status")
+  }
+  
+  authGetProviders() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers")
+  }
+  
+  authGetQuickConnectStatus() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/status")
+  }
+  
+  authProviderInitiate() {
+    return createUrl(this.baseUrl, "/api/v1/auth/providers/initiate")
+  }
+  
+  authQuickConnectInitiate() {
+    return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/initiate")
   }
   
   createApiToken() {
-    return createUrl(this.baseUrl, "/api/v1/user/apitoken")
+    return createUrl(this.baseUrl, "/api/v1/me/apitokens")
   }
   
   createPlaylist() {
     return createUrl(this.baseUrl, "/api/v1/playlists")
   }
   
-  createPlaylistFromFilter() {
-    return createUrl(this.baseUrl, "/api/v1/playlists/filter")
+  createTrackFilter() {
+    return createUrl(this.baseUrl, "/api/v1/me/filters/tracks")
   }
   
-  createTaglist() {
-    return createUrl(this.baseUrl, "/api/v1/taglists")
+  deleteApiToken(tokenId: string) {
+    return createUrl(this.baseUrl, `/api/v1/me/apitokens/${tokenId}`)
   }
   
-  deleteApiToken(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/user/apitoken/${id}`)
+  deletePlaylist(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
   }
   
-  deletePlaylist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
+  deleteTrackFilter(filterId: string) {
+    return createUrl(this.baseUrl, `/api/v1/me/filters/tracks/${filterId}`)
   }
   
-  deleteTaglist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
+  editPlaylist(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
+  }
+  
+  favoriteTrack(trackId: string) {
+    return createUrl(this.baseUrl, `/api/v1/me/favorites/tracks/${trackId}`)
+  }
+  
+  generatePlaylistImage(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/images/generate`)
   }
   
   getAlbumById(id: string) {
@@ -284,8 +338,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/albums")
   }
   
-  getAllApiTokens() {
-    return createUrl(this.baseUrl, "/api/v1/user/apitoken")
+  getApiTokens() {
+    return createUrl(this.baseUrl, "/api/v1/me/apitokens")
   }
   
   getArtistAlbums(id: string) {
@@ -296,143 +350,147 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/artists/${id}`)
   }
   
-  getArtistFile(artistId: string, file: string) {
-    return createUrl(this.baseUrl, `/files/artists/${artistId}/${file}`)
+  getArtistImage(artistId: string, image: string) {
+    return createUrl(this.baseUrl, `/files/artists/images/${artistId}/${image}`)
   }
   
   getArtists() {
     return createUrl(this.baseUrl, "/api/v1/artists")
   }
   
-  getDefaultImage(image: string) {
-    return createUrl(this.baseUrl, `/files/images/default/${image}`)
-  }
-  
-  getLibraryPaths() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/paths")
+  getFavoriteTrackIds() {
+    return createUrl(this.baseUrl, "/api/v1/me/favorites/tracks/ids")
   }
   
   getMe() {
     return createUrl(this.baseUrl, "/api/v1/auth/me")
   }
   
-  getMediaFromAlbum(albumId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/album/${albumId}`)
+  getMediaSettings() {
+    return createUrl(this.baseUrl, "/api/v1/media/settings")
   }
   
-  getMediaFromArtist(artistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/artist/${artistId}`)
+  getPlaylistById(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
   }
   
-  getMediaFromFilter() {
-    return createUrl(this.baseUrl, "/api/v1/media/filter")
+  getPlaylistImage(playlistId: string, image: string) {
+    return createUrl(this.baseUrl, `/files/playlists/images/${playlistId}/${image}`)
   }
   
-  getMediaFromIds() {
-    return createUrl(this.baseUrl, "/api/v1/media/ids")
+  getPlaylistItemIds(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/ids`)
   }
   
-  getMediaFromPlaylist(playlistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/playlist/${playlistId}`)
-  }
-  
-  getMediaFromTaglist(taglistId: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/taglist/${taglistId}`)
-  }
-  
-  getPlaylistById(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}`)
-  }
-  
-  getPlaylistItems(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
+  getPlaylistItems(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
   getPlaylists() {
     return createUrl(this.baseUrl, "/api/v1/playlists")
   }
   
+  getQuickPlaylistIds() {
+    return createUrl(this.baseUrl, "/api/v1/me/quickplaylist")
+  }
+  
   getSystemInfo() {
     return createUrl(this.baseUrl, "/api/v1/system/info")
-  }
-  
-  getTaglistById(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
-  }
-  
-  getTaglistTracks(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}/tracks`)
-  }
-  
-  getTaglists() {
-    return createUrl(this.baseUrl, "/api/v1/taglists")
   }
   
   getTrackById(id: string) {
     return createUrl(this.baseUrl, `/api/v1/tracks/${id}`)
   }
   
-  getTrackFile(trackId: string, file: string) {
-    return createUrl(this.baseUrl, `/files/tracks/${trackId}/${file}`)
+  getTrackHistory() {
+    return createUrl(this.baseUrl, "/api/v1/history/tracks")
+  }
+  
+  getTrackHistoryById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/history/tracks/${id}`)
   }
   
   getTracks() {
     return createUrl(this.baseUrl, "/api/v1/tracks")
   }
   
-  getUserQuickPlaylistItemIds() {
-    return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
+  getUser(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}`)
   }
   
-  refillSearch() {
-    return createUrl(this.baseUrl, "/api/v1/system/search")
+  getUserImage(userId: string, image: string) {
+    return createUrl(this.baseUrl, `/files/users/images/${userId}/${image}`)
   }
   
-  removeItemFromUserQuickPlaylist() {
-    return createUrl(this.baseUrl, "/api/v1/user/quickplaylist")
+  getUserTrackFavorites(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/favorites/tracks`)
   }
   
-  removePlaylistItem(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/playlists/${id}/items`)
+  getUserTrackFilters(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/filters/tracks`)
   }
   
-  retrivePaths() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/paths")
+  pushTrackHistory() {
+    return createUrl(this.baseUrl, "/api/v1/history/tracks")
+  }
+  
+  removePlaylistItem(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
+  }
+  
+  reorderPlaylistItems(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items/reorder`)
+  }
+  
+  runTask(taskName: string) {
+    return createUrl(this.baseUrl, `/api/v1/system/task/${taskName}`)
   }
   
   searchAlbums() {
-    return createUrl(this.baseUrl, "/api/v1/albums/search")
+    return createUrl(this.baseUrl, "/api/v1/search/albums")
   }
   
   searchArtists() {
-    return createUrl(this.baseUrl, "/api/v1/artists/search")
+    return createUrl(this.baseUrl, "/api/v1/search/artists")
+  }
+  
+  searchPlaylists() {
+    return createUrl(this.baseUrl, "/api/v1/search/playlists")
   }
   
   searchTracks() {
-    return createUrl(this.baseUrl, "/api/v1/tracks/search")
+    return createUrl(this.baseUrl, "/api/v1/search/tracks")
   }
   
-  signin() {
-    return createUrl(this.baseUrl, "/api/v1/auth/signin")
+  searchUsers() {
+    return createUrl(this.baseUrl, "/api/v1/search/users")
   }
   
-  signup() {
-    return createUrl(this.baseUrl, "/api/v1/auth/signup")
+  setQuickPlaylist() {
+    return createUrl(this.baseUrl, "/api/v1/me/quickplaylist")
   }
   
   sseHandler() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/sse")
+    return createUrl(this.baseUrl, "/api/v1/system/sse")
   }
   
-  syncLibrary() {
-    return createUrl(this.baseUrl, "/api/v1/system/library")
+  streamTrack(trackId: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/stream/tracks/${trackId}`)
   }
   
-  updateTaglist(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/taglists/${id}`)
+  unfavoriteTrack(trackId: string) {
+    return createUrl(this.baseUrl, `/api/v1/me/favorites/tracks/${trackId}`)
   }
   
-  updateUserSettings() {
-    return createUrl(this.baseUrl, "/api/v1/user/settings")
+  updateMe() {
+    return createUrl(this.baseUrl, "/api/v1/me")
+  }
+  
+  updateTrackFilter(filterId: string) {
+    return createUrl(this.baseUrl, `/api/v1/me/filters/tracks/${filterId}`)
+  }
+  
+  uploadPlaylistImage(playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/image/upload`)
   }
 }

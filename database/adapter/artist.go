@@ -3,7 +3,7 @@ package adapter
 import (
 	"go/ast"
 
-	"github.com/nanoteck137/dwebble/tools/filter"
+	"github.com/nanoteck137/tunebook/tools/filter"
 )
 
 var _ filter.ResolverAdapter = (*TrackResolverAdapter)(nil)
@@ -25,12 +25,6 @@ func (a *ArtistResolverAdapter) ResolveVariableName(name string) (filter.Name, b
 		return filter.Name{
 			Kind: filter.NameKindString,
 			Name: "artists.name",
-		}, true
-	case "otherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "artists.other_name",
-			Nullable: true,
 		}, true
 	case "created":
 		return filter.Name{

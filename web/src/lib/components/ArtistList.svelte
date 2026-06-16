@@ -1,21 +1,28 @@
 <script lang="ts">
-  import type { ArtistInfo } from "$lib/api/types";
   import { cn } from "$lib/utils";
+
+  export type Artist = {
+    id: string;
+    name: string;
+  };
 
   type Props = {
     class?: string;
-    artists: ArtistInfo[];
+    artists: Artist[];
   };
 
   const { class: className, artists }: Props = $props();
 </script>
 
-<p class={cn("line-clamp-1 text-xs", className)}>
+<p
+  class={cn("line-clamp-1 w-full text-xs", className)}
+  title={artists.map((a) => a.name).join(", ")}
+>
   {#each artists as artist, i}
     {#if i > 0}
       {", "}
     {/if}
-    <a class="hover:underline" href="/artists/{artist.id}">
+    <a class="hover:underline" href="/artists/{artist.id}" title={artist.name}>
       {artist.name}
     </a>
   {/each}

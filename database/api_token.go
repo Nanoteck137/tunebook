@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/pyrin/ember"
 )
+
+var createApiTokenId = createIdGenerator(32)
 
 type ApiToken struct {
 	Id     string `db:"id"`
@@ -35,18 +35,24 @@ func ApiTokenQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db DB) GetApiTokenById(ctx context.Context, id string) (ApiToken, error) {
+func (db DB) GetApiTokenById(
+	ctx context.Context,
+	tokenId string,
+) (ApiToken, error) {
 	query := ApiTokenQuery().
-		Where(goqu.I("api_tokens.id").Eq(id))
+		Where(goqu.I("api_tokens.id").Eq(tokenId))
 
-	return ember.Single[ApiToken](db.db, ctx, query)
+	return Single[ApiToken](db, ctx, query)
 }
 
-func (db DB) GetAllApiTokensForUser(ctx context.Context, userId string) ([]ApiToken, error) {
+func (db DB) GetAllApiTokensForUser(
+	ctx context.Context,
+	userId string,
+) ([]ApiToken, error) {
 	query := ApiTokenQuery().
 		Where(goqu.I("api_tokens.user_id").Eq(userId))
 
-	return ember.Multiple[ApiToken](db.db, ctx, query)
+	return Multiple[ApiToken](db, ctx, query)
 }
 
 type CreateApiTokenParams struct {
@@ -58,48 +64,43 @@ type CreateApiTokenParams struct {
 	Updated int64
 }
 
-func (db DB) CreateApiToken(ctx context.Context, params CreateApiTokenParams) (ApiToken, error) {
-	t := time.Now().UnixMilli()
-	created := params.Created
-	updated := params.Updated
-
-	if created == 0 && updated == 0 {
-		created = t
-		updated = t
+func (db DB) CreateApiToken(
+	ctx context.Context,
+	params CreateApiTokenParams,
+) (string, error) {
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
 	}
 
-	id := params.Id
-	if id == "" {
-		id = utils.CreateApiTokenId()
+	if params.Id == "" {
+		params.Id = createApiTokenId()
 	}
 
 	query := dialect.Insert("api_tokens").Rows(goqu.Record{
-		"id":      id,
+		"id":      params.Id,
 		"user_id": params.UserId,
 
 		"name": params.Name,
 
-		"created": created,
-		"updated": updated,
-	}).
-		Returning(
-			"api_tokens.id",
-			"api_tokens.user_id",
+		"created": params.Created,
+		"updated": params.Updated,
+	})
 
-			"api_tokens.name",
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return "", err
+	}
 
-			"api_tokens.updated",
-			"api_tokens.created",
-		)
-
-	return ember.Single[ApiToken](db.db, ctx, query)
+	return params.Id, nil
 }
 
-func (db DB) DeleteApiToken(ctx context.Context, id string) error {
+func (db DB) DeleteApiToken(ctx context.Context, tokenId string) error {
 	query := dialect.Delete("api_tokens").
-		Where(goqu.I("api_tokens.id").Eq(id))
+		Where(goqu.I("api_tokens.id").Eq(tokenId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

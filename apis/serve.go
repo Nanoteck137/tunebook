@@ -1,304 +1,78 @@
 package apis
 
 import (
-	"context"
-	"errors"
+	"log/slog"
 	"net/http"
 	"os"
-	"os/exec"
-	"path"
-	"strings"
 
-	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/assets"
-	"github.com/nanoteck137/dwebble/core"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook"
+	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/pyrin"
 )
 
-func RegisterHandlers(app core.App, router pyrin.Router) {
-	g := router.Group("/api/v1")
-	InstallHandlers(app, g)
+func RegisterApiHandlers(app core.App, g pyrin.Group) {
+	InstallSystemHandlers(app, g)
+	InstallAuthHandlers(app, g)
+	InstallUserHandlers(app, g)
 
-	g = router.Group("/files")
+	InstallArtistHandlers(app, g)
+	InstallAlbumHandlers(app, g)
+	InstallTrackHandlers(app, g)
+	InstallMediaHandlers(app, g)
+	InstallTagHandlers(app, g)
+
+	InstallPlaylistHandlers(app, g)
+
+	InstallHistoryHandlers(app, g)
+
+	InstallSearchHandlers(app, g)
+}
+
+func RegisterStaticHandlers(app core.App, g pyrin.Group) {
+
 	g.Register(
 		pyrin.NormalHandler{
-			Name: "GetDefaultImage",
 			Method: http.MethodGet,
-			Path:   "/images/default/:image",
+			Path:   "/static/*",
 			HandlerFunc: func(c pyrin.Context) error {
-				image := c.Param("image")
-				return pyrin.ServeFile(c, assets.DefaultImagesFS, image)
-			},
-		},
-		pyrin.NormalHandler{
-			Name: "GetAlbumImage",
-			Method: http.MethodGet,
-			Path:   "/albums/images/:albumId/:image",
-			HandlerFunc: func(c pyrin.Context) error {
-				albumId := c.Param("albumId")
-				image := c.Param("image")
+				// TODO(patrik): Fix this
+				f := os.DirFS("./render/static")
+				fs := http.StripPrefix("/static", http.FileServerFS(f))
 
-				ext := path.Ext(image)
-				name := strings.TrimRight(image, ext)
+				fs.ServeHTTP(c.Response(), c.Request())
 
-				ctx := c.Request().Context()
-
-				album, err := app.DB().GetAlbumById(ctx, albumId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return pyrin.NoContentNotFound()
-					}
-
-					return err
-				}
-
-				if !album.CoverArt.Valid {
-					// TODO(patrik): Fix
-					return pyrin.ServeFile(c, assets.DefaultImagesFS, "default_album.png")
-				}
-
-				cacheDir := app.WorkDir().Cache()
-				albumCache := cacheDir.Album(album.Id)
-
-				// Make sure that the cache directory is setup
-				dirs := []string{
-					cacheDir.String(),
-					cacheDir.Albums(),
-					albumCache,
-				}
-
-				for _, dir := range dirs {
-					err = os.Mkdir(dir, 0755)
-					if err != nil && !os.IsExist(err) {
-						return err
-					}
-				}
-
-				originalFilename := path.Base(album.CoverArt.String)
-				originalFileExt := path.Ext(originalFilename)
-
-				convertImage := func(name string, size int) error {
-					name = name + ext
-					p := path.Join(albumCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							err := utils.CreateResizedImage(album.CoverArt.String, p, size, size)
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-
-					f := os.DirFS(albumCache)
-					return pyrin.ServeFile(c, f, name)
-				}
-
-				switch name {
-				case "original":
-					if originalFileExt == ext {
-						p := path.Dir(album.CoverArt.String)
-						f := os.DirFS(p)
-
-						return pyrin.ServeFile(c, f, originalFilename)
-					} else {
-						name := "original" + ext
-						p := path.Join(albumCache, name)
-
-						_, err := os.Stat(p)
-						if err != nil {
-							if os.IsNotExist(err) {
-								err := utils.ConvertImage(album.CoverArt.String, p)
-								if err != nil {
-									return err
-								}
-							} else {
-								return err
-							}
-						}
-
-						f := os.DirFS(albumCache)
-						return pyrin.ServeFile(c, f, name)
-					}
-
-				case "128":
-					return convertImage("128", 128)
-				case "256":
-					return convertImage("256", 256)
-				case "512":
-					return convertImage("512", 512)
-				}
-
-				return pyrin.NoContentNotFound()
-			},
-		},
-		pyrin.NormalHandler{
-			Name: "GetArtistFile",
-			Method: http.MethodGet,
-			Path:   "/artists/:artistId/:file",
-			HandlerFunc: func(c pyrin.Context) error {
-				artistId := c.Param("artistId")
-				file := c.Param("file")
-
-				p := app.WorkDir().Artist(artistId)
-				f := os.DirFS(p)
-
-				return pyrin.ServeFile(c, f, file)
-			},
-		},
-		pyrin.NormalHandler{
-			Name: "GetTrackFile",
-			Method: http.MethodGet,
-			Path:   "/tracks/:trackId/:file",
-			HandlerFunc: func(c pyrin.Context) error {
-				trackId := c.Param("trackId")
-				file := c.Param("file")
-
-				fileExt := path.Ext(file)
-
-				ctx := context.TODO()
-
-				track, err := app.DB().GetTrackById(ctx, trackId)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return pyrin.NoContentNotFound()
-					}
-
-					return err
-				}
-
-				mediaType := types.GetMediaTypeFromExt(fileExt)
-
-				if mediaType == types.MediaTypeUnknown {
-					return pyrin.NoContentNotFound()
-				}
-
-				// Return the original file if the filename matches the
-				// one stored inside the track
-				if track.MediaType == mediaType {
-					d := path.Dir(track.Filename)
-					filename := path.Base(track.Filename)
-
-					f := os.DirFS(d)
-					return pyrin.ServeFile(c, f, filename)
-				}
-
-				// Here we need to start transcoding the original track
-				// media to the requested format
-
-				cacheDir := app.WorkDir().Cache()
-				trackCache := cacheDir.Track(track.Id)
-
-				// Make sure that the cache directory is setup
-				dirs := []string{
-					cacheDir.String(),
-					cacheDir.Tracks(),
-					trackCache,
-				}
-
-				for _, dir := range dirs {
-					err = os.Mkdir(dir, 0755)
-					if err != nil && !os.IsExist(err) {
-						return err
-					}
-				}
-
-				switch mediaType {
-				case types.MediaTypeMp3:
-					name := "track.mp3"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-b:a", "320k", p)
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				case types.MediaTypeOggOpus:
-					name := "track.opus"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-b:a", "96k", p)
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				case types.MediaTypeOggVorbis:
-					name := "track.ogg"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-b:a", "96k", p)
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				case types.MediaTypeAac:
-					name := "track.aac"
-					p := path.Join(trackCache, name)
-
-					_, err := os.Stat(p)
-					if err != nil {
-						if os.IsNotExist(err) {
-							cmd := exec.Command("ffmpeg", "-i", track.Filename, "-codec:a", "aac", "-vn", "-b:a", "128k", p)
-							cmd.Stderr = os.Stderr
-							err := cmd.Run()
-							if err != nil {
-								return err
-							}
-						} else {
-							return err
-						}
-					}
-
-					f := os.DirFS(trackCache)
-					return pyrin.ServeFile(c, f, name)
-				}
-
-				return pyrin.NoContentNotFound()
+				return nil
 			},
 		},
 	)
+
+	// TODO(patrik): I don't like this
+	if app != nil {
+		webDir := app.Config().WebDir
+		if webDir != "" {
+			g.Register(
+				// TODO(patrik): Fix this
+				pyrin.SpaHandler(os.DirFS(webDir), "index.html"),
+			)
+		}
+	}
+}
+
+func RegisterHandlers(app core.App, router pyrin.Router) {
+	RegisterStaticHandlers(app, router.Group(""))
+
+	RegisterApiHandlers(app, router.Group("/api/v1"))
+	// TODO(patrik): Should the files be under the /api/v1 group?
+	InstallFilesHandlers(app, router.Group("/files"))
 }
 
 func Server(app core.App) (*pyrin.Server, error) {
 	s := pyrin.NewServer(&pyrin.ServerConfig{
-		LogName: dwebble.AppName,
+		LogName: tunebook.AppName,
+		ErrorCallback: func(err error) {
+			// TODO(patrik): Handle this better
+			slog.Error("API Error", "err", err)
+		},
 		RegisterHandlers: func(router pyrin.Router) {
 			RegisterHandlers(app, router)
 		},

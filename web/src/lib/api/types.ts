@@ -45,9 +45,9 @@ export const Album = z.object({
   // Name: Album.tags
   "tags": z.array(z.string()),
   // Name: Album.created
-  "created": z.number(),
+  "created": z.string(),
   // Name: Album.updated
-  "updated": z.number(),
+  "updated": z.string(),
 });
 export type Album = z.infer<typeof Album>;
 
@@ -57,6 +57,10 @@ export const ApiToken = z.object({
   "id": z.string(),
   // Name: ApiToken.name
   "name": z.string(),
+  // Name: ApiToken.created
+  "created": z.string(),
+  // Name: ApiToken.updated
+  "updated": z.string(),
 });
 export type ApiToken = z.infer<typeof ApiToken>;
 
@@ -66,27 +70,129 @@ export const Artist = z.object({
   "id": z.string(),
   // Name: Artist.name
   "name": z.string(),
-  // Name: Artist.picture
-  "picture": Images,
+  // Name: Artist.coverArt
+  "coverArt": Images,
   // Name: Artist.tags
   "tags": z.array(z.string()),
   // Name: Artist.created
-  "created": z.number(),
+  "created": z.string(),
   // Name: Artist.updated
-  "updated": z.number(),
+  "updated": z.string(),
 });
 export type Artist = z.infer<typeof Artist>;
 
-// Name: ChangePasswordBody
-export const ChangePasswordBody = z.object({
-  // Name: ChangePasswordBody.currentPassword
-  "currentPassword": z.string(),
-  // Name: ChangePasswordBody.newPassword
-  "newPassword": z.string(),
-  // Name: ChangePasswordBody.newPasswordConfirm
-  "newPasswordConfirm": z.string(),
+// Name: AuthClaimQuickConnectCodeBody
+export const AuthClaimQuickConnectCodeBody = z.object({
+  // Name: AuthClaimQuickConnectCodeBody.code
+  "code": z.string(),
 });
-export type ChangePasswordBody = z.infer<typeof ChangePasswordBody>;
+export type AuthClaimQuickConnectCodeBody = z.infer<typeof AuthClaimQuickConnectCodeBody>;
+
+// Name: AuthFinishProvider
+export const AuthFinishProvider = z.object({
+  // Name: AuthFinishProvider.token
+  "token": z.string(),
+});
+export type AuthFinishProvider = z.infer<typeof AuthFinishProvider>;
+
+// Name: AuthFinishProviderBody
+export const AuthFinishProviderBody = z.object({
+  // Name: AuthFinishProviderBody.requestId
+  "requestId": z.string(),
+  // Name: AuthFinishProviderBody.challenge
+  "challenge": z.string(),
+});
+export type AuthFinishProviderBody = z.infer<typeof AuthFinishProviderBody>;
+
+// Name: AuthFinishQuickConnect
+export const AuthFinishQuickConnect = z.object({
+  // Name: AuthFinishQuickConnect.token
+  "token": z.string(),
+});
+export type AuthFinishQuickConnect = z.infer<typeof AuthFinishQuickConnect>;
+
+// Name: AuthFinishQuickConnectBody
+export const AuthFinishQuickConnectBody = z.object({
+  // Name: AuthFinishQuickConnectBody.code
+  "code": z.string(),
+  // Name: AuthFinishQuickConnectBody.challenge
+  "challenge": z.string(),
+});
+export type AuthFinishQuickConnectBody = z.infer<typeof AuthFinishQuickConnectBody>;
+
+// Name: AuthGetProviderStatus
+export const AuthGetProviderStatus = z.object({
+  // Name: AuthGetProviderStatus.status
+  "status": z.string(),
+});
+export type AuthGetProviderStatus = z.infer<typeof AuthGetProviderStatus>;
+
+// Name: AuthGetProviderStatusBody
+export const AuthGetProviderStatusBody = z.object({
+  // Name: AuthGetProviderStatusBody.requestId
+  "requestId": z.string(),
+  // Name: AuthGetProviderStatusBody.challenge
+  "challenge": z.string(),
+});
+export type AuthGetProviderStatusBody = z.infer<typeof AuthGetProviderStatusBody>;
+
+// Name: AuthGetQuickConnectStatus
+export const AuthGetQuickConnectStatus = z.object({
+  // Name: AuthGetQuickConnectStatus.status
+  "status": z.string(),
+});
+export type AuthGetQuickConnectStatus = z.infer<typeof AuthGetQuickConnectStatus>;
+
+// Name: AuthGetQuickConnectStatusBody
+export const AuthGetQuickConnectStatusBody = z.object({
+  // Name: AuthGetQuickConnectStatusBody.code
+  "code": z.string(),
+  // Name: AuthGetQuickConnectStatusBody.challenge
+  "challenge": z.string(),
+});
+export type AuthGetQuickConnectStatusBody = z.infer<typeof AuthGetQuickConnectStatusBody>;
+
+// Name: AuthInitiate
+export const AuthInitiate = z.object({
+  // Name: AuthInitiate.requestId
+  "requestId": z.string(),
+  // Name: AuthInitiate.authUrl
+  "authUrl": z.string(),
+  // Name: AuthInitiate.challenge
+  "challenge": z.string(),
+  // Name: AuthInitiate.expiresAt
+  "expiresAt": z.string(),
+});
+export type AuthInitiate = z.infer<typeof AuthInitiate>;
+
+// Name: AuthInitiateBody
+export const AuthInitiateBody = z.object({
+  // Name: AuthInitiateBody.providerId
+  "providerId": z.string(),
+});
+export type AuthInitiateBody = z.infer<typeof AuthInitiateBody>;
+
+// Name: AuthProvider
+export const AuthProvider = z.object({
+  // Name: AuthProvider.id
+  "id": z.string(),
+  // Name: AuthProvider.displayName
+  "displayName": z.string(),
+});
+export type AuthProvider = z.infer<typeof AuthProvider>;
+
+// Name: AuthQuickConnectInitiate
+export const AuthQuickConnectInitiate = z.object({
+  // Name: AuthQuickConnectInitiate.code
+  "code": z.string(),
+  // Name: AuthQuickConnectInitiate.challenge
+  "challenge": z.string(),
+  // Name: AuthQuickConnectInitiate.authUrl
+  "authUrl": z.string(),
+  // Name: AuthQuickConnectInitiate.expiresAt
+  "expiresAt": z.string(),
+});
+export type AuthQuickConnectInitiate = z.infer<typeof AuthQuickConnectInitiate>;
 
 // Name: CreateApiToken
 export const CreateApiToken = z.object({
@@ -106,8 +212,6 @@ export type CreateApiTokenBody = z.infer<typeof CreateApiTokenBody>;
 export const CreatePlaylist = z.object({
   // Name: CreatePlaylist.id
   "id": z.string(),
-  // Name: CreatePlaylist.name
-  "name": z.string(),
 });
 export type CreatePlaylist = z.infer<typeof CreatePlaylist>;
 
@@ -118,40 +222,28 @@ export const CreatePlaylistBody = z.object({
 });
 export type CreatePlaylistBody = z.infer<typeof CreatePlaylistBody>;
 
-// Name: CreateTaglist
-export const CreateTaglist = z.object({
-  // Name: CreateTaglist.id
-  "id": z.string(),
-});
-export type CreateTaglist = z.infer<typeof CreateTaglist>;
-
-// Name: CreateTaglistBody
-export const CreateTaglistBody = z.object({
-  // Name: CreateTaglistBody.name
+// Name: CreateTrackFilterBody
+export const CreateTrackFilterBody = z.object({
+  // Name: CreateTrackFilterBody.name
   "name": z.string(),
-  // Name: CreateTaglistBody.filter
+  // Name: CreateTrackFilterBody.filter
   "filter": z.string(),
 });
-export type CreateTaglistBody = z.infer<typeof CreateTaglistBody>;
+export type CreateTrackFilterBody = z.infer<typeof CreateTrackFilterBody>;
+
+// Name: EditPlaylistBody
+export const EditPlaylistBody = z.object({
+  // Name: EditPlaylistBody.name
+  "name": z.string().nullable().optional(),
+  // Name: EditPlaylistBody.coverUrl
+  "coverUrl": z.string().nullable().optional(),
+});
+export type EditPlaylistBody = z.infer<typeof EditPlaylistBody>;
 
 // Name: GetAlbumById
 export const GetAlbumById = z.object({
-  // Name: GetAlbumById.id
-  "id": z.string(),
-  // Name: GetAlbumById.name
-  "name": z.string(),
-  // Name: GetAlbumById.year
-  "year": z.number().nullable(),
-  // Name: GetAlbumById.coverArt
-  "coverArt": Images,
-  // Name: GetAlbumById.artists
-  "artists": z.array(ArtistInfo),
-  // Name: GetAlbumById.tags
-  "tags": z.array(z.string()),
-  // Name: GetAlbumById.created
-  "created": z.number(),
-  // Name: GetAlbumById.updated
-  "updated": z.number(),
+  // Name: GetAlbumById.album
+  "album": Album,
 });
 export type GetAlbumById = z.infer<typeof GetAlbumById>;
 
@@ -161,6 +253,8 @@ export const Track = z.object({
   "id": z.string(),
   // Name: Track.name
   "name": z.string(),
+  // Name: Track.order
+  "order": z.number().nullable(),
   // Name: Track.duration
   "duration": z.number(),
   // Name: Track.number
@@ -178,9 +272,9 @@ export const Track = z.object({
   // Name: Track.tags
   "tags": z.array(z.string()),
   // Name: Track.created
-  "created": z.number(),
+  "created": z.string(),
   // Name: Track.updated
-  "updated": z.number(),
+  "updated": z.string(),
 });
 export type Track = z.infer<typeof Track>;
 
@@ -213,12 +307,12 @@ export const GetAlbums = z.object({
 });
 export type GetAlbums = z.infer<typeof GetAlbums>;
 
-// Name: GetAllApiTokens
-export const GetAllApiTokens = z.object({
-  // Name: GetAllApiTokens.tokens
+// Name: GetApiTokens
+export const GetApiTokens = z.object({
+  // Name: GetApiTokens.tokens
   "tokens": z.array(ApiToken),
 });
-export type GetAllApiTokens = z.infer<typeof GetAllApiTokens>;
+export type GetApiTokens = z.infer<typeof GetApiTokens>;
 
 // Name: GetArtistAlbumsById
 export const GetArtistAlbumsById = z.object({
@@ -229,18 +323,8 @@ export type GetArtistAlbumsById = z.infer<typeof GetArtistAlbumsById>;
 
 // Name: GetArtistById
 export const GetArtistById = z.object({
-  // Name: GetArtistById.id
-  "id": z.string(),
-  // Name: GetArtistById.name
-  "name": z.string(),
-  // Name: GetArtistById.picture
-  "picture": Images,
-  // Name: GetArtistById.tags
-  "tags": z.array(z.string()),
-  // Name: GetArtistById.created
-  "created": z.number(),
-  // Name: GetArtistById.updated
-  "updated": z.number(),
+  // Name: GetArtistById.artist
+  "artist": Artist,
 });
 export type GetArtistById = z.infer<typeof GetArtistById>;
 
@@ -253,193 +337,142 @@ export const GetArtists = z.object({
 });
 export type GetArtists = z.infer<typeof GetArtists>;
 
-// Name: Path
-export const Path = z.object({
-  // Name: Path.name
-  "name": z.string(),
-  // Name: Path.path
-  "path": z.string(),
-  // Name: Path.isDir
-  "isDir": z.boolean(),
-  // Name: Path.depth
-  "depth": z.number(),
+// Name: GetAuthProviders
+export const GetAuthProviders = z.object({
+  // Name: GetAuthProviders.providers
+  "providers": z.array(AuthProvider),
 });
-export type Path = z.infer<typeof Path>;
+export type GetAuthProviders = z.infer<typeof GetAuthProviders>;
 
-// Name: GetLibraryPaths
-export const GetLibraryPaths = z.object({
-  // Name: GetLibraryPaths.paths
-  "paths": z.array(Path),
+// Name: GetFavoriteTrackIds
+export const GetFavoriteTrackIds = z.object({
+  // Name: GetFavoriteTrackIds.ids
+  "ids": z.array(z.string()),
 });
-export type GetLibraryPaths = z.infer<typeof GetLibraryPaths>;
+export type GetFavoriteTrackIds = z.infer<typeof GetFavoriteTrackIds>;
+
+// Name: TrackHistory
+export const TrackHistory = z.object({
+  // Name: TrackHistory.id
+  "id": z.string(),
+  // Name: TrackHistory.userId
+  "userId": z.string(),
+  // Name: TrackHistory.track
+  "track": Track,
+  // Name: TrackHistory.listenedAt
+  "listenedAt": z.number(),
+  // Name: TrackHistory.playbackType
+  "playbackType": z.string(),
+  // Name: TrackHistory.status
+  "status": z.string(),
+  // Name: TrackHistory.percentPlayed
+  "percentPlayed": z.number(),
+  // Name: TrackHistory.created
+  "created": z.string(),
+  // Name: TrackHistory.updated
+  "updated": z.string(),
+});
+export type TrackHistory = z.infer<typeof TrackHistory>;
+
+// Name: GetHistoryById
+export const GetHistoryById = z.object({
+  // Name: GetHistoryById.history
+  "history": TrackHistory,
+});
+export type GetHistoryById = z.infer<typeof GetHistoryById>;
 
 // Name: GetMe
 export const GetMe = z.object({
   // Name: GetMe.id
   "id": z.string(),
-  // Name: GetMe.username
-  "username": z.string(),
-  // Name: GetMe.role
-  "role": z.string(),
+  // Name: GetMe.email
+  "email": z.string(),
   // Name: GetMe.displayName
   "displayName": z.string(),
+  // Name: GetMe.role
+  "role": z.string(),
+  // Name: GetMe.picture
+  "picture": Images,
   // Name: GetMe.quickPlaylist
   "quickPlaylist": z.string().nullable(),
 });
 export type GetMe = z.infer<typeof GetMe>;
 
-// Name: MediaResource
-export const MediaResource = z.object({
-  // Name: MediaResource.id
-  "id": z.string(),
-  // Name: MediaResource.name
+// Name: MediaFormat
+export const MediaFormat = z.object({
+  // Name: MediaFormat.name
   "name": z.string(),
+  // Name: MediaFormat.format
+  "format": z.string(),
+  // Name: MediaFormat.ext
+  "ext": z.string(),
+  // Name: MediaFormat.qualityHighBitrate
+  "qualityHighBitrate": z.number(),
+  // Name: MediaFormat.qualityMediumBitrate
+  "qualityMediumBitrate": z.number(),
+  // Name: MediaFormat.qualityLowBitrate
+  "qualityLowBitrate": z.number(),
+  // Name: MediaFormat.order
+  "order": z.number(),
 });
-export type MediaResource = z.infer<typeof MediaResource>;
+export type MediaFormat = z.infer<typeof MediaFormat>;
 
-// Name: MediaItem
-export const MediaItem = z.object({
-  // Name: MediaItem.track
-  "track": MediaResource,
-  // Name: MediaItem.artists
-  "artists": z.array(MediaResource),
-  // Name: MediaItem.album
-  "album": MediaResource,
-  // Name: MediaItem.coverArt
+// Name: MediaDeviceSpec
+export const MediaDeviceSpec = z.object({
+  // Name: MediaDeviceSpec.name
+  "name": z.string(),
+  // Name: MediaDeviceSpec.preferedFormat
+  "preferedFormat": z.string(),
+  // Name: MediaDeviceSpec.allowedFormats
+  "allowedFormats": z.array(z.string()),
+});
+export type MediaDeviceSpec = z.infer<typeof MediaDeviceSpec>;
+
+// Name: GetMediaSettings
+export const GetMediaSettings = z.object({
+  // Name: GetMediaSettings.formats
+  "formats": z.array(MediaFormat),
+  // Name: GetMediaSettings.deviceSpecs
+  "deviceSpecs": z.array(MediaDeviceSpec),
+});
+export type GetMediaSettings = z.infer<typeof GetMediaSettings>;
+
+// Name: Playlist
+export const Playlist = z.object({
+  // Name: Playlist.id
+  "id": z.string(),
+  // Name: Playlist.name
+  "name": z.string(),
+  // Name: Playlist.coverArt
   "coverArt": Images,
-  // Name: MediaItem.mediaType
-  "mediaType": z.string(),
-  // Name: MediaItem.mediaUrl
-  "mediaUrl": z.string(),
+  // Name: Playlist.ownerId
+  "ownerId": z.string(),
+  // Name: Playlist.ownerDisplayName
+  "ownerDisplayName": z.string(),
+  // Name: Playlist.ownerPicture
+  "ownerPicture": Images,
+  // Name: Playlist.trackCount
+  "trackCount": z.number(),
+  // Name: Playlist.created
+  "created": z.string(),
+  // Name: Playlist.updated
+  "updated": z.string(),
 });
-export type MediaItem = z.infer<typeof MediaItem>;
-
-// Name: GetMedia
-export const GetMedia = z.object({
-  // Name: GetMedia.items
-  "items": z.array(MediaItem),
-});
-export type GetMedia = z.infer<typeof GetMedia>;
-
-// Name: GetMediaCommonBody
-export const GetMediaCommonBody = z.object({
-  // Name: GetMediaCommonBody.mediaType
-  "mediaType": z.string().optional(),
-  // Name: GetMediaCommonBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaCommonBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaCommonBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaCommonBody.offset
-  "offset": z.number().optional(),
-});
-export type GetMediaCommonBody = z.infer<typeof GetMediaCommonBody>;
-
-// Name: GetMediaFromAlbumBody
-export const GetMediaFromAlbumBody = z.object({
-  // Name: GetMediaFromAlbumBody.mediaType
-  "mediaType": z.string().optional(),
-  // Name: GetMediaFromAlbumBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromAlbumBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromAlbumBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromAlbumBody.offset
-  "offset": z.number().optional(),
-});
-export type GetMediaFromAlbumBody = z.infer<typeof GetMediaFromAlbumBody>;
-
-// Name: GetMediaFromArtistBody
-export const GetMediaFromArtistBody = z.object({
-  // Name: GetMediaFromArtistBody.mediaType
-  "mediaType": z.string().optional(),
-  // Name: GetMediaFromArtistBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromArtistBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromArtistBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromArtistBody.offset
-  "offset": z.number().optional(),
-});
-export type GetMediaFromArtistBody = z.infer<typeof GetMediaFromArtistBody>;
-
-// Name: GetMediaFromFilterBody
-export const GetMediaFromFilterBody = z.object({
-  // Name: GetMediaFromFilterBody.mediaType
-  "mediaType": z.string().optional(),
-  // Name: GetMediaFromFilterBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromFilterBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromFilterBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromFilterBody.offset
-  "offset": z.number().optional(),
-  // Name: GetMediaFromFilterBody.filter
-  "filter": z.string(),
-});
-export type GetMediaFromFilterBody = z.infer<typeof GetMediaFromFilterBody>;
-
-// Name: GetMediaFromIdsBody
-export const GetMediaFromIdsBody = z.object({
-  // Name: GetMediaFromIdsBody.mediaType
-  "mediaType": z.string().optional(),
-  // Name: GetMediaFromIdsBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromIdsBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromIdsBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromIdsBody.offset
-  "offset": z.number().optional(),
-  // Name: GetMediaFromIdsBody.trackIds
-  "trackIds": z.array(z.string()),
-  // Name: GetMediaFromIdsBody.keepOrder
-  "keepOrder": z.boolean().optional(),
-});
-export type GetMediaFromIdsBody = z.infer<typeof GetMediaFromIdsBody>;
-
-// Name: GetMediaFromPlaylistBody
-export const GetMediaFromPlaylistBody = z.object({
-  // Name: GetMediaFromPlaylistBody.mediaType
-  "mediaType": z.string().optional(),
-  // Name: GetMediaFromPlaylistBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromPlaylistBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromPlaylistBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromPlaylistBody.offset
-  "offset": z.number().optional(),
-});
-export type GetMediaFromPlaylistBody = z.infer<typeof GetMediaFromPlaylistBody>;
-
-// Name: GetMediaFromTaglistBody
-export const GetMediaFromTaglistBody = z.object({
-  // Name: GetMediaFromTaglistBody.mediaType
-  "mediaType": z.string().optional(),
-  // Name: GetMediaFromTaglistBody.shuffle
-  "shuffle": z.boolean().optional(),
-  // Name: GetMediaFromTaglistBody.sort
-  "sort": z.string().optional(),
-  // Name: GetMediaFromTaglistBody.limit
-  "limit": z.number().optional(),
-  // Name: GetMediaFromTaglistBody.offset
-  "offset": z.number().optional(),
-});
-export type GetMediaFromTaglistBody = z.infer<typeof GetMediaFromTaglistBody>;
+export type Playlist = z.infer<typeof Playlist>;
 
 // Name: GetPlaylistById
 export const GetPlaylistById = z.object({
-  // Name: GetPlaylistById.id
-  "id": z.string(),
-  // Name: GetPlaylistById.name
-  "name": z.string(),
+  // Name: GetPlaylistById.playlist
+  "playlist": Playlist,
 });
 export type GetPlaylistById = z.infer<typeof GetPlaylistById>;
+
+// Name: GetPlaylistItemIds
+export const GetPlaylistItemIds = z.object({
+  // Name: GetPlaylistItemIds.ids
+  "ids": z.array(z.string()),
+});
+export type GetPlaylistItemIds = z.infer<typeof GetPlaylistItemIds>;
 
 // Name: GetPlaylistItems
 export const GetPlaylistItems = z.object({
@@ -450,21 +483,21 @@ export const GetPlaylistItems = z.object({
 });
 export type GetPlaylistItems = z.infer<typeof GetPlaylistItems>;
 
-// Name: Playlist
-export const Playlist = z.object({
-  // Name: Playlist.id
-  "id": z.string(),
-  // Name: Playlist.name
-  "name": z.string(),
-});
-export type Playlist = z.infer<typeof Playlist>;
-
 // Name: GetPlaylists
 export const GetPlaylists = z.object({
+  // Name: GetPlaylists.page
+  "page": Page,
   // Name: GetPlaylists.playlists
   "playlists": z.array(Playlist),
 });
 export type GetPlaylists = z.infer<typeof GetPlaylists>;
+
+// Name: GetQuickPlaylistIds
+export const GetQuickPlaylistIds = z.object({
+  // Name: GetQuickPlaylistIds.ids
+  "ids": z.array(z.string()),
+});
+export type GetQuickPlaylistIds = z.infer<typeof GetQuickPlaylistIds>;
 
 // Name: GetSystemInfo
 export const GetSystemInfo = z.object({
@@ -473,80 +506,45 @@ export const GetSystemInfo = z.object({
 });
 export type GetSystemInfo = z.infer<typeof GetSystemInfo>;
 
-// Name: GetTaglistById
-export const GetTaglistById = z.object({
-  // Name: GetTaglistById.id
-  "id": z.string(),
-  // Name: GetTaglistById.name
-  "name": z.string(),
-  // Name: GetTaglistById.filter
-  "filter": z.string(),
-  // Name: GetTaglistById.created
-  "created": z.number(),
-  // Name: GetTaglistById.updated
-  "updated": z.number(),
-});
-export type GetTaglistById = z.infer<typeof GetTaglistById>;
-
-// Name: GetTaglistTracks
-export const GetTaglistTracks = z.object({
-  // Name: GetTaglistTracks.page
-  "page": Page,
-  // Name: GetTaglistTracks.tracks
-  "tracks": z.array(Track),
-});
-export type GetTaglistTracks = z.infer<typeof GetTaglistTracks>;
-
-// Name: Taglist
-export const Taglist = z.object({
-  // Name: Taglist.id
-  "id": z.string(),
-  // Name: Taglist.name
-  "name": z.string(),
-  // Name: Taglist.filter
-  "filter": z.string(),
-  // Name: Taglist.created
-  "created": z.number(),
-  // Name: Taglist.updated
-  "updated": z.number(),
-});
-export type Taglist = z.infer<typeof Taglist>;
-
-// Name: GetTaglists
-export const GetTaglists = z.object({
-  // Name: GetTaglists.taglists
-  "taglists": z.array(Taglist),
-});
-export type GetTaglists = z.infer<typeof GetTaglists>;
-
 // Name: GetTrackById
 export const GetTrackById = z.object({
-  // Name: GetTrackById.id
-  "id": z.string(),
-  // Name: GetTrackById.name
-  "name": z.string(),
-  // Name: GetTrackById.duration
-  "duration": z.number(),
-  // Name: GetTrackById.number
-  "number": z.number().nullable(),
-  // Name: GetTrackById.year
-  "year": z.number().nullable(),
-  // Name: GetTrackById.coverArt
-  "coverArt": Images,
-  // Name: GetTrackById.albumId
-  "albumId": z.string(),
-  // Name: GetTrackById.albumName
-  "albumName": z.string(),
-  // Name: GetTrackById.artists
-  "artists": z.array(ArtistInfo),
-  // Name: GetTrackById.tags
-  "tags": z.array(z.string()),
-  // Name: GetTrackById.created
-  "created": z.number(),
-  // Name: GetTrackById.updated
-  "updated": z.number(),
+  // Name: GetTrackById.track
+  "track": Track,
 });
 export type GetTrackById = z.infer<typeof GetTrackById>;
+
+// Name: TrackFilter
+export const TrackFilter = z.object({
+  // Name: TrackFilter.filterId
+  "filterId": z.string(),
+  // Name: TrackFilter.userId
+  "userId": z.string(),
+  // Name: TrackFilter.name
+  "name": z.string(),
+  // Name: TrackFilter.filter
+  "filter": z.string(),
+  // Name: TrackFilter.created
+  "created": z.string(),
+  // Name: TrackFilter.updated
+  "updated": z.string(),
+});
+export type TrackFilter = z.infer<typeof TrackFilter>;
+
+// Name: GetTrackFilters
+export const GetTrackFilters = z.object({
+  // Name: GetTrackFilters.filters
+  "filters": z.array(TrackFilter),
+});
+export type GetTrackFilters = z.infer<typeof GetTrackFilters>;
+
+// Name: GetTrackHistory
+export const GetTrackHistory = z.object({
+  // Name: GetTrackHistory.page
+  "page": Page,
+  // Name: GetTrackHistory.history
+  "history": z.array(TrackHistory),
+});
+export type GetTrackHistory = z.infer<typeof GetTrackHistory>;
 
 // Name: GetTracks
 export const GetTracks = z.object({
@@ -557,21 +555,54 @@ export const GetTracks = z.object({
 });
 export type GetTracks = z.infer<typeof GetTracks>;
 
-// Name: GetUserQuickPlaylistItemIds
-export const GetUserQuickPlaylistItemIds = z.object({
-  // Name: GetUserQuickPlaylistItemIds.trackIds
-  "trackIds": z.array(z.string()),
+// Name: UserData
+export const UserData = z.object({
+  // Name: UserData.id
+  "id": z.string(),
+  // Name: UserData.displayName
+  "displayName": z.string(),
+  // Name: UserData.role
+  "role": z.string(),
+  // Name: UserData.picture
+  "picture": Images,
+  // Name: UserData.created
+  "created": z.string(),
 });
-export type GetUserQuickPlaylistItemIds = z.infer<typeof GetUserQuickPlaylistItemIds>;
+export type UserData = z.infer<typeof UserData>;
 
-// Name: PostPlaylistFilterBody
-export const PostPlaylistFilterBody = z.object({
-  // Name: PostPlaylistFilterBody.name
-  "name": z.string(),
-  // Name: PostPlaylistFilterBody.filter
-  "filter": z.string(),
+// Name: GetUser
+export const GetUser = z.object({
+  // Name: GetUser.user
+  "user": UserData,
 });
-export type PostPlaylistFilterBody = z.infer<typeof PostPlaylistFilterBody>;
+export type GetUser = z.infer<typeof GetUser>;
+
+// Name: GetUserFavorites
+export const GetUserFavorites = z.object({
+  // Name: GetUserFavorites.page
+  "page": Page,
+  // Name: GetUserFavorites.items
+  "items": z.array(Track),
+});
+export type GetUserFavorites = z.infer<typeof GetUserFavorites>;
+
+// Name: PushTrackHistory
+export const PushTrackHistory = z.object({
+  // Name: PushTrackHistory.id
+  "id": z.string(),
+});
+export type PushTrackHistory = z.infer<typeof PushTrackHistory>;
+
+// Name: PushTrackHistoryBody
+export const PushTrackHistoryBody = z.object({
+  // Name: PushTrackHistoryBody.trackId
+  "trackId": z.string(),
+  // Name: PushTrackHistoryBody.playbackType
+  "playbackType": z.string(),
+  // Name: PushTrackHistoryBody.percentPlayed
+  "percentPlayed": z.number(),
+});
+export type PushTrackHistoryBody = z.infer<typeof PushTrackHistoryBody>;
 
 // Name: RemovePlaylistItemBody
 export const RemovePlaylistItemBody = z.object({
@@ -580,71 +611,82 @@ export const RemovePlaylistItemBody = z.object({
 });
 export type RemovePlaylistItemBody = z.infer<typeof RemovePlaylistItemBody>;
 
-// Name: Signin
-export const Signin = z.object({
-  // Name: Signin.token
-  "token": z.string(),
+// Name: ReorderPlaylistItemsBody
+export const ReorderPlaylistItemsBody = z.object({
+  // Name: ReorderPlaylistItemsBody.before
+  "before": z.boolean(),
+  // Name: ReorderPlaylistItemsBody.anchorTrackId
+  "anchorTrackId": z.string(),
+  // Name: ReorderPlaylistItemsBody.trackIds
+  "trackIds": z.array(z.string()),
 });
-export type Signin = z.infer<typeof Signin>;
+export type ReorderPlaylistItemsBody = z.infer<typeof ReorderPlaylistItemsBody>;
 
-// Name: SigninBody
-export const SigninBody = z.object({
-  // Name: SigninBody.username
-  "username": z.string(),
-  // Name: SigninBody.password
-  "password": z.string(),
+// Name: SearchAlbums
+export const SearchAlbums = z.object({
+  // Name: SearchAlbums.page
+  "page": Page,
+  // Name: SearchAlbums.albums
+  "albums": z.array(Album),
 });
-export type SigninBody = z.infer<typeof SigninBody>;
+export type SearchAlbums = z.infer<typeof SearchAlbums>;
 
-// Name: Signup
-export const Signup = z.object({
-  // Name: Signup.id
-  "id": z.string(),
-  // Name: Signup.username
-  "username": z.string(),
+// Name: SearchArtists
+export const SearchArtists = z.object({
+  // Name: SearchArtists.page
+  "page": Page,
+  // Name: SearchArtists.artists
+  "artists": z.array(Artist),
 });
-export type Signup = z.infer<typeof Signup>;
+export type SearchArtists = z.infer<typeof SearchArtists>;
 
-// Name: SignupBody
-export const SignupBody = z.object({
-  // Name: SignupBody.username
-  "username": z.string(),
-  // Name: SignupBody.password
-  "password": z.string(),
-  // Name: SignupBody.passwordConfirm
-  "passwordConfirm": z.string(),
+// Name: SearchPlaylists
+export const SearchPlaylists = z.object({
+  // Name: SearchPlaylists.page
+  "page": Page,
+  // Name: SearchPlaylists.playlists
+  "playlists": z.array(Playlist),
 });
-export type SignupBody = z.infer<typeof SignupBody>;
+export type SearchPlaylists = z.infer<typeof SearchPlaylists>;
 
-// Name: SyncLibraryBody
-export const SyncLibraryBody = z.object({
-  // Name: SyncLibraryBody.path
-  "path": z.string().optional(),
+// Name: SearchTracks
+export const SearchTracks = z.object({
+  // Name: SearchTracks.page
+  "page": Page,
+  // Name: SearchTracks.tracks
+  "tracks": z.array(Track),
 });
-export type SyncLibraryBody = z.infer<typeof SyncLibraryBody>;
+export type SearchTracks = z.infer<typeof SearchTracks>;
 
-// Name: TrackId
-export const TrackId = z.object({
-  // Name: TrackId.trackId
-  "trackId": z.string(),
+// Name: SearchUsers
+export const SearchUsers = z.object({
+  // Name: SearchUsers.page
+  "page": Page,
+  // Name: SearchUsers.users
+  "users": z.array(UserData),
 });
-export type TrackId = z.infer<typeof TrackId>;
+export type SearchUsers = z.infer<typeof SearchUsers>;
 
-// Name: UpdateTaglistBody
-export const UpdateTaglistBody = z.object({
-  // Name: UpdateTaglistBody.name
+// Name: SetQuickPlaylistBody
+export const SetQuickPlaylistBody = z.object({
+  // Name: SetQuickPlaylistBody.playlistId
+  "playlistId": z.string(),
+});
+export type SetQuickPlaylistBody = z.infer<typeof SetQuickPlaylistBody>;
+
+// Name: UpdateMeBody
+export const UpdateMeBody = z.object({
+  // Name: UpdateMeBody.displayName
+  "displayName": z.string().nullable().optional(),
+});
+export type UpdateMeBody = z.infer<typeof UpdateMeBody>;
+
+// Name: UpdateTrackFilterBody
+export const UpdateTrackFilterBody = z.object({
+  // Name: UpdateTrackFilterBody.name
   "name": z.string().nullable().optional(),
-  // Name: UpdateTaglistBody.filter
+  // Name: UpdateTrackFilterBody.filter
   "filter": z.string().nullable().optional(),
 });
-export type UpdateTaglistBody = z.infer<typeof UpdateTaglistBody>;
-
-// Name: UpdateUserSettingsBody
-export const UpdateUserSettingsBody = z.object({
-  // Name: UpdateUserSettingsBody.displayName
-  "displayName": z.string().nullable().optional(),
-  // Name: UpdateUserSettingsBody.quickPlaylist
-  "quickPlaylist": z.string().nullable().optional(),
-});
-export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
+export type UpdateTrackFilterBody = z.infer<typeof UpdateTrackFilterBody>;
 

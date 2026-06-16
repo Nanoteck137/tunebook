@@ -3,13 +3,13 @@ package apis
 import (
 	"errors"
 	"net/http"
-	"strings"
 
-	"github.com/nanoteck137/dwebble/core"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/utils"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 type Album struct {
@@ -24,33 +24,34 @@ type Album struct {
 
 	Tags []string `json:"tags"`
 
-	Created int64 `json:"created"`
-	Updated int64 `json:"updated"`
+	Created string `json:"created"`
+	Updated string `json:"updated"`
 }
 
 func ConvertDBAlbum(c pyrin.Context, album database.Album) Album {
-	allArtists := make([]ArtistInfo, len(album.FeaturingArtists)+1)
+	allArtists := make([]ArtistInfo, len(album.FeaturingArtists.Data)+1)
 
 	allArtists[0] = ArtistInfo{
 		Id:   album.ArtistId,
 		Name: album.ArtistName,
 	}
 
-	for i, v := range album.FeaturingArtists {
+	for i, v := range album.FeaturingArtists.Data {
 		allArtists[i+1] = ArtistInfo{
 			Id:   v.Id,
 			Name: v.Name,
 		}
 	}
+
 	return Album{
 		Id:       album.Id,
 		Name:     album.Name,
-		Year:     ConvertSqlNullInt64(album.Year),
-		CoverArt: ConvertAlbumCoverURL(c, album.Id, album.CoverArt),
+		Year:     utils.SqlNullToInt64Ptr(album.Year),
+		CoverArt: ConvertAlbumCoverURL(c, album.Id),
 		Artists:  allArtists,
-		Tags:     utils.SplitString(album.Tags.String),
-		Created:  album.Created,
-		Updated:  album.Updated,
+		Tags:     utils.SplitTagString(album.Tags.String),
+		Created:  formatTime(album.Created),
+		Updated:  formatTime(album.Updated),
 	}
 }
 
@@ -60,11 +61,30 @@ type GetAlbums struct {
 }
 
 type GetAlbumById struct {
-	Album
+	Album Album `json:"album"`
 }
 
 type GetAlbumTracks struct {
 	Tracks []Track `json:"tracks"`
+}
+
+func handleAlbumServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrAlbumServiceAlbumNotFound):
+		return AlbumNotFound()
+	}
+
+	var invalidFilter *service.InvalidFilterError
+	if errors.As(err, &invalidFilter) {
+		return InvalidFilter(errors.New(invalidFilter.Message))
+	}
+
+	var invalidSort *service.InvalidSortError
+	if errors.As(err, &invalidSort) {
+		return InvalidSort(errors.New(invalidSort.Message))
+	}
+
+	return err
 }
 
 func InstallAlbumHandlers(app core.App, group pyrin.Group) {
@@ -74,22 +94,23 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 			Path:         "/albums",
 			Method:       http.MethodGet,
 			ResponseType: GetAlbums{},
-			Errors:       []pyrin.ErrorType{ErrTypeInvalidFilter, ErrTypeInvalidSort},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
-				opts := getPageOptions(q)
 
-				albums, pageInfo, err := app.DB().GetAlbumsPaged(c.Request().Context(), opts)
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				filterParams := getFilterParams(q)
+
+				albums, pageInfo, err := app.AlbumService().GetAlbums(
+					ctx,
+					service.GetAlbumsParams{
+						Page:   pageParams,
+						Filter: filterParams,
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrInvalidFilter) {
-						return nil, InvalidFilter(err)
-					}
-
-					if errors.Is(err, database.ErrInvalidSort) {
-						return nil, InvalidSort(err)
-					}
-
-					return nil, err
+					return nil, handleAlbumServiceErrors(err)
 				}
 
 				res := GetAlbums{
@@ -106,48 +127,21 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "SearchAlbums",
-			Path:         "/albums/search",
-			Method:       http.MethodGet,
-			ResponseType: GetAlbums{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-
-				query := strings.TrimSpace(q.Get("query"))
-
-				albums, err := app.DB().SearchAlbums(query)
-				if err != nil {
-					return nil, err
-				}
-
-				res := GetAlbums{
-					Albums: make([]Album, len(albums)),
-				}
-
-				for i, album := range albums {
-					res.Albums[i] = ConvertDBAlbum(c, album)
-				}
-
-				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
 			Name:         "GetAlbumById",
 			Method:       http.MethodGet,
 			Path:         "/albums/:id",
 			ResponseType: GetAlbumById{},
-			Errors:       []pyrin.ErrorType{ErrTypeAlbumNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
+				ctx := c.Request().Context()
 
-				album, err := app.DB().GetAlbumById(c.Request().Context(), id)
+				album, err := app.AlbumService().GetAlbumById(
+					ctx,
+					service.GetAlbumByIdParams{
+						AlbumId: c.Param("id"),
+					},
+				)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AlbumNotFound()
-					}
-
-					return nil, err
+					return nil, handleAlbumServiceErrors(err)
 				}
 
 				return GetAlbumById{
@@ -161,20 +155,15 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodGet,
 			Path:         "/albums/:id/tracks",
 			ResponseType: GetAlbumTracks{},
-			Errors:       []pyrin.ErrorType{ErrTypeAlbumNotFound},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
+				ctx := c.Request().Context()
 
-				album, err := app.DB().GetAlbumById(c.Request().Context(), id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AlbumNotFound()
-					}
-
-					return nil, err
-				}
-
-				tracks, err := app.DB().GetTracksByAlbum(c.Request().Context(), album.Id)
+				tracks, err := app.AlbumService().GetAlbumTracks(
+					ctx,
+					service.GetAlbumTracksParams{
+						AlbumId: c.Param("id"),
+					},
+				)
 				if err != nil {
 					return nil, err
 				}

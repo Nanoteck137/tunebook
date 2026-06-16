@@ -6,120 +6,92 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
-	"github.com/nanoteck137/pyrin/ember"
+	"github.com/nanoteck137/tunebook/database/adapter"
+	"github.com/nanoteck137/tunebook/tools/filter"
+	"github.com/nanoteck137/tunebook/types"
 )
 
+var createPlaylistId = createIdGenerator(16)
+
 type Playlist struct {
-	Id      string         `db:"id"`
-	Name    string         `db:"name"`
-	Picture sql.NullString `db:"picture"`
+	Id       string         `db:"id"`
+	Name     string         `db:"name"`
+	CoverArt sql.NullString `db:"cover_art"`
 
 	OwnerId string `db:"owner_id"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
-}
 
-type PlaylistItem struct {
-	PlaylistId string `db:"playlist_id"`
-	TrackId    string `db:"track_id"`
+	OwnerDisplayName string         `db:"owner_display_name"`
+	OwnerPicture     sql.NullString `db:"owner_picture"`
+
+	TrackCount sql.NullInt64 `db:"track_count"`
 }
 
 func PlaylistQuery() *goqu.SelectDataset {
+	trackCountQuery := dialect.From("playlist_items").
+		Select(
+			goqu.I("playlist_items.playlist_id").As("id"),
+			goqu.COUNT(goqu.I("playlist_items.track_id")).As("data"),
+		).
+		GroupBy(goqu.I("playlist_items.playlist_id"))
+
 	query := dialect.From("playlists").
 		Select(
 			"playlists.id",
 			"playlists.name",
-			"playlists.picture",
+			"playlists.cover_art",
 
 			"playlists.owner_id",
 
 			"playlists.created",
 			"playlists.updated",
+
+			goqu.I("owner.display_name").As("owner_display_name"),
+			goqu.I("owner.picture").As("owner_picture"),
+
+			goqu.I("track_count.data").As("track_count"),
+		).
+		Join(
+			UserQuery().As("owner"),
+			goqu.On(goqu.I("playlists.owner_id").Eq(goqu.I("owner.id"))),
+		).
+		LeftJoin(
+			trackCountQuery.As("track_count"),
+			goqu.On(goqu.I("playlists.id").Eq(goqu.I("track_count.id"))),
 		)
 
 	return query
 }
 
-func (db DB) GetPlaylistsByUser(ctx context.Context, userId string) ([]Playlist, error) {
-	query := PlaylistQuery().
-		Where(goqu.I("playlists.owner_id").Eq(userId))
-
-	return ember.Multiple[Playlist](db.db, ctx, query)
+type GetPlaylistsParams struct {
+	Page   types.PageParams
+	Filter types.FilterParams
 }
 
-func (db DB) GetPlaylistById(ctx context.Context, id string) (Playlist, error) {
-	query := PlaylistQuery().
-		Where(goqu.I("playlists.id").Eq(id))
-
-	return ember.Single[Playlist](db.db, ctx, query)
-}
-
-func (db DB) GetPlaylistItems(ctx context.Context, playlistId string) ([]PlaylistItem, error) {
-	query := dialect.From("playlist_items").
-		Select(
-			"playlist_items.playlist_id",
-			"playlist_items.track_id",
-		).
-		Where(goqu.I("playlist_id").Eq(playlistId))
-
-	return ember.Multiple[PlaylistItem](db.db, ctx, query)
-}
-
-func (db DB) GetPlaylistTracks(ctx context.Context, playlistId string) ([]Track, error) {
-	tracks := TrackQuery()
-
-	query := dialect.From("playlist_items").
-		Select("tracks.*").
-		Join(
-			tracks.As("tracks"),
-			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-		).
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		Order(goqu.I("tracks.name").Asc())
-
-	return ember.Multiple[Track](db.db, ctx, query)
-}
-
-func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts FetchOptions) ([]Track, types.Page, error) {
-	tracks := TrackQuery()
-
-	query := dialect.From("playlist_items").
-		Select("tracks.*").
-		Join(
-			tracks.As("tracks"),
-			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-		).
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		Order(goqu.I("tracks.name").Asc())
+func (db DB) GetPlaylists(
+	ctx context.Context,
+	params GetPlaylistsParams,
+) ([]Playlist, types.Page, error) {
+	query := PlaylistQuery()
 
 	var err error
 
-	countQuery := query.
-		Select(goqu.COUNT("tracks.id"))
-
-	if opts.PerPage > 0 {
-		query = query.
-			Limit(uint(opts.PerPage)).
-			Offset(uint(opts.Page * opts.PerPage))
-	}
-
-	totalItems, err := ember.Single[int](db.db, ctx, countQuery)
+	a := adapter.PlaylistResolverAdapter{}
+	query, err = applyFilterParams(params.Filter, &a, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	totalPages := utils.TotalPages(opts.PerPage, totalItems)
-	page := types.Page{
-		Page:       opts.Page,
-		PerPage:    opts.PerPage,
-		TotalItems: totalItems,
-		TotalPages: totalPages,
+	page, err := buildPage(ctx, db, params.Page, query, "playlists.id")
+	if err != nil {
+		return nil, types.Page{}, err
 	}
 
-	items, err := ember.Multiple[Track](db.db, ctx, query)
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[Playlist](db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -127,10 +99,39 @@ func (db DB) GetPlaylistTracksPaged(ctx context.Context, playlistId string, opts
 	return items, page, nil
 }
 
+func (db DB) GetPlaylistsIn(
+	ctx context.Context,
+	in any,
+	sort string,
+) ([]Playlist, error) {
+	query := PlaylistQuery().
+		Where(goqu.I("playlists.id").In(in))
+
+	a := adapter.PlaylistResolverAdapter{}
+	resolver := filter.New(&a)
+
+	query, err := applySort(query, resolver, sort)
+	if err != nil {
+		return nil, err
+	}
+
+	return Multiple[Playlist](db, ctx, query)
+}
+
+func (db DB) GetPlaylistById(
+	ctx context.Context,
+	playlistId string,
+) (Playlist, error) {
+	query := PlaylistQuery().
+		Where(goqu.I("playlists.id").Eq(playlistId))
+
+	return Single[Playlist](db, ctx, query)
+}
+
 type CreatePlaylistParams struct {
-	Id      string
-	Name    string
-	Picture sql.NullString
+	Id       string
+	Name     string
+	CoverArt sql.NullString
 
 	OwnerId string
 
@@ -138,54 +139,76 @@ type CreatePlaylistParams struct {
 	Updated int64
 }
 
-func (db DB) CreatePlaylist(ctx context.Context, params CreatePlaylistParams) (Playlist, error) {
-	t := time.Now().UnixMilli()
-	created := params.Created
-	updated := params.Updated
-
-	if created == 0 && updated == 0 {
-		created = t
-		updated = t
+func (db DB) CreatePlaylist(
+	ctx context.Context,
+	params CreatePlaylistParams,
+) (string, error) {
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
 	}
 
-	id := params.Id
-	if id == "" {
-		id = utils.CreateId()
+	if params.Id == "" {
+		params.Id = createPlaylistId()
 	}
 
 	query := dialect.Insert("playlists").
 		Rows(goqu.Record{
-			"id":      id,
-			"name":    params.Name,
-			"picture": params.Picture,
+			"id":        params.Id,
+			"name":      params.Name,
+			"cover_art": params.CoverArt,
 
 			"owner_id": params.OwnerId,
 
-			"created": created,
-			"updated": updated,
-		}).
-		Returning(
-			"playlists.id",
-			"playlists.name",
-			"playlists.picture",
-
-			"playlists.owner_id",
-
-			"playlists.created",
-			"playlists.updated",
-		)
-
-	return ember.Single[Playlist](db.db, ctx, query)
-}
-
-func (db DB) AddItemToPlaylist(ctx context.Context, playlistId, trackId string) error {
-	query := goqu.Insert("playlist_items").
-		Rows(goqu.Record{
-			"playlist_id": playlistId,
-			"track_id":    trackId,
+			"created": params.Created,
+			"updated": params.Updated,
 		})
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return "", err
+	}
+
+	return params.Id, nil
+}
+
+type PlaylistChanges struct {
+	Name Change[string]
+
+	OwnerId Change[string]
+
+	CoverArt Change[sql.NullString]
+
+	Created Change[int64]
+}
+
+func (db DB) UpdatePlaylist(
+	ctx context.Context,
+	playlistId string,
+	changes PlaylistChanges,
+) error {
+	record := goqu.Record{}
+
+	addToRecord(record, "name", changes.Name)
+
+	addToRecord(record, "owner_id", changes.OwnerId)
+
+	addToRecord(record, "cover_art", changes.CoverArt)
+
+	addToRecord(record, "created", changes.Created)
+
+	if len(record) == 0 {
+		return nil
+	}
+
+	record["updated"] = time.Now().UnixMilli()
+
+	query := dialect.Update("playlists").
+		Set(record).
+		Where(goqu.I("playlists.id").Eq(playlistId))
+
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -193,38 +216,11 @@ func (db DB) AddItemToPlaylist(ctx context.Context, playlistId, trackId string) 
 	return nil
 }
 
-func (db DB) RemovePlaylistItem(ctx context.Context, playlistId, trackId string) error {
-	query := goqu.Delete("playlist_items").
-		Where(goqu.And(
-			goqu.I("playlist_items.playlist_id").Eq(playlistId),
-			goqu.I("playlist_items.track_id").Eq(trackId),
-		))
-
-	_, err := db.db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db DB) RemoveAllPlaylistItem(ctx context.Context, playlistId string) error {
-	query := goqu.Delete("playlist_items").
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId))
-
-	_, err := db.db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db DB) DeletePlaylist(ctx context.Context, id string) error {
+func (db DB) DeletePlaylist(ctx context.Context, playlistId string) error {
 	query := dialect.Delete("playlists").
-		Where(goqu.I("playlists.id").Eq(id))
+		Where(goqu.I("playlists.id").Eq(playlistId))
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

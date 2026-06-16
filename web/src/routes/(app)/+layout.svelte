@@ -1,0 +1,264 @@
+<script lang="ts">
+  import {
+    DiscAlbum,
+    FileMusic,
+    Home,
+    ListMusic,
+    ListVideo,
+    LogIn,
+    LogOut,
+    Menu,
+    Search,
+    Server,
+    User,
+    Users,
+  } from "lucide-svelte";
+  import AudioPlayer from "$lib/components/audio/AudioPlayer.svelte";
+  import Link from "$lib/components/Link.svelte";
+  import { browser } from "$app/environment";
+  import { fade, fly } from "svelte/transition";
+  import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
+  import toast, { Toaster } from "svelte-5-french-toast";
+  import { handleApiError, setApiClientRaw } from "$lib";
+  import { setMusicManager } from "$lib/music-manager.svelte";
+  import { goto, invalidateAll } from "$app/navigation";
+  import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
+  import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
+  import { setFavorites } from "$lib/favorites.svelte";
+  import { isRoleAdmin } from "$lib/utils.js";
+
+  let { children, data } = $props();
+
+  let apiClient = setApiClientRaw(data.apiClient);
+
+  setMusicManager(apiClient);
+
+  let favorites = setFavorites(apiClient, data.favoriteIds);
+
+  let quickPlaylist = setQuickPlaylist(apiClient);
+
+  $effect(() => {
+    quickPlaylist.setPlaylistId(data.user?.quickPlaylist ?? null);
+  });
+
+  $effect(() => {
+    favorites.ids = data.favoriteIds;
+  });
+
+  let showSideMenu = $state(false);
+
+  function close() {
+    showSideMenu = false;
+  }
+
+  $effect(() => {
+    if (showSideMenu) {
+      if (browser) document.body.style.overflow = "hidden";
+    } else {
+      if (browser) document.body.style.overflow = "";
+    }
+  });
+</script>
+
+<svelte:head>
+  <title>Tunebook</title>
+</svelte:head>
+
+<Toaster position="bottom-right" />
+
+<header
+  class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+>
+  <div class="container flex h-14 max-w-screen-2xl items-center gap-4">
+    <button
+      onclick={() => {
+        showSideMenu = true;
+      }}
+    >
+      <Menu size="20" />
+    </button>
+
+    <a
+      class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-2xl font-medium text-transparent"
+      href="/">Tunebook</a
+    >
+
+    <div class="flex-grow"></div>
+
+    <div class="flex items-center gap-2">
+      {#if data.userPlaylists}
+        <QuickPlaylistSelectorModal
+          class={buttonVariants({ variant: "ghost", size: "icon" })}
+          playlists={data.userPlaylists}
+          currentQuickPlaylistId={data.user?.quickPlaylist ?? undefined}
+          onResult={async (playlistId) => {
+            const res = await apiClient.setQuickPlaylist({
+              playlistId: playlistId,
+            });
+            if (!res.success) {
+              handleApiError(res.error);
+              invalidateAll();
+              return;
+            }
+
+            toast.success("Successfully set quick playlist");
+            invalidateAll();
+          }}
+        >
+          <ListVideo />
+        </QuickPlaylistSelectorModal>
+      {/if}
+
+      <Button href="/search" size="icon" variant="ghost">
+        <Search />
+      </Button>
+
+      {#if data.user}
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <img
+              class="w-8 rounded-full"
+              src={data.user.picture.small}
+              alt=""
+            />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content class="w-56" align="end">
+            <DropdownMenu.Group>
+              <DropdownMenu.GroupHeading>
+                {data.user.displayName}
+              </DropdownMenu.GroupHeading>
+
+              <DropdownMenu.Separator />
+
+              <DropdownMenu.Item
+                onSelect={() => {
+                  if (!data.user) return;
+
+                  goto(`/users/${data.user.id}`);
+                }}
+              >
+                <User />
+                Account
+              </DropdownMenu.Item>
+
+              {#if isRoleAdmin(data.user.role)}
+                <DropdownMenu.Item
+                  onSelect={() => {
+                    goto(`/server`);
+                  }}
+                >
+                  <Server />
+                  Server
+                </DropdownMenu.Item>
+              {/if}
+
+              <DropdownMenu.Separator />
+
+              <DropdownMenu.Item
+                onSelect={() => {
+                  localStorage.removeItem("token");
+                  goto("/", { invalidateAll: true });
+                }}
+              >
+                <LogOut />
+                Logout
+              </DropdownMenu.Item>
+            </DropdownMenu.Group>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      {/if}
+    </div>
+  </div>
+</header>
+
+<main class="container py-8">
+  {@render children()}
+</main>
+
+<footer class="fixed bottom-0 w-full">
+  <AudioPlayer />
+</footer>
+
+{#if showSideMenu}
+  <!-- svelte-ignore a11y_consider_explicit_label -->
+  <button
+    class="fixed inset-0 z-50 bg-black/80"
+    onclick={() => {
+      showSideMenu = false;
+    }}
+    transition:fade={{ duration: 200 }}
+  ></button>
+
+  <aside
+    class={`fixed bottom-0 top-0 z-50 flex w-72 flex-col bg-sidebar text-sidebar-foreground`}
+    transition:fly={{ x: -400 }}
+  >
+    <div class="flex h-14 items-center gap-4 border-b px-8">
+      <button
+        onclick={() => {
+          showSideMenu = false;
+        }}
+      >
+        <Menu size="20" />
+      </button>
+      <a
+        class="text-2xl font-medium"
+        href="/"
+        onclick={() => {
+          showSideMenu = false;
+        }}
+      >
+        Tunebook
+      </a>
+    </div>
+
+    <div class="flex flex-col gap-2 px-4 py-4">
+      <Link title="Home" href="/" icon={Home} onClick={close} />
+      <Link title="Artists" href="/artists" icon={Users} onClick={close} />
+      <Link title="Albums" href="/albums" icon={DiscAlbum} onClick={close} />
+      <Link title="Tracks" href="/tracks" icon={FileMusic} onClick={close} />
+
+      {#if data.user}
+        <Link
+          title="Playlists"
+          href="/playlists"
+          icon={ListMusic}
+          onClick={close}
+        />
+      {/if}
+    </div>
+    <div class="flex-grow"></div>
+    <div class="flex flex-col gap-2 px-4 py-2">
+      {#if data.user}
+        <!-- TODO(patrik): Temp -->
+        <img class="w-16" src={data.user.picture.small} alt="" />
+
+        <Link
+          title={data.user.displayName}
+          href="/users/{data.user.id}"
+          icon={User}
+          onClick={close}
+        />
+
+        {#if data.user.role === "super_user"}
+          <Link title="Server" href="/server" icon={Server} onClick={close} />
+        {/if}
+
+        <Link
+          title="Logout"
+          icon={LogOut}
+          onClick={() => {
+            localStorage.removeItem("token");
+            invalidateAll();
+            goto("/");
+
+            close();
+          }}
+        />
+      {:else}
+        <Link title="Login" href="/login" icon={LogIn} onClick={close} />
+      {/if}
+    </div>
+    <div class="h-4"></div>
+  </aside>
+{/if}

@@ -3,8 +3,8 @@ package adapter
 import (
 	"go/ast"
 
-	"github.com/nanoteck137/dwebble/tools/filter"
-	"github.com/nanoteck137/dwebble/tools/utils"
+	"github.com/gosimple/slug"
+	"github.com/nanoteck137/tunebook/tools/filter"
 )
 
 var _ filter.ResolverAdapter = (*TrackResolverAdapter)(nil)
@@ -26,12 +26,6 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 		return filter.Name{
 			Kind: filter.NameKindString,
 			Name: "tracks.name",
-		}, true
-	case "otherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "tracks.other_name",
-			Nullable: true,
 		}, true
 	case "number":
 		return filter.Name{
@@ -66,22 +60,10 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Kind: filter.NameKindString,
 			Name: "albums.name",
 		}, true
-	case "albumOtherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "albums.other_name",
-			Nullable: true,
-		}, true
 	case "artistName":
 		return filter.Name{
 			Kind: filter.NameKindString,
 			Name: "artists.name",
-		}, true
-	case "artistOtherName":
-		return filter.Name{
-			Kind:     filter.NameKindString,
-			Name:     "artists.other_name",
-			Nullable: true,
 		}, true
 	case "created":
 		return filter.Name{
@@ -101,7 +83,7 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 func (a *TrackResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
 	switch typ {
 	case "tags":
-		return utils.Slug(name), true
+		return slug.Make(name), true
 	case "featuringArtists":
 		return name, true
 	}

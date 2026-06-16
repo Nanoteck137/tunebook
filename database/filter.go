@@ -7,7 +7,7 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
-	"github.com/nanoteck137/dwebble/tools/filter"
+	"github.com/nanoteck137/tunebook/tools/filter"
 )
 
 // TODO(patrik): Move
@@ -34,6 +34,26 @@ func applyFilter(query *goqu.SelectDataset, resolver *filter.Resolver, filterStr
 	}
 
 	return query.Where(expr), nil
+}
+
+// TODO(patrik): Remove and make better
+func applyFilterCustom(
+	query *goqu.SelectDataset, 
+	resolver *filter.Resolver, 
+	filterStr string, 
+	where exp.Expression,
+) (*goqu.SelectDataset, error) {
+	if filterStr == "" {
+		return query.Where(where), nil
+	}
+
+	// TODO(patrik): Better errors
+	expr, err := fullParseFilter(resolver, filterStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return query.Where(where, expr), nil
 }
 
 func applySort(query *goqu.SelectDataset, resolver *filter.Resolver, sortStr string) (*goqu.SelectDataset, error) {
@@ -164,4 +184,19 @@ func generateSort(e filter.SortExpr) ([]exp.OrderedExpression, error) {
 	}
 
 	return nil, fmt.Errorf("Unimplemented expr %T", e)
+}
+
+func TestFilter(f string, a filter.ResolverAdapter) error {
+	ast, err := parser.ParseExpr(f)
+	if err != nil {
+		return InvalidFilter(err)
+	}
+
+	r := filter.New(a)
+	_, err = r.Resolve(ast)
+	if err != nil {
+		return InvalidFilter(err)
+	}
+
+	return nil
 }

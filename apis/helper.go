@@ -1,19 +1,18 @@
 package apis
 
 import (
-	"context"
-	"database/sql"
 	"errors"
 	"fmt"
-	"log/slog"
-	"path"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/nanoteck137/dwebble/core"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/tools/utils"
-	"github.com/nanoteck137/dwebble/types"
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 type UserCheckFunc func(user *database.User) error
@@ -42,10 +41,25 @@ func User(app core.App, c pyrin.Context, checks ...UserCheckFunc) (*database.Use
 	return user, nil
 }
 
+func parseAuthHeader(authHeader string) string {
+	splits := strings.Split(authHeader, " ")
+	if len(splits) != 2 {
+		return ""
+	}
+
+	if splits[0] != "Bearer" {
+		return ""
+	}
+
+	return splits[1]
+}
+
+// TODO(patrik): Cleanup
 func getUser(app core.App, c pyrin.Context) (*database.User, error) {
+	ctx := c.Request().Context()
+
 	apiTokenHeader := c.Request().Header.Get("X-Api-Token")
 	if apiTokenHeader != "" {
-		ctx := context.TODO()
 		token, err := app.DB().GetApiTokenById(ctx, apiTokenHeader)
 		if err != nil {
 			if errors.Is(err, database.ErrItemNotFound) {
@@ -55,7 +69,7 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 			return nil, err
 		}
 
-		user, err := app.DB().GetUserById(c.Request().Context(), token.UserId)
+		user, err := app.DB().GetUserById(ctx, token.UserId)
 		if err != nil {
 			return nil, InvalidAuth("invalid api token")
 		}
@@ -64,7 +78,7 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	}
 
 	authHeader := c.Request().Header.Get("Authorization")
-	tokenString := utils.ParseAuthHeader(authHeader)
+	tokenString := parseAuthHeader(authHeader)
 	if tokenString == "" {
 		return nil, InvalidAuth("invalid authorization header")
 	}
@@ -90,7 +104,7 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 		}
 
 		userId := claims["userId"].(string)
-		user, err := app.DB().GetUserById(c.Request().Context(), userId)
+		user, err := app.DB().GetUserById(ctx, userId)
 		if err != nil {
 			return nil, InvalidAuth("invalid authorization token")
 		}
@@ -100,53 +114,6 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 
 	return nil, InvalidAuth("invalid authorization token")
 }
-
-func ConvertSqlNullString(value sql.NullString) *string {
-	if value.Valid {
-		return &value.String
-	}
-
-	return nil
-}
-
-func ConvertSqlNullInt64(value sql.NullInt64) *int64 {
-	if value.Valid {
-		return &value.Int64
-	}
-
-	return nil
-}
-
-const (
-	UNKNOWN_ARTIST_ID   = "unknown"
-	UNKNOWN_ARTIST_NAME = "UNKNOWN"
-)
-
-func EnsureUnknownArtistExists(ctx context.Context, db *database.Database, workDir types.WorkDir) error {
-	_, err := db.GetArtistById(ctx, UNKNOWN_ARTIST_ID)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			slog.Info("Creating 'unknown' artist")
-			_, err := db.CreateArtist(ctx, database.CreateArtistParams{
-				Id:   UNKNOWN_ARTIST_ID,
-				Name: UNKNOWN_ARTIST_NAME,
-				Slug: utils.Slug(UNKNOWN_ARTIST_NAME),
-			})
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-
-	return nil
-}
-
-const (
-	DefaultArtistPictureName = "default/default_artist.png"
-	DefaultAlbumCoverArtName = "default/default_album.png"
-)
 
 func ConvertURL(c pyrin.Context, path string) string {
 	host := c.Request().Host
@@ -161,53 +128,82 @@ func ConvertURL(c pyrin.Context, path string) string {
 	return fmt.Sprintf("%s://%s%s", scheme, host, path)
 }
 
-func ConvertImageURL(c pyrin.Context, albumId string, val sql.NullString, def string) string {
-	coverArt := def
-	if val.Valid && val.String != "" {
-		coverArt = val.String
-	}
+const (
+	IMAGE_ORIGINAL = "original.png"
+	IMAGE_SMALL    = "128.png"
+	IMAGE_MEDIUM   = "256.png"
+	IMAGE_LARGE    = "512.png"
+)
 
-	return ConvertURL(c, "/files/albums/images/"+albumId+"/"+coverArt)
-}
-
-func ConvertArtistPicture(c pyrin.Context, artistId string, val sql.NullString) types.Images {
-	if val.Valid && val.String != "" {
-		first := "/files/artists/" + artistId + "/"
-		return types.Images{
-			Original: ConvertURL(c, first+val.String),
-			Small:    ConvertURL(c, first+"picture-128.png"),
-			Medium:   ConvertURL(c, first+"picture-256.png"),
-			Large:    ConvertURL(c, first+"picture-512.png"),
-		}
-	}
-
-	url := ConvertURL(c, "/files/images/"+DefaultArtistPictureName)
+func ConvertArtistCoverURL(c pyrin.Context, artistId string) types.Images {
+	first := "/files/artists/images/" + artistId + "/"
 	return types.Images{
-		Original: url,
-		Small:    url,
-		Medium:   url,
-		Large:    url,
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
 	}
 }
 
-func ConvertAlbumCoverURL(c pyrin.Context, albumId string, val sql.NullString) types.Images {
-	if val.Valid && val.String != "" {
-		coverArt := val.String
-		originalExt := path.Ext(coverArt)
-		return types.Images{
-			// TODO(patrik): Move to const (cover-128.png, cover-256.png, cover-512.png)
-			Original: ConvertURL(c, "/files/albums/images/"+albumId+"/"+"original"+originalExt),
-			Small:    ConvertURL(c, "/files/albums/images/"+albumId+"/"+"128.png"),
-			Medium:   ConvertURL(c, "/files/albums/images/"+albumId+"/"+"256.png"),
-			Large:    ConvertURL(c, "/files/albums/images/"+albumId+"/"+"512.png"),
+func ConvertAlbumCoverURL(c pyrin.Context, albumId string) types.Images {
+	first := "/files/albums/images/" + albumId + "/"
+	return types.Images{
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
+	}
+}
+
+func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string) types.Images {
+	first := "/files/playlists/images/" + playlistId + "/"
+	return types.Images{
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
+	}
+}
+
+func ConvertUserPictureURL(c pyrin.Context, userId string) types.Images {
+	first := "/files/users/images/" + userId + "/"
+	return types.Images{
+		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
+		Small:    ConvertURL(c, first+IMAGE_SMALL),
+		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
+		Large:    ConvertURL(c, first+IMAGE_LARGE),
+	}
+}
+
+func getPageParams(q url.Values, defaultPerPage int) types.PageParams {
+	perPage := defaultPerPage
+	page := 0
+
+	if s := q.Get("perPage"); s != "" {
+		i, _ := strconv.Atoi(s)
+		if i > 0 {
+			perPage = i
 		}
 	}
 
-	url := ConvertURL(c, "/files/images/"+DefaultAlbumCoverArtName)
-	return types.Images{
-		Original: url,
-		Small:    url,
-		Medium:   url,
-		Large:    url,
+	if s := q.Get("page"); s != "" {
+		i, _ := strconv.Atoi(s)
+		page = i
 	}
+
+	return types.PageParams{
+		PerPage: perPage,
+		Page:    page,
+	}
+}
+
+func getFilterParams(q url.Values) types.FilterParams {
+	return types.FilterParams{
+		Filter: q.Get("filter"),
+		Sort:   q.Get("sort"),
+	}
+}
+
+func formatTime(ms int64) string {
+	return time.UnixMilli(ms).UTC().Format(time.RFC3339)
 }

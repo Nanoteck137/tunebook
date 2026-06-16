@@ -1,221 +1,305 @@
 package apis
 
 import (
-	"context"
 	"errors"
+	"fmt"
 	"net/http"
-	"regexp"
-	"strings"
+	"sort"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/nanoteck137/dwebble/core"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/maruel/natural"
+	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/render"
+	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/utils"
+	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/validate"
 )
 
-type Signup struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
-}
-
-// TODO(patrik): Test if this works with validation
-type SignupBody struct {
-	Username        string `json:"username"`
-	Password        string `json:"password"`
-	PasswordConfirm string `json:"passwordConfirm"`
-}
-
-var usernameRegex = regexp.MustCompile("^[a-zA-Z0-9-]+$")
-var passwordLengthRule = validate.Length(8, 32)
-
-// TODO(patrik): Remove? and let the usernameRegex handle error
-func (b *SignupBody) Transform() {
-	b.Username = strings.TrimSpace(b.Username)
-}
-
-func (b SignupBody) Validate() error {
-	checkPasswordMatch := validate.By(func(value interface{}) error {
-		if b.PasswordConfirm != b.Password {
-			return errors.New("password mismatch")
-		}
-
-		return nil
-	})
-
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Username, validate.Required, validate.Length(4, 32), validate.Match(usernameRegex).Error("not valid username")),
-		validate.Field(&b.Password, validate.Required, passwordLengthRule, checkPasswordMatch),
-		validate.Field(&b.PasswordConfirm, validate.Required, checkPasswordMatch),
-	)
-}
-
-type Signin struct {
-	Token string `json:"token"`
-}
-
-type SigninBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-func (b SigninBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Username, validate.Required),
-		validate.Field(&b.Password, validate.Required),
-	)
-}
-
-// TODO(patrik): Test if this works with validation
-type ChangePasswordBody struct {
-	CurrentPassword    string `json:"currentPassword"`
-	NewPassword        string `json:"newPassword"`
-	NewPasswordConfirm string `json:"newPasswordConfirm"`
-}
-
-func (b ChangePasswordBody) Validate() error {
-	checkPasswordMatch := validate.By(func(value interface{}) error {
-		if b.NewPasswordConfirm != b.NewPassword {
-			return errors.New("password mismatch")
-		}
-
-		return nil
-	})
-
-	return validate.ValidateStruct(
-		&b,
-		validate.Field(&b.CurrentPassword, validate.Required),
-		validate.Field(&b.NewPassword, validate.Required, passwordLengthRule, checkPasswordMatch),
-		validate.Field(&b.NewPasswordConfirm, validate.Required, checkPasswordMatch),
-	)
-}
-
 type GetMe struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	Id          string `json:"id"`
+	Email       string `json:"email"`
+	DisplayName string `json:"displayName"`
+	Role        string `json:"role"`
 
-	DisplayName   string  `json:"displayName"`
+	Picture types.Images `json:"picture"`
+
 	QuickPlaylist *string `json:"quickPlaylist"`
 }
 
+type AuthInitiate struct {
+	RequestId string `json:"requestId"`
+	AuthUrl   string `json:"authUrl"`
+	Challenge string `json:"challenge"`
+	ExpiresAt string `json:"expiresAt"`
+}
+
+type AuthInitiateBody struct {
+	ProviderId string `json:"providerId"`
+}
+
+type AuthQuickConnectInitiate struct {
+	Code      string `json:"code"`
+	Challenge string `json:"challenge"`
+	AuthUrl   string `json:"authUrl"`
+	ExpiresAt string `json:"expiresAt"`
+}
+
+type AuthLoginWithCode struct {
+	Token string `json:"token"`
+}
+
+type AuthLoginWithCodeBody struct {
+	ProviderId string `json:"providerId"`
+	Code       string `json:"code"`
+	State      string `json:"state"`
+}
+
+type AuthFinishProvider struct {
+	Token string `json:"token"`
+}
+
+type AuthFinishProviderBody struct {
+	RequestId string `json:"requestId"`
+	Challenge string `json:"challenge"`
+}
+
+type AuthProvider struct {
+	Id          string `json:"id"`
+	DisplayName string `json:"displayName"`
+}
+
+type GetAuthProviders struct {
+	Providers []AuthProvider `json:"providers"`
+}
+
+type AuthClaimQuickConnectCodeBody struct {
+	Code string `json:"code"`
+}
+
+type AuthFinishQuickConnect struct {
+	Token string `json:"token"`
+}
+
+type AuthFinishQuickConnectBody struct {
+	Code      string `json:"code"`
+	Challenge string `json:"challenge"`
+}
+
+type AuthGetQuickConnectStatus struct {
+	Status string `json:"status"`
+}
+
+type AuthGetQuickConnectStatusBody struct {
+	Code      string `json:"code"`
+	Challenge string `json:"challenge"`
+}
+
+type AuthGetProviderStatus struct {
+	Status string `json:"status"`
+}
+
+type AuthGetProviderStatusBody struct {
+	RequestId string `json:"requestId"`
+	Challenge string `json:"challenge"`
+}
+
 func InstallAuthHandlers(app core.App, group pyrin.Group) {
+	// NOTE(patrik): Provider Authentication
 	group.Register(
 		pyrin.ApiHandler{
-			Name:         "Signup",
-			Path:         "/auth/signup",
-			Method:       http.MethodPost,
-			ResponseType: Signup{},
-			BodyType:     SignupBody{},
-			Errors:       []pyrin.ErrorType{ErrTypeUserAlreadyExists},
+			Name:         "AuthGetProviders",
+			Method:       http.MethodGet,
+			Path:         "/auth/providers",
+			ResponseType: GetAuthProviders{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[SignupBody](c)
-				if err != nil {
-					return nil, err
+				providers := app.Config().OidcProviders
+
+				res := GetAuthProviders{
+					Providers: make([]AuthProvider, 0, len(providers)),
 				}
 
-				ctx := context.TODO()
-
-				_, err = app.DB().GetUserByUsername(ctx, body.Username)
-				if err == nil {
-					return nil, UserAlreadyExists()
+				for id, provider := range providers {
+					res.Providers = append(res.Providers, AuthProvider{
+						Id:          id,
+						DisplayName: provider.Name,
+					})
 				}
 
-				if !errors.Is(err, database.ErrItemNotFound) {
-					return nil, err
-				}
-
-				user, err := app.DB().CreateUser(ctx, database.CreateUserParams{
-					Username: body.Username,
-					Password: body.Password,
+				sort.Slice(res.Providers, func(i, j int) bool {
+					return natural.Less(res.Providers[i].DisplayName, res.Providers[j].DisplayName)
 				})
-				if err != nil {
-					return nil, err
-				}
 
-				return Signup{
-					Id:       user.Id,
-					Username: user.Username,
-				}, nil
+				return res, nil
 			},
 		},
 
 		pyrin.ApiHandler{
-			Name:         "Signin",
-			Path:         "/auth/signin",
+			Name:         "AuthProviderInitiate",
 			Method:       http.MethodPost,
-			ResponseType: Signin{},
-			BodyType:     SigninBody{},
-			Errors:       []pyrin.ErrorType{ErrTypeUserNotFound, ErrTypeInvalidCredentials},
+			Path:         "/auth/providers/initiate",
+			ResponseType: AuthInitiate{},
+			BodyType:     AuthInitiateBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[SigninBody](c)
+				body, err := pyrin.Body[AuthInitiateBody](c)
 				if err != nil {
 					return nil, err
 				}
 
-				user, err := app.DB().GetUserByUsername(c.Request().Context(), body.Username)
+				authService := app.AuthService()
+
+				res, err := authService.CreateProviderRequest(body.ProviderId)
 				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, UserNotFound()
+					return nil, err
+				}
+
+				return AuthInitiate{
+					RequestId: res.RequestId,
+					AuthUrl:   res.AuthUrl,
+					Challenge: res.Challenge,
+					ExpiresAt: res.Expires.Format(time.RFC3339Nano),
+				}, nil
+			},
+		},
+
+		pyrin.NormalHandler{
+			Name:   "AuthCallback",
+			Method: http.MethodGet,
+			Path:   "/auth/providers/callback",
+			HandlerFunc: func(c pyrin.Context) error {
+				url := c.Request().URL
+				state := url.Query().Get("state")
+				code := url.Query().Get("code")
+
+				authService := app.AuthService()
+
+				err := authService.CompleteProviderRequest(state, code)
+				if err != nil {
+					if errors.Is(err, service.ErrAuthServiceRequestExpired) {
+						render.RenderCallbackRequestExpired(c.Response())
+						c.Response().WriteHeader(http.StatusOK)
+
+						return nil
+					}
+
+					render.RenderCallbackError(c.Response())
+					c.Response().WriteHeader(http.StatusOK)
+
+					return nil
+				}
+
+				render.RenderCallbackSuccess(c.Response())
+				c.Response().WriteHeader(http.StatusOK)
+
+				return nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "AuthFinishProvider",
+			Path:         "/auth/providers/finish",
+			Method:       http.MethodPost,
+			ResponseType: AuthFinishProvider{},
+			BodyType:     AuthFinishProviderBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[AuthFinishProviderBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				authService := app.AuthService()
+
+				token, err := authService.CreateAuthTokenForProvider(body.RequestId, body.Challenge)
+				if err != nil {
+					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
+						// TODO(patrik): Better error
+						return nil, errors.New("request not found")
 					}
 
 					return nil, err
 				}
 
-				if user.Password != body.Password {
-					return nil, InvalidCredentials()
-				}
-
-				token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-					"userId": user.Id,
-					"iat":    time.Now().Unix(),
-					// "exp":    time.Now().Add(1000 * time.Second).Unix(),
-				})
-
-				tokenString, err := token.SignedString(([]byte)(app.Config().JwtSecret))
-				if err != nil {
-					return nil, err
-				}
-
-				return Signin{
-					Token: tokenString,
+				return AuthFinishProvider{
+					Token: token,
 				}, nil
 			},
 		},
 
 		pyrin.ApiHandler{
-			Name:     "ChangePassword",
-			Path:     "/auth/password",
-			Method:   http.MethodPatch,
-			BodyType: ChangePasswordBody{},
+			Name:         "AuthGetProviderStatus",
+			Path:         "/auth/provider/status",
+			Method:       http.MethodPost,
+			ResponseType: AuthGetProviderStatus{},
+			BodyType:     AuthGetProviderStatusBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[AuthGetProviderStatusBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				authService := app.AuthService()
+
+				status, err := authService.CheckProviderRequestStatus(body.RequestId, body.Challenge)
+				if err != nil {
+					fmt.Printf("err: %v\n", err)
+					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
+						// TODO(patrik): Better error
+						return nil, errors.New("request not found")
+					}
+
+					return nil, err
+				}
+
+				return AuthGetProviderStatus{
+					Status: string(status),
+				}, nil
+			},
+		},
+	)
+
+	// NOTE(patrik): Quick Connect Authentication
+	group.Register(
+		pyrin.ApiHandler{
+			Name:         "AuthQuickConnectInitiate",
+			Method:       http.MethodPost,
+			Path:         "/auth/quick-connect/initiate",
+			ResponseType: AuthQuickConnectInitiate{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				authService := app.AuthService()
+
+				res, err := authService.CreateQuickConnectRequest()
+				if err != nil {
+					return nil, err
+				}
+
+				return AuthQuickConnectInitiate{
+					Code:      res.Code,
+					Challenge: res.Challenge,
+					AuthUrl:   "FIX ME",
+					ExpiresAt: res.Expires.Format(time.RFC3339Nano),
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "AuthClaimQuickConnectCode",
+			Method:   http.MethodPost,
+			Path:     "/auth/quick-connect/claim",
+			BodyType: AuthClaimQuickConnectCodeBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[AuthClaimQuickConnectCodeBody](c)
+				if err != nil {
+					return nil, err
+				}
+
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
 
-				ctx := context.TODO()
+				authService := app.AuthService()
 
-				body, err := pyrin.Body[ChangePasswordBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				// TODO(patrik): Check body.CurrentPassword
-
-				if user.Password != body.CurrentPassword {
-					// TODO(patrik): Better error
-					return nil, errors.New("Password not matching")
-				}
-
-				err = app.DB().UpdateUser(ctx, user.Id, database.UserChanges{
-					Password: types.Change[string]{
-						Value:   body.NewPassword,
-						Changed: true,
-					},
-				})
+				err = authService.CompleteQuickConnectRequest(body.Code, user.Id)
 				if err != nil {
 					return nil, err
 				}
@@ -224,6 +308,69 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		pyrin.ApiHandler{
+			Name:         "AuthGetQuickConnectStatus",
+			Path:         "/auth/quick-connect/status",
+			Method:       http.MethodPost,
+			ResponseType: AuthGetQuickConnectStatus{},
+			BodyType:     AuthGetQuickConnectStatusBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[AuthGetQuickConnectStatusBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				authService := app.AuthService()
+
+				status, err := authService.CheckQuickConnectRequestStatus(body.Code, body.Challenge)
+				if err != nil {
+					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
+						// TODO(patrik): Better error
+						return nil, errors.New("request not found")
+					}
+
+					return nil, err
+				}
+
+				return AuthGetQuickConnectStatus{
+					Status: string(status),
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "AuthFinishQuickConnect",
+			Path:         "/auth/quick-connect/finish",
+			Method:       http.MethodPost,
+			ResponseType: AuthFinishQuickConnect{},
+			BodyType:     AuthFinishQuickConnectBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[AuthFinishQuickConnectBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				authService := app.AuthService()
+
+				token, err := authService.CreateAuthTokenForQuickConnect(body.Code, body.Challenge)
+				if err != nil {
+					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
+						// TODO(patrik): Better error
+						return nil, errors.New("request not found")
+					}
+
+					return nil, err
+				}
+
+				return AuthFinishQuickConnect{
+					Token: token,
+				}, nil
+			},
+		},
+	)
+
+	// NOTE(patrik): Other Authentication related stuff
+	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetMe",
 			Path:         "/auth/me",
@@ -235,22 +382,13 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				displayName := user.Username
-				if user.DisplayName.Valid {
-					displayName = user.DisplayName.String
-				}
-
-				var quickPlaylist *string
-				if user.QuickPlaylist.Valid {
-					quickPlaylist = &user.QuickPlaylist.String
-				}
-
 				return GetMe{
 					Id:            user.Id,
-					Username:      user.Username,
+					Email:         user.Email,
+					DisplayName:   user.DisplayName,
 					Role:          user.Role,
-					DisplayName:   displayName,
-					QuickPlaylist: quickPlaylist,
+					Picture:       ConvertUserPictureURL(c, user.Id),
+					QuickPlaylist: utils.SqlNullToStringPtr(user.QuickPlaylist),
 				}, nil
 			},
 		},

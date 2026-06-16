@@ -14,7 +14,7 @@
 
 <div class="flex items-center gap-2 border-b py-2 pr-2">
   <div class="group relative">
-    <Image class="w-14 min-w-14" src={artist.picture.small} alt="cover" />
+    <Image class="w-14 min-w-14" src={artist.coverArt.small} alt="cover" />
   </div>
   <div class="flex flex-grow flex-col">
     <div class="flex items-center gap-1">

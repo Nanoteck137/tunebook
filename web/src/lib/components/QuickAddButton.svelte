@@ -4,15 +4,14 @@
   import { Star } from "lucide-svelte";
 
   type Props = {
-    show: boolean;
     trackId: string;
   };
 
-  const { show, trackId }: Props = $props();
+  const { trackId }: Props = $props();
   const quickPlaylist = getQuickPlaylist();
 </script>
 
-{#if show}
+{#if quickPlaylist.playlist !== null}
   <Button
     type="submit"
     class="rounded-full"
@@ -21,6 +20,7 @@
     onclick={() => {
       quickPlaylist.toggleTrack(trackId);
     }}
+    title={"Quick Add: " + quickPlaylist.playlist.name}
   >
     {#if quickPlaylist.hasTrack(trackId)}
       <Star class="fill-primary" />

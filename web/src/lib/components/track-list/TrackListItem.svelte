@@ -2,32 +2,49 @@
   import type { Track } from "$lib/api/types";
   import ArtistList from "$lib/components/ArtistList.svelte";
   import Image from "$lib/components/Image.svelte";
+  import { cn } from "$lib/utils";
   import { Play } from "lucide-svelte";
   import type { Snippet } from "svelte";
 
   type Props = {
+    class?: string;
     showNumber?: boolean;
+    displayOrder?: boolean;
     track: Track;
     children?: Snippet;
 
     onPlayClicked?: () => void;
   };
 
-  const { showNumber, track, children, onPlayClicked }: Props = $props();
+  const {
+    class: className,
+    showNumber,
+    displayOrder,
+    track,
+    children,
+    onPlayClicked,
+  }: Props = $props();
 </script>
 
-<div class="flex items-center gap-2 py-2 pr-2">
-  <div class="group relative">
+<div
+  class={cn(
+    "group flex items-center gap-2 p-2 hover:bg-off-background1 group-even:bg-off-background2 group-even:hover:bg-off-background1 has-[[data-state='open']]:bg-off-background1 group-even:has-[[data-state='open']]:bg-off-background1",
+    className,
+  )}
+>
+  <div class="relative">
     {#if showNumber}
       <div
         class="group flex min-h-10 min-w-10 flex-col items-end justify-center"
       >
-        <p class=" text-right text-sm font-medium group-hover:hidden">
+        <p
+          class=" text-right text-sm font-medium group-hover:hidden group-has-[[data-state='open']]:block"
+        >
           {track.number}.
         </p>
         {#if onPlayClicked}
           <button
-            class={`hidden group-hover:block`}
+            class={`hidden group-hover:block group-has-[[data-state='open']]:!hidden`}
             onclick={() => {
               onPlayClicked?.();
             }}
@@ -40,7 +57,7 @@
       <Image class="w-14 min-w-14" src={track.coverArt.small} alt="cover" />
       {#if onPlayClicked}
         <button
-          class={`absolute bottom-0 left-0 right-0 top-0 hidden items-center justify-center rounded border bg-black/80 group-hover:flex`}
+          class={`absolute bottom-0 left-0 right-0 top-0 hidden items-center justify-center rounded border bg-black/80 group-hover:flex group-has-[[data-state='open']]:!hidden`}
           onclick={() => {
             onPlayClicked?.();
           }}
@@ -53,6 +70,9 @@
   <div class="flex flex-grow flex-col">
     <div class="flex items-center gap-1">
       <p class="line-clamp-1 w-fit text-sm font-medium" title={track.name}>
+        {#if displayOrder}
+          {track.order}.
+        {/if}
         {track.name}
       </p>
     </div>

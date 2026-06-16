@@ -1,9 +1,11 @@
 package core
 
 import (
-	"github.com/nanoteck137/dwebble/config"
-	"github.com/nanoteck137/dwebble/database"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook/config"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/tools/broker"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 // Inspiration from Pocketbase: https://github.com/pocketbase/pocketbase
@@ -12,7 +14,25 @@ type App interface {
 	DB() *database.Database
 	Config() *config.Config
 
-	WorkDir() types.WorkDir
+	DataDir() types.DataDir
+
+	NotificationService() *service.NotificationService
+	TaskService() *service.TaskService
+	AuthService() *service.AuthService
+	UserService() *service.UserService
+	SearchService() *service.SearchService
+	LibraryService() *service.LibraryService
+	ImageService() *service.ImageService
+	MediaService() *service.MediaService
+
+	ArtistService() *service.ArtistService
+	AlbumService() *service.AlbumService
+	TrackService() *service.TrackService
+	PlaylistService() *service.PlaylistService
+	HistoryService() *service.HistoryService
+
+	Broker() *broker.Broker
 
 	Bootstrap() error
+	Shutdown() error
 }

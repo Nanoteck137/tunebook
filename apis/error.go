@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	ErrTypeInvalidAuth      pyrin.ErrorType = "INVALID_AUTH"
-	ErrTypeArtistNotFound   pyrin.ErrorType = "ARTIST_NOT_FOUND"
-	ErrTypeAlbumNotFound    pyrin.ErrorType = "ALBUM_NOT_FOUND"
-	ErrTypeTrackNotFound    pyrin.ErrorType = "TRACK_NOT_FOUND"
-	ErrTypeTaglistNotFound  pyrin.ErrorType = "TAGLIST_NOT_FOUND"
-	ErrTypeApiTokenNotFound pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
-	ErrTypeQueueNotFound    pyrin.ErrorType = "QUEUE_NOT_FOUND"
+	ErrTypeInvalidAuth             pyrin.ErrorType = "INVALID_AUTH"
+	ErrTypeArtistNotFound          pyrin.ErrorType = "ARTIST_NOT_FOUND"
+	ErrTypeAlbumNotFound           pyrin.ErrorType = "ALBUM_NOT_FOUND"
+	ErrTypeTrackNotFound           pyrin.ErrorType = "TRACK_NOT_FOUND"
+	ErrTypeVirtualPlaylistNotFound pyrin.ErrorType = "VIRTUAL_PLAYLIST_NOT_FOUND"
+	ErrTypeApiTokenNotFound        pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
+	ErrTypeQueueNotFound           pyrin.ErrorType = "QUEUE_NOT_FOUND"
 
 	ErrTypeInvalidFilter      pyrin.ErrorType = "INVALID_FILTER"
 	ErrTypeInvalidSort        pyrin.ErrorType = "INVALID_SORT"
@@ -23,6 +23,10 @@ const (
 
 	ErrTypePlaylistNotFound        pyrin.ErrorType = "PLAYLIST_NOT_FOUND"
 	ErrTypePlaylistAlreadyHasTrack pyrin.ErrorType = "PLAYLIST_ALREADY_HAS_TRACK"
+
+	ErrTypeFilterNotFound pyrin.ErrorType = "FILTER_NOT_FOUND"
+
+	ErrTypeHistoryNotFound pyrin.ErrorType = "HISTORY_NOT_FOUND"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -57,11 +61,11 @@ func TrackNotFound() *pyrin.Error {
 	}
 }
 
-func TaglistNotFound() *pyrin.Error {
+func VirtualPlaylistNotFound() *pyrin.Error {
 	return &pyrin.Error{
 		Code:    http.StatusNotFound,
-		Type:    ErrTypeTaglistNotFound,
-		Message: "Taglist not found",
+		Type:    ErrTypeVirtualPlaylistNotFound,
+		Message: "Virtual Playlist not found",
 	}
 }
 
@@ -107,7 +111,7 @@ func UserAlreadyExists() *pyrin.Error {
 
 func UserNotFound() *pyrin.Error {
 	return &pyrin.Error{
-		Code:    http.StatusUnauthorized,
+		Code:    http.StatusNotFound,
 		Type:    ErrTypeUserNotFound,
 		Message: "User not found",
 	}
@@ -126,6 +130,22 @@ func PlaylistNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypePlaylistNotFound,
 		Message: "Playlist not found",
+	}
+}
+
+func FilterNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeFilterNotFound,
+		Message: "Filter not found",
+	}
+}
+
+func HistoryNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeHistoryNotFound,
+		Message: "History not found",
 	}
 }
 

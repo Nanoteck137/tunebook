@@ -22,6 +22,12 @@ const config = {
         footer: "2fr 230px",
       },
       colors: {
+        "logo-1": "hsl(var(--logo-1) / <alpha-value>)",
+        "logo-2": "hsl(var(--logo-2) / <alpha-value>)",
+        "logo-3": "hsl(var(--logo-3) / <alpha-value>)",
+
+        "off-background1": "hsl(var(--off-background-1) / <alpha-value>)",
+        "off-background2": "hsl(var(--off-background-2) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",

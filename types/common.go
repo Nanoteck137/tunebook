@@ -2,145 +2,92 @@ package types
 
 import "path"
 
-type MediaType string
+type DataDir string
 
-const (
-	MediaTypeUnknown   MediaType = "unknown"
-	MediaTypeFlac      MediaType = "flac"
-	MediaTypeOggOpus   MediaType = "ogg-opus"
-	MediaTypeOggVorbis MediaType = "ogg-vorbis"
-	MediaTypeMp3       MediaType = "mp3"
-	MediaTypeAac       MediaType = "aac"
-)
-
-func GetMediaTypeFromExt(ext string) MediaType {
-	switch ext {
-	case ".flac":
-		return MediaTypeFlac
-	case ".opus":
-		return MediaTypeOggOpus
-	case ".ogg":
-		return MediaTypeOggVorbis
-	case ".mp3":
-		return MediaTypeMp3
-	case ".aac":
-		return MediaTypeAac
-	}
-
-	return MediaTypeUnknown
-}
-
-func (m MediaType) ToExt() (string, bool) {
-	switch m {
-	case MediaTypeFlac:
-		return ".flac", true
-	case MediaTypeOggOpus:
-		return ".opus", true
-	case MediaTypeOggVorbis:
-		return ".ogg", true
-	case MediaTypeMp3:
-		return ".mp3", true
-	case MediaTypeAac:
-		return ".aac", true
-	}
-
-	return "", false
-}
-
-func (m MediaType) IsValid() bool {
-	switch m {
-	case MediaTypeFlac:
-		return true
-	case MediaTypeOggOpus:
-		return true
-	case MediaTypeOggVorbis:
-		return true
-	case MediaTypeMp3:
-		return true
-	case MediaTypeAac:
-		return true
-	}
-
-	return false
-}
-
-type Map map[string]any
-
-type WorkDir string
-
-func (d WorkDir) String() string {
+func (d DataDir) String() string {
 	return string(d)
 }
 
-func (d WorkDir) DatabaseFile() string {
+func (d DataDir) DatabaseFile() string {
 	return path.Join(d.String(), "data.db")
 }
 
-func (d WorkDir) ExportFile() string {
-	return path.Join(d.String(), "export.json")
+func (d DataDir) Temp() string {
+	return path.Join(d.String(), "temp")
 }
 
-func (d WorkDir) SetupFile() string {
-	return path.Join(d.String(), "setup")
+func (d DataDir) Playlists() string {
+	return path.Join(d.String(), "playlists")
 }
 
-func (d WorkDir) Trash() string {
-	return path.Join(d.String(), "trash")
+func (d DataDir) Playlist(id string) string {
+	return path.Join(d.Playlists(), id)
 }
 
-func (d WorkDir) Artists() string {
-	return path.Join(d.String(), "artists")
+func (d DataDir) Users() string {
+	return path.Join(d.String(), "users")
 }
 
-func (d WorkDir) Artist(id string) string {
-	return path.Join(d.Artists(), id)
+func (d DataDir) User(id string) string {
+	return path.Join(d.Users(), id)
 }
 
-func (d WorkDir) Albums() string {
-	return path.Join(d.String(), "albums")
+func (d DataDir) Cache() string {
+	return path.Join(d.String(), "cache")
 }
 
-func (d WorkDir) Album(id string) string {
-	return path.Join(d.Albums(), id)
+func (d DataDir) CacheImages() ImageCacheDir {
+	return ImageCacheDir(path.Join(d.Cache(), "images"))
 }
 
-func (d WorkDir) Tracks() string {
-	return path.Join(d.String(), "tracks")
+func (d DataDir) CacheTranscoding() string {
+	return path.Join(d.Cache(), "transcoding")
 }
 
-func (d WorkDir) Track(id string) string {
-	return path.Join(d.Tracks(), id)
-}
+type ImageCacheDir string
 
-func (d WorkDir) Cache() CacheDir {
-	return CacheDir(path.Join(d.String(), "cache"))
-}
-
-type CacheDir string
-
-func (d CacheDir) String() string {
+func (d ImageCacheDir) String() string {
 	return string(d)
 }
 
-func (d CacheDir) Albums() string {
+func (d ImageCacheDir) Artists() string {
+	return path.Join(d.String(), "artists")
+}
+
+func (d ImageCacheDir) Artist(id string) string {
+	return path.Join(d.Artists(), id)
+}
+
+func (d ImageCacheDir) Albums() string {
 	return path.Join(d.String(), "albums")
 }
 
-func (d CacheDir) Album(id string) string {
+func (d ImageCacheDir) Album(id string) string {
 	return path.Join(d.Albums(), id)
 }
 
-func (d CacheDir) Tracks() string {
+func (d ImageCacheDir) Tracks() string {
 	return path.Join(d.String(), "tracks")
 }
 
-func (d CacheDir) Track(id string) string {
+func (d ImageCacheDir) Track(id string) string {
 	return path.Join(d.Tracks(), id)
 }
 
-type Change[T any] struct {
-	Value   T
-	Changed bool
+func (d ImageCacheDir) Playlists() string {
+	return path.Join(d.String(), "playlists")
+}
+
+func (d ImageCacheDir) Playlist(id string) string {
+	return path.Join(d.Playlists(), id)
+}
+
+func (d ImageCacheDir) Users() string {
+	return path.Join(d.String(), "users")
+}
+
+func (d ImageCacheDir) User(id string) string {
+	return path.Join(d.Users(), id)
 }
 
 type Error struct {

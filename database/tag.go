@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 )
 
 type Tag struct {
@@ -24,14 +23,14 @@ func TagQuery() *goqu.SelectDataset {
 func (db DB) GetAllTags(ctx context.Context) ([]Tag, error) {
 	query := TagQuery()
 
-	return ember.Multiple[Tag](db.db, ctx, query)
+	return Multiple[Tag](db, ctx, query)
 }
 
 func (db DB) GetTagBySlug(ctx context.Context, slug string) (Tag, error) {
 	query := TagQuery().
 		Where(goqu.I("tags.slug").Eq(slug))
 
-	return ember.Single[Tag](db.db, ctx, query)
+	return Single[Tag](db, ctx, query)
 }
 
 func (db DB) CreateTag(ctx context.Context, slug string) error {
@@ -41,7 +40,7 @@ func (db DB) CreateTag(ctx context.Context, slug string) error {
 		}).
 		Prepared(true)
 
-	_, err := db.db.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

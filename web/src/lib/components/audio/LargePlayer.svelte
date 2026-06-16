@@ -12,55 +12,19 @@
     Volume2,
     VolumeX,
   } from "lucide-svelte";
-  import { getMusicManager } from "$lib/music-manager.svelte";
+  import { getMusicManager, type MediaItem } from "$lib/music-manager.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
-  import type { MediaItem } from "$lib/api/types";
   import Image from "$lib/components/Image.svelte";
+  import { getApiClient } from "$lib";
 
   const musicManager = getMusicManager();
+  const apiClient = getApiClient();
 
-  interface Props {
-    loading: boolean;
-    playing: boolean;
+  let currentMediaItem = $state<MediaItem | null>(null);
 
-    currentTime: number;
-    duration: number;
-
-    volume: number;
-    audioMuted: boolean;
-
-    mediaItem: MediaItem | null;
-
-    queue: MediaItem[];
-    currentQueueIndex: number;
-
-    onPlay: () => void;
-    onPause: () => void;
-    onNextTrack: () => void;
-    onPrevTrack: () => void;
-    onSeek: (e: number) => void;
-    onVolumeChanged: (e: number) => void;
-    onToggleMuted: () => void;
-  }
-
-  let {
-    queue,
-    currentQueueIndex,
-    loading,
-    playing,
-    currentTime,
-    duration,
-    volume,
-    audioMuted,
-    mediaItem,
-    onPlay,
-    onPause,
-    onNextTrack,
-    onPrevTrack,
-    onSeek,
-    onVolumeChanged,
-    onToggleMuted,
-  }: Props = $props();
+  $effect(() => {
+    currentMediaItem = musicManager.queue.getCurrentMediaItem();
+  });
 </script>
 
 {#snippet queueSheet()}
@@ -85,17 +49,17 @@
 
       <ScrollArea class="h-full pb-6">
         <div class="mr-3 flex flex-col gap-2">
-          {#each queue as mediaItem, i}
+          {#each musicManager.queue.items as mediaItem, i}
             <div
-              class={`flex items-center gap-2 rounded p-1 ${currentQueueIndex === i ? "bg-accent text-accent-foreground" : ""}`}
+              class={`flex items-center gap-2 rounded p-1 ${musicManager.queue.index === i ? "bg-accent text-accent-foreground" : ""}`}
             >
               <div class="group relative">
                 <Image
                   class="w-12 min-w-12"
-                  src={mediaItem?.coverArt.small}
+                  src={mediaItem?.coverArt}
                   alt="cover"
                 />
-                {#if i == currentQueueIndex}
+                {#if i == musicManager.queue.index}
                   <div
                     class="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center rounded border bg-muted/80"
                   >
@@ -106,7 +70,7 @@
                     class={`absolute bottom-0 left-0 right-0 top-0 hidden items-center justify-center rounded border bg-muted/80 group-hover:flex`}
                     onclick={async () => {
                       await musicManager.setQueueIndex(i);
-                      musicManager.requestPlay();
+                      musicManager.play();
                     }}
                   >
                     <Play class="text-muted-foreground" size="25" />
@@ -114,8 +78,8 @@
                 {/if}
               </div>
               <div class="flex flex-col">
-                <p class="line-clamp-1 text-sm" title={mediaItem?.track.name}>
-                  {mediaItem?.track.name}
+                <p class="line-clamp-1 text-sm" title={mediaItem?.name}>
+                  {mediaItem?.name}
                 </p>
                 <p
                   class="line-clamp-1 text-xs font-light"
@@ -138,9 +102,10 @@
 >
   <div class="absolute -top-1.5 left-0 right-0">
     <Slider
-      value={currentTime / duration}
+      value={musicManager.currentTime / musicManager.duration}
       onValue={(p) => {
-        onSeek(p * duration);
+        musicManager.setPosition(p * musicManager.duration);
+        // onSeek(p * musicManager.duration);
       }}
     />
   </div>
@@ -148,29 +113,55 @@
   <div class="grid h-full grid-cols-footer">
     <div class="flex items-center gap-2">
       <div class="flex items-center gap-2">
+        <!-- <button
+          onclick={async () => {
+            if (!mediaItem) return;
+
+            const res = await apiClient.recordTrack(mediaItem.track.id, {
+              source: "unknown",
+              duration: currentTime,
+            });
+            if (!res.success) {
+              return handleApiError(res.error);
+            }
+
+            toast.success("Recorded track");
+          }}
+        >
+          <TestTube size={32} />
+        </button> -->
+
         <button
           onclick={() => {
-            onPrevTrack();
+            musicManager.previousTrack();
           }}
         >
           <SkipBack size={32} />
         </button>
 
-        {#if loading}
+        {#if musicManager.loading}
           <Spinner class="h-8 w-8" />
-        {:else if playing}
-          <button onclick={onPause}>
+        {:else if musicManager.playing}
+          <button
+            onclick={() => {
+              musicManager.pause();
+            }}
+          >
             <Pause size={32} />
           </button>
         {:else}
-          <button onclick={onPlay}>
+          <button
+            onclick={() => {
+              musicManager.play();
+            }}
+          >
             <Play size={32} />
           </button>
         {/if}
 
         <button
           onclick={() => {
-            onNextTrack();
+            musicManager.nextTrack();
           }}
         >
           <SkipForward size={32} />
@@ -178,27 +169,29 @@
       </div>
 
       <p class="hidden min-w-20 text-xs font-medium lg:block">
-        {formatTime(currentTime)} /{" "}
-        {formatTime(Number.isNaN(duration) ? 0 : duration)}
+        {formatTime(musicManager.currentTime)} /{" "}
+        {formatTime(
+          Number.isNaN(musicManager.duration) ? 0 : musicManager.duration,
+        )}
       </p>
 
       <div class="flex items-center justify-center gap-2 align-middle">
         <Image
           class="w-12 min-w-12"
-          src={mediaItem?.coverArt.small}
+          src={currentMediaItem?.coverArt}
           alt="cover"
           loading="eager"
         />
         <div class="flex flex-col">
           <p
             class="line-clamp-1 text-ellipsis text-sm"
-            title={mediaItem?.track.name}
+            title={currentMediaItem?.name}
           >
-            {mediaItem?.track.name}
+            {currentMediaItem?.name}
           </p>
 
           <p class="line-clamp-1 min-w-80 text-ellipsis text-xs">
-            {mediaItem?.artists[0].name}
+            {currentMediaItem?.artists[0].name}
           </p>
         </div>
       </div>
@@ -207,17 +200,18 @@
     <div class="flex items-center justify-evenly">
       <div class="flex w-full items-center gap-4 p-4">
         <Slider
-          value={volume}
+          value={musicManager.volume}
           onValue={(p) => {
-            onVolumeChanged(p);
+            // musicManager.set
+            // onVolumeChanged(p);
           }}
         />
         <button
           onclick={() => {
-            onToggleMuted();
+            // onToggleMuted();
           }}
         >
-          {#if audioMuted}
+          {#if musicManager.muted}
             <VolumeX size="25" />
           {:else}
             <Volume2 size="25" />

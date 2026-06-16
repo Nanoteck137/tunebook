@@ -1,104 +1,132 @@
 package config
 
 import (
-	"log/slog"
-	"os"
+	"errors"
+	"fmt"
 
-	"github.com/nanoteck137/dwebble"
-	"github.com/nanoteck137/dwebble/types"
+	"github.com/nanoteck137/tunebook"
+	"github.com/nanoteck137/validate"
 	"github.com/spf13/viper"
 )
 
+type ConfigOidcProvider struct {
+	Name         string `mapstructure:"name"`
+	ClientId     string `mapstructure:"client_id"`
+	ClientSecret string `mapstructure:"client_secret"`
+	IssuerUrl    string `mapstructure:"issuer_url"`
+	RedirectUrl  string `mapstructure:"redirect_url"`
+}
+
+func (c ConfigOidcProvider) Validate() error {
+	return validate.ValidateStruct(&c,
+		validate.Field(&c.Name, validate.Required),
+		validate.Field(&c.ClientId, validate.Required),
+		validate.Field(&c.ClientSecret, validate.Required),
+		validate.Field(&c.IssuerUrl, validate.Required),
+		validate.Field(&c.RedirectUrl, validate.Required),
+	)
+}
+
 type Config struct {
-	RunMigrations   bool   `mapstructure:"run_migrations"`
-	ListenAddr      string `mapstructure:"listen_addr"`
-	DataDir         string `mapstructure:"data_dir"`
-	LibraryDir      string `mapstructure:"library_dir"`
-	Username        string `mapstructure:"username"`
-	InitialPassword string `mapstructure:"initial_password"`
-	JwtSecret       string `mapstructure:"jwt_secret"`
+	RunMigrations bool   `mapstructure:"run_migrations"`
+	ListenAddr    string `mapstructure:"listen_addr"`
+	DataDir       string `mapstructure:"data_dir"`
+	LibraryDir    string `mapstructure:"library_dir"`
+	JwtSecret     string `mapstructure:"jwt_secret"`
+
+	WebDir string `mapstructure:"web"`
+
+	MeilisearchAddress string `mapstructure:"meilisearch_address"`
+	MeilisearchApiKey  string `mapstructure:"meilisearch_api_key"`
+
+	OidcProviders map[string]ConfigOidcProvider `mapstructure:"oidc_providers"`
 }
 
-func (c *Config) WorkDir() types.WorkDir {
-	return types.WorkDir(c.DataDir)
+func (c Config) Validate() error {
+	return validate.ValidateStruct(&c,
+		validate.Field(&c.ListenAddr, validate.Required),
+		validate.Field(&c.DataDir, validate.Required),
+		validate.Field(&c.LibraryDir, validate.Required),
+		validate.Field(&c.JwtSecret, validate.Required),
+
+		validate.Field(&c.MeilisearchAddress, validate.Required),
+		validate.Field(&c.MeilisearchApiKey, validate.Required),
+
+		validate.Field(&c.OidcProviders, validate.Required, validate.Length(1, 0)),
+	)
 }
 
-func setDefaults() {
-	viper.SetDefault("run_migrations", "true")
-	viper.SetDefault("listen_addr", ":3000")
-	viper.BindEnv("data_dir")
-	viper.BindEnv("library_dir")
-	viper.BindEnv("username")
-	viper.BindEnv("initial_password")
-	viper.BindEnv("jwt_secret")
-}
+func Load(cfgFile string) (*Config, error) {
+	v := viper.New()
 
-func validateConfig(config *Config) {
-	hasError := false
+	// NOTE(patrik): Set default values here
+	v.SetDefault("run_migrations", "true")
+	v.SetDefault("listen_addr", ":3000")
+	v.BindEnv("data_dir")
+	v.BindEnv("library_dir")
+	v.BindEnv("jwt_secret")
 
-	validate := func(expr bool, msg string) {
-		if expr {
-			slog.Error("Config Validation", "err", msg)
-			hasError = true
-		}
-	}
+	v.BindEnv("web")
 
-	// NOTE(patrik): Has default value, here for completeness
-	// validate(config.RunMigrations == "", "run_migrations needs to be set")
-	validate(config.ListenAddr == "", "listen_addr needs to be set")
-	validate(config.DataDir == "", "data_dir needs to be set")
-	validate(config.LibraryDir == "", "library_dir needs to be set")
-	validate(config.Username == "", "username needs to be set")
-	validate(config.InitialPassword == "", "initial_password needs to be set")
-	validate(config.JwtSecret == "", "jwt_secret needs to be set")
+	v.BindEnv("meilisearch_address")
+	v.BindEnv("meilisearch_api_key")
 
-	if hasError {
-		slog.Error("Config not valid")
-		os.Exit(-1)
-	}
-}
-
-var ConfigFile string
-var LoadedConfig Config
-
-func InitConfig() {
-	setDefaults()
-
-	if ConfigFile != "" {
-		viper.SetConfigFile(ConfigFile)
+	if cfgFile != "" {
+		v.SetConfigFile(cfgFile)
 	} else {
-		viper.AddConfigPath(".")
-		viper.SetConfigName("config")
+		v.AddConfigPath(".")
+		v.SetConfigName("config")
 	}
 
-	viper.SetEnvPrefix(dwebble.AppName)
-	viper.AutomaticEnv()
+	v.SetEnvPrefix(tunebook.AppName)
+	v.AutomaticEnv()
 
-	err := viper.ReadInConfig()
+	err := v.ReadInConfig()
 	if err != nil {
-		slog.Warn("Failed to load config", "err", err)
-	}
-
-	err = viper.Unmarshal(&LoadedConfig)
-	if err != nil {
-		slog.Error("Failed to unmarshal config: ", err)
-		os.Exit(-1)
-	}
-
-	hide := func(s string) string {
-		var res string
-		for i := 0; i < len(s); i++ {
-			res += "*"
+		var confErr viper.ConfigFileNotFoundError
+		if !errors.As(err, &confErr) {
+			return nil, fmt.Errorf("reading config: %w", err)
 		}
-
-		return res
 	}
 
-	configCopy := LoadedConfig
-	configCopy.JwtSecret = hide(configCopy.JwtSecret)
-	configCopy.InitialPassword = hide(configCopy.InitialPassword)
+	override := v.GetString("config_override")
+	if override != "" {
+		v.SetConfigFile(override)
+		v.MergeInConfig()
+	}
 
-	slog.Info("Current Config", "config", configCopy)
+	var config Config
+	err = v.Unmarshal(&config)
+	if err != nil {
+		return nil, fmt.Errorf("parsing config: %w", err)
+	}
 
-	validateConfig(&LoadedConfig)
+	// configCopy := LoadedConfig
+	// configCopy.OidcProviders = map[string]ConfigOidcProvider{}
+	// for k, v := range LoadedConfig.OidcProviders {
+	// 	configCopy.OidcProviders[k] = v
+	// }
+	//
+	// configCopy.JwtSecret = "***"
+	// configCopy.MeilisearchApiKey = "***"
+	// for k, v := range configCopy.OidcProviders {
+	// 	v.ClientSecret = "***"
+	// 	configCopy.OidcProviders[k] = v
+	// }
+	//
+	// slog.Info("loaded config", "config", configCopy)
+
+	// TODO(patrik): I hate this
+	oldTag := validate.ErrorTag
+	validate.ErrorTag = "mapstructure"
+	defer func() {
+		validate.ErrorTag = oldTag
+	}()
+
+	err = config.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+
+	return &config, nil
 }

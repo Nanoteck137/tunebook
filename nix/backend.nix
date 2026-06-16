@@ -1,9 +1,9 @@
 { self }: 
 { config, lib, pkgs, ... }:
 with lib; let
-  cfg = config.services.dwebble;
+  cfg = config.services.tunebook;
 
-  dwebbleConfig = pkgs.writeText "config.toml" ''
+  tunebookConfig = pkgs.writeText "config.toml" ''
     listen_addr = "${cfg.host}:${toString cfg.port}"
     data_dir = "${cfg.dataDir}"
     library_dir = "${cfg.libraryDir}"
@@ -13,8 +13,8 @@ with lib; let
   '';
 in
 {
-  options.services.dwebble = {
-    enable = mkEnableOption "Enable the dwebble service";
+  options.services.tunebook = {
+    enable = mkEnableOption "Enable the tunebook service";
 
     port = mkOption {
       type = types.port;
@@ -30,7 +30,7 @@ in
 
     dataDir = mkOption {
       type = types.path;
-      default = "/var/lib/dwebble";
+      default = "/var/lib/tunebook";
       description = "path to the data directory";
     };
 
@@ -62,13 +62,13 @@ in
 
     user = mkOption {
       type = types.str;
-      default = "dwebble";
+      default = "tunebook";
       description = "user to use for this service";
     };
 
     group = mkOption {
       type = types.str;
-      default = "dwebble";
+      default = "tunebook";
       description = "group to use for this service";
     };
 
@@ -80,8 +80,8 @@ in
   };
 
   config = mkIf cfg.enable {
-    systemd.services.dwebble = {
-      description = "dwebble";
+    systemd.services.tunebook = {
+      description = "tunebook";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
 
@@ -90,7 +90,7 @@ in
           User = cfg.user;
           Group = cfg.group;
 
-          ExecStart = "${cfg.package}/bin/dwebble serve -c '${dwebbleConfig}'";
+          ExecStart = "${cfg.package}/bin/tunebook serve -c '${tunebookConfig}'";
 
           Restart = "on-failure";
           RestartSec = "5s";
@@ -109,12 +109,12 @@ in
           RestrictSUIDSGID = true;
         }
 
-        (mkIf (cfg.dataDir != "/var/lib/dwebble") {
+        (mkIf (cfg.dataDir != "/var/lib/tunebook") {
           ReadWritePaths = [ cfg.dataDir ];
         })
 
-        (mkIf (cfg.dataDir == "/var/lib/dwebble") {
-          StateDirectory = "dwebble";
+        (mkIf (cfg.dataDir == "/var/lib/tunebook") {
+          StateDirectory = "tunebook";
         })
 
       ];
@@ -124,16 +124,16 @@ in
       allowedTCPPorts = [ cfg.port ];
     };
 
-    users.users = mkIf (cfg.user == "dwebble") {
-      dwebble = {
+    users.users = mkIf (cfg.user == "tunebook") {
+      tunebook = {
         group = cfg.group;
         isSystemUser = true;
         home = "${cfg.dataDir}";
       };
     };
 
-    users.groups = mkIf (cfg.group == "dwebble") {
-      dwebble = {};
+    users.groups = mkIf (cfg.group == "tunebook") {
+      tunebook = {};
     };
   };
 }

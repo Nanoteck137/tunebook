@@ -1,5 +1,5 @@
 {
-  description = "Devshell for dwebble";
+  description = "Devshell for tunebook";
 
   inputs = {
     nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
@@ -11,11 +11,10 @@
     devtools.url     = "github:nanoteck137/devtools";
     devtools.inputs.nixpkgs.follows = "nixpkgs";
 
-    tagopus.url      = "github:nanoteck137/tagopus/v0.1.1";
-    tagopus.inputs.nixpkgs.follows = "nixpkgs";
+    just.url = "github:casey/just/1.50.0";
   };
 
-  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, tagopus, ... }:
+  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, just, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [];
@@ -27,49 +26,73 @@
         fullVersion = ''${version}-${self.dirtyShortRev or self.shortRev or "dirty"}'';
 
         backend = pkgs.buildGoModule {
-          pname = "dwebble";
+          pname = "tunebook";
           version = fullVersion;
           src = ./.;
-          subPackages = ["cmd/dwebble" "cmd/dwebble-cli"];
+          subPackages = ["cmd/tunebook"];
 
           ldflags = [
-            "-X github.com/nanoteck137/dwebble.Version=${version}"
-            "-X github.com/nanoteck137/dwebble.Commit=${self.dirtyRev or self.rev or "no-commit"}"
+            "-X github.com/nanoteck137/tunebook.Version=${version}"
+            "-X github.com/nanoteck137/tunebook.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
-          tags = ["fts5"];
-
-          vendorHash = "sha256-1HbNz94qQg1dRhl6DAdmJWovy1DX+d4FbMg2U3XjqnI=";
+          vendorHash = "sha256-k0l3se3TqneXsqFMtbZtJbm1Ti55UMc+D2bWbLxLPA4=";
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
 
           postFixup = ''
-            wrapProgram $out/bin/dwebble --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
-            wrapProgram $out/bin/dwebble-cli --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick tagopus.packages.${system}.default ]}
+            wrapProgram $out/bin/tunebook --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
           '';
         };
 
-        frontend = pkgs.buildNpmPackage {
-          name = "dwebble-web";
+        web = pkgs.buildNpmPackage {
+          name = "tunebook-web";
           version = fullVersion;
 
           src = gitignore.lib.gitignoreSource ./web;
-          npmDepsHash = "sha256-fWymnJnrDS39AHzT90h8+ItxPJ+q8CxENWUfkk79MG4=";
+          npmDepsHash = "sha256-xIrTtTfnssHyyOF8ruqfeEdcXrzKHENy5fL06B2vZD8=";
 
           PUBLIC_VERSION=version;
           PUBLIC_COMMIT=self.dirtyRev or self.rev or "no-commit";
+          PUBLIC_API_ADDRESS="";
 
           installPhase = ''
             runHook preInstall
             cp -r build $out/
-            echo '{ "type": "module" }' > $out/package.json
-
-            mkdir $out/bin
-            echo -e "#!${pkgs.runtimeShell}\n${pkgs.nodejs}/bin/node $out\n" > $out/bin/dwebble-web
-            chmod +x $out/bin/dwebble-web
-
             runHook postInstall
           '';
+        };
+
+        docker = pkgs.dockerTools.buildLayeredImage {
+          name = "tunebook";
+          tag  = fullVersion;
+
+          contents = [
+            pkgs.dockerTools.caCertificates
+            web
+            backend
+          ];
+
+          extraCommands = ''
+            mkdir -p data
+            mkdir -p library
+          '';
+
+          config = {
+            Entrypoint   = [ "/bin/tunebook" ];
+            Cmd = [ "serve" ];
+            WorkingDir = "/data";
+
+            ExposedPorts = { 
+              "3000/tcp" = {}; 
+            };
+
+            Env = [
+              "TUNEBOOK_WEB=${web}"
+              "TUNEBOOK_DATA_DIR=/data"
+              "TUNEBOOK_LIBRARY_DIR=/library"
+            ];
+          };
         };
 
         tools = devtools.packages.${system};
@@ -77,7 +100,7 @@
       {
         packages = {
           default = backend;
-          inherit backend frontend;
+          inherit backend web docker;
         };
 
         devShells.default = pkgs.mkShell {
@@ -89,18 +112,17 @@
             imagemagick
             ffmpeg
 
-            tagopus.packages.${system}.default
             tools.publishVersion
+
+            just.packages.${system}.default
           ];
         };
       }
     ) // {
       nixosModules.backend = import ./nix/backend.nix { inherit self; };
-      nixosModules.frontend = import ./nix/frontend.nix { inherit self; };
       nixosModules.default = { ... }: {
         imports = [
           self.nixosModules.backend
-          self.nixosModules.frontend
         ];
       };
     };
