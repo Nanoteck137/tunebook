@@ -159,6 +159,7 @@ func (db *Database) Begin() (Tx, error) {
 				Tx: tx,
 			},
 		},
+		handle: tx,
 	}, nil
 }
 

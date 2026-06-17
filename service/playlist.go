@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 var playlistErr = NewServiceErrCreator("playlist")
