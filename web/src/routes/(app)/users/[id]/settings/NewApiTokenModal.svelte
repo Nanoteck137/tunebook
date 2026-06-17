@@ -34,13 +34,14 @@
       validators: zod(Schema),
       dataType: "json",
       resetForm: true,
-      async onUpdate({ form }) {
+      async onUpdate({ form, cancel }) {
         if (form.valid) {
           const formData = form.data;
           const res = await apiClient.createApiToken({
             name: formData.name,
           });
           if (!res.success) {
+            cancel();
             return handleApiError(res.error);
           }
 

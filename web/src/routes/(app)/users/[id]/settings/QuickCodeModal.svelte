@@ -33,7 +33,7 @@
       validators: zod(Schema),
       dataType: "json",
       resetForm: true,
-      async onUpdate({ form }) {
+      async onUpdate({ form, cancel }) {
         if (form.valid) {
           const formData = form.data;
 
@@ -41,6 +41,7 @@
             code: formData.code,
           });
           if (!res.success) {
+            cancel();
             return handleApiError(res.error);
           }
 
