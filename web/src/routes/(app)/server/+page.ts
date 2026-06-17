@@ -9,7 +9,11 @@ export const load: PageLoad = async ({ parent }) => {
     redirect(301, "/");
   }
 
-  const mediaSettings = await data.apiClient.getMediaSettings();
+  const [mediaSettings, systemInfo] = await Promise.all([
+    data.apiClient.getMediaSettings(),
+    data.apiClient.getSystemInfo(),
+  ]);
+
   if (!mediaSettings.success) {
     throw error(mediaSettings.error.code, {
       message: mediaSettings.error.message,
@@ -17,8 +21,16 @@ export const load: PageLoad = async ({ parent }) => {
     });
   }
 
+  if (!systemInfo.success) {
+    throw error(systemInfo.error.code, {
+      message: systemInfo.error.message,
+      type: systemInfo.error.type,
+    });
+  }
+
   return {
     ...data,
     mediaSettings: mediaSettings.data,
+    systemInfo: systemInfo.data,
   };
 };

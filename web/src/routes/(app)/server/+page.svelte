@@ -2,8 +2,20 @@
   import { PUBLIC_COMMIT, PUBLIC_VERSION } from "$env/static/public";
   import { getApiClient, handleApiError } from "$lib";
   import { formatDuration } from "$lib/utils.js";
-  import { Button } from "@nanoteck137/nano-ui";
-  import { Play } from "lucide-svelte";
+  import {
+    Button,
+    Card,
+    Separator,
+  } from "@nanoteck137/nano-ui";
+  import {
+    AlertCircle,
+    DiscAlbum,
+    FileMusic,
+    Play,
+    RefreshCw,
+    Server,
+    Users,
+  } from "lucide-svelte";
   import { onMount } from "svelte";
   import toast from "svelte-5-french-toast";
   import { z } from "zod";
@@ -68,10 +80,7 @@
     });
 
     eventSource.addEventListener("library-sync-state", (e) => {
-      console.log(JSON.parse(e.data));
       const data = LibrarySyncStateEvent.parse(JSON.parse(e.data));
-
-      console.log("library state", data);
 
       errors = data.errors;
       numArtists = data.numArtists;
@@ -91,19 +100,7 @@
     eventSource.addEventListener("task-sync-state", (e) => {
       const data = TaskSyncStateEvent.parse(JSON.parse(e.data));
 
-      console.log("tasks state", data);
       tasks = data.tasks;
-
-      // isSyncing = data.isRunning;
-      // errors = data.errors;
-      // numArtists = data.numArtists;
-      // numAlbums = data.numAlbums;
-      // numTracks = data.numTracks;
-
-      // artistSyncTime = data.artistsSyncDurationMs;
-      // albumSyncTime = data.albumsSyncDurationMs;
-      // trackSyncTime = data.tracksSyncDurationMs;
-      // totalSyncTime = data.totalSyncDurationMs;
     });
 
     return () => {
@@ -112,122 +109,240 @@
   });
 </script>
 
-<p>Server Page (W.I.P)</p>
-
-<p>Version: {PUBLIC_VERSION}</p>
-<p>Commit: {PUBLIC_COMMIT}</p>
-
-{#each tasks as task}
-  <div class="flex items-center gap-2">
-    <p>{task.name} - Running: {task.isRunning}</p>
-    {#if !task.isRunning}
-      <Button
-        variant="ghost"
-        size="icon"
-        onclick={async () => {
-          const res = await apiClient.runTask(task.name);
-          if (!res.success) {
-            return handleApiError(res.error);
-          }
-
-          toast.success("Dispatched task");
-        }}
-      >
-        <Play />
-      </Button>
-    {/if}
+<div class="flex flex-col gap-6">
+  <div class="flex items-center gap-3">
+    <Server size={24} />
+    <h1 class="text-xl font-bold">Server</h1>
+    <span class="text-xs text-muted-foreground">
+      Server: {data.systemInfo.version} | Client: v{PUBLIC_VERSION} ({PUBLIC_COMMIT})
+    </span>
   </div>
-{/each}
 
-<p>Num Artists: {numArtists}</p>
-<p>Num Albums: {numAlbums}</p>
-<p>Num Tracks: {numTracks}</p>
+  <div class="grid grid-cols-3 gap-4">
+    <Card.Root>
+      <div class="flex flex-col gap-2 p-4">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <Users size={16} />
+          <span>Artists</span>
+        </div>
+        <span class="text-2xl font-bold">{numArtists}</span>
+        <span class="text-xs text-muted-foreground">
+          Last sync: {formatDuration(artistSyncTime)}
+        </span>
+      </div>
+    </Card.Root>
 
-<br />
+    <Card.Root>
+      <div class="flex flex-col gap-2 p-4">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <DiscAlbum size={16} />
+          <span>Albums</span>
+        </div>
+        <span class="text-2xl font-bold">{numAlbums}</span>
+        <span class="text-xs text-muted-foreground">
+          Last sync: {formatDuration(albumSyncTime)}
+        </span>
+      </div>
+    </Card.Root>
 
-<p>Artist Sync Time: {formatDuration(artistSyncTime)}</p>
-<p>Album Sync Time: {formatDuration(albumSyncTime)}</p>
-<p>Track Sync Time: {formatDuration(trackSyncTime)}</p>
-<p>Total Sync Time: {formatDuration(totalSyncTime)}</p>
-
-<p>Missing Artists:</p>
-<div class="flex flex-col">
-  {#each missingArtists as artist}
-    <a href="/artists/{artist.id}">{artist.name}</a>
-  {/each}
-</div>
-
-<p>Missing Albums:</p>
-<div class="flex flex-col">
-  {#each missingAlbums as album}
-    <a href="/albums/{album.id}">{album.name}</a>
-  {/each}
-</div>
-
-<p>Missing Tracks:</p>
-<div class="flex flex-col">
-  {#each missingTracks as track}
-    <p>{track.name}</p>
-  {/each}
-</div>
-
-<p>Errors:</p>
-{#each errors as err}
-  <p>Error: {err}</p>
-{/each}
-
-<!-- {#if syncState?.report.syncErrors}
-  {#each syncState?.report.syncErrors as err}
-    <p class="whitespace-pre font-mono">{err.fullMessage}</p>
-    <br />
-  {/each}
-{/if} -->
-
-<!-- {#if syncState?.paths}
-  <div class="flex flex-col items-start">
-    {#each syncState?.paths as path}
-      <button
-        class="hover:underline"
-        style={`padding-left: ${path.depth * 20}px`}
-        onclick={async () => {
-          const res = await apiClient.syncLibrary({ path: path.path });
-          if (!res.success) {
-            handleApiError(res.error);
-            return;
-          }
-        }}
-      >
-        {path.path}
-      </button>
-    {/each}
+    <Card.Root>
+      <div class="flex flex-col gap-2 p-4">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <FileMusic size={16} />
+          <span>Tracks</span>
+        </div>
+        <span class="text-2xl font-bold">{numTracks}</span>
+        <span class="text-xs text-muted-foreground">
+          Last sync: {formatDuration(trackSyncTime)}
+        </span>
+      </div>
+    </Card.Root>
   </div>
-{/if} -->
 
-<div class="h-10"></div>
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <Card.Root>
+      <div class="p-6">
+        <div class="flex items-center gap-2">
+          <RefreshCw size={18} />
+          <h2 class="text-lg font-semibold">Tasks</h2>
+        </div>
 
-<p>Media Formats:</p>
-<div class="flex flex-col gap-2">
-  {#each data.mediaSettings.formats as format}
-    <div>
-      <p>Name: {format.name}</p>
-      <p>Format: {format.format}</p>
-      <p>Ext: {format.ext}</p>
-      <p>High: {format.qualityHighBitrate}</p>
-      <p>Medium: {format.qualityMediumBitrate}</p>
-      <p>Low: {format.qualityLowBitrate}</p>
+        <Separator class="my-4" />
+
+        <div class="flex flex-col gap-2">
+          {#each tasks as task}
+            <div class="flex items-center justify-between rounded-lg border p-3">
+              <div class="flex flex-col">
+                <span class="text-sm font-medium">{task.name}</span>
+                <span class="text-xs text-muted-foreground">
+                  {task.isRunning ? "Running..." : "Idle"}
+                </span>
+              </div>
+              {#if !task.isRunning}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onclick={async () => {
+                    const res = await apiClient.runTask(task.name);
+                    if (!res.success) {
+                      return handleApiError(res.error);
+                    }
+
+                    toast.success("Dispatched task");
+                  }}
+                >
+                  <Play size={14} />
+                  Run
+                </Button>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    </Card.Root>
+
+    <Card.Root>
+      <div class="p-6">
+        <div class="flex items-center gap-2">
+          <AlertCircle size={18} />
+          <h2 class="text-lg font-semibold">Missing Items</h2>
+        </div>
+
+        <Separator class="my-4" />
+
+        <div class="flex flex-col gap-4">
+          {#if missingArtists.length > 0}
+            <div>
+              <span class="text-xs font-medium text-muted-foreground">Artists ({missingArtists.length})</span>
+              <div class="mt-1 flex flex-col">
+                {#each missingArtists as artist}
+                  <a
+                    href="/artists/{artist.id}"
+                    class="text-sm hover:underline"
+                  >{artist.name}</a>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if missingAlbums.length > 0}
+            <div>
+              <span class="text-xs font-medium text-muted-foreground">Albums ({missingAlbums.length})</span>
+              <div class="mt-1 flex flex-col">
+                {#each missingAlbums as album}
+                  <a
+                    href="/albums/{album.id}"
+                    class="text-sm hover:underline"
+                  >{album.name}</a>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if missingTracks.length > 0}
+            <div>
+              <span class="text-xs font-medium text-muted-foreground">Tracks ({missingTracks.length})</span>
+              <div class="mt-1 flex flex-col">
+                {#each missingTracks as track}
+                  <span class="text-sm">{track.name}</span>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if missingArtists.length === 0 && missingAlbums.length === 0 && missingTracks.length === 0}
+            <p class="text-sm text-muted-foreground">No missing items.</p>
+          {/if}
+        </div>
+      </div>
+    </Card.Root>
+  </div>
+
+  {#if errors.length > 0}
+    <Card.Root>
+      <div class="p-6">
+        <div class="flex items-center gap-2 text-destructive">
+          <AlertCircle size={18} />
+          <h2 class="text-lg font-semibold">Errors</h2>
+        </div>
+
+        <Separator class="my-4" />
+
+        <div class="flex flex-col gap-1">
+          {#each errors as err}
+            <p class="font-mono text-sm text-destructive">{err}</p>
+          {/each}
+        </div>
+      </div>
+    </Card.Root>
+  {/if}
+
+  <Card.Root>
+    <div class="p-6">
+      <div class="flex items-center gap-2">
+        <Server size={18} />
+        <h2 class="text-lg font-semibold">Media Configuration</h2>
+      </div>
+
+      <Separator class="my-4" />
+
+      <div class="flex flex-col gap-6">
+        <div>
+          <h3 class="mb-2 text-sm font-medium text-muted-foreground">Formats</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="text-muted-foreground">
+                  <th class="px-3 py-2 font-medium">Name</th>
+                  <th class="px-3 py-2 font-medium">Format</th>
+                  <th class="px-3 py-2 font-medium">Ext</th>
+                  <th class="px-3 py-2 font-medium">High</th>
+                  <th class="px-3 py-2 font-medium">Medium</th>
+                  <th class="px-3 py-2 font-medium">Low</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each data.mediaSettings.formats as format}
+                  <tr class="border-t">
+                    <td class="px-3 py-2">{format.name}</td>
+                    <td class="px-3 py-2 font-mono text-xs">{format.format}</td>
+                    <td class="px-3 py-2 font-mono text-xs">{format.ext}</td>
+                    <td class="px-3 py-2">{format.qualityHighBitrate}kbps</td>
+                    <td class="px-3 py-2">{format.qualityMediumBitrate}kbps</td>
+                    <td class="px-3 py-2">{format.qualityLowBitrate}kbps</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h3 class="mb-2 text-sm font-medium text-muted-foreground">Device Specs</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="text-muted-foreground">
+                  <th class="px-3 py-2 font-medium">Name</th>
+                  <th class="px-3 py-2 font-medium">Preferred Format</th>
+                  <th class="px-3 py-2 font-medium">Allowed Formats</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each data.mediaSettings.deviceSpecs as spec}
+                  <tr class="border-t">
+                    <td class="px-3 py-2">{spec.name}</td>
+                    <td class="px-3 py-2 font-mono text-xs">{spec.preferedFormat}</td>
+                    <td class="px-3 py-2 font-mono text-xs">{spec.allowedFormats.join(", ")}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-  {/each}
-</div>
-
-<div class="h-10"></div>
-
-<p>Media Device Specs:</p>
-<div class="flex flex-col gap-2">
-  {#each data.mediaSettings.deviceSpecs as spec}
-    <div>
-      <p>Name: {spec.name}</p>
-      <p>Prefered Format: {spec.preferedFormat}</p>
-      <p>Allowed Formats: {spec.allowedFormats.join(",")}</p>
-    </div>
-  {/each}
+  </Card.Root>
 </div>
