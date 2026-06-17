@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { handleApiError } from "$lib";
 import type { ApiClient } from "$lib/api/client";
 import * as api from "$lib/api/types";
@@ -75,7 +74,7 @@ class Queue {
     const cached = this.loadedItems.get(index);
     if (cached) return cached;
 
-    const res = await this.apiClient.getQueueItemAtIndex(index);
+    const res = await this.apiClient.getQueueItemAtIndex(index.toString());
     if (!res.success) {
       handleApiError(res.error);
       return null;
@@ -100,7 +99,12 @@ class Queue {
       }
 
       for (const page of pages.keys()) {
-        const res = await this.apiClient.getQueue(page, QUEUE_PAGE_SIZE);
+        const res = await this.apiClient.getQueue({
+          query: {
+            page: page.toString(),
+            perPage: QUEUE_PAGE_SIZE.toString(),
+          },
+        });
         if (!res.success) {
           handleApiError(res.error);
           continue;
