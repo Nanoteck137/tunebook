@@ -25,6 +25,8 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 
 	InstallHistoryHandlers(app, g)
 
+	InstallQueueHandlers(app, g)
+
 	InstallSearchHandlers(app, g)
 }
 

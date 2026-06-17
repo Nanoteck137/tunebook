@@ -12,6 +12,21 @@
       ]
     },
     {
+      "name": "AddQueueItemsBody",
+      "fields": [
+        {
+          "name": "trackIds",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "position",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Album",
       "fields": [
         {
@@ -597,6 +612,51 @@
       ]
     },
     {
+      "name": "GetQueue",
+      "fields": [
+        {
+          "name": "currentIndex",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "items",
+          "type": "[]QueueItem",
+          "omitEmpty": false
+        },
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetQueueIds",
+      "fields": [
+        {
+          "name": "currentIndex",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "items",
+          "type": "[]QueueIdItem",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetQueueItem",
+      "fields": [
+        {
+          "name": "item",
+          "type": "QueueItem",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetQuickPlaylistIds",
       "fields": [
         {
@@ -882,6 +942,36 @@
       ]
     },
     {
+      "name": "QueueIdItem",
+      "fields": [
+        {
+          "name": "queueItemId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackId",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "QueueItem",
+      "fields": [
+        {
+          "name": "queueItemId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "track",
+          "type": "Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "RemovePlaylistItemBody",
       "fields": [
         {
@@ -908,6 +998,26 @@
           "name": "trackIds",
           "type": "[]string",
           "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReplaceQueueBody",
+      "fields": [
+        {
+          "name": "trackIds",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "currentIndex",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "shuffle",
+          "type": "bool",
+          "omitEmpty": true
         }
       ]
     },
@@ -982,6 +1092,16 @@
         {
           "name": "users",
           "type": "[]UserData",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "SetQueuePositionBody",
+      "fields": [
+        {
+          "name": "index",
+          "type": "int",
           "omitEmpty": false
         }
       ]
@@ -1216,6 +1336,13 @@
       "body": "AddItemToPlaylistBody"
     },
     {
+      "type": "api",
+      "name": "AddQueueItems",
+      "method": "POST",
+      "path": "/api/v1/queue/items",
+      "body": "AddQueueItemsBody"
+    },
+    {
       "type": "normal",
       "name": "AuthCallback",
       "method": "GET",
@@ -1281,6 +1408,12 @@
       "method": "POST",
       "path": "/api/v1/auth/quick-connect/initiate",
       "response": "AuthQuickConnectInitiate"
+    },
+    {
+      "type": "api",
+      "name": "ClearQueue",
+      "method": "DELETE",
+      "path": "/api/v1/queue"
     },
     {
       "type": "api",
@@ -1460,6 +1593,27 @@
     },
     {
       "type": "api",
+      "name": "GetQueue",
+      "method": "GET",
+      "path": "/api/v1/queue",
+      "response": "GetQueue"
+    },
+    {
+      "type": "api",
+      "name": "GetQueueIds",
+      "method": "GET",
+      "path": "/api/v1/queue/ids",
+      "response": "GetQueueIds"
+    },
+    {
+      "type": "api",
+      "name": "GetQueueItemAtIndex",
+      "method": "GET",
+      "path": "/api/v1/queue/items/:position",
+      "response": "GetQueueItem"
+    },
+    {
+      "type": "api",
       "name": "GetQuickPlaylistIds",
       "method": "GET",
       "path": "/api/v1/me/quickplaylist",
@@ -1544,10 +1698,23 @@
     },
     {
       "type": "api",
+      "name": "RemoveQueueItem",
+      "method": "DELETE",
+      "path": "/api/v1/queue/items/:itemId"
+    },
+    {
+      "type": "api",
       "name": "ReorderPlaylistItems",
       "method": "POST",
       "path": "/api/v1/playlists/:playlistId/items/reorder",
       "body": "ReorderPlaylistItemsBody"
+    },
+    {
+      "type": "api",
+      "name": "ReplaceQueue",
+      "method": "PUT",
+      "path": "/api/v1/queue",
+      "body": "ReplaceQueueBody"
     },
     {
       "type": "api",
@@ -1589,6 +1756,13 @@
       "method": "GET",
       "path": "/api/v1/search/users",
       "response": "SearchUsers"
+    },
+    {
+      "type": "api",
+      "name": "SetQueuePosition",
+      "method": "PATCH",
+      "path": "/api/v1/queue/position",
+      "body": "SetQueuePositionBody"
     },
     {
       "type": "api",

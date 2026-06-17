@@ -4,6 +4,7 @@
     FileMusic,
     Home,
     ListMusic,
+    ListOrdered,
     ListVideo,
     LogIn,
     LogOut,
@@ -340,6 +341,8 @@
           icon={ListMusic}
           onClick={close}
         />
+
+        <Link title="Queue" href="/queue" icon={ListOrdered} onClick={close} />
       {/if}
     </div>
     <div class="flex-grow"></div>

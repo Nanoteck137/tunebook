@@ -167,7 +167,11 @@
   userPlaylists={data.userPlaylists}
   quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
-    await musicManager.addTracks({ trackId, clear: true });
+    await musicManager.addTracks({
+      trackIds: data.tracks.map((t) => t.id),
+      trackId,
+      clear: true,
+    });
   }}
 />
 

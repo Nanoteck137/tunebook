@@ -8,6 +8,15 @@ export const AddItemToPlaylistBody = z.object({
 });
 export type AddItemToPlaylistBody = z.infer<typeof AddItemToPlaylistBody>;
 
+// Name: AddQueueItemsBody
+export const AddQueueItemsBody = z.object({
+  // Name: AddQueueItemsBody.trackIds
+  "trackIds": z.array(z.string()),
+  // Name: AddQueueItemsBody.position
+  "position": z.string(),
+});
+export type AddQueueItemsBody = z.infer<typeof AddQueueItemsBody>;
+
 // Name: Images
 export const Images = z.object({
   // Name: Images.original
@@ -492,6 +501,51 @@ export const GetPlaylists = z.object({
 });
 export type GetPlaylists = z.infer<typeof GetPlaylists>;
 
+// Name: QueueItem
+export const QueueItem = z.object({
+  // Name: QueueItem.queueItemId
+  "queueItemId": z.string(),
+  // Name: QueueItem.track
+  "track": Track,
+});
+export type QueueItem = z.infer<typeof QueueItem>;
+
+// Name: GetQueue
+export const GetQueue = z.object({
+  // Name: GetQueue.currentIndex
+  "currentIndex": z.number(),
+  // Name: GetQueue.items
+  "items": z.array(QueueItem),
+  // Name: GetQueue.page
+  "page": Page,
+});
+export type GetQueue = z.infer<typeof GetQueue>;
+
+// Name: QueueIdItem
+export const QueueIdItem = z.object({
+  // Name: QueueIdItem.queueItemId
+  "queueItemId": z.string(),
+  // Name: QueueIdItem.trackId
+  "trackId": z.string(),
+});
+export type QueueIdItem = z.infer<typeof QueueIdItem>;
+
+// Name: GetQueueIds
+export const GetQueueIds = z.object({
+  // Name: GetQueueIds.currentIndex
+  "currentIndex": z.number(),
+  // Name: GetQueueIds.items
+  "items": z.array(QueueIdItem),
+});
+export type GetQueueIds = z.infer<typeof GetQueueIds>;
+
+// Name: GetQueueItem
+export const GetQueueItem = z.object({
+  // Name: GetQueueItem.item
+  "item": QueueItem,
+});
+export type GetQueueItem = z.infer<typeof GetQueueItem>;
+
 // Name: GetQuickPlaylistIds
 export const GetQuickPlaylistIds = z.object({
   // Name: GetQuickPlaylistIds.ids
@@ -622,6 +676,17 @@ export const ReorderPlaylistItemsBody = z.object({
 });
 export type ReorderPlaylistItemsBody = z.infer<typeof ReorderPlaylistItemsBody>;
 
+// Name: ReplaceQueueBody
+export const ReplaceQueueBody = z.object({
+  // Name: ReplaceQueueBody.trackIds
+  "trackIds": z.array(z.string()),
+  // Name: ReplaceQueueBody.currentIndex
+  "currentIndex": z.number().nullable().optional(),
+  // Name: ReplaceQueueBody.shuffle
+  "shuffle": z.boolean().optional(),
+});
+export type ReplaceQueueBody = z.infer<typeof ReplaceQueueBody>;
+
 // Name: SearchAlbums
 export const SearchAlbums = z.object({
   // Name: SearchAlbums.page
@@ -666,6 +731,13 @@ export const SearchUsers = z.object({
   "users": z.array(UserData),
 });
 export type SearchUsers = z.infer<typeof SearchUsers>;
+
+// Name: SetQueuePositionBody
+export const SetQueuePositionBody = z.object({
+  // Name: SetQueuePositionBody.index
+  "index": z.number(),
+});
+export type SetQueuePositionBody = z.infer<typeof SetQueuePositionBody>;
 
 // Name: SetQuickPlaylistBody
 export const SetQuickPlaylistBody = z.object({

@@ -22,7 +22,7 @@
   import { getApiClient, handleApiError } from "$lib";
   import { showPlaylistModal } from "$lib/playlist-modal.svelte";
   import { cn } from "$lib/utils";
-  import type { Playlist, Track } from "$lib/api/types";
+  import type { Track } from "$lib/api/types";
   import { goto, invalidateAll } from "$app/navigation";
   import { getFavorites } from "$lib/favorites.svelte";
   import { getQuickPlaylist } from "$lib/quick-playlist.svelte";
@@ -37,22 +37,14 @@
     isAlbumShowcase?: boolean;
     displayOrder?: boolean;
 
-    userPlaylists?: Playlist[] | null;
-    quickPlaylist?: string | null;
-
+    // eslint-disable-next-line no-unused-vars
     onPlay: (trackId: string) => void;
+    // eslint-disable-next-line no-unused-vars
     onReorder?: (items: string[], anchor: string | null) => void;
   };
 
-  const {
-    isAlbumShowcase,
-    tracks,
-    displayOrder,
-    userPlaylists,
-    quickPlaylist,
-    onPlay,
-    onReorder,
-  }: Props = $props();
+  const { isAlbumShowcase, tracks, displayOrder, onPlay, onReorder }: Props =
+    $props();
   const apiClient = getApiClient();
   const favoritesManager = getFavorites();
   const quickPlaylistManager = getQuickPlaylist();
@@ -179,7 +171,11 @@
                     onSelect={async () => {
                       const wasFav = favoritesManager.hasTrack(track.id);
                       await favoritesManager.toggleTrack(track.id);
-                      toast.success(wasFav ? "Removed from favorites" : "Added to favorites");
+                      toast.success(
+                        wasFav
+                          ? "Removed from favorites"
+                          : "Added to favorites",
+                      );
                     }}
                   >
                     {#if favoritesManager.hasTrack(track.id)}
@@ -197,7 +193,11 @@
                       onSelect={async () => {
                         const wasIn = quickPlaylistManager.hasTrack(track.id);
                         await quickPlaylistManager.toggleTrack(track.id);
-                        toast.success(wasIn ? "Removed from quick playlist" : "Added to quick playlist");
+                        toast.success(
+                          wasIn
+                            ? "Removed from quick playlist"
+                            : "Added to quick playlist",
+                        );
                       }}
                     >
                       {#if quickPlaylistManager.hasTrack(track.id)}

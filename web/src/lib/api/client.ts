@@ -15,6 +15,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  addQueueItems(body: api.AddQueueItemsBody, options?: ExtraOptions) {
+    return this.request("/api/v1/queue/items", "POST", z.undefined(), z.any(), body, options)
+  }
+  
   
   authClaimQuickConnectCode(body: api.AuthClaimQuickConnectCodeBody, options?: ExtraOptions) {
     return this.request("/api/v1/auth/quick-connect/claim", "POST", z.undefined(), z.any(), body, options)
@@ -46,6 +50,10 @@ export class ApiClient extends BaseApiClient {
   
   authQuickConnectInitiate(options?: ExtraOptions) {
     return this.request("/api/v1/auth/quick-connect/initiate", "POST", api.AuthQuickConnectInitiate, z.any(), undefined, options)
+  }
+  
+  clearQueue(options?: ExtraOptions) {
+    return this.request("/api/v1/queue", "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
@@ -143,6 +151,18 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/playlists", "GET", api.GetPlaylists, z.any(), undefined, options)
   }
   
+  getQueue(options?: ExtraOptions) {
+    return this.request("/api/v1/queue", "GET", api.GetQueue, z.any(), undefined, options)
+  }
+  
+  getQueueIds(options?: ExtraOptions) {
+    return this.request("/api/v1/queue/ids", "GET", api.GetQueueIds, z.any(), undefined, options)
+  }
+  
+  getQueueItemAtIndex(position: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/queue/items/${position}`, "GET", api.GetQueueItem, z.any(), undefined, options)
+  }
+  
   getQuickPlaylistIds(options?: ExtraOptions) {
     return this.request("/api/v1/me/quickplaylist", "GET", api.GetQuickPlaylistIds, z.any(), undefined, options)
   }
@@ -188,8 +208,16 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "DELETE", z.undefined(), z.any(), body, options)
   }
   
+  removeQueueItem(itemId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/queue/items/${itemId}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
   reorderPlaylistItems(playlistId: string, body: api.ReorderPlaylistItemsBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  replaceQueue(body: api.ReplaceQueueBody, options?: ExtraOptions) {
+    return this.request("/api/v1/queue", "PUT", z.undefined(), z.any(), body, options)
   }
   
   runTask(taskName: string, options?: ExtraOptions) {
@@ -214,6 +242,10 @@ export class ApiClient extends BaseApiClient {
   
   searchUsers(options?: ExtraOptions) {
     return this.request("/api/v1/search/users", "GET", api.SearchUsers, z.any(), undefined, options)
+  }
+  
+  setQueuePosition(body: api.SetQueuePositionBody, options?: ExtraOptions) {
+    return this.request("/api/v1/queue/position", "PATCH", z.undefined(), z.any(), body, options)
   }
   
   setQuickPlaylist(body: api.SetQuickPlaylistBody, options?: ExtraOptions) {
@@ -250,6 +282,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
+  addQueueItems() {
+    return createUrl(this.baseUrl, "/api/v1/queue/items")
+  }
+  
   authCallback() {
     return createUrl(this.baseUrl, "/api/v1/auth/providers/callback")
   }
@@ -284,6 +320,10 @@ export class ClientUrls {
   
   authQuickConnectInitiate() {
     return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/initiate")
+  }
+  
+  clearQueue() {
+    return createUrl(this.baseUrl, "/api/v1/queue")
   }
   
   createApiToken() {
@@ -390,6 +430,18 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/playlists")
   }
   
+  getQueue() {
+    return createUrl(this.baseUrl, "/api/v1/queue")
+  }
+  
+  getQueueIds() {
+    return createUrl(this.baseUrl, "/api/v1/queue/ids")
+  }
+  
+  getQueueItemAtIndex(position: string) {
+    return createUrl(this.baseUrl, `/api/v1/queue/items/${position}`)
+  }
+  
   getQuickPlaylistIds() {
     return createUrl(this.baseUrl, "/api/v1/me/quickplaylist")
   }
@@ -438,8 +490,16 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
+  removeQueueItem(itemId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queue/items/${itemId}`)
+  }
+  
   reorderPlaylistItems(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items/reorder`)
+  }
+  
+  replaceQueue() {
+    return createUrl(this.baseUrl, "/api/v1/queue")
   }
   
   runTask(taskName: string) {
@@ -464,6 +524,10 @@ export class ClientUrls {
   
   searchUsers() {
     return createUrl(this.baseUrl, "/api/v1/search/users")
+  }
+  
+  setQueuePosition() {
+    return createUrl(this.baseUrl, "/api/v1/queue/position")
   }
   
   setQuickPlaylist() {

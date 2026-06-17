@@ -30,6 +30,7 @@ type App interface {
 	TrackService() *service.TrackService
 	PlaylistService() *service.PlaylistService
 	HistoryService() *service.HistoryService
+	QueueService() *service.QueueService
 
 	Broker() *broker.Broker
 

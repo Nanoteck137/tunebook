@@ -31,7 +31,8 @@ type BaseApp struct {
 	albumService        *service.AlbumService
 	trackService        *service.TrackService
 	playlistService     *service.PlaylistService
-	historyService  *service.HistoryService
+	historyService      *service.HistoryService
+	queueService        *service.QueueService
 
 	broker *broker.Broker
 }
@@ -58,6 +59,10 @@ func (app *BaseApp) PlaylistService() *service.PlaylistService {
 
 func (app *BaseApp) HistoryService() *service.HistoryService {
 	return app.historyService
+}
+
+func (app *BaseApp) QueueService() *service.QueueService {
+	return app.queueService
 }
 
 func (app *BaseApp) TaskService() *service.TaskService {
@@ -209,6 +214,11 @@ func (app *BaseApp) Bootstrap() error {
 
 	app.historyService = service.NewHistoryService(
 		newServiceLogger("track_history"),
+		app.db,
+	)
+
+	app.queueService = service.NewQueueService(
+		newServiceLogger("queue"),
 		app.db,
 	)
 

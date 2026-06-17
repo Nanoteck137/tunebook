@@ -3,6 +3,7 @@
 
   interface Props {
     value: number;
+    // eslint-disable-next-line no-unused-vars
     onValue: (value: number) => void;
     growOnHover?: boolean;
     buffered?: number;
@@ -10,7 +11,14 @@
     ariaLabel?: string;
   }
 
-  let { value, onValue, growOnHover = true, buffered = 0, class: className = "", ariaLabel = "Seek" }: Props = $props();
+  let {
+    value,
+    onValue,
+    growOnHover = true,
+    buffered = 0,
+    class: className = "",
+    ariaLabel = "Seek",
+  }: Props = $props();
 
   let trackEl: HTMLDivElement | undefined = $state();
   let dragging = $state(false);

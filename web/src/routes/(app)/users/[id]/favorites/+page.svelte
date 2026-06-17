@@ -10,8 +10,6 @@
 <TrackList
   totalTracks={data.page.totalItems}
   tracks={data.tracks}
-  userPlaylists={data.userPlaylists}
-  quickPlaylist={data.user?.quickPlaylist}
   onPlay={() => {}}
 />
 

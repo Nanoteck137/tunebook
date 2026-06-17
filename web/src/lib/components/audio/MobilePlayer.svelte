@@ -20,19 +20,24 @@
   const [send, receive] = crossfade({ duration: 250 });
 
   let currentMediaItem = $state<MediaItem | null>(null);
+  let nextItems = $state<MediaItem[]>([]);
 
   $effect(() => {
-    currentMediaItem = musicManager.queue.getCurrentMediaItem();
-  });
+    currentMediaItem = musicManager.currentItem;
 
-  let nextItems = $derived(musicManager.queue.getNextItems());
+    musicManager.queue.getNextItems(0, 50).then((items) => {
+      nextItems = items;
+    });
+  });
 
   let open = $state(false);
   let closing = $state(false);
   let activeTab = $state<string | null>(null);
 
   let seekValue = $derived(
-    Number.isNaN(musicManager.duration) ? 0 : musicManager.currentTime / musicManager.duration,
+    Number.isNaN(musicManager.duration)
+      ? 0
+      : musicManager.currentTime / musicManager.duration,
   );
 
   function openPlayer() {
@@ -82,8 +87,12 @@
       </div>
 
       <div class="flex min-w-0 flex-col items-start text-left">
-        <p class="w-full truncate text-sm font-medium">{currentMediaItem?.name ?? "No track playing"}</p>
-        <p class="w-full truncate text-xs text-muted-foreground">{currentMediaItem?.artists[0]?.name ?? ""}</p>
+        <p class="w-full truncate text-sm font-medium">
+          {currentMediaItem?.name ?? "No track playing"}
+        </p>
+        <p class="w-full truncate text-xs text-muted-foreground">
+          {currentMediaItem?.artists[0]?.name ?? ""}
+        </p>
       </div>
 
       <div class="flex-grow"></div>
@@ -127,14 +136,16 @@
     aria-label="Now Playing"
   >
     <!-- Header -->
-    <div class="flex items-center gap-4 px-4 pt-2 pb-2">
+    <div class="flex items-center gap-4 px-4 pb-2 pt-2">
       <button
         class="flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
         onclick={closePlayer}
       >
         <ChevronDown size="24" />
       </button>
-      <p class="truncate text-center text-sm font-medium text-muted-foreground">
+      <p
+        class="truncate text-center text-sm font-medium text-muted-foreground"
+      >
         Now Playing
       </p>
     </div>
@@ -162,8 +173,11 @@
               <p class="text-sm text-muted-foreground">
                 {#if currentMediaItem}
                   {#each currentMediaItem.artists as artist, i}
-                    {#if i > 0}, {/if}
-                    <a href="/artists/{artist.id}" class="hover:underline">{artist.name}</a>
+                    {#if i > 0},
+                    {/if}
+                    <a href="/artists/{artist.id}" class="hover:underline"
+                      >{artist.name}</a
+                    >
                   {/each}
                 {/if}
               </p>
@@ -179,8 +193,16 @@
                 buffered={musicManager.buffered}
               />
               <div class="flex justify-between text-xs text-muted-foreground">
-                <span class="tabular-nums">{formatTime(musicManager.currentTime)}</span>
-                <span class="tabular-nums">{formatTime(Number.isNaN(musicManager.duration) ? 0 : musicManager.duration)}</span>
+                <span class="tabular-nums"
+                  >{formatTime(musicManager.currentTime)}</span
+                >
+                <span class="tabular-nums"
+                  >{formatTime(
+                    Number.isNaN(musicManager.duration)
+                      ? 0
+                      : musicManager.duration,
+                  )}</span
+                >
               </div>
             </div>
 
@@ -260,8 +282,12 @@
               />
             </div>
             <div class="flex min-w-0 flex-1 flex-col">
-              <p class="truncate text-sm font-medium">{currentMediaItem?.name ?? "No track playing"}</p>
-              <p class="truncate text-xs text-muted-foreground">{currentMediaItem?.artists[0]?.name ?? ""}</p>
+              <p class="truncate text-sm font-medium">
+                {currentMediaItem?.name ?? "No track playing"}
+              </p>
+              <p class="truncate text-xs text-muted-foreground">
+                {currentMediaItem?.artists[0]?.name ?? ""}
+              </p>
             </div>
             {#if musicManager.loading}
               <div class="h-10 w-10 animate-pulse rounded-full bg-muted" />
@@ -283,12 +309,28 @@
           </div>
 
           {#if activeTab === "queue"}
+            <div class="flex items-center justify-between px-2 py-2">
+              <p class="text-sm font-medium text-muted-foreground">Up next</p>
+              <a
+                href="/queue"
+                class="text-sm font-medium text-primary transition-colors hover:underline"
+                onclick={() => closePlayer()}
+              >
+                View full queue
+              </a>
+            </div>
+
             {#if nextItems.length > 0}
               <div class="flex w-full flex-col gap-1 pb-4">
                 {#each nextItems as mediaItem, i (mediaItem.trackId)}
                   {@const queueIndex = musicManager.queue.index + 1 + i}
-                  <div class="group flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent/50">
-                    <span class="w-6 text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
+                  <div
+                    class="group flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent/50"
+                  >
+                    <span
+                      class="w-6 text-right text-xs tabular-nums text-muted-foreground"
+                      >{i + 1}</span
+                    >
                     <button
                       class="shrink-0"
                       onclick={async () => {
@@ -296,19 +338,28 @@
                         musicManager.play();
                       }}
                     >
-                      <Image class="w-10 min-w-10 rounded" src={mediaItem.coverArt} alt="cover" />
+                      <Image
+                        class="w-10 min-w-10 rounded"
+                        src={mediaItem.coverArt}
+                        alt="cover"
+                      />
                     </button>
                     <div class="flex min-w-0 flex-1 flex-col">
-                      <p class="truncate text-sm font-medium">{mediaItem.name}</p>
+                      <p class="truncate text-sm font-medium">
+                        {mediaItem.name}
+                      </p>
                       <p class="truncate text-xs text-muted-foreground">
                         {#each mediaItem.artists as artist, j}
-                          {#if j > 0}, {/if}{artist.name}
+                          {#if j > 0},
+                          {/if}{artist.name}
                         {/each}
                       </p>
                     </div>
                     <button
                       class="shrink-0 rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
-                      onclick={() => musicManager.removeQueueItem(queueIndex)}
+                      onclick={async () => {
+                        await musicManager.removeQueueItem(queueIndex);
+                      }}
                     >
                       <X size="14" />
                     </button>
@@ -316,7 +367,9 @@
                 {/each}
               </div>
             {:else}
-              <p class="py-8 text-center text-sm text-muted-foreground">Queue is empty</p>
+              <p class="py-8 text-center text-sm text-muted-foreground">
+                Queue is empty
+              </p>
             {/if}
           {:else if activeTab === "lyrics"}
             <div class="flex items-center justify-center py-16">
@@ -324,7 +377,9 @@
             </div>
           {:else if activeTab === "related"}
             <div class="flex items-center justify-center py-16">
-              <p class="text-sm text-muted-foreground">Related content not available</p>
+              <p class="text-sm text-muted-foreground">
+                Related content not available
+              </p>
             </div>
           {/if}
         </div>
@@ -334,19 +389,28 @@
     <!-- Tab bar -->
     <div class="flex border-t border-border px-4 pt-2">
       <button
-        class="flex-1 pb-2 text-sm font-medium transition-colors {activeTab === 'queue' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}"
+        class="flex-1 pb-2 text-sm font-medium transition-colors {activeTab ===
+        'queue'
+          ? 'border-b-2 border-foreground text-foreground'
+          : 'text-muted-foreground'}"
         onclick={() => switchTab("queue")}
       >
         Queue
       </button>
       <button
-        class="flex-1 pb-2 text-sm font-medium transition-colors {activeTab === 'lyrics' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}"
+        class="flex-1 pb-2 text-sm font-medium transition-colors {activeTab ===
+        'lyrics'
+          ? 'border-b-2 border-foreground text-foreground'
+          : 'text-muted-foreground'}"
         onclick={() => switchTab("lyrics")}
       >
         Lyrics
       </button>
       <button
-        class="flex-1 pb-2 text-sm font-medium transition-colors {activeTab === 'related' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}"
+        class="flex-1 pb-2 text-sm font-medium transition-colors {activeTab ===
+        'related'
+          ? 'border-b-2 border-foreground text-foreground'
+          : 'text-muted-foreground'}"
         onclick={() => switchTab("related")}
       >
         Related

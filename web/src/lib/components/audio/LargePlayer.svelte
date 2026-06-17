@@ -1,6 +1,6 @@
 <script lang="ts">
   import SeekSlider from "$lib/components/SeekSlider.svelte";
-  import { Button, ScrollArea, Separator, Sheet } from "@nanoteck137/nano-ui";
+  import { Button, ScrollArea, Sheet } from "@nanoteck137/nano-ui";
   import { formatTime } from "$lib/utils";
   import {
     ListX,
@@ -21,14 +21,21 @@
   const musicManager = getMusicManager();
 
   let currentMediaItem = $state<MediaItem | null>(null);
+  let previousItems = $state<MediaItem[]>([]);
+  let currentQueueItem = $state<MediaItem | null>(null);
+  let nextItems = $state<MediaItem[]>([]);
 
   $effect(() => {
-    currentMediaItem = musicManager.queue.getCurrentMediaItem();
-  });
+    currentMediaItem = musicManager.currentItem;
+    currentQueueItem = musicManager.currentItem;
 
-  let previousItems = $derived(musicManager.queue.getPreviousItems());
-  let currentQueueItem = $derived(musicManager.queue.getCurrentItem());
-  let nextItems = $derived(musicManager.queue.getNextItems());
+    musicManager.queue.getPreviousItems(0, 50).then((items) => {
+      previousItems = items;
+    });
+    musicManager.queue.getNextItems(0, 50).then((items) => {
+      nextItems = items;
+    });
+  });
 </script>
 
 {#snippet queueSheet()}
@@ -39,16 +46,19 @@
     <Sheet.Content side="right">
       <div class="flex items-center justify-between pb-4">
         <p class="text-base font-semibold">Queue</p>
-        <Button
-          class="rounded-full"
-          variant="ghost"
-          size="icon"
-          onclick={() => {
-            musicManager.clearQueue();
-          }}
-        >
-          <ListX />
-        </Button>
+        <div class="flex items-center">
+          <Button variant="ghost" size="sm" href="/queue">View all</Button>
+          <Button
+            class="rounded-full"
+            variant="ghost"
+            size="icon"
+            onclick={async () => {
+              await musicManager.clearQueue();
+            }}
+          >
+            <ListX />
+          </Button>
+        </div>
       </div>
 
       <ScrollArea class="h-full pb-6">
@@ -122,7 +132,10 @@
                   </div>
                 </div>
                 <div class="flex min-w-0 flex-col">
-                  <p class="truncate text-sm font-medium" title={currentQueueItem.name}>
+                  <p
+                    class="truncate text-sm font-medium"
+                    title={currentQueueItem.name}
+                  >
                     {currentQueueItem.name}
                   </p>
                   <p class="truncate text-xs text-muted-foreground">
@@ -183,7 +196,9 @@
                     </div>
                     <button
                       class="shrink-0 rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
-                      onclick={() => musicManager.removeQueueItem(queueIndex)}
+                      onclick={async () => {
+                        await musicManager.removeQueueItem(queueIndex);
+                      }}
                     >
                       <X size="14" />
                     </button>

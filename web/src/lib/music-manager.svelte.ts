@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars */
+import { handleApiError } from "$lib";
 import type { ApiClient } from "$lib/api/client";
+import * as api from "$lib/api/types";
 import { getContext, setContext } from "svelte";
 
 export type MediaRef = {
@@ -8,6 +10,7 @@ export type MediaRef = {
 };
 
 export type MediaItem = {
+  queueItemId: string;
   trackId: string;
   name: string;
   album: MediaRef;
@@ -15,96 +18,158 @@ export type MediaItem = {
   coverArt: string;
 };
 
-type SavedQueue = {
-  items: string[];
-  index: number;
+type QueueEntry = {
+  queueItemId: string;
+  trackId: string;
 };
 
+const QUEUE_PAGE_SIZE = 50;
+
+function trackToMediaItem(item: api.QueueItem): MediaItem {
+  return {
+    queueItemId: item.queueItemId,
+    trackId: item.track.id,
+    name: item.track.name,
+    album: { id: item.track.albumId, name: item.track.albumName },
+    artists: item.track.artists.map((a) => ({ id: a.id, name: a.name })),
+    coverArt: item.track.coverArt.small,
+  };
+}
+
 class Queue {
-  items = $state<MediaItem[]>([]);
+  entries = $state<QueueEntry[]>([]);
   index = $state(0);
+  totalItems = $state(0);
 
-  setQueueItems(items: MediaItem[], index?: number) {
-    this.items = items;
-    this.index = index ?? 0;
+  private apiClient: ApiClient;
+  private loadedItems = $state(new Map<number, MediaItem>());
+
+  constructor(apiClient: ApiClient) {
+    this.apiClient = apiClient;
   }
 
-  getCurrentMediaItem() {
-    if (this.items.length === 0) return null;
-    return this.items[this.index];
+  setQueue(entries: QueueEntry[], index: number, totalItems: number) {
+    this.entries = entries;
+    this.index = index;
+    this.totalItems = totalItems;
+    this.loadedItems.clear();
   }
 
-  getPreviousItems() {
-    return this.items.slice(0, this.index);
+  async loadEntries() {
+    const res = await this.apiClient.getQueueIds();
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
+    }
+
+    this.setQueue(
+      res.data.items,
+      res.data.currentIndex,
+      res.data.items.length,
+    );
   }
 
-  getCurrentItem() {
+  async loadItem(index: number): Promise<MediaItem | null> {
+    if (index < 0 || index >= this.totalItems) return null;
+
+    const cached = this.loadedItems.get(index);
+    if (cached) return cached;
+
+    const res = await this.apiClient.getQueueItemAtIndex(index);
+    if (!res.success) {
+      handleApiError(res.error);
+      return null;
+    }
+
+    const mediaItem = trackToMediaItem(res.data.item);
+    this.loadedItems.set(index, mediaItem);
+    return mediaItem;
+  }
+
+  async loadItems(indices: number[]): Promise<Map<number, MediaItem>> {
+    if (indices.length === 0) return new Map();
+
+    const missing = indices.filter((i) => !this.loadedItems.has(i));
+
+    if (missing.length > 0) {
+      const pages = new Map<number, number[]>();
+      for (const index of missing) {
+        const page = Math.floor(index / QUEUE_PAGE_SIZE);
+        if (!pages.has(page)) pages.set(page, []);
+        pages.get(page)!.push(index);
+      }
+
+      for (const page of pages.keys()) {
+        const res = await this.apiClient.getQueue(page, QUEUE_PAGE_SIZE);
+        if (!res.success) {
+          handleApiError(res.error);
+          continue;
+        }
+
+        for (let i = 0; i < res.data.items.length; i++) {
+          const position = page * QUEUE_PAGE_SIZE + i;
+          const mediaItem = trackToMediaItem(res.data.items[i]);
+          this.loadedItems.set(position, mediaItem);
+        }
+      }
+    }
+
+    const result = new Map<number, MediaItem>();
+    for (const index of indices) {
+      const item = this.loadedItems.get(index);
+      if (item) result.set(index, item);
+    }
+    return result;
+  }
+
+  getCurrentMediaItem(): MediaItem | null {
+    return this.loadedItems.get(this.index) ?? null;
+  }
+
+  getCurrentItem(): MediaItem | null {
     return this.getCurrentMediaItem();
   }
 
-  getNextItems() {
-    return this.items.slice(this.index + 1);
+  async getPreviousItems(page: number, perPage: number): Promise<MediaItem[]> {
+    const start = page * perPage;
+    const end = Math.min(this.index, start + perPage);
+    const indices: number[] = [];
+    for (let i = start; i < end; i++) indices.push(i);
+
+    const loaded = await this.loadItems(indices);
+    const result: MediaItem[] = [];
+    for (let i = start; i < end; i++) {
+      const item = loaded.get(i);
+      if (item) result.push(item);
+    }
+    return result;
+  }
+
+  async getNextItems(page: number, perPage: number): Promise<MediaItem[]> {
+    const start = this.index + 1 + page * perPage;
+    const end = Math.min(this.totalItems, start + perPage);
+    const indices: number[] = [];
+    for (let i = start; i < end; i++) indices.push(i);
+
+    const loaded = await this.loadItems(indices);
+    const result: MediaItem[] = [];
+    for (let i = start; i < end; i++) {
+      const item = loaded.get(i);
+      if (item) result.push(item);
+    }
+    return result;
+  }
+
+  async getItemAtIndex(index: number): Promise<MediaItem | null> {
+    return this.loadItem(index);
   }
 
   isEndOfQueue() {
-    return this.index >= this.items.length - 1;
+    return this.index >= this.totalItems - 1;
   }
 
   isQueueEmpty() {
-    return this.items.length === 0;
-  }
-
-  setQueueIndex(index: number) {
-    if (index >= this.items.length) {
-      this.index = 0;
-      return;
-    }
-
-    if (index < 0) {
-      return;
-    }
-
-    this.index = index;
-
-    this.saveQueue();
-  }
-
-  removeItem(index: number) {
-    if (index < 0 || index >= this.items.length) return;
-
-    this.items.splice(index, 1);
-    if (index < this.index) {
-      this.index--;
-    } else if (index === this.index) {
-      this.index = Math.min(this.index, this.items.length - 1);
-    }
-
-    this.saveQueue();
-  }
-
-  clearQueue() {
-    this.items = [];
-    this.index = 0;
-
-    this.saveQueue();
-  }
-
-  saveQueue() {
-    const q: SavedQueue = {
-      items: this.items.map((i) => i.trackId),
-      index: this.index,
-    };
-
-    localStorage.setItem("queue", JSON.stringify(q));
-  }
-
-  async loadQueue(loadTracks: (ids: string[]) => Promise<MediaItem[]>) {
-    const s = localStorage.getItem("queue");
-    if (s) {
-      const q: SavedQueue = JSON.parse(s);
-      await loadTracks(q.items);
-      this.index = q.index;
-    }
+    return this.totalItems === 0;
   }
 }
 
@@ -172,7 +237,7 @@ export class MusicManager {
     this.audio = new Audio();
 
     this.apiClient = apiClient;
-    this.queue = new Queue();
+    this.queue = new Queue(apiClient);
 
     this.setupAudio();
     this.setupMediaSession();
@@ -180,40 +245,29 @@ export class MusicManager {
     this.volume = getVolume();
     this.muted = getMuted();
 
-    /*
-    this.queue.loadQueue(async (ids) => {
-      const tracks = await apiClient.loadTrackFromIds({ ids });
-      if (!tracks.success) {
-        // TODO(patrik): Handle error
-        return [];
-      }
+    this.loadInitialQueue();
+  }
 
-      return tracks.data.tracks.map(
-        (track) =>
-          ({
-            trackId: track.id,
-            name: track.name,
-          }) as MediaItem,
-      );
-    });
-    */
+  private async loadInitialQueue() {
+    await this.queue.loadEntries();
+    await this.queueUpdate();
+  }
 
-    this.queueUpdate();
+  private async refreshQueue() {
+    await this.queue.loadEntries();
+    await this.queueUpdate();
   }
 
   setupAudio() {
     this.audio.addEventListener("canplay", () => {
-      // console.log("canplay");
       this.loading = false;
     });
 
     this.audio.addEventListener("loadstart", () => {
-      // console.log("loadstart");
       this.loading = true;
     });
 
     this.audio.addEventListener("loadedmetadata", () => {
-      // console.log("loadedmetadata");
       this.currentTime = this.audio.currentTime;
       this.duration = this.audio.duration;
     });
@@ -251,22 +305,6 @@ export class MusicManager {
     this.audio.addEventListener("ended", async () => {
       await this.nextTrack();
     });
-
-    // musicManager.emitter.on("requestPlay", () => {
-    //   audio.play();
-    // });
-
-    // musicManager.emitter.on("requestPause", () => {
-    //   audio.pause();
-    // });
-
-    // musicManager.emitter.on("requestPlayPause", () => {
-    //   if (playing) {
-    //     audio.pause();
-    //   } else {
-    //     audio.play();
-    //   }
-    // });
   }
 
   private setupMediaSession() {
@@ -274,8 +312,12 @@ export class MusicManager {
 
     navigator.mediaSession.setActionHandler("play", () => this.play());
     navigator.mediaSession.setActionHandler("pause", () => this.pause());
-    navigator.mediaSession.setActionHandler("nexttrack", () => this.nextTrack());
-    navigator.mediaSession.setActionHandler("previoustrack", () => this.previousTrack());
+    navigator.mediaSession.setActionHandler("nexttrack", () =>
+      this.nextTrack(),
+    );
+    navigator.mediaSession.setActionHandler("previoustrack", () =>
+      this.previousTrack(),
+    );
     navigator.mediaSession.setActionHandler("seekto", (details) => {
       if (details.seekTime != null) {
         this.setPosition(details.seekTime);
@@ -343,30 +385,53 @@ export class MusicManager {
     this.audio.currentTime = position;
   }
 
-  removeQueueItem(index: number) {
-    this.queue.removeItem(index);
-    this.queueUpdate();
+  async removeQueueItem(index: number) {
+    const entry = this.queue.entries[index];
+    if (!entry) return;
+
+    const res = await this.apiClient.removeQueueItem(entry.queueItemId);
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
+    }
+
+    await this.refreshQueue();
   }
 
   async clearQueue(update = true) {
     await this.sendTrackEvent();
 
-    this.queue.clearQueue();
+    const res = await this.apiClient.clearQueue();
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
+    }
+
     if (update) {
-      this.queueUpdate();
+      await this.refreshQueue();
     }
   }
 
   async setQueueIndex(index: number) {
     await this.sendTrackEvent();
 
-    this.queue.setQueueIndex(index);
-    this.queueUpdate();
+    const res = await this.apiClient.setQueuePosition({ index });
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
+    }
+
+    await this.queue.loadEntries();
+    await this.queueUpdate();
   }
 
-  queueUpdate() {
+  async queueUpdate() {
     this.showPlayer = !this.queue.isQueueEmpty();
-    const mediaItem = this.queue.getCurrentMediaItem();
+
+    let mediaItem = this.queue.getCurrentMediaItem();
+    if (!mediaItem && !this.queue.isQueueEmpty()) {
+      mediaItem = await this.queue.loadItem(this.queue.index);
+    }
 
     if (mediaItem) {
       if (mediaItem?.trackId !== this.currentItem?.trackId) {
@@ -380,6 +445,7 @@ export class MusicManager {
     } else {
       this.audio.removeAttribute("src");
       this.audio.load();
+      this.currentItem = null;
     }
 
     this.updateMediaSession();
@@ -403,32 +469,80 @@ export class MusicManager {
     this.audio.pause();
   }
 
-  async addTracks(params: { clear?: boolean; trackId?: string }) {
-    /*
-    if (params.clear) {
-      await this.clearQueue(false);
+  async queueRequest(
+    request:
+      | { type: "addArtist"; artistId: string }
+      | { type: "addAlbum"; albumId: string }
+      | { type: "addPlaylist"; playlistId: string; filterId?: string },
+    options: {
+      shuffle?: boolean;
+      append?: "back";
+      queueIndexToTrackId?: string;
+    } = {},
+  ) {
+    let trackIds: string[] = [];
+
+    switch (request.type) {
+      case "addAlbum": {
+        const res = await this.apiClient.getAlbumTracks(request.albumId);
+        if (!res.success) {
+          handleApiError(res.error);
+          return;
+        }
+        trackIds = res.data.tracks.map((t) => t.id);
+        break;
+      }
+      case "addPlaylist": {
+        const res = await this.apiClient.getPlaylistItems(request.playlistId);
+        if (!res.success) {
+          handleApiError(res.error);
+          return;
+        }
+        trackIds = res.data.items.map((t) => t.id);
+        break;
+      }
+      case "addArtist":
+        // TODO: Backend does not yet have an artist tracks endpoint
+        console.error("queueRequest for artist not implemented");
+        return;
     }
 
-    const res = await this.apiClient.getMediaFromFilter({
-      filter: "",
-    });
-    if (!res.success) {
-      console.log("error getting media", res.error);
-      return;
-    }
+    if (trackIds.length === 0) return;
 
-    this.queue.items.push(...res.data.items);
-    if (params.trackId) {
-      this.queue.index = this.queue.items.findIndex(
-        (item) => item.trackId == params.trackId,
-      );
+    if (options.append === "back") {
+      const res = await this.apiClient.addQueueItems({
+        trackIds,
+        position: "end",
+      });
+      if (!res.success) {
+        handleApiError(res.error);
+        return;
+      }
     } else {
-      this.queue.index = 0;
-    }
-    this.queueUpdate();
+      let currentIndex = 0;
+      if (options.queueIndexToTrackId) {
+        const idx = trackIds.indexOf(options.queueIndexToTrackId);
+        if (idx !== -1) {
+          currentIndex = idx;
+        }
+      }
 
-    this.play();
-    */
+      const res = await this.apiClient.replaceQueue({
+        trackIds,
+        currentIndex,
+        shuffle: options.shuffle,
+      });
+      if (!res.success) {
+        handleApiError(res.error);
+        return;
+      }
+    }
+
+    await this.refreshQueue();
+
+    if (!options.append) {
+      this.play();
+    }
   }
 
   async addAlbumTracks(params: {
@@ -436,37 +550,42 @@ export class MusicManager {
     clear?: boolean;
     trackId?: string;
   }) {
-    if (params.clear) {
-      await this.clearQueue(false);
-    }
+    await this.queueRequest(
+      { type: "addAlbum", albumId: params.albumId },
+      {
+        queueIndexToTrackId: params.trackId,
+      },
+    );
+  }
 
-    const res = await this.apiClient.getAlbumTracks(params.albumId);
-    if (!res.success) {
-      console.log("error getting media", res.error);
+  async addTracks(params: {
+    trackIds?: string[];
+    trackId?: string;
+    clear?: boolean;
+  }) {
+    if (!params.trackIds || params.trackIds.length === 0) {
       return;
     }
 
-    const items: MediaItem[] = res.data.tracks.map(
-      (t) =>
-        ({
-          trackId: t.id,
-          name: t.name,
-          album: { id: t.albumId, name: t.albumName },
-          artists: t.artists.map((a) => ({ id: a.id, name: a.name })),
-          coverArt: t.coverArt.small,
-        }) as MediaItem,
-    );
-
-    this.queue.items.push(...items);
+    let currentIndex = 0;
     if (params.trackId) {
-      this.queue.index = this.queue.items.findIndex(
-        (item) => item.trackId == params.trackId,
-      );
-    } else {
-      this.queue.index = 0;
+      const idx = params.trackIds.indexOf(params.trackId);
+      if (idx !== -1) {
+        currentIndex = idx;
+      }
     }
-    this.queueUpdate();
 
+    const res = await this.apiClient.replaceQueue({
+      trackIds: params.trackIds,
+      currentIndex,
+      shuffle: false,
+    });
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
+    }
+
+    await this.refreshQueue();
     this.play();
   }
 }
