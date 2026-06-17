@@ -1,13 +1,45 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import TrackListItem from "$lib/components/track-list/TrackListItem.svelte";
-  import { Breadcrumb, Pagination, Separator } from "@nanoteck137/nano-ui";
+  import { Breadcrumb, Button, Select } from "@nanoteck137/nano-ui";
+  import { Play, Shuffle } from "lucide-svelte";
+  import TrackList from "$lib/components/track-list/TrackList.svelte";
+  import { getMusicManager } from "$lib/music-manager.svelte";
+  import Pagination from "$lib/components/Pagination.svelte";
 
-  const { data } = $props();
+  let { data } = $props();
+  const musicManager = getMusicManager();
+
+  const sortTypes = [
+    { label: "Name (A-Z)", value: "name-a-z" },
+    { label: "Name (Z-A)", value: "name-z-a" },
+    { label: "Artist", value: "artist" },
+    { label: "Album", value: "album" },
+    { label: "Duration", value: "duration" },
+    { label: "Year", value: "year" },
+    { label: "Added (New–Old)", value: "created-new" },
+    { label: "Added (Old-New)", value: "created-old" },
+  ] as const;
+
+  let sort = $state(
+    ($page.url.searchParams.get("sort") as (typeof sortTypes)[number]["value"]) ?? "name-a-z",
+  );
+
+  function updateSort(value: string) {
+    sort = value as (typeof sortTypes)[number]["value"];
+
+    const query = $page.url.searchParams;
+    query.delete("sort");
+
+    if (sort !== "name-a-z") {
+      query.set("sort", sort);
+    }
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
 </script>
 
-<div class="py-2">
+<div class="flex flex-col gap-4">
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
@@ -25,54 +57,69 @@
       </Breadcrumb.Item>
     </Breadcrumb.List>
   </Breadcrumb.Root>
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-baseline gap-2">
+      <h1 class="text-xl font-bold">Tracks</h1>
+      {#if data.page}
+        <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
+      {/if}
+    </div>
+
+    <div class="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onclick={async () => {
+          await musicManager.queueRequest(
+            { type: "addArtist", artistId: data.artist.id },
+            { shuffle: true },
+          );
+        }}
+      >
+        <Shuffle size={14} />
+        Shuffle
+      </Button>
+      <Button
+        size="sm"
+        onclick={async () => {
+          await musicManager.queueRequest(
+            { type: "addArtist", artistId: data.artist.id },
+            {},
+          );
+        }}
+      >
+        <Play size={14} />
+        Play All
+      </Button>
+    </div>
+
+    <Select.Root
+      type="single"
+      allowDeselect={false}
+      value={sort}
+      onValueChange={updateSort}
+    >
+      <Select.Trigger class="h-9 w-full sm:w-40">
+        {sortTypes.find((i) => i.value === sort)?.label ?? "Sort"}
+      </Select.Trigger>
+      <Select.Content>
+        {#each sortTypes as ty (ty.value)}
+          <Select.Item value={ty.value} label={ty.label} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
+  </div>
+
+  <TrackList
+    totalTracks={data.tracks.length}
+    tracks={data.tracks}
+    userPlaylists={data.userPlaylists}
+    quickPlaylist={data.user?.quickPlaylist}
+    onPlay={async (trackId) => {
+      // TODO: queue artist tracks and start from trackId
+    }}
+  />
+
+  <Pagination page={data.page} />
 </div>
-
-<p class="text-xl font-bold">Tracks</p>
-
-{#each data.tracks as track}
-  <TrackListItem {track} />
-  <Separator />
-{/each}
-
-<div class="h-8"></div>
-
-<Pagination.Root
-  page={data.page.page + 1}
-  count={data.page.totalItems}
-  perPage={data.page.perPage}
-  siblingCount={1}
-  onPageChange={(p) => {
-    const query = $page.url.searchParams;
-    query.set("page", (p - 1).toString());
-
-    goto(`?${query.toString()}`, { invalidateAll: true, keepFocus: true });
-  }}
->
-  {#snippet children({ pages, currentPage })}
-    <Pagination.Content>
-      <Pagination.Item>
-        <Pagination.PrevButton />
-      </Pagination.Item>
-      {#each pages as page (page.key)}
-        {#if page.type === "ellipsis"}
-          <Pagination.Item>
-            <Pagination.Ellipsis />
-          </Pagination.Item>
-        {:else}
-          <Pagination.Item>
-            <Pagination.Link
-              href="?page={page.value}"
-              {page}
-              isActive={currentPage === page.value}
-            >
-              {page.value}
-            </Pagination.Link>
-          </Pagination.Item>
-        {/if}
-      {/each}
-      <Pagination.Item>
-        <Pagination.NextButton />
-      </Pagination.Item>
-    </Pagination.Content>
-  {/snippet}
-</Pagination.Root>

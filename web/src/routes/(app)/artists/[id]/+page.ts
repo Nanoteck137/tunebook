@@ -8,7 +8,7 @@ export const load: PageLoad = async ({ parent, params }) => {
   const albums = await data.apiClient.getAlbums({
     query: {
       filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
-      perPage: "5",
+      perPage: "6",
     },
   });
   if (!albums.success) {

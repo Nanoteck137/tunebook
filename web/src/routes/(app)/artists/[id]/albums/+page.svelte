@@ -1,13 +1,42 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import AlbumListItem from "$lib/components/AlbumListItem.svelte";
-  import { Breadcrumb, Pagination } from "@nanoteck137/nano-ui";
+  import { Breadcrumb, Select } from "@nanoteck137/nano-ui";
+  import Image from "$lib/components/Image.svelte";
+  import Pagination from "$lib/components/Pagination.svelte";
 
-  const { data } = $props();
+  let { data } = $props();
+
+  const sortTypes = [
+    { label: "Name (A-Z)", value: "name-a-z" },
+    { label: "Name (Z-A)", value: "name-z-a" },
+    { label: "Year (New–Old)", value: "year-new" },
+    { label: "Year (Old-New)", value: "year-old" },
+    { label: "Created (New–Old)", value: "created-new" },
+    { label: "Created (Old-New)", value: "created-old" },
+    { label: "Updated (New–Old)", value: "updated-new" },
+    { label: "Updated (Old-New)", value: "updated-old" },
+  ] as const;
+
+  let sort = $state(
+    ($page.url.searchParams.get("sort") as (typeof sortTypes)[number]["value"]) ?? "name-a-z",
+  );
+
+  function updateSort(value: string) {
+    sort = value as (typeof sortTypes)[number]["value"];
+
+    const query = $page.url.searchParams;
+    query.delete("sort");
+
+    if (sort !== "name-a-z") {
+      query.set("sort", sort);
+    }
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
 </script>
 
-<div class="py-2">
+<div class="flex flex-col gap-4">
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
@@ -25,53 +54,54 @@
       </Breadcrumb.Item>
     </Breadcrumb.List>
   </Breadcrumb.Root>
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-baseline gap-2">
+      <h1 class="text-xl font-bold">Albums</h1>
+      {#if data.page}
+        <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
+      {/if}
+    </div>
+
+    <Select.Root
+      type="single"
+      allowDeselect={false}
+      value={sort}
+      onValueChange={updateSort}
+    >
+      <Select.Trigger class="h-9 w-full sm:w-40">
+        {sortTypes.find((i) => i.value === sort)?.label ?? "Sort"}
+      </Select.Trigger>
+      <Select.Content>
+        {#each sortTypes as ty (ty.value)}
+          <Select.Item value={ty.value} label={ty.label} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+    {#each data.albums as album}
+      <a
+        href="/albums/{album.id}"
+        class="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
+      >
+        <Image
+          class="aspect-square w-full rounded-none border-0"
+          src={album.coverArt.medium}
+          alt={album.name}
+        />
+        <div class="flex flex-col gap-0.5 p-2">
+          <p class="truncate text-sm font-medium group-hover:underline" title={album.name}>
+            {album.name}
+          </p>
+          <p class="truncate text-xs text-muted-foreground" title={album.artists.map((a) => a.name).join(", ")}>
+            {album.artists.map((a) => a.name).join(", ")}
+          </p>
+        </div>
+      </a>
+    {/each}
+  </div>
+
+  <Pagination page={data.page} />
 </div>
-
-<p class="text-xl font-bold">Albums</p>
-
-{#each data.albums as album}
-  <AlbumListItem {album} link />
-{/each}
-
-<div class="h-8"></div>
-
-<Pagination.Root
-  page={data.page.page + 1}
-  count={data.page.totalItems}
-  perPage={data.page.perPage}
-  siblingCount={1}
-  onPageChange={(p) => {
-    const query = $page.url.searchParams;
-    query.set("page", (p - 1).toString());
-
-    goto(`?${query.toString()}`, { invalidateAll: true, keepFocus: true });
-  }}
->
-  {#snippet children({ pages, currentPage })}
-    <Pagination.Content>
-      <Pagination.Item>
-        <Pagination.PrevButton />
-      </Pagination.Item>
-      {#each pages as page (page.key)}
-        {#if page.type === "ellipsis"}
-          <Pagination.Item>
-            <Pagination.Ellipsis />
-          </Pagination.Item>
-        {:else}
-          <Pagination.Item>
-            <Pagination.Link
-              href="?page={page.value}"
-              {page}
-              isActive={currentPage === page.value}
-            >
-              {page.value}
-            </Pagination.Link>
-          </Pagination.Item>
-        {/if}
-      {/each}
-      <Pagination.Item>
-        <Pagination.NextButton />
-      </Pagination.Item>
-    </Pagination.Content>
-  {/snippet}
-</Pagination.Root>
