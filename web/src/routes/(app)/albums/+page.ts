@@ -100,26 +100,13 @@ export const load: PageLoad = async ({ parent, url }) => {
   let albums: Album[] = [];
   let page: Page | null = null;
 
-  const q = url.searchParams.get("query");
-  if (q) {
-    const res = await data.apiClient.searchAlbums({
-      query: { ...query, query: q, perPage: "2" },
-    });
-    if (!res.success) {
-      throw error(res.error.code, { message: res.error.message });
-    }
-
-    albums = res.data.albums;
-    page = res.data.page;
-  } else {
-    const res = await data.apiClient.getAlbums({ query });
-    if (!res.success) {
-      throw error(res.error.code, { message: res.error.message });
-    }
-
-    albums = res.data.albums;
-    page = res.data.page;
+  const res = await data.apiClient.getAlbums({ query });
+  if (!res.success) {
+    throw error(res.error.code, { message: res.error.message });
   }
+
+  albums = res.data.albums;
+  page = res.data.page;
 
   return {
     ...data,
