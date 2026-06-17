@@ -15,6 +15,3 @@ CREATE TABLE track_history (
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
 );
-
--- +goose Down
-DROP TABLE track_history;

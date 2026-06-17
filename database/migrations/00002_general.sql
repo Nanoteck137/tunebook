@@ -82,28 +82,3 @@ CREATE TABLE tracks_tags (
 
     PRIMARY KEY(track_id, tag_slug)
 );
-
--- +goose Down
-DROP TABLE api_tokens; 
-
-DROP TABLE taglists; 
-DROP TABLE playlist_items; 
-DROP TABLE playlists; 
-
-DROP TABLE users_settings; 
-DROP TABLE users; 
-
-DROP TABLE tracks_tags; 
-DROP TABLE albums_tags ; 
-DROP TABLE artists_tags ; 
-DROP TABLE tags; 
-
-DROP TABLE tracks_featuring_artists; 
-DROP TABLE tracks_media; 
-DROP TABLE tracks; 
-
-DROP TABLE albums_featuring_artists; 
-DROP TABLE albums; 
-
-DROP TABLE artists; 
-
