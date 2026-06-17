@@ -1,40 +1,44 @@
 <script lang="ts">
-  import Slider from "$lib/components/SeekSlider.svelte";
+  import SeekSlider from "$lib/components/SeekSlider.svelte";
   import { Button, ScrollArea, Separator, Sheet } from "@nanoteck137/nano-ui";
   import { formatTime } from "$lib/utils";
   import {
     ListX,
-    Logs,
+    ListMusic,
     Pause,
     Play,
     SkipBack,
     SkipForward,
     Volume2,
     VolumeX,
+    X,
+    Music2,
   } from "lucide-svelte";
   import { getMusicManager, type MediaItem } from "$lib/music-manager.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import Image from "$lib/components/Image.svelte";
-  import { getApiClient } from "$lib";
 
   const musicManager = getMusicManager();
-  const apiClient = getApiClient();
 
   let currentMediaItem = $state<MediaItem | null>(null);
 
   $effect(() => {
     currentMediaItem = musicManager.queue.getCurrentMediaItem();
   });
+
+  let previousItems = $derived(musicManager.queue.getPreviousItems());
+  let currentQueueItem = $derived(musicManager.queue.getCurrentItem());
+  let nextItems = $derived(musicManager.queue.getNextItems());
 </script>
 
 {#snippet queueSheet()}
   <Sheet.Root>
     <Sheet.Trigger>
-      <Logs size="24" />
+      <ListMusic size="20" />
     </Sheet.Trigger>
     <Sheet.Content side="right">
-      <div class="flex items-center gap-2 pb-2">
-        <p>Queue</p>
+      <div class="flex items-center justify-between pb-4">
+        <p class="text-base font-semibold">Queue</p>
         <Button
           class="rounded-full"
           variant="ghost"
@@ -48,49 +52,152 @@
       </div>
 
       <ScrollArea class="h-full pb-6">
-        <div class="mr-3 flex flex-col gap-2">
-          {#each musicManager.queue.items as mediaItem, i}
-            <div
-              class={`flex items-center gap-2 rounded p-1 ${musicManager.queue.index === i ? "bg-accent text-accent-foreground" : ""}`}
-            >
-              <div class="group relative">
-                <Image
-                  class="w-12 min-w-12"
-                  src={mediaItem?.coverArt}
-                  alt="cover"
-                />
-                {#if i == musicManager.queue.index}
+        <div class="mr-3 flex flex-col gap-3">
+          <!-- Played -->
+          {#if previousItems.length > 0}
+            <div>
+              <p
+                class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
+                Played
+              </p>
+              <div class="flex flex-col gap-1">
+                {#each previousItems as mediaItem, i (mediaItem.trackId)}
+                  {@const queueIndex = i}
                   <div
-                    class="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center rounded border bg-muted/80"
+                    class="group flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent/50"
                   >
-                    <Play class="text-muted-foreground" size="25" />
+                    <button
+                      class="shrink-0"
+                      onclick={async () => {
+                        await musicManager.setQueueIndex(queueIndex);
+                        musicManager.play();
+                      }}
+                    >
+                      <Image
+                        class="w-10 min-w-10 rounded"
+                        src={mediaItem.coverArt}
+                        alt="cover"
+                      />
+                    </button>
+                    <div class="flex min-w-0 flex-1 flex-col">
+                      <p
+                        class="truncate text-sm font-medium"
+                        title={mediaItem.name}
+                      >
+                        {mediaItem.name}
+                      </p>
+                      <p class="truncate text-xs text-muted-foreground">
+                        {#each mediaItem.artists as artist, j}
+                          {#if j > 0},
+                          {/if}{artist.name}
+                        {/each}
+                      </p>
+                    </div>
                   </div>
-                {:else}
-                  <button
-                    class={`absolute bottom-0 left-0 right-0 top-0 hidden items-center justify-center rounded border bg-muted/80 group-hover:flex`}
-                    onclick={async () => {
-                      await musicManager.setQueueIndex(i);
-                      musicManager.play();
-                    }}
-                  >
-                    <Play class="text-muted-foreground" size="25" />
-                  </button>
-                {/if}
-              </div>
-              <div class="flex flex-col">
-                <p class="line-clamp-1 text-sm" title={mediaItem?.name}>
-                  {mediaItem?.name}
-                </p>
-                <p
-                  class="line-clamp-1 text-xs font-light"
-                  title={mediaItem?.artists[0].name}
-                >
-                  {mediaItem?.artists[0].name}
-                </p>
+                {/each}
               </div>
             </div>
-            <Separator />
-          {/each}
+          {/if}
+
+          <!-- Now Playing -->
+          {#if currentQueueItem}
+            <div>
+              <p
+                class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
+                Now Playing
+              </p>
+              <div class="flex items-center gap-3 rounded-md bg-accent/50 p-3">
+                <div class="relative shrink-0">
+                  <Image
+                    class="w-12 min-w-12 rounded"
+                    src={currentQueueItem.coverArt}
+                    alt="cover"
+                  />
+                  <div
+                    class="absolute inset-0 flex items-center justify-center"
+                  >
+                    <Music2 class="text-primary" size="16" />
+                  </div>
+                </div>
+                <div class="flex min-w-0 flex-col">
+                  <p class="truncate text-sm font-medium" title={currentQueueItem.name}>
+                    {currentQueueItem.name}
+                  </p>
+                  <p class="truncate text-xs text-muted-foreground">
+                    {#each currentQueueItem.artists as artist, j}
+                      {#if j > 0},
+                      {/if}{artist.name}
+                    {/each}
+                  </p>
+                </div>
+              </div>
+            </div>
+          {/if}
+
+          <!-- Next in queue -->
+          {#if nextItems.length > 0}
+            <div>
+              <p
+                class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
+                Next in queue
+              </p>
+              <div class="flex flex-col gap-1">
+                {#each nextItems as mediaItem, i (mediaItem.trackId)}
+                  {@const queueIndex = musicManager.queue.index + 1 + i}
+                  <div
+                    class="group flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent/50"
+                  >
+                    <span
+                      class="w-5 text-right text-xs tabular-nums text-muted-foreground"
+                      >{i + 1}</span
+                    >
+                    <button
+                      class="shrink-0"
+                      onclick={async () => {
+                        await musicManager.setQueueIndex(queueIndex);
+                        musicManager.play();
+                      }}
+                    >
+                      <Image
+                        class="w-10 min-w-10 rounded"
+                        src={mediaItem.coverArt}
+                        alt="cover"
+                      />
+                    </button>
+                    <div class="flex min-w-0 flex-1 flex-col">
+                      <p
+                        class="truncate text-sm font-medium"
+                        title={mediaItem.name}
+                      >
+                        {mediaItem.name}
+                      </p>
+                      <p class="truncate text-xs text-muted-foreground">
+                        {#each mediaItem.artists as artist, j}
+                          {#if j > 0},
+                          {/if}{artist.name}
+                        {/each}
+                      </p>
+                    </div>
+                    <button
+                      class="shrink-0 rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+                      onclick={() => musicManager.removeQueueItem(queueIndex)}
+                    >
+                      <X size="14" />
+                    </button>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if !currentQueueItem}
+            <p class="py-8 text-center text-sm text-muted-foreground">
+              Queue is empty
+            </p>
+          {/if}
         </div>
       </ScrollArea>
     </Sheet.Content>
@@ -98,128 +205,133 @@
 {/snippet}
 
 <div
-  class="container z-30 hidden h-16 bg-background text-foreground transition-transform duration-500 md:block"
+  class="container relative z-30 hidden h-[72px] border-t bg-background md:block"
 >
-  <div class="absolute -top-1.5 left-0 right-0">
-    <Slider
-      value={musicManager.currentTime / musicManager.duration}
+  <div class="absolute -top-1.5 left-0 right-0 px-0">
+    <SeekSlider
+      value={Number.isNaN(musicManager.duration)
+        ? 0
+        : musicManager.currentTime / musicManager.duration}
       onValue={(p) => {
         musicManager.setPosition(p * musicManager.duration);
-        // onSeek(p * musicManager.duration);
       }}
+      buffered={musicManager.buffered}
     />
   </div>
 
-  <div class="grid h-full grid-cols-footer">
-    <div class="flex items-center gap-2">
-      <div class="flex items-center gap-2">
-        <!-- <button
-          onclick={async () => {
-            if (!mediaItem) return;
-
-            const res = await apiClient.recordTrack(mediaItem.track.id, {
-              source: "unknown",
-              duration: currentTime,
-            });
-            if (!res.success) {
-              return handleApiError(res.error);
-            }
-
-            toast.success("Recorded track");
-          }}
-        >
-          <TestTube size={32} />
-        </button> -->
-
-        <button
-          onclick={() => {
-            musicManager.previousTrack();
-          }}
-        >
-          <SkipBack size={32} />
-        </button>
-
-        {#if musicManager.loading}
-          <Spinner class="h-8 w-8" />
-        {:else if musicManager.playing}
-          <button
-            onclick={() => {
-              musicManager.pause();
-            }}
-          >
-            <Pause size={32} />
-          </button>
-        {:else}
-          <button
-            onclick={() => {
-              musicManager.play();
-            }}
-          >
-            <Play size={32} />
-          </button>
-        {/if}
-
-        <button
-          onclick={() => {
-            musicManager.nextTrack();
-          }}
-        >
-          <SkipForward size={32} />
-        </button>
-      </div>
-
-      <p class="hidden min-w-20 text-xs font-medium lg:block">
-        {formatTime(musicManager.currentTime)} /{" "}
-        {formatTime(
-          Number.isNaN(musicManager.duration) ? 0 : musicManager.duration,
-        )}
-      </p>
-
-      <div class="flex items-center justify-center gap-2 align-middle">
+  <div class="flex h-full items-center justify-between gap-4">
+    <!-- Left: Track info -->
+    <div class="flex min-w-0 basis-1/4 items-center gap-3">
+      <a
+        href={currentMediaItem ? `/albums/${currentMediaItem.album.id}` : "#"}
+        class="shrink-0"
+      >
         <Image
           class="w-12 min-w-12"
           src={currentMediaItem?.coverArt}
           alt="cover"
           loading="eager"
         />
-        <div class="flex flex-col">
-          <p
-            class="line-clamp-1 text-ellipsis text-sm"
-            title={currentMediaItem?.name}
-          >
-            {currentMediaItem?.name}
-          </p>
-
-          <p class="line-clamp-1 min-w-80 text-ellipsis text-xs">
-            {currentMediaItem?.artists[0].name}
-          </p>
-        </div>
+      </a>
+      <div class="flex min-w-0 flex-col">
+        <a
+          href={currentMediaItem
+            ? `/albums/${currentMediaItem.album.id}`
+            : "#"}
+          class="truncate text-sm font-medium hover:underline"
+          title={currentMediaItem?.name}
+        >
+          {currentMediaItem?.name ?? "No track playing"}
+        </a>
+        <p class="truncate text-xs text-muted-foreground">
+          {#if currentMediaItem}
+            {#each currentMediaItem.artists as artist, i}
+              {#if i > 0},
+              {/if}
+              <a href="/artists/{artist.id}" class="hover:underline"
+                >{artist.name}</a
+              >
+            {/each}
+          {/if}
+        </p>
       </div>
     </div>
 
-    <div class="flex items-center justify-evenly">
-      <div class="flex w-full items-center gap-4 p-4">
-        <Slider
-          value={musicManager.volume}
-          onValue={(p) => {
-            // musicManager.set
-            // onVolumeChanged(p);
-          }}
-        />
+    <!-- Center: Controls + time -->
+    <div class="flex flex-col items-center gap-0.5">
+      <div class="flex items-center gap-3">
         <button
-          onclick={() => {
-            // onToggleMuted();
-          }}
+          class="text-muted-foreground transition-colors hover:text-foreground"
+          onclick={() => musicManager.previousTrack()}
         >
-          {#if musicManager.muted}
-            <VolumeX size="25" />
-          {:else}
-            <Volume2 size="25" />
-          {/if}
+          <SkipBack size="20" />
         </button>
 
-        {@render queueSheet()}
+        {#if musicManager.loading}
+          <Spinner class="h-8 w-8" />
+        {:else if musicManager.playing}
+          <button
+            class="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background transition-colors hover:scale-105"
+            onclick={() => musicManager.pause()}
+          >
+            <Pause size="18" />
+          </button>
+        {:else}
+          <button
+            class="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background transition-colors hover:scale-105"
+            onclick={() => musicManager.play()}
+          >
+            <Play size="18" />
+          </button>
+        {/if}
+
+        <button
+          class="text-muted-foreground transition-colors hover:text-foreground"
+          onclick={() => musicManager.nextTrack()}
+        >
+          <SkipForward size="20" />
+        </button>
       </div>
+
+      <div class="flex items-center gap-1 text-xs text-muted-foreground">
+        <span class="min-w-[32px] text-right tabular-nums"
+          >{formatTime(musicManager.currentTime)}</span
+        >
+        <span class="text-[10px]">/</span>
+        <span class="min-w-[32px] text-left tabular-nums"
+          >{formatTime(
+            Number.isNaN(musicManager.duration) ? 0 : musicManager.duration,
+          )}</span
+        >
+      </div>
+    </div>
+
+    <!-- Right: Volume + Queue -->
+    <div class="flex basis-1/4 items-center justify-end gap-2">
+      <button
+        class="text-muted-foreground transition-colors hover:text-foreground"
+        onclick={() => {
+          musicManager.muted = !musicManager.muted;
+        }}
+      >
+        {#if musicManager.muted || musicManager.volume === 0}
+          <VolumeX size="20" />
+        {:else}
+          <Volume2 size="20" />
+        {/if}
+      </button>
+
+      <SeekSlider
+        class="w-24"
+        growOnHover={false}
+        value={musicManager.muted ? 0 : musicManager.volume}
+        onValue={(p) => {
+          musicManager.volume = p;
+          musicManager.muted = p === 0;
+        }}
+      />
+
+      {@render queueSheet()}
     </div>
   </div>
 </div>

@@ -1,6 +1,5 @@
 <script lang="ts">
   import LargePlayer from "$lib/components/audio/LargePlayer.svelte";
-  import SmallPlayer from "$lib/components/audio/SmallPlayer.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
 
   const musicManager = getMusicManager();
@@ -70,5 +69,4 @@
 
 {#if musicManager.showPlayer}
   <LargePlayer />
-  <SmallPlayer />
 {/if}

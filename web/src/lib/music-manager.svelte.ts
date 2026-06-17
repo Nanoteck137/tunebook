@@ -34,6 +34,18 @@ class Queue {
     return this.items[this.index];
   }
 
+  getPreviousItems() {
+    return this.items.slice(0, this.index);
+  }
+
+  getCurrentItem() {
+    return this.getCurrentMediaItem();
+  }
+
+  getNextItems() {
+    return this.items.slice(this.index + 1);
+  }
+
   isEndOfQueue() {
     return this.index >= this.items.length - 1;
   }
@@ -53,6 +65,19 @@ class Queue {
     }
 
     this.index = index;
+
+    this.saveQueue();
+  }
+
+  removeItem(index: number) {
+    if (index < 0 || index >= this.items.length) return;
+
+    this.items.splice(index, 1);
+    if (index < this.index) {
+      this.index--;
+    } else if (index === this.index) {
+      this.index = Math.min(this.index, this.items.length - 1);
+    }
 
     this.saveQueue();
   }
@@ -112,9 +137,30 @@ export class MusicManager {
 
   currentTime = $state(0);
   duration = $state(0);
+  buffered = $state(0);
 
-  volume = $state(getVolume());
-  muted = $state(getMuted());
+  #volume = $state(getVolume());
+  #muted = $state(getMuted());
+
+  get volume() {
+    return this.#volume;
+  }
+
+  set volume(v: number) {
+    this.#volume = v;
+    this.audio.volume = v;
+    localStorage.setItem("player-volume", v.toString());
+  }
+
+  get muted() {
+    return this.#muted;
+  }
+
+  set muted(m: boolean) {
+    this.#muted = m;
+    this.audio.volume = m ? 0 : this.#volume;
+    localStorage.setItem("player-muted", m.toString());
+  }
 
   showPlayer = $state(false);
 
@@ -133,12 +179,6 @@ export class MusicManager {
 
     this.volume = getVolume();
     this.muted = getMuted();
-
-    if (this.muted) {
-      this.audio.volume = 0.0;
-    } else {
-      this.audio.volume = this.volume;
-    }
 
     /*
     this.queue.loadQueue(async (ids) => {
@@ -179,7 +219,11 @@ export class MusicManager {
     });
 
     this.audio.addEventListener("progress", () => {
-      // console.log("progress");
+      const tr = this.audio.buffered;
+      if (tr.length > 0) {
+        const end = tr.end(tr.length - 1);
+        this.buffered = this.duration > 0 ? end / this.duration : 0;
+      }
     });
 
     this.audio.addEventListener("timeupdate", () => {
@@ -297,6 +341,11 @@ export class MusicManager {
 
   setPosition(position: number) {
     this.audio.currentTime = position;
+  }
+
+  removeQueueItem(index: number) {
+    this.queue.removeItem(index);
+    this.queueUpdate();
   }
 
   async clearQueue(update = true) {

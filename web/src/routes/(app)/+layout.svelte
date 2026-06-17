@@ -14,6 +14,8 @@
     Users,
   } from "lucide-svelte";
   import AudioPlayer from "$lib/components/audio/AudioPlayer.svelte";
+  import MobilePlayer from "$lib/components/audio/MobilePlayer.svelte";
+  import { getMusicManager } from "$lib/music-manager.svelte";
   import Link from "$lib/components/Link.svelte";
   import { browser } from "$app/environment";
   import { fade, fly } from "svelte/transition";
@@ -232,6 +234,10 @@
 <main class="container px-4 py-4 sm:px-8">
   {@render children()}
 </main>
+
+{#if getMusicManager().showPlayer}
+  <MobilePlayer />
+{/if}
 
 <footer class="fixed bottom-0 z-40 w-full">
   <AudioPlayer />
