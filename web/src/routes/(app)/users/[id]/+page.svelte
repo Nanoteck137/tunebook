@@ -1,6 +1,13 @@
 <script lang="ts">
   import { Card, Separator } from "@nanoteck137/nano-ui";
-  import { BarChart3, Clock, Heart, ListMusic, Play, TrendingUp } from "lucide-svelte";
+  import {
+    BarChart3,
+    Clock,
+    Heart,
+    ListMusic,
+    Play,
+    TrendingUp,
+  } from "lucide-svelte";
   import type { Track } from "$lib/api/types";
   import TrackListItem from "$lib/components/track-list/TrackListItem.svelte";
 
@@ -12,15 +19,33 @@
 
   let { data } = $props();
 
-  let favoriteCount = $derived(
-    data.userData.id === data.user?.id ? data.favoriteIds.length.toString() : "—",
-  );
+  let favoriteCount = $derived("—");
 
   let stats = $derived([
-    { icon: Play, label: "Tracks Played", value: "—", note: "not yet tracked" },
-    { icon: Clock, label: "Listening Time", value: "—", note: "not yet tracked" },
-    { icon: ListMusic, label: "Playlists", value: "—", note: "not yet tracked" },
-    { icon: Heart, label: "Favorites", value: favoriteCount, note: "" },
+    {
+      icon: Play,
+      label: "Tracks Played",
+      value: "—",
+      note: "not yet tracked",
+    },
+    {
+      icon: Clock,
+      label: "Listening Time",
+      value: "—",
+      note: "not yet tracked",
+    },
+    {
+      icon: ListMusic,
+      label: "Playlists",
+      value: "—",
+      note: "not yet tracked",
+    },
+    {
+      icon: Heart,
+      label: "Favorites",
+      value: favoriteCount,
+      note: "not yet tracked",
+    },
   ]);
 
   // TODO: Replace with API data when available
@@ -111,7 +136,9 @@
     { year: 2023, trackCount: 4215, listeningTime: 261900 },
   ];
 
-  let maxTrackCount = $derived(Math.max(...yearStats.map((y) => y.trackCount)));
+  let maxTrackCount = $derived(
+    Math.max(...yearStats.map((y) => y.trackCount)),
+  );
 
   function formatListeningTime(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
@@ -168,7 +195,8 @@
         <h2 class="text-lg font-semibold">Top Tracks</h2>
       </div>
       <p class="mt-1 text-sm text-muted-foreground">
-        This section will show the tracks {data.userData.displayName} listens to the most.
+        This section will show the tracks {data.userData.displayName} listens to
+        the most.
       </p>
 
       <Separator class="my-4" />
@@ -202,7 +230,9 @@
           >
             <span class="w-12 text-sm font-medium">{stat.year}</span>
             <div class="flex flex-1 flex-col gap-1">
-              <div class="flex items-center justify-between text-xs text-muted-foreground">
+              <div
+                class="flex items-center justify-between text-xs text-muted-foreground"
+              >
                 <span>{stat.trackCount.toLocaleString()} tracks</span>
                 <span>{formatListeningTime(stat.listeningTime)}</span>
               </div>
