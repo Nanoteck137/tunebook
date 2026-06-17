@@ -1,8 +1,10 @@
 import type { ApiClient } from "$lib/api/client";
 import type { PageLoad } from "./$types";
 
-async function getPlaylists(apiClient: ApiClient) {
-  const res = await apiClient.getPlaylists();
+async function getPlaylists(apiClient: ApiClient, userId?: string) {
+  const res = await apiClient.getPlaylists({
+    query: { filter: `ownerId == "${userId}"` },
+  });
   if (!res.success) {
     return [];
   }
@@ -39,7 +41,7 @@ export const load: PageLoad = async ({ parent }) => {
 
   return {
     ...data,
-    playlists: getPlaylists(data.apiClient),
+    playlists: getPlaylists(data.apiClient, data.user?.id),
     recentAlbums: getRecentAlbums(data.apiClient),
     favorites: getFavorites(data.apiClient, data.user?.id),
   };
