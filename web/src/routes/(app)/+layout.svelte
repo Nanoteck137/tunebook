@@ -24,7 +24,10 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
   import { setFavorites } from "$lib/favorites.svelte";
-  import { initPlaylistModalManager, showPlaylistModal } from "$lib/playlist-modal.svelte";
+  import {
+    initPlaylistModalManager,
+    showPlaylistModal,
+  } from "$lib/playlist-modal.svelte";
   import PlaylistSelectorModal from "$lib/components/new-modals/PlaylistSelectorModal.svelte";
   import { isRoleAdmin } from "$lib/utils.js";
   import { page } from "$app/state";
@@ -74,7 +77,7 @@
 <header
   class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 >
-  <div class="container flex h-14 max-w-screen-2xl items-center gap-4">
+  <div class="container flex h-14 max-w-screen-2xl items-center gap-4 px-4">
     <button
       onclick={() => {
         showSideMenu = true;
@@ -95,7 +98,9 @@
         <button
           class={buttonVariants({ variant: "ghost", size: "icon" })}
           onclick={async () => {
-            const id = await showPlaylistModal({ selectedId: data.user?.quickPlaylist ?? undefined });
+            const id = await showPlaylistModal({
+              selectedId: data.user?.quickPlaylist ?? undefined,
+            });
             if (!id) return;
 
             const res = await apiClient.setQuickPlaylist({
@@ -177,7 +182,7 @@
   </div>
 </header>
 
-<main class="container py-8">
+<main class="container px-4 py-4">
   {@render children()}
 </main>
 
