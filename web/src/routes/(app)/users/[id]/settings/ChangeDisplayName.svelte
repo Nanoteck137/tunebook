@@ -39,28 +39,25 @@
   const { form, errors, enhance, submitting } = f;
 </script>
 
-<div class="flex flex-col items-center gap-4 border-b p-6">
-  <h2 class="text-bold text-center text-xl">Change Display Name</h2>
+<form class="flex flex-col gap-4" use:enhance>
+  <FormItem>
+    <Label for="displayName">Display Name</Label>
+    <Input
+      id="displayName"
+      name="displayName"
+      type="text"
+      class="max-w-sm"
+      bind:value={$form.displayName}
+    />
+    <Errors errors={$errors.displayName} />
+  </FormItem>
 
-  <form class="flex w-full flex-col gap-4 sm:max-w-[460px]" use:enhance>
-    <FormItem>
-      <Label for="displayName">Display Name</Label>
-      <Input
-        id="displayName"
-        name="displayName"
-        type="text"
-        bind:value={$form.displayName}
-      />
-      <Errors errors={$errors.displayName} />
-    </FormItem>
-
-    <div class="flex flex-col justify-end sm:flex-row">
-      <Button type="submit" disabled={$submitting}>
-        Update Display Name
-        {#if $submitting}
-          <Spinner />
-        {/if}
-      </Button>
-    </div>
-  </form>
-</div>
+  <div>
+    <Button type="submit" disabled={$submitting}>
+      Update
+      {#if $submitting}
+        <Spinner />
+      {/if}
+    </Button>
+  </div>
+</form>
