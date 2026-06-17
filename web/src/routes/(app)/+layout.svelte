@@ -19,30 +19,30 @@
   import { fade, fly } from "svelte/transition";
   import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
   import toast, { Toaster } from "svelte-5-french-toast";
-  import { handleApiError, setApiClientRaw } from "$lib";
+  import { getApiAddress, handleApiError, setApiClient } from "$lib";
   import { setMusicManager } from "$lib/music-manager.svelte";
   import { goto, invalidateAll } from "$app/navigation";
   import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
   import { setFavorites } from "$lib/favorites.svelte";
   import { isRoleAdmin } from "$lib/utils.js";
+  import { page } from "$app/state";
 
   let { children, data } = $props();
 
-  let apiClient = setApiClientRaw(data.apiClient);
+  let apiClient = setApiClient(
+    getApiAddress(page.url),
+    localStorage.getItem("token") ?? undefined,
+  );
 
   setMusicManager(apiClient);
 
-  let favorites = setFavorites(apiClient, data.favoriteIds);
+  setFavorites(apiClient);
 
   let quickPlaylist = setQuickPlaylist(apiClient);
 
   $effect(() => {
     quickPlaylist.setPlaylistId(data.user?.quickPlaylist ?? null);
-  });
-
-  $effect(() => {
-    favorites.ids = data.favoriteIds;
   });
 
   let showSideMenu = $state(false);

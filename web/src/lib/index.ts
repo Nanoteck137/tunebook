@@ -1,8 +1,18 @@
 // place files you want to import through the `$lib` alias in this folder.
 
+import { PUBLIC_API_ADDRESS } from "$env/static/public";
 import { ApiClient } from "$lib/api/client";
 import { getContext, setContext } from "svelte";
 import toast from "svelte-5-french-toast";
+
+export function getApiAddress(url: URL) {
+  let res = PUBLIC_API_ADDRESS;
+  if (res === "") {
+    res = url.origin;
+  }
+
+  return res;
+}
 
 export function handleApiError(err: {
   code: number;

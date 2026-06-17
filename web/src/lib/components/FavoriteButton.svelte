@@ -22,6 +22,7 @@
       favorites.toggleTrack(trackId);
     }}
     title="Favorite"
+    disabled={favorites.loading}
   >
     {#if favorites.hasTrack(trackId)}
       <Heart class="fill-primary" />

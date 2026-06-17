@@ -1,5 +1,4 @@
-import { PUBLIC_API_ADDRESS } from "$env/static/public";
-import { setApiClientAuth } from "$lib";
+import { getApiAddress, setApiClientAuth } from "$lib";
 import { ApiClient } from "$lib/api/client";
 import type { GetMe, Playlist } from "$lib/api/types";
 import { error } from "@sveltejs/kit";
@@ -9,14 +8,7 @@ export const prerender = false;
 export const ssr = false;
 
 export const load: LayoutLoad = async ({ url }) => {
-  console.log("LAYOUT");
-
-  let addr = PUBLIC_API_ADDRESS;
-  if (addr === "") {
-    addr = url.origin;
-  }
-
-  const apiClient = new ApiClient(addr);
+  const apiClient = new ApiClient(getApiAddress(url));
   const token = localStorage.getItem("token") ?? undefined;
   setApiClientAuth(apiClient, token);
 

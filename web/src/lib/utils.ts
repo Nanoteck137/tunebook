@@ -1,4 +1,3 @@
-import type { CheckedValue } from "$lib/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -55,14 +54,6 @@ export function getPagedQueryOptions(searchParams: URLSearchParams) {
   }
 
   return query;
-}
-
-export function convertValue<T>(val: CheckedValue<T>): T | undefined {
-  if (val.checked) {
-    return val.value;
-  }
-
-  return undefined;
 }
 
 export function sleep(ms: number): Promise<void> {

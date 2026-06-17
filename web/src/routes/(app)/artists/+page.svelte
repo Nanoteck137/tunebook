@@ -1,19 +1,16 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
-  import { getApiClient } from "$lib";
   import { Artist } from "$lib/api/types";
   import Image from "$lib/components/Image.svelte";
+  import Pagination from "$lib/components/Pagination.svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
   import { cn } from "$lib/utils";
   import {
-    Button,
     buttonVariants,
     DropdownMenu,
-    Input,
-    Pagination,
     Separator,
   } from "@nanoteck137/nano-ui";
-  import { EllipsisVertical, Filter, Users } from "lucide-svelte";
+  import { EllipsisVertical, Users } from "lucide-svelte";
 
   let { data } = $props();
 </script>
@@ -115,45 +112,6 @@
   {/each}
 </div>
 
-<div class="h-4"></div>
+<Spacer size="lg" />
 
-<Pagination.Root
-  page={data.page.page + 1}
-  count={data.page.totalItems}
-  perPage={data.page.perPage}
-  siblingCount={1}
-  onPageChange={(p) => {
-    const query = $page.url.searchParams;
-    query.set("page", (p - 1).toString());
-
-    goto(`?${query.toString()}`, { invalidateAll: true, keepFocus: true });
-  }}
->
-  {#snippet children({ pages, currentPage })}
-    <Pagination.Content>
-      <Pagination.Item>
-        <Pagination.PrevButton />
-      </Pagination.Item>
-      {#each pages as page (page.key)}
-        {#if page.type === "ellipsis"}
-          <Pagination.Item>
-            <Pagination.Ellipsis />
-          </Pagination.Item>
-        {:else}
-          <Pagination.Item>
-            <Pagination.Link
-              href="?page={page.value}"
-              {page}
-              isActive={currentPage === page.value}
-            >
-              {page.value}
-            </Pagination.Link>
-          </Pagination.Item>
-        {/if}
-      {/each}
-      <Pagination.Item>
-        <Pagination.NextButton />
-      </Pagination.Item>
-    </Pagination.Content>
-  {/snippet}
-</Pagination.Root>
+<Pagination page={data.page} />

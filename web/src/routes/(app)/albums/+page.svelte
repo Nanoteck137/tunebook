@@ -74,12 +74,10 @@
   {/each}
 </div>
 
-{#if data.page}
-  <Spacer size="lg" />
+<Spacer size="lg" />
 
-  <Separator />
+<Separator />
 
-  <Spacer size="lg" />
+<Spacer size="lg" />
 
-  <Pagination page={data.page} />
-{/if}
+<Pagination page={data.page} />
