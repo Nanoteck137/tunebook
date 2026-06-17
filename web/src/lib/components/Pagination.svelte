@@ -3,6 +3,7 @@
   import { page } from "$app/stores";
   import type { Page } from "$lib/api/types";
   import { Pagination } from "@nanoteck137/nano-ui";
+  import { ChevronLeft, ChevronRight } from "lucide-svelte";
 
   type Props = {
     page: Page;
@@ -15,7 +16,7 @@
   page={pageInfo.page + 1}
   count={pageInfo.totalItems}
   perPage={pageInfo.perPage}
-  siblingCount={1}
+  siblingCount={0}
   onPageChange={(p) => {
     const query = $page.url.searchParams;
     query.set("page", (p - 1).toString());
@@ -24,9 +25,14 @@
   }}
 >
   {#snippet children({ pages, currentPage })}
-    <Pagination.Content>
+    <Pagination.Content class="overflow-x-auto">
       <Pagination.Item>
-        <Pagination.PrevButton class="w-28 justify-end" />
+        <Pagination.PrevButton class="w-10 sm:w-20">
+          {#snippet children()}
+            <ChevronLeft size={16} />
+            <span class="hidden sm:inline">Previous</span>
+          {/snippet}
+        </Pagination.PrevButton>
       </Pagination.Item>
       {#each pages as page (page.key)}
         {#if page.type === "ellipsis"}
@@ -46,7 +52,12 @@
         {/if}
       {/each}
       <Pagination.Item>
-        <Pagination.NextButton class="w-28 justify-start" />
+        <Pagination.NextButton class="w-10 sm:w-20">
+          {#snippet children()}
+            <span class="hidden sm:inline">Next</span>
+            <ChevronRight size={16} />
+          {/snippet}
+        </Pagination.NextButton>
       </Pagination.Item>
     </Pagination.Content>
   {/snippet}
