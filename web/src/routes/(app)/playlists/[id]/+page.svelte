@@ -3,29 +3,39 @@
   import { page } from "$app/stores";
   import { getApiClient, handleApiError } from "$lib";
   import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
-  import Spacer from "$lib/components/Spacer.svelte";
+  import Image from "$lib/components/Image.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
-  import TrackListHeader from "$lib/components/track-list/TrackListHeader.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte.js";
   import {
     Breadcrumb,
     Button,
+    buttonVariants,
     DropdownMenu,
     Pagination,
   } from "@nanoteck137/nano-ui";
-  import { Pencil, Trash } from "lucide-svelte";
+  import {
+    EllipsisVertical,
+    ListPlus,
+    Pencil,
+    Play,
+    Shuffle,
+    Trash,
+    Upload,
+    Wand2,
+  } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
   import EditPlaylistModal from "./EditPlaylistModal.svelte";
   import UploadPlaylistCoverModal from "./UploadPlaylistCoverModal.svelte";
 
   const { data } = $props();
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   const musicManager = getMusicManager();
   const apiClient = getApiClient();
 
-  let openConfirmDeleteAlbum = $state(false);
+  let openConfirmDelete = $state(false);
   let openEditPlaylistModal = $state(false);
   let openUploadCoverModal = $state(false);
+
+  const isOwner = $derived(data.user?.id === data.playlist.ownerId);
 </script>
 
 <div class="py-2">
@@ -42,78 +52,147 @@
   </Breadcrumb.Root>
 </div>
 
-<Button
-  onclick={async () => {
-    const res = await apiClient.generatePlaylistImage(data.playlist.id);
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-  }}
+<div
+  class="flex flex-col gap-6 rounded-lg border bg-gradient-to-b from-zinc-900 to-background p-4 sm:p-6 md:flex-row md:items-end md:gap-8"
 >
-  Test Generate
-</Button>
+  <Image
+    class="w-40 min-w-40 self-center shadow-lg md:w-52 md:min-w-52"
+    src={data.playlist.coverArt.large}
+    alt={data.playlist.name}
+  />
 
-<Button
-  onclick={async () => {
-    openEditPlaylistModal = true;
-  }}
->
-  Edit Playlist
-</Button>
+  <div class="flex min-w-0 flex-col gap-2">
+    <p
+      class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+    >
+      Playlist
+    </p>
 
-<Button
-  onclick={async () => {
-    openUploadCoverModal = true;
-  }}
->
-  Upload Cover
-</Button>
+    <h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
+      {data.playlist.name}
+    </h1>
 
-<p>Track Count: {data.playlist.trackCount}</p>
+    <div
+      class="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground"
+    >
+      <span class="font-medium text-foreground"
+        >{data.playlist.ownerDisplayName}</span
+      >
+      <span>&middot; {data.playlist.trackCount} tracks</span>
+    </div>
 
-<TrackListHeader
-  name={data.playlist.name}
-  image={data.playlist.coverArt.medium}
-  onPlay={async (shuffle) => {
-    // const filterId = $page.url.searchParams.get("filterId") ?? "";
-    // await musicManager.queueRequest(
-    //   { type: "addPlaylist", playlistId: data.playlist.id, filterId },
-    //   { shuffle },
-    // );
-  }}
->
-  {#snippet more()}
-    <DropdownMenu.Group>
-      <DropdownMenu.Item onSelect={() => {}}>
-        <Pencil />
-        Edit Playlist
-      </DropdownMenu.Item>
-
-      <DropdownMenu.Item
-        onSelect={() => {
-          openConfirmDeleteAlbum = true;
+    <div class="flex gap-2 pt-2">
+      <Button
+        onclick={async () => {
+          await musicManager.queueRequest(
+            { type: "addPlaylist", playlistId: data.playlist.id },
+            {},
+          );
         }}
       >
-        <Trash />
-        Delete Playlist
-      </DropdownMenu.Item>
-    </DropdownMenu.Group>
-  {/snippet}
-</TrackListHeader>
+        <Play />
+        Play
+      </Button>
 
-<Spacer size="md" />
+      <Button
+        variant="outline"
+        onclick={async () => {
+          await musicManager.queueRequest(
+            { type: "addPlaylist", playlistId: data.playlist.id },
+            { shuffle: true },
+          );
+        }}
+      >
+        <Shuffle />
+        Shuffle
+      </Button>
+
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger
+          class={buttonVariants({ variant: "outline", size: "icon" })}
+        >
+          <EllipsisVertical />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content align="start">
+          <DropdownMenu.Group>
+            <DropdownMenu.Item
+              onSelect={async () => {
+                await musicManager.queueRequest(
+                  { type: "addPlaylist", playlistId: data.playlist.id },
+                  { append: "back" },
+                );
+              }}
+            >
+              <ListPlus />
+              Append to Queue
+            </DropdownMenu.Item>
+
+            {#if isOwner}
+              <DropdownMenu.Separator />
+
+              <DropdownMenu.Item
+                onSelect={() => {
+                  openEditPlaylistModal = true;
+                }}
+              >
+                <Pencil />
+                Edit Playlist
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Item
+                onSelect={() => {
+                  openUploadCoverModal = true;
+                }}
+              >
+                <Upload />
+                Upload Cover
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Item
+                onSelect={async () => {
+                  const res = await apiClient.generatePlaylistImage(
+                    data.playlist.id,
+                  );
+                  if (!res.success) {
+                    handleApiError(res.error);
+                  } else {
+                    toast.success("Generating cover");
+                  }
+                }}
+              >
+                <Wand2 />
+                Generate Cover
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Separator />
+
+              <DropdownMenu.Item
+                onSelect={() => {
+                  openConfirmDelete = true;
+                }}
+              >
+                <Trash />
+                Delete Playlist
+              </DropdownMenu.Item>
+            {/if}
+          </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    </div>
+  </div>
+</div>
+
+<div class="h-4"></div>
 
 <TrackList
   displayOrder
   totalTracks={data.page.totalItems}
   tracks={data.items}
-  userPlaylists={data.userPlaylists}
-  quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
-    // await musicManager.queueRequest(
-    //   { type: "addPlaylist", playlistId: data.playlist.id },
-    //   { queueIndexToTrackId: trackId },
-    // );
+    await musicManager.queueRequest(
+      { type: "addPlaylist", playlistId: data.playlist.id },
+      { queueIndexToTrackId: trackId },
+    );
   }}
   onReorder={async (items, anchor) => {
     const res = await apiClient.reorderPlaylistItems(data.playlist.id, {
@@ -130,7 +209,7 @@
   }}
 />
 
-<Spacer size="md" />
+<div class="h-4"></div>
 
 <Pagination.Root
   page={data.page.page + 1}
@@ -174,7 +253,7 @@
 </Pagination.Root>
 
 <ConfirmModal
-  bind:open={openConfirmDeleteAlbum}
+  bind:open={openConfirmDelete}
   removeTrigger
   confirmDelete
   onResult={async () => {
