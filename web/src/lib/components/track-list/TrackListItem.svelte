@@ -3,8 +3,10 @@
   import ArtistList from "$lib/components/ArtistList.svelte";
   import Image from "$lib/components/Image.svelte";
   import { cn } from "$lib/utils";
-  import { Play } from "lucide-svelte";
+  import { Heart, Play, Star } from "lucide-svelte";
   import type { Snippet } from "svelte";
+  import { getFavorites } from "$lib/favorites.svelte";
+  import { getQuickPlaylist } from "$lib/quick-playlist.svelte";
 
   type Props = {
     class?: string;
@@ -24,6 +26,14 @@
     children,
     onPlayClicked,
   }: Props = $props();
+  const favoriteManager = getFavorites();
+  const quickPlaylistManager = getQuickPlaylist();
+
+  let isFav = $derived(favoriteManager.hasTrack(track.id));
+  let isQuick = $derived(
+    quickPlaylistManager.playlist !== null &&
+      quickPlaylistManager.hasTrack(track.id),
+  );
 </script>
 
 <div
@@ -32,62 +42,63 @@
     className,
   )}
 >
-  <div class="relative">
+  <button
+    class="shrink-0"
+    onclick={() => onPlayClicked?.()}
+    aria-label="Play {track.name}"
+  >
     {#if showNumber}
-      <div
-        class="group flex min-h-10 min-w-10 flex-col items-end justify-center"
-      >
-        <p
-          class=" text-right text-sm font-medium group-hover:hidden group-has-[[data-state='open']]:block"
-        >
+      <div class="flex min-h-10 min-w-10 flex-col items-end justify-center">
+        <p class="text-right text-sm font-medium group-hover:hidden">
           {track.number}.
         </p>
-        {#if onPlayClicked}
-          <button
-            class={`hidden group-hover:block group-has-[[data-state='open']]:!hidden`}
-            onclick={() => {
-              onPlayClicked?.();
-            }}
-          >
-            <Play size="25" />
-          </button>
-        {/if}
+        <div class="hidden items-center justify-center group-hover:flex">
+          <Play size={20} />
+        </div>
       </div>
     {:else}
-      <Image class="w-14 min-w-14" src={track.coverArt.small} alt="cover" />
-      {#if onPlayClicked}
-        <button
-          class={`absolute bottom-0 left-0 right-0 top-0 hidden items-center justify-center rounded border bg-black/80 group-hover:flex group-has-[[data-state='open']]:!hidden`}
-          onclick={() => {
-            onPlayClicked?.();
-          }}
+      <div class="relative">
+        <Image class="w-14 min-w-14" src={track.coverArt.small} alt="cover" />
+        <div
+          class="absolute inset-0 flex items-center justify-center rounded border bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
         >
-          <Play size="25" />
-        </button>
-      {/if}
+          <Play size={20} class="text-white" />
+        </div>
+      </div>
     {/if}
-  </div>
-  <div class="flex flex-grow flex-col">
-    <div class="flex items-center gap-1">
-      <p class="line-clamp-1 w-fit text-sm font-medium" title={track.name}>
-        {#if displayOrder}
-          {track.order}.
-        {/if}
-        {track.name}
-      </p>
-    </div>
+  </button>
+
+  <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+    <p class="truncate text-sm font-medium" title={track.name}>
+      {#if isFav}
+        <Heart size={12} class="mr-0.5 inline fill-primary text-primary sm:hidden" />
+      {/if}
+      {#if isQuick}
+        <Star size={12} class="mr-0.5 inline fill-primary text-primary sm:hidden" />
+      {/if}
+      {#if displayOrder}
+        {track.order}.
+      {/if}
+      {track.name}
+    </p>
 
     <ArtistList class="text-muted-foreground" artists={track.artists} />
 
-    <p class="line-clamp-1 text-xs text-muted-foreground">
-      {#if track.tags.length > 0}
-        {track.tags.join(", ")}
-      {:else}
-        No Tags
-      {/if}
-    </p>
+    {#if track.tags.length > 0}
+      <div
+        class="flex min-w-0 gap-1 overflow-hidden text-ellipsis whitespace-nowrap"
+      >
+        {#each track.tags as tag}
+          <span
+            class="shrink-0 rounded bg-secondary/50 px-1 py-0.5 text-[10px] text-muted-foreground"
+            >{tag}</span
+          >
+        {/each}
+      </div>
+    {/if}
   </div>
-  <div class="flex items-center">
+
+  <div class="flex shrink-0 items-center gap-0.5 sm:gap-1">
     {@render children?.()}
   </div>
 </div>
