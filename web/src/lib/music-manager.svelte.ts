@@ -129,6 +129,7 @@ export class MusicManager {
     this.queue = new Queue();
 
     this.setupAudio();
+    this.setupMediaSession();
 
     this.volume = getVolume();
     this.muted = getMuted();
@@ -190,13 +191,13 @@ export class MusicManager {
     });
 
     this.audio.addEventListener("playing", () => {
-      // console.log("playing");
       this.playing = true;
+      this.updateMediaSession();
     });
 
     this.audio.addEventListener("pause", () => {
-      // console.log("pause");
       this.playing = false;
+      this.updateMediaSession();
     });
 
     this.audio.addEventListener("load", () => {
@@ -222,6 +223,45 @@ export class MusicManager {
     //     audio.play();
     //   }
     // });
+  }
+
+  private setupMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+
+    navigator.mediaSession.setActionHandler("play", () => this.play());
+    navigator.mediaSession.setActionHandler("pause", () => this.pause());
+    navigator.mediaSession.setActionHandler("nexttrack", () => this.nextTrack());
+    navigator.mediaSession.setActionHandler("previoustrack", () => this.previousTrack());
+    navigator.mediaSession.setActionHandler("seekto", (details) => {
+      if (details.seekTime != null) {
+        this.setPosition(details.seekTime);
+      }
+    });
+    navigator.mediaSession.setActionHandler("seekforward", () => {
+      this.setPosition(Math.min(this.audio.currentTime + 10, this.duration));
+    });
+    navigator.mediaSession.setActionHandler("seekbackward", () => {
+      this.setPosition(Math.max(this.audio.currentTime - 10, 0));
+    });
+  }
+
+  private updateMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+
+    const item = this.currentItem;
+    if (!item) {
+      navigator.mediaSession.playbackState = "none";
+      return;
+    }
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: item.name,
+      artist: item.artists.map((a) => a.name).join(", "),
+      album: item.album.name,
+      artwork: [{ src: item.coverArt }],
+    });
+
+    navigator.mediaSession.playbackState = this.playing ? "playing" : "paused";
   }
 
   private resetTrackEventTracking() {
@@ -292,6 +332,8 @@ export class MusicManager {
       this.audio.removeAttribute("src");
       this.audio.load();
     }
+
+    this.updateMediaSession();
   }
 
   async nextTrack() {
