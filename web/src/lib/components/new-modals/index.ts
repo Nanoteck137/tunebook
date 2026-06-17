@@ -7,3 +7,5 @@ export interface Modal<T> {
   // eslint-disable-next-line no-unused-vars
   onResult: (res: T) => void;
 }
+
+export { default as PlaylistSelectorModal } from "./PlaylistSelectorModal.svelte";

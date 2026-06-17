@@ -22,9 +22,10 @@
   import { getApiAddress, handleApiError, setApiClient } from "$lib";
   import { setMusicManager } from "$lib/music-manager.svelte";
   import { goto, invalidateAll } from "$app/navigation";
-  import QuickPlaylistSelectorModal from "$lib/components/new-modals/QuickPlaylistSelectorModal.svelte";
   import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
   import { setFavorites } from "$lib/favorites.svelte";
+  import { initPlaylistModalManager, showPlaylistModal } from "$lib/playlist-modal.svelte";
+  import PlaylistSelectorModal from "$lib/components/new-modals/PlaylistSelectorModal.svelte";
   import { isRoleAdmin } from "$lib/utils.js";
   import { page } from "$app/state";
 
@@ -38,6 +39,8 @@
   setMusicManager(apiClient);
 
   setFavorites(apiClient);
+
+  initPlaylistModalManager(apiClient);
 
   let quickPlaylist = setQuickPlaylist(apiClient);
 
@@ -66,6 +69,8 @@
 
 <Toaster position="bottom-right" />
 
+<PlaylistSelectorModal />
+
 <header
   class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 >
@@ -86,14 +91,15 @@
     <div class="flex-grow"></div>
 
     <div class="flex items-center gap-2">
-      {#if data.userPlaylists}
-        <QuickPlaylistSelectorModal
+      {#if data.user}
+        <button
           class={buttonVariants({ variant: "ghost", size: "icon" })}
-          playlists={data.userPlaylists}
-          currentQuickPlaylistId={data.user?.quickPlaylist ?? undefined}
-          onResult={async (playlistId) => {
+          onclick={async () => {
+            const id = await showPlaylistModal({ selectedId: data.user?.quickPlaylist ?? undefined });
+            if (!id) return;
+
             const res = await apiClient.setQuickPlaylist({
-              playlistId: playlistId,
+              playlistId: id,
             });
             if (!res.success) {
               handleApiError(res.error);
@@ -106,7 +112,7 @@
           }}
         >
           <ListVideo />
-        </QuickPlaylistSelectorModal>
+        </button>
       {/if}
 
       <Button href="/search" size="icon" variant="ghost">

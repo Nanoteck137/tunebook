@@ -15,6 +15,8 @@
     Users,
     X,
   } from "lucide-svelte";
+  import { getApiClient, handleApiError } from "$lib";
+  import { showPlaylistModal } from "$lib/playlist-modal.svelte";
   import { cn } from "$lib/utils";
   import type { Playlist, Track } from "$lib/api/types";
   import QuickAddButton from "$lib/components/QuickAddButton.svelte";
@@ -45,6 +47,7 @@
     onPlay,
     onReorder,
   }: Props = $props();
+  const apiClient = getApiClient();
 
   let selectedTracks = $state<string[]>([]);
 </script>
@@ -166,12 +169,16 @@
                   {/if}
                   <DropdownMenu.Item
                     onSelect={async () => {
-                      if (!userPlaylists) return;
+                      const id = await showPlaylistModal();
+                      if (!id) return;
 
-                      // await openAddToPlaylist({
-                      //   playlists: userPlaylists,
-                      //   track,
-                      // });
+                      const res = await apiClient.addItemToPlaylist(id, {
+                        trackId: track.id,
+                      });
+                      if (!res.success) {
+                        handleApiError(res.error);
+                        return;
+                      }
 
                       await invalidateAll();
                     }}
