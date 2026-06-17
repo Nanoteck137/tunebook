@@ -29,6 +29,15 @@
         {#if data.userData.id === data.user?.id}
           <a
             class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+            href="/users/{data.userData.id}/favorites"
+          >
+            Favorites
+          </a>
+        {/if}
+
+        {#if data.userData.id === data.user?.id}
+          <a
+            class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
             href="/users/{data.userData.id}/history"
           >
             History
