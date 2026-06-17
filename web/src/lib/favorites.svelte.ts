@@ -11,7 +11,9 @@ class Favorites {
   constructor(apiClient: ApiClient) {
     this.apiClient = apiClient;
 
-    this.fetchIds();
+    if (localStorage.getItem("token")) {
+      this.fetchIds();
+    }
   }
 
   async fetchIds() {
