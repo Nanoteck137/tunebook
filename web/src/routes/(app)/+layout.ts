@@ -1,6 +1,6 @@
 import { getApiAddress, setApiClientAuth } from "$lib";
 import { ApiClient } from "$lib/api/client";
-import type { GetMe, Playlist } from "$lib/api/types";
+import type { GetMe } from "$lib/api/types";
 import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 
@@ -25,45 +25,8 @@ export const load: LayoutLoad = async ({ url }) => {
     }
   }
 
-  let favoriteIds = [] as string[];
-  let quickPlaylistIds = [] as string[];
-  let userPlaylists: Playlist[] | null = null;
-
-  if (user) {
-    const res = await apiClient.getFavoriteTrackIds();
-    if (!res.success) {
-      // TODO(patrik): Better handling of this error
-      throw error(res.error.code, { message: res.error.message });
-    }
-
-    favoriteIds = res.data.ids;
-
-    if (user.quickPlaylist) {
-      const res = await apiClient.getQuickPlaylistIds();
-      if (!res.success) {
-        // TODO(patrik): Better handling of this error
-        throw error(res.error.code, { message: res.error.message });
-      }
-
-      quickPlaylistIds = res.data.ids;
-    }
-
-    {
-      const res = await apiClient.getPlaylists();
-      if (!res.success) {
-        // TODO(patrik): Better handling of this error
-        throw error(res.error.code, { message: res.error.message });
-      }
-
-      userPlaylists = res.data.playlists;
-    }
-  }
-
   return {
     apiClient,
     user,
-    favoriteIds,
-    quickPlaylistIds,
-    userPlaylists,
   };
 };
