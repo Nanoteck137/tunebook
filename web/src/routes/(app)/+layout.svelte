@@ -77,7 +77,9 @@
 <header
   class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 >
-  <div class="container flex h-14 max-w-screen-2xl items-center gap-4 px-4">
+  <div
+    class="container flex h-14 max-w-screen-2xl items-center gap-4 px-4 sm:px-8"
+  >
     <button
       onclick={() => {
         showSideMenu = true;
@@ -90,6 +92,51 @@
       class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-2xl font-medium text-transparent"
       href="/">Tunebook</a
     >
+
+    <div class="hidden items-center gap-1 md:flex">
+      <a
+        href="/albums"
+        class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
+          '/albums',
+        )
+          ? 'bg-accent text-accent-foreground'
+          : 'text-muted-foreground'}"
+      >
+        Albums
+      </a>
+      <a
+        href="/artists"
+        class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
+          '/artists',
+        )
+          ? 'bg-accent text-accent-foreground'
+          : 'text-muted-foreground'}"
+      >
+        Artists
+      </a>
+      <a
+        href="/tracks"
+        class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
+          '/tracks',
+        )
+          ? 'bg-accent text-accent-foreground'
+          : 'text-muted-foreground'}"
+      >
+        Tracks
+      </a>
+      {#if data.user}
+        <a
+          href="/playlists"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
+            '/playlists',
+          )
+            ? 'bg-accent text-accent-foreground'
+            : 'text-muted-foreground'}"
+        >
+          Playlists
+        </a>
+      {/if}
+    </div>
 
     <div class="flex-grow"></div>
 
@@ -128,7 +175,7 @@
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>
             <img
-              class="w-8 rounded-full"
+              class="w-8 min-w-8 rounded-full"
               src={data.user.picture.small}
               alt=""
             />
@@ -182,12 +229,63 @@
   </div>
 </header>
 
-<main class="container px-4 py-4">
+<main class="container px-4 py-4 sm:px-8">
   {@render children()}
 </main>
 
-<footer class="fixed bottom-0 w-full">
+<footer class="fixed bottom-0 z-40 w-full">
   <AudioPlayer />
+
+  <nav
+    class="flex items-center justify-around border-t bg-background py-1 md:hidden"
+  >
+    <a
+      href="/albums"
+      class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+        '/albums',
+      )
+        ? 'text-primary'
+        : 'text-muted-foreground'}"
+    >
+      <DiscAlbum size={18} />
+      Albums
+    </a>
+    <a
+      href="/artists"
+      class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+        '/artists',
+      )
+        ? 'text-primary'
+        : 'text-muted-foreground'}"
+    >
+      <Users size={18} />
+      Artists
+    </a>
+    <a
+      href="/tracks"
+      class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+        '/tracks',
+      )
+        ? 'text-primary'
+        : 'text-muted-foreground'}"
+    >
+      <FileMusic size={18} />
+      Tracks
+    </a>
+    {#if data.user}
+      <a
+        href="/playlists"
+        class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+          '/playlists',
+        )
+          ? 'text-primary'
+          : 'text-muted-foreground'}"
+      >
+        <ListMusic size={18} />
+        Playlists
+      </a>
+    {/if}
+  </nav>
 </footer>
 
 {#if showSideMenu}
