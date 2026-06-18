@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 var createQueueItemId = createIdGenerator(32)
@@ -106,19 +107,32 @@ func (db DB) GetNextQueueItemPosition(ctx context.Context, queueId string) (int,
 }
 
 type GetQueueItemsParams struct {
-	QueueId  string
-	Page     int
-	PerPage  int
+	Page types.PageParams
+
+	QueueId string
 }
 
-func (db DB) GetQueueItems(ctx context.Context, params GetQueueItemsParams) ([]QueueItemTrack, error) {
+func (db DB) GetQueueItems(
+	ctx context.Context,
+	params GetQueueItemsParams,
+) ([]QueueItemTrack, types.Page, error) {
 	query := QueueItemTrackQuery().
 		Where(goqu.I("queue_items.queue_id").Eq(params.QueueId)).
-		Order(goqu.I("queue_items.position").Asc()).
-		Limit(uint(params.PerPage)).
-		Offset(uint(params.Page * params.PerPage))
+		Order(goqu.I("queue_items.position").Asc())
 
-	return Multiple[QueueItemTrack](db, ctx, query)
+	page, err := buildPage(ctx, db, params.Page, query, "queue_items.id")
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[QueueItemTrack](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
 }
 
 func (db DB) GetQueueItemIds(ctx context.Context, queueId string) ([]string, error) {

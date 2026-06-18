@@ -29,91 +29,105 @@ func NewQueueService(logger *slog.Logger, db *database.Database) *QueueService {
 
 const defaultQueuePerPage = 50
 
+type GetQueueParams struct {
+	Page types.PageParams
+
+	UserId string
+}
+
 type GetQueueResult struct {
 	Items        []database.QueueItemTrack
 	CurrentIndex int
 	Page         types.Page
 }
 
-type GetQueueIdsResult struct {
+func (s *QueueService) GetQueue(
+	ctx context.Context,
+	params GetQueueParams,
+) (GetQueueResult, error) {
+	queue, err := s.getOrCreateQueue(ctx, params.UserId)
+	if err != nil {
+		return GetQueueResult{}, err
+	}
+
+	items, page, err := s.db.GetQueueItems(ctx, database.GetQueueItemsParams{
+		Page:    params.Page,
+		QueueId: queue.Id,
+	})
+	if err != nil {
+		return GetQueueResult{}, err
+	}
+
+	return GetQueueResult{
+		Items:        items,
+		CurrentIndex: queue.CurrentIndex,
+		Page:         page,
+	}, nil
+}
+
+type QueueIdsResult struct {
 	Entries      []database.QueueItemEntry
 	CurrentIndex int
 }
 
-func (s *QueueService) GetQueue(ctx context.Context, userId string, page, perPage int) (*GetQueueResult, error) {
+func (s *QueueService) GetQueueIds(
+	ctx context.Context,
+	userId string,
+) (QueueIdsResult, error) {
 	queue, err := s.getOrCreateQueue(ctx, userId)
 	if err != nil {
-		return nil, err
-	}
-
-	if perPage <= 0 {
-		perPage = defaultQueuePerPage
-	}
-
-	count, err := s.db.GetQueueItemCount(ctx, queue.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	items, err := s.db.GetQueueItems(ctx, database.GetQueueItemsParams{
-		QueueId: queue.Id,
-		Page:    page,
-		PerPage: perPage,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	pageInfo := types.Page{
-		Page:       page,
-		PerPage:    perPage,
-		TotalItems: count,
-		TotalPages: (count + perPage - 1) / perPage,
-	}
-
-	return &GetQueueResult{
-		Items:        items,
-		CurrentIndex: queue.CurrentIndex,
-		Page:         pageInfo,
-	}, nil
-}
-
-func (s *QueueService) GetQueueIds(ctx context.Context, userId string) (*GetQueueIdsResult, error) {
-	queue, err := s.getOrCreateQueue(ctx, userId)
-	if err != nil {
-		return nil, err
+		return QueueIdsResult{}, err
 	}
 
 	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id)
 	if err != nil {
-		return nil, err
+		return QueueIdsResult{}, err
 	}
 
-	return &GetQueueIdsResult{
+	return QueueIdsResult{
 		Entries:      entries,
 		CurrentIndex: queue.CurrentIndex,
 	}, nil
 }
 
-func (s *QueueService) GetQueueItemAtIndex(ctx context.Context, userId string, index int) (database.QueueItemTrack, error) {
-	queue, err := s.getOrCreateQueue(ctx, userId)
+type GetQueueItemAtIndexParams struct {
+	UserId string
+	Index  int
+}
+
+func (s *QueueService) GetQueueItemAtIndex(
+	ctx context.Context,
+	params GetQueueItemAtIndexParams,
+) (database.QueueItemTrack, error) {
+	queue, err := s.getOrCreateQueue(ctx, params.UserId)
 	if err != nil {
 		return database.QueueItemTrack{}, err
 	}
 
-	return s.db.GetQueueItemAtPosition(ctx, queue.Id, index)
+	item, err := s.db.GetQueueItemAtPosition(ctx, queue.Id, params.Index)
+	if err != nil {
+		return database.QueueItemTrack{}, err
+	}
+
+	return item, nil
 }
 
-func (s *QueueService) getOrCreateQueue(ctx context.Context, userId string) (database.Queue, error) {
-	queue, err := s.db.GetQueueByUserId(ctx, userId)
+func (s *QueueService) getOrCreateQueue(
+	ctx context.Context,
+	userId string,
+) (database.Queue, error) {
+	queue, err := s.db.GetQueueById(ctx, userId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
-			err = s.db.CreateQueue(ctx, userId, 0)
+			_, err = s.db.CreateQueue(ctx, database.CreateQueueParams{
+				Id:           userId,
+				CurrentIndex: 0,
+			})
 			if err != nil {
 				return database.Queue{}, err
 			}
 
-			queue, err = s.db.GetQueueByUserId(ctx, userId)
+			queue, err = s.db.GetQueueById(ctx, userId)
 			if err != nil {
 				return database.Queue{}, err
 			}
@@ -134,7 +148,10 @@ type ReplaceQueueParams struct {
 	Shuffle      bool
 }
 
-func (s *QueueService) ReplaceQueue(ctx context.Context, params ReplaceQueueParams) error {
+func (s *QueueService) ReplaceQueue(
+	ctx context.Context,
+	params ReplaceQueueParams,
+) error {
 	queue, err := s.getOrCreateQueue(ctx, params.UserId)
 	if err != nil {
 		return err
@@ -183,13 +200,21 @@ func (s *QueueService) ReplaceQueue(ctx context.Context, params ReplaceQueuePara
 	}
 
 	err = tx.UpdateQueue(ctx, queue.Id, database.QueueChanges{
-		CurrentIndex: database.Change[int]{Value: currentIndex, Changed: true},
+		CurrentIndex: database.Change[int]{
+			Value:   currentIndex,
+			Changed: true,
+		},
 	})
 	if err != nil {
 		return err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type AddItemsParams struct {
@@ -198,7 +223,10 @@ type AddItemsParams struct {
 	Position string // "next" or "end"
 }
 
-func (s *QueueService) AddItems(ctx context.Context, params AddItemsParams) error {
+func (s *QueueService) AddItems(
+	ctx context.Context,
+	params AddItemsParams,
+) error {
 	queue, err := s.getOrCreateQueue(ctx, params.UserId)
 	if err != nil {
 		return err
@@ -216,10 +244,7 @@ func (s *QueueService) AddItems(ctx context.Context, params AddItemsParams) erro
 
 	var newIds []string
 	if params.Position == "next" {
-		insertIndex := queue.CurrentIndex + 1
-		if insertIndex > len(existingIds) {
-			insertIndex = len(existingIds)
-		}
+		insertIndex := min(queue.CurrentIndex+1, len(existingIds))
 
 		newIds = make([]string, 0, len(existingIds)+len(params.TrackIds))
 		newIds = append(newIds, existingIds[:insertIndex]...)
@@ -229,11 +254,16 @@ func (s *QueueService) AddItems(ctx context.Context, params AddItemsParams) erro
 		newIds = append(existingIds, params.TrackIds...)
 	}
 
-	return s.ReplaceQueue(ctx, ReplaceQueueParams{
+	err = s.ReplaceQueue(ctx, ReplaceQueueParams{
 		UserId:       params.UserId,
 		TrackIds:     newIds,
 		CurrentIndex: queue.CurrentIndex,
 	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type RemoveItemParams struct {
@@ -241,7 +271,10 @@ type RemoveItemParams struct {
 	ItemId string
 }
 
-func (s *QueueService) RemoveItem(ctx context.Context, params RemoveItemParams) error {
+func (s *QueueService) RemoveItem(
+	ctx context.Context,
+	params RemoveItemParams,
+) error {
 	queue, err := s.getOrCreateQueue(ctx, params.UserId)
 	if err != nil {
 		return err
@@ -275,11 +308,16 @@ func (s *QueueService) RemoveItem(ctx context.Context, params RemoveItemParams) 
 		newIndex = 0
 	}
 
-	return s.ReplaceQueue(ctx, ReplaceQueueParams{
+	err = s.ReplaceQueue(ctx, ReplaceQueueParams{
 		UserId:       params.UserId,
 		TrackIds:     newIds,
 		CurrentIndex: newIndex,
 	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type SetPositionParams struct {
@@ -287,15 +325,26 @@ type SetPositionParams struct {
 	Index  int
 }
 
-func (s *QueueService) SetPosition(ctx context.Context, params SetPositionParams) error {
+func (s *QueueService) SetPosition(
+	ctx context.Context,
+	params SetPositionParams,
+) error {
 	queue, err := s.getOrCreateQueue(ctx, params.UserId)
 	if err != nil {
 		return err
 	}
 
-	return s.db.UpdateQueue(ctx, queue.Id, database.QueueChanges{
-		CurrentIndex: database.Change[int]{Value: params.Index, Changed: true},
+	err = s.db.UpdateQueue(ctx, queue.Id, database.QueueChanges{
+		CurrentIndex: database.Change[int]{
+			Value:   params.Index,
+			Changed: true,
+		},
 	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *QueueService) ClearQueue(ctx context.Context, userId string) error {
@@ -316,11 +365,19 @@ func (s *QueueService) ClearQueue(ctx context.Context, userId string) error {
 	}
 
 	err = tx.UpdateQueue(ctx, queue.Id, database.QueueChanges{
-		CurrentIndex: database.Change[int]{Value: 0, Changed: true},
+		CurrentIndex: database.Change[int]{
+			Value:   0,
+			Changed: true,
+		},
 	})
 	if err != nil {
 		return err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return err
 }

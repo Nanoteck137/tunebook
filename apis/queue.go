@@ -39,8 +39,8 @@ type GetQueue struct {
 }
 
 type GetQueueIds struct {
-	CurrentIndex int             `json:"currentIndex"`
-	Items        []QueueIdItem   `json:"items"`
+	CurrentIndex int           `json:"currentIndex"`
+	Items        []QueueIdItem `json:"items"`
 }
 
 type QueueIdItem struct {
@@ -95,9 +95,13 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				pageParams := getPageParams(q, 50)
-
-				result, err := app.QueueService().GetQueue(ctx, user.Id, pageParams.Page, pageParams.PerPage)
+				result, err := app.QueueService().GetQueue(
+					ctx,
+					service.GetQueueParams{
+						Page:   getPageParams(q, 50),
+						UserId: user.Id,
+					},
+				)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
@@ -160,10 +164,17 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 				position, err := strconv.Atoi(c.Param("position"))
 				if err != nil {
+					// TODO(patrik): Better error
 					return nil, err
 				}
 
-				item, err := app.QueueService().GetQueueItemAtIndex(ctx, user.Id, position)
+				item, err := app.QueueService().GetQueueItemAtIndex(
+					ctx,
+					service.GetQueueItemAtIndexParams{
+						UserId: user.Id,
+						Index:  position,
+					},
+				)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
@@ -197,12 +208,14 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					currentIndex = *body.CurrentIndex
 				}
 
-				err = app.QueueService().ReplaceQueue(ctx, service.ReplaceQueueParams{
-					UserId:       user.Id,
-					TrackIds:     body.TrackIds,
-					CurrentIndex: currentIndex,
-					Shuffle:      body.Shuffle,
-				})
+				err = app.QueueService().ReplaceQueue(ctx,
+					service.ReplaceQueueParams{
+						UserId:       user.Id,
+						TrackIds:     body.TrackIds,
+						CurrentIndex: currentIndex,
+						Shuffle:      body.Shuffle,
+					},
+				)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
@@ -229,11 +242,14 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.QueueService().AddItems(ctx, service.AddItemsParams{
-					UserId:   user.Id,
-					TrackIds: body.TrackIds,
-					Position: body.Position,
-				})
+				err = app.QueueService().AddItems(
+					ctx,
+					service.AddItemsParams{
+						UserId:   user.Id,
+						TrackIds: body.TrackIds,
+						Position: body.Position,
+					},
+				)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
@@ -254,10 +270,13 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.QueueService().RemoveItem(ctx, service.RemoveItemParams{
-					UserId: user.Id,
-					ItemId: c.Param("itemId"),
-				})
+				err = app.QueueService().RemoveItem(
+					ctx,
+					service.RemoveItemParams{
+						UserId: user.Id,
+						ItemId: c.Param("itemId"),
+					},
+				)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
@@ -284,10 +303,13 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.QueueService().SetPosition(ctx, service.SetPositionParams{
-					UserId: user.Id,
-					Index:  body.Index,
-				})
+				err = app.QueueService().SetPosition(
+					ctx,
+					service.SetPositionParams{
+						UserId: user.Id,
+						Index:  body.Index,
+					},
+				)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
