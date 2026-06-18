@@ -3,10 +3,15 @@ package utils
 import (
 	"database/sql"
 	"errors"
+	"math"
 	"os"
 	"strings"
 	"time"
 )
+
+func TotalPages(perPage, totalItems int) int {
+	return int(math.Ceil(float64(totalItems) / float64(perPage)))
+}
 
 func SplitTagString(s string) []string {
 	tags := []string{}

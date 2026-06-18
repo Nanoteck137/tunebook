@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math"
 	"time"
 
 	"github.com/kr/pretty"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 const (
@@ -570,10 +569,6 @@ func (s *SearchService) SearchUsers(
 	return users, page, nil
 }
 
-func totalPages(perPage, totalItems int) int {
-	return int(math.Ceil(float64(totalItems) / float64(perPage)))
-}
-
 func search[TDoc hasID, TResult any](
 	ctx context.Context,
 	index meilisearch.IndexManager,
@@ -601,7 +596,7 @@ func search[TDoc hasID, TResult any](
 		Page:       params.Page.Page,
 		PerPage:    params.Page.PerPage,
 		TotalItems: totalItems,
-		TotalPages: totalPages(params.Page.PerPage, totalItems),
+		TotalPages: utils.TotalPages(params.Page.PerPage, totalItems),
 	}
 
 	var hits []TDoc

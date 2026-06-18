@@ -4,7 +4,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"math"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nrednav/cuid2"
@@ -28,10 +27,6 @@ func createIdGenerator(length int) func() string {
 	}
 
 	return res
-}
-
-func totalPages(perPage, totalItems int) int {
-	return int(math.Ceil(float64(totalItems) / float64(perPage)))
 }
 
 type JsonColumn[T any] struct {
