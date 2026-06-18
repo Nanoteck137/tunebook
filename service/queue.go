@@ -27,8 +27,6 @@ func NewQueueService(logger *slog.Logger, db *database.Database) *QueueService {
 	}
 }
 
-const defaultQueuePerPage = 50
-
 type GetQueueParams struct {
 	Page types.PageParams
 
