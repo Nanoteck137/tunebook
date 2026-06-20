@@ -39,6 +39,9 @@ type Config struct {
 	MeilisearchAddress string `mapstructure:"meilisearch_address"`
 	MeilisearchApiKey  string `mapstructure:"meilisearch_api_key"`
 
+	NtfyBaseUrl string `mapstructure:"ntfy_base_url"`
+	NtfyTopic   string `mapstructure:"ntfy_topic"`
+
 	OidcProviders map[string]ConfigOidcProvider `mapstructure:"oidc_providers"`
 }
 
@@ -62,6 +65,8 @@ func Load(cfgFile string) (*Config, error) {
 	// NOTE(patrik): Set default values here
 	v.SetDefault("run_migrations", "true")
 	v.SetDefault("listen_addr", ":3000")
+	v.SetDefault("ntfy_base_url", "")
+	v.SetDefault("ntfy_topic", "")
 	v.BindEnv("data_dir")
 	v.BindEnv("library_dir")
 	v.BindEnv("jwt_secret")

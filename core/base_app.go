@@ -147,6 +147,10 @@ func (app *BaseApp) Bootstrap() error {
 		app.config,
 	)
 
+	if !app.notificationService.IsEnabled() {
+		slog.Warn("notification service disabled, ntfy_base_url or ntfy_topic not set")
+	}
+
 	app.taskService = service.NewTaskService(newServiceLogger("task"))
 
 	app.imageService = service.NewImageService(

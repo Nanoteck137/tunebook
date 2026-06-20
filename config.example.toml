@@ -8,6 +8,9 @@ jwt_secret = "" # Example: openssl rand -base64 32
 meilisearch_address="<ADDRESS_TO_MEILISEARCH_INSTANCE>"
 meilisearch_api_key="<MEILISEARCH_API_KEY>"
 
+# ntfy_base_url = "https://ntfy.sh"
+# ntfy_topic = ""
+
 [oidc_providers]
 
 [oidc_providers.<PROVIDER_ID>]

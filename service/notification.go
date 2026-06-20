@@ -10,6 +10,7 @@ import (
 	"github.com/nanoteck137/tunebook/config"
 )
 
+// TODO(patrik): Rename to NotifyPriority or something like that
 type Priority int
 
 const (
@@ -51,8 +52,8 @@ type NotificationService struct {
 func NewNotificationService(logger *slog.Logger, config *config.Config) *NotificationService {
 	return &NotificationService{
 		logger:  logger,
-		BaseUrl: "https://ntfy.nanoteck137.net",
-		Topic:   "test",
+		BaseUrl: config.NtfyBaseUrl,
+		Topic:   config.NtfyTopic,
 	}
 }
 
@@ -95,7 +96,16 @@ func (s *NotificationService) sendNotification(body notificationMessageBody) err
 	return nil
 }
 
+func (s *NotificationService) IsEnabled() bool {
+	return s.BaseUrl != "" && s.Topic != ""
+}
+
 func (s *NotificationService) SendSimple(title, message string, opts SimpleNotificationOptions) error {
+	if s.IsEnabled() {
+		s.logger.Debug("notification service not configured, skipping")
+		return nil
+	}
+
 	body := notificationMessageBody{
 		Topic:    s.Topic,
 		Message:  message,
