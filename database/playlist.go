@@ -227,3 +227,18 @@ func (db DB) DeletePlaylist(ctx context.Context, playlistId string) error {
 
 	return nil
 }
+
+func (db DB) GetUserPlaylistCount(
+	ctx context.Context,
+	userId string,
+) (int, error) {
+	tbl := goqu.T("playlists")
+	query := dialect.From(tbl).
+		Select(
+			goqu.COUNT(tbl.Col("id")),
+		).
+		Where(tbl.Col("owner_id").Eq(userId)).
+		GroupBy(tbl.Col("owner_id"))
+
+	return Single[int](db, ctx, query)
+}

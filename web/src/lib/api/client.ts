@@ -192,6 +192,10 @@ export class ApiClient extends BaseApiClient {
   }
   
   
+  getUserStats(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/stats`, "GET", api.GetUserStats, z.any(), undefined, options)
+  }
+  
   getUserTrackFavorites(userId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/users/${userId}/favorites/tracks`, "GET", api.GetUserFavorites, z.any(), undefined, options)
   }
@@ -472,6 +476,10 @@ export class ClientUrls {
   
   getUserImage(userId: string, image: string) {
     return createUrl(this.baseUrl, `/files/users/images/${userId}/${image}`)
+  }
+  
+  getUserStats(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/stats`)
   }
   
   getUserTrackFavorites(userId: string) {

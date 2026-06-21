@@ -33,8 +33,8 @@ type BaseApp struct {
 	albumService    *service.AlbumService
 	trackService    *service.TrackService
 	playlistService *service.PlaylistService
-	historyService  *service.HistoryService
-	queueService    *service.QueueService
+	historyService *service.HistoryService
+	queueService   *service.QueueService
 
 	broker *broker.Broker
 }
@@ -258,12 +258,19 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	err = app.taskService.AddTask(tasks.NewLibraryCleanupTask(app.libraryService))
+	err = app.taskService.AddTask(
+		tasks.NewLibraryCleanupTask(app.libraryService))
 	if err != nil {
 		return err
 	}
 
 	err = app.taskService.AddTask(tasks.NewSearchIndexTask(app.searchService))
+	if err != nil {
+		return err
+	}
+
+	err = app.taskService.AddTask(
+		tasks.NewUserStatsRecalculateTask(app.userService))
 	if err != nil {
 		return err
 	}

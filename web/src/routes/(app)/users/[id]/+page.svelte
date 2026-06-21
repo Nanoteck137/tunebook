@@ -19,32 +19,30 @@
 
   let { data } = $props();
 
-  let favoriteCount = $derived("—");
-
   let stats = $derived([
     {
       icon: Play,
       label: "Tracks Played",
-      value: "—",
-      note: "not yet tracked",
+      value: data.stats.numTracksPlayed.toLocaleString(),
+      note: "",
     },
     {
       icon: Clock,
       label: "Listening Time",
-      value: "—",
-      note: "not yet tracked",
+      value: formatListeningTime(data.stats.listeningTime),
+      note: "",
     },
     {
       icon: ListMusic,
       label: "Playlists",
-      value: "—",
-      note: "not yet tracked",
+      value: data.stats.numPlaylistsCreated.toLocaleString(),
+      note: "",
     },
     {
       icon: Heart,
       label: "Favorites",
-      value: favoriteCount,
-      note: "not yet tracked",
+      value: data.stats.numFavoriteTracks.toLocaleString(),
+      note: "",
     },
   ]);
 

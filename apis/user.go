@@ -11,6 +11,7 @@ import (
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/validate"
 )
 
@@ -125,6 +126,17 @@ func (b UpdateTrackFilterBody) Validate() error {
 	)
 }
 
+type GetUserStats struct {
+	NumTracksPlayed     int    `json:"numTracksPlayed"`
+	NumTracksSkipped    int    `json:"numTracksSkipped"`
+	NumPlaylistsCreated int    `json:"numPlaylistsCreated"`
+	NumFavoriteTracks   int    `json:"numFavoriteTracks"`
+	ListeningTime       int64  `json:"listeningTime"`
+	LastListenedAt      *int64 `json:"lastListenedAt"`
+
+	Updated string `json:"updated"`
+}
+
 type ApiToken struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
@@ -193,6 +205,37 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				return GetUser{
 					User: ConvertDBUser(c, user),
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserStats",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/stats",
+			ResponseType: GetUserStats{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				stats, err := app.UserService().GetUserStats(
+					ctx,
+					service.GetUserStatsParams{
+						UserId: c.Param("userId"),
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				return GetUserStats{
+					NumTracksPlayed:     stats.NumTracksPlayed,
+					NumTracksSkipped:    stats.NumTracksSkipped,
+					NumPlaylistsCreated: stats.NumPlaylistsCreated,
+					NumFavoriteTracks:   stats.NumFavoriteTracks,
+					ListeningTime:       stats.ListeningTime,
+					LastListenedAt:      utils.SqlNullToInt64Ptr(
+						stats.LastListenedAt),
+					Updated:             formatTime(stats.Updated),
 				}, nil
 			},
 		},
@@ -480,11 +523,14 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				filterId, err := app.UserService().CreateTrackFilter(ctx, service.CreateTrackFilterParams{
-					UserId: user.Id,
-					Name:   body.Name,
-					Filter: body.Filter,
-				})
+				filterId, err := app.UserService().CreateTrackFilter(
+					ctx,
+					service.CreateTrackFilterParams{
+						UserId: user.Id,
+						Name:   body.Name,
+						Filter: body.Filter,
+					},
+				)
 				if err != nil {
 					return nil, handleUserServiceErrors(err)
 				}

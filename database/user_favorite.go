@@ -140,3 +140,18 @@ func (db DB) DeleteUserFavorite(ctx context.Context, userId, trackId string) err
 
 	return nil
 }
+
+func (db DB) GetUserFavoriteCount(
+	ctx context.Context,
+	userId string,
+) (int, error) {
+	tbl := goqu.T("user_favorites")
+	query := dialect.From(tbl).
+		Select(
+			goqu.COUNT(tbl.Col("track_id")),
+		).
+		Where(tbl.Col("user_id").Eq(userId)).
+		GroupBy(tbl.Col("user_id"))
+
+	return Single[int](db, ctx, query)
+}

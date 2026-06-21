@@ -640,6 +640,25 @@ export const GetUserFavorites = z.object({
 });
 export type GetUserFavorites = z.infer<typeof GetUserFavorites>;
 
+// Name: GetUserStats
+export const GetUserStats = z.object({
+  // Name: GetUserStats.numTracksPlayed
+  "numTracksPlayed": z.number(),
+  // Name: GetUserStats.numTracksSkipped
+  "numTracksSkipped": z.number(),
+  // Name: GetUserStats.numPlaylistsCreated
+  "numPlaylistsCreated": z.number(),
+  // Name: GetUserStats.numFavoriteTracks
+  "numFavoriteTracks": z.number(),
+  // Name: GetUserStats.listeningTime
+  "listeningTime": z.number(),
+  // Name: GetUserStats.lastListenedAt
+  "lastListenedAt": z.number().nullable(),
+  // Name: GetUserStats.updated
+  "updated": z.string(),
+});
+export type GetUserStats = z.infer<typeof GetUserStats>;
+
 // Name: PushTrackHistory
 export const PushTrackHistory = z.object({
   // Name: PushTrackHistory.id

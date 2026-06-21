@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -176,4 +177,76 @@ func (db DB) DeleteTrackHistory(ctx context.Context, track_historyId string) err
 	}
 
 	return nil
+}
+
+func (db DB) GetCompletedPlayCount(
+	ctx context.Context, 
+	userId string,
+) (int, error) {
+	tbl := goqu.T("track_history")
+	query := dialect.From(tbl).
+		Where(
+			tbl.Col("user_id").Eq(userId),
+			tbl.Col("status").Eq("completed"),
+		).
+		Select(goqu.COUNT("*"))
+
+	return Single[int](db, ctx, query)
+}
+
+func (db DB) GetSkippedPlayCount(
+	ctx context.Context, 
+	userId string,
+) (int, error) {
+	tbl := goqu.T("track_history")
+	query := dialect.From(tbl).
+		Where(
+			tbl.Col("user_id").Eq(userId),
+			tbl.Col("status").Eq("skipped"),
+		).
+		Select(goqu.COUNT("*"))
+
+	return Single[int](db, ctx, query)
+}
+
+func (db DB) GetCompletedListeningTime(
+	ctx context.Context, 
+	userId string,
+) (int64, error) {
+	historyTbl := goqu.T("track_history")
+	tracksTbl := goqu.T("tracks")
+
+	query := dialect.From(historyTbl).
+		Select(
+			goqu.COALESCE(
+				goqu.SUM(tracksTbl.Col("duration")), 0,
+			).As("listening_time"),
+		).
+		Join(
+			tracksTbl,
+			goqu.On(historyTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
+		).
+		Where(
+			historyTbl.Col("user_id").Eq(userId),
+			historyTbl.Col("status").Eq("completed"),
+		)
+	
+	listeningTime, err := Single[sql.NullInt64](db, ctx, query)
+	if err != nil {
+		return 0, err
+	}
+
+	return listeningTime.Int64, nil
+}
+
+func (db DB) GetLastListenedAt(
+	ctx context.Context, 
+	userId string,
+) (sql.NullInt64, error) {
+	tbl := goqu.T("track_history")
+	query := dialect.From(tbl).
+		Where(tbl.Col("user_id").Eq(userId)).
+		Select(goqu.MAX(tbl.Col("listened_at")))
+
+	return Single[sql.NullInt64](db, ctx, query)
 }

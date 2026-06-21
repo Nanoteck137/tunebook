@@ -62,6 +62,37 @@ func (s *UserService) GetUserById(
 	return user, nil
 }
 
+type GetUserStatsParams struct {
+	UserId string
+}
+
+func (s *UserService) GetUserStats(
+	ctx context.Context,
+	params GetUserStatsParams,
+) (database.UserStats, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return database.UserStats{}, ErrUserServiceUserNotFound
+		}
+
+		return database.UserStats{}, userErr.Wrap("get user stats", err)
+	}
+
+	stats, err := s.db.GetUserStats(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return database.UserStats{
+				UserId: params.UserId,
+			}, nil
+		}
+
+		return database.UserStats{}, userErr.Wrap("get user stats", err)
+	}
+
+	return stats, nil
+}
+
 type GetFavoriteTracksParams struct {
 	UserId string
 	Page   types.PageParams
@@ -398,6 +429,70 @@ func (s *UserService) CreateApiToken(
 type DeleteApiTokenParams struct {
 	TokenId string
 	UserId  string
+}
+
+func (s *UserService) RecalculateUserStats(ctx context.Context, userId string) error {
+	numTracksPlayed, err := s.db.GetCompletedPlayCount(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("recalculate stats: get completed play count", err)
+	}
+
+	numTracksSkipped, err := s.db.GetSkippedPlayCount(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("recalculate stats: get skipped play count", err)
+	}
+
+	listeningTimeMs, err := s.db.GetCompletedListeningTime(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("recalculate stats: get listening time", err)
+	}
+
+	lastListenedAt, err := s.db.GetLastListenedAt(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("recalculate stats: get last listened at", err)
+	}
+
+	numPlaylistsCreated, err := s.db.GetUserPlaylistCount(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("recalculate stats: get playlist count", err)
+	}
+
+	numFavoriteTracks, err := s.db.GetUserFavoriteCount(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("recalculate stats: get favorite count", err)
+	}
+
+	err = s.db.SetUserStats(ctx, database.SetUserStatsParams{
+		UserId: userId,
+
+		NumTracksPlayed:     numTracksPlayed,
+		NumTracksSkipped:    numTracksSkipped,
+		NumPlaylistsCreated: numPlaylistsCreated,
+		NumFavoriteTracks:   numFavoriteTracks,
+		ListeningTime:       listeningTimeMs,
+		LastListenedAt:      lastListenedAt,
+	})
+	if err != nil {
+		return userErr.Wrap("recalculate stats: set", err)
+	}
+
+	return nil
+}
+
+func (s *UserService) RecalculateAllUserStats(ctx context.Context) error {
+	users, err := s.db.GetAllUsers(ctx)
+	if err != nil {
+		return userErr.Wrap("recalculate all stats: get users", err)
+	}
+
+	for _, user := range users {
+		err := s.RecalculateUserStats(ctx, user.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *UserService) DeleteApiToken(

@@ -752,6 +752,46 @@
       ]
     },
     {
+      "name": "GetUserStats",
+      "fields": [
+        {
+          "name": "numTracksPlayed",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "numTracksSkipped",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "numPlaylistsCreated",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "numFavoriteTracks",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "listeningTime",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "lastListenedAt",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Images",
       "fields": [
         {
@@ -1666,6 +1706,13 @@
       "name": "GetUserImage",
       "method": "GET",
       "path": "/files/users/images/:userId/:image"
+    },
+    {
+      "type": "api",
+      "name": "GetUserStats",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/stats",
+      "response": "GetUserStats"
     },
     {
       "type": "api",
