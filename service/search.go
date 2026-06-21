@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
@@ -174,8 +173,6 @@ func (s *SearchService) recreateIndex(
 	if err != nil {
 		return fmt.Errorf("recreate index: update settings: %w", err)
 	}
-
-	pretty.Println(settingsTask)
 
 	err = s.waitForTask(ctx, settingsTask.TaskUID)
 	if err != nil {
