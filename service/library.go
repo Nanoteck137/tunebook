@@ -170,7 +170,10 @@ func setArtistTags(ctx context.Context, db database.DB, artistId string, tags []
 	return nil
 }
 
-func (s *LibraryService) syncSingleArtist(ctx context.Context, entry *library.ArtistEntry) error {
+func (s *LibraryService) syncSingleArtist(
+	ctx context.Context, 
+	entry *library.ArtistEntry,
+) error {
 	coverArt := entry.GetCoverArt()
 
 	dbArtist, err := s.db.GetArtistById(ctx, entry.Id)
@@ -237,6 +240,12 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 		var entry library.ArtistEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
+			return err
+		}
+
+		err = entry.Validate()
+		if err != nil {
+			// TODO(patrik): Better error
 			return err
 		}
 
@@ -391,6 +400,12 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 		var entry library.AlbumEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
+			return err
+		}
+
+		err = entry.Validate()
+		if err != nil {
+			// TODO(patrik): Better error
 			return err
 		}
 
@@ -619,6 +634,18 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 		err := decoder.Decode(&entry)
 		if err != nil {
 			stop := s.addError(fmt.Errorf("failed to decode next track entry[%d]: %w", idx, err))
+			if stop {
+				break
+			}
+
+			continue
+		}
+
+		err = entry.Validate()
+		if err != nil {
+			stop := s.addError(
+				fmt.Errorf("entry validation[%d]: %w", idx, err),
+			)
 			if stop {
 				break
 			}
