@@ -21,7 +21,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/oauth2 v0.28.0
-	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
 )
 
 require (

@@ -2,17 +2,38 @@ package probe
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/nanoteck137/tunebook/types"
-	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
-func convertMapKeysToLowercase(m map[string]any) map[string]any {
-	res := make(map[string]any)
+type Tags map[string]any
+
+type ffprobeStream struct {
+	CodecName string `json:"codec_name"`
+	CodecType string `json:"codec_type"`
+	Duration  string `json:"duration"`
+	Tags      Tags   `json:"tags"`
+}
+
+type ffprobeFormat struct {
+	FormatName string `json:"format_name"`
+	Duration   string `json:"duration"`
+	Tags       Tags   `json:"tags"`
+}
+
+type ffprobeOutput struct {
+	Streams []ffprobeStream `json:"streams"`
+	Format  ffprobeFormat   `json:"format"`
+}
+
+func convertMapKeysToLowercase(m Tags) Tags {
+	res := make(Tags)
 	for k, v := range m {
 		res[strings.ToLower(k)] = v
 	}
@@ -21,30 +42,55 @@ func convertMapKeysToLowercase(m map[string]any) map[string]any {
 }
 
 type ProbeResult struct {
-	Tags        ffprobe.Tags
+	Tags        Tags
 	MediaFormat types.MediaFormat
 	Duration    time.Duration
 }
 
 func ProbeMedia(ctx context.Context, filepath string) (*ProbeResult, error) {
-	probe, err := ffprobe.ProbeURL(ctx, filepath)
+	args := []string{
+		"-v", "quiet",
+		"-print_format", "json",
+		"-show_format",
+		"-show_streams",
+		filepath,
+	}
+
+	cmd := exec.CommandContext(ctx, "ffprobe", args...)
+	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
 	}
 
-	var tags ffprobe.Tags
-	hasGlobalTags := probe.Format.FormatName != "ogg"
+	var result ffprobeOutput
+	err = json.Unmarshal(out, &result)
+	if err != nil {
+		return nil, err
+	}
 
-	audioStream := probe.FirstAudioStream()
+	var tags Tags
+	hasGlobalTags := result.Format.FormatName != "ogg"
+
+	var audioStream *ffprobeStream
+	for i, s := range result.Streams {
+		if s.CodecType == "audio" {
+			audioStream = &result.Streams[i]
+			break
+		}
+	}
+
 	if audioStream == nil {
-		// TODO(patrik): Better error?
 		return nil, errors.New("contains no audio streams")
 	}
 
 	if hasGlobalTags {
-		tags = probe.Format.TagList
+		tags = result.Format.Tags
 	} else {
-		tags = audioStream.TagList
+		tags = audioStream.Tags
+	}
+
+	if tags == nil {
+		tags = make(Tags)
 	}
 
 	tags = convertMapKeysToLowercase(tags)
