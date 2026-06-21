@@ -679,7 +679,7 @@ func (s *LibraryService) Sync() error {
 	p := s.config.LibraryDir
 
 	// TODO(patrik): Replace with s.logger
-	slog.Info("starting library sync...")
+	s.logger.Info("starting library sync...")
 
 	s.norificationService.SendSimple(SendSimpleParams{
 		Title:    "Starting library sync",
@@ -691,7 +691,7 @@ func (s *LibraryService) Sync() error {
 	defer func() {
 		s.update()
 
-		slog.Info("stopped library sync")
+		s.logger.Info("stopped library sync")
 
 		message := fmt.Sprintf(
 			"%d Error(s)\nTotal sync time %s",
@@ -782,7 +782,7 @@ func (s *LibraryService) Sync() error {
 		if !exists {
 			artist, err := s.db.GetArtistById(ctx, id)
 			if err == nil {
-				slog.Warn("missing artist",
+				s.logger.Warn("missing artist",
 					"id", id,
 					"name", artist.Name,
 				)
@@ -797,7 +797,7 @@ func (s *LibraryService) Sync() error {
 		if !exists {
 			album, err := s.db.GetAlbumById(ctx, id)
 			if err == nil {
-				slog.Warn("missing album",
+				s.logger.Warn("missing album",
 					"id", id,
 					"name", album.Name,
 					"artist", album.ArtistName,
@@ -814,7 +814,7 @@ func (s *LibraryService) Sync() error {
 		if !exists {
 			track, err := s.db.GetTrackById(ctx, id)
 			if err == nil {
-				slog.Warn("missing track",
+				s.logger.Warn("missing track",
 					"id", id,
 					"name", track.Name,
 					"album", track.AlbumName,
