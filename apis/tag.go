@@ -2,8 +2,8 @@ package apis
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/core"
 )
 
 type tagApi struct {

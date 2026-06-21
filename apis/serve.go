@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/tunebook/core"
-	"github.com/nanoteck137/pyrin"
 )
 
 func RegisterApiHandlers(app core.App, g pyrin.Group) {

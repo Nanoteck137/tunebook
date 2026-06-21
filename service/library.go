@@ -17,8 +17,8 @@ import (
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/library"
 	"github.com/nanoteck137/tunebook/tools/broker"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)

@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/maruel/natural"
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/render"
 	"github.com/nanoteck137/tunebook/service"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 type GetMe struct {

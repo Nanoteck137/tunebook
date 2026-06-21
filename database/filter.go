@@ -38,9 +38,9 @@ func applyFilter(query *goqu.SelectDataset, resolver *filter.Resolver, filterStr
 
 // TODO(patrik): Remove and make better
 func applyFilterCustom(
-	query *goqu.SelectDataset, 
-	resolver *filter.Resolver, 
-	filterStr string, 
+	query *goqu.SelectDataset,
+	resolver *filter.Resolver,
+	filterStr string,
 	where exp.Expression,
 ) (*goqu.SelectDataset, error) {
 	if filterStr == "" {

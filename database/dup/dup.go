@@ -180,8 +180,8 @@ func RunUp(
 
 		if m.UpSQL == "" {
 			slog.Info(
-				"dup: skipping migration, empty up", 
-				"version", m.Version, 
+				"dup: skipping migration, empty up",
+				"version", m.Version,
 				"name", m.Name,
 			)
 

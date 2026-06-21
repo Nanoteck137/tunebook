@@ -13,8 +13,8 @@ import (
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/probe"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 var ErrInternalError = errors.New("internal error")

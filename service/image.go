@@ -18,8 +18,8 @@ import (
 
 	"github.com/nanoteck137/tunebook/assets"
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 var magickImageMapping = map[string]ImageType{

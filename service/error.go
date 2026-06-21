@@ -20,7 +20,7 @@ func (e *ServiceError) Error() string {
 }
 
 func (e *ServiceError) Unwrap() error {
-    return e.Err
+	return e.Err
 }
 
 type ServiceErrCreator struct {

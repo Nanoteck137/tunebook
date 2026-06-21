@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/nanoteck137/tunebook/service"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 var _ service.Task = (*CacheCleanupTask)(nil)

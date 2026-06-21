@@ -7,8 +7,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/core"
 )
 
 func InstallFilesHandlers(app core.App, g pyrin.Group) {

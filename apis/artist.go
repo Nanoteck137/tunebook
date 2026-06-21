@@ -4,12 +4,12 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 type ArtistInfo struct {

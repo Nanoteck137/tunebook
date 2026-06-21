@@ -12,7 +12,7 @@ var createTrackFilterId = createIdGenerator(8)
 type TrackFilter struct {
 	RowId int `db:"rowid"`
 
-	Id     string `db:"id"`
+	Id string `db:"id"`
 
 	UserId string `db:"user_id"`
 
@@ -79,7 +79,7 @@ func (db DB) CreateTrackFilter(ctx context.Context, params CreateTrackFilterPara
 	}
 
 	query := dialect.Insert("track_filters").Rows(goqu.Record{
-		"id":      params.Id,
+		"id": params.Id,
 
 		"user_id": params.UserId,
 

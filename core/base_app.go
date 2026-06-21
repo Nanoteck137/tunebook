@@ -10,8 +10,8 @@ import (
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tasks"
 	"github.com/nanoteck137/tunebook/tools/broker"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 var _ App = (*BaseApp)(nil)
@@ -29,12 +29,12 @@ type BaseApp struct {
 	imageService        *service.ImageService
 	mediaService        *service.MediaService
 
-	artistService       *service.ArtistService
-	albumService        *service.AlbumService
-	trackService        *service.TrackService
-	playlistService     *service.PlaylistService
-	historyService      *service.HistoryService
-	queueService        *service.QueueService
+	artistService   *service.ArtistService
+	albumService    *service.AlbumService
+	trackService    *service.TrackService
+	playlistService *service.PlaylistService
+	historyService  *service.HistoryService
+	queueService    *service.QueueService
 
 	broker *broker.Broker
 }

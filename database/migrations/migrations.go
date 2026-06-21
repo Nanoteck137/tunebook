@@ -19,5 +19,3 @@ func RunMigrateUp(ctx context.Context, db *database.Database) error {
 
 	return dup.RunUp(ctx, db, ms)
 }
-
-
