@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { page } from "$app/state";
   import {
     Button,
     buttonVariants,
@@ -7,7 +8,7 @@
     DropdownMenu,
     Input,
   } from "@nanoteck137/nano-ui";
-  import { EllipsisVertical, Info, Search } from "lucide-svelte";
+  import { EllipsisVertical, Info, Search, X } from "lucide-svelte";
   import Pagination from "$lib/components/Pagination.svelte";
   import { cn } from "$lib/utils";
   import { onMount } from "svelte";
@@ -20,6 +21,11 @@
       keepFocus: true,
       replaceState: true,
     });
+  }
+
+  function clearSearch() {
+    value = "";
+    doSearch("");
   }
 
   let initialValue = $state("");
@@ -63,6 +69,15 @@
       day: "numeric",
     });
   }
+
+  const tabs = [
+    { label: "All", href: "/search" },
+    { label: "Tracks", href: "/search/tracks" },
+    { label: "Artists", href: "/search/artists" },
+    { label: "Albums", href: "/search/albums" },
+    { label: "Playlists", href: "/search/playlists" },
+    { label: "Users", href: "/search/users" },
+  ];
 </script>
 
 <svelte:head>
@@ -70,8 +85,8 @@
 </svelte:head>
 
 <div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-2">
-    <h1 class="text-xl font-bold">Search Albums</h1>
+  <div>
+    <h1 class="mb-4 text-xl font-bold">Search Albums</h1>
 
     <form
       action=""
@@ -82,26 +97,49 @@
         doSearch(value);
       }}
     >
-      <div class="flex items-center gap-2">
-        <div class="relative flex-1">
-          <Search
-            size={16}
-            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            id="query"
-            name="query"
-            placeholder="Search albums..."
-            autocomplete="off"
-            value={initialValue}
-            oninput={onInput}
-            class="pl-9"
-          />
+      <div class="rounded-lg border bg-card p-3">
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <Search
+              size={16}
+              class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              id="query"
+              name="query"
+              placeholder="Search albums..."
+              autocomplete="off"
+              value={initialValue}
+              oninput={onInput}
+              class="pl-9"
+            />
+          </div>
+          <Button type="submit">Search</Button>
+          {#if data.query}
+            <Button variant="ghost" size="icon" onclick={clearSearch}>
+              <X size={16} />
+            </Button>
+          {/if}
         </div>
-        <Button type="submit">Search</Button>
       </div>
     </form>
   </div>
+
+  <nav class="flex flex-wrap gap-1">
+    {#each tabs as { label, href }}
+      <a
+        href="{href}?query={data.query}"
+        class={cn(
+          "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+          page.url.pathname === href
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        )}
+      >
+        {label}
+      </a>
+    {/each}
+  </nav>
 
   {#if data.query && data.albums.length === 0}
     <p class="py-12 text-center text-sm text-muted-foreground">
