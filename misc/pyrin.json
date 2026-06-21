@@ -45,6 +45,11 @@
           "omitEmpty": false
         },
         {
+          "name": "albumType",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
           "name": "coverArt",
           "type": "Images",
           "omitEmpty": false

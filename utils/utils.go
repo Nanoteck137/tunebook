@@ -30,6 +30,14 @@ func SqlNullToStringPtr(value sql.NullString) *string {
 	return nil
 }
 
+func StringToPtr(value string) *string {
+	if value != "" {
+		return &value
+	}
+
+	return nil
+}
+
 func SqlNullToInt64Ptr(value sql.NullInt64) *int64 {
 	if value.Valid {
 		return &value.Int64

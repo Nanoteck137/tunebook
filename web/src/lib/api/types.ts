@@ -47,6 +47,8 @@ export const Album = z.object({
   "name": z.string(),
   // Name: Album.year
   "year": z.number().nullable(),
+  // Name: Album.albumType
+  "albumType": z.string(),
   // Name: Album.coverArt
   "coverArt": Images,
   // Name: Album.artists

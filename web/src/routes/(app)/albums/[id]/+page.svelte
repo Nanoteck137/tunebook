@@ -42,7 +42,7 @@
     <p
       class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
     >
-      Album
+      {data.album.albumType}
     </p>
 
     <h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">

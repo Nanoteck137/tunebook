@@ -171,7 +171,7 @@ func setArtistTags(ctx context.Context, db database.DB, artistId string, tags []
 }
 
 func (s *LibraryService) syncSingleArtist(
-	ctx context.Context, 
+	ctx context.Context,
 	entry *library.ArtistEntry,
 ) error {
 	coverArt := entry.GetCoverArt()
@@ -323,6 +323,7 @@ func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.Alb
 					Int64: entry.Year,
 					Valid: entry.Year != 0,
 				},
+				AlbumType: entry.AlbumType,
 			})
 			if err != nil {
 				return err
@@ -355,6 +356,11 @@ func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.Alb
 				Valid: entry.Year != 0,
 			},
 			Changed: entry.Year != dbAlbum.Year.Int64,
+		}
+
+		changes.AlbumType = database.Change[library.AlbumType]{
+			Value:   entry.AlbumType,
+			Changed: entry.AlbumType != dbAlbum.AlbumType,
 		}
 
 		err = s.db.UpdateAlbum(ctx, dbAlbum.Id, changes)
@@ -402,6 +408,9 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 		if err != nil {
 			return err
 		}
+
+		// TODO(patrik): Remove, test code
+		entry.AlbumType = library.AlbumTypeAlbum
 
 		err = entry.Validate()
 		if err != nil {

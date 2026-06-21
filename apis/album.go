@@ -16,7 +16,8 @@ type Album struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 
-	Year *int64 `json:"year"`
+	Year      *int64  `json:"year"`
+	AlbumType string `json:"albumType"`
 
 	CoverArt types.Images `json:"coverArt"`
 
@@ -44,14 +45,15 @@ func ConvertDBAlbum(c pyrin.Context, album database.Album) Album {
 	}
 
 	return Album{
-		Id:       album.Id,
-		Name:     album.Name,
-		Year:     utils.SqlNullToInt64Ptr(album.Year),
-		CoverArt: ConvertAlbumCoverURL(c, album.Id),
-		Artists:  allArtists,
-		Tags:     utils.SplitTagString(album.Tags.String),
-		Created:  formatTime(album.Created),
-		Updated:  formatTime(album.Updated),
+		Id:        album.Id,
+		Name:      album.Name,
+		Year:      utils.SqlNullToInt64Ptr(album.Year),
+		AlbumType: string(album.AlbumType),
+		CoverArt:  ConvertAlbumCoverURL(c, album.Id),
+		Artists:   allArtists,
+		Tags:      utils.SplitTagString(album.Tags.String),
+		Created:   formatTime(album.Created),
+		Updated:   formatTime(album.Updated),
 	}
 }
 

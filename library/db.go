@@ -31,14 +31,32 @@ func (e ArtistEntry) GetCoverArt() string {
 	return filepath.Join(e.Path, e.CoverArt)
 }
 
+type AlbumType string
+
+const (
+	AlbumTypeUnknown     AlbumType = "unknown"
+	AlbumTypeAlbum       AlbumType = "album"
+	AlbumTypeSingle      AlbumType = "single"
+	AlbumTypeEP          AlbumType = "ep"
+	AlbumTypeCompilation AlbumType = "compilation"
+	AlbumTypeLive        AlbumType = "live"
+	AlbumTypeSoundtrack  AlbumType = "soundtrack"
+	AlbumTypeDemo        AlbumType = "demo"
+	AlbumTypeMixtape     AlbumType = "mixtape"
+	AlbumTypeBootleg     AlbumType = "bootleg"
+	AlbumTypeRemix       AlbumType = "remix"
+	AlbumTypeOther       AlbumType = "other"
+)
+
 type AlbumEntry struct {
-	Id                 string   `json:"id"`
-	Name               string   `json:"name"`
-	CoverArt           string   `json:"coverArt"`
-	Year               int64    `json:"year"`
-	ArtistId           string   `json:"artistId"`
-	FeaturingArtistIds []string `json:"featuringArtistIds"`
-	Tags               []string `json:"tags"`
+	Id                 string    `json:"id"`
+	Name               string    `json:"name"`
+	CoverArt           string    `json:"coverArt"`
+	Year               int64     `json:"year"`
+	AlbumType          AlbumType `json:"albumType"`
+	ArtistId           string    `json:"artistId"`
+	FeaturingArtistIds []string  `json:"featuringArtistIds"`
+	Tags               []string  `json:"tags"`
 
 	Path string `json:"path"`
 }
@@ -47,6 +65,20 @@ func (e AlbumEntry) Validate() error {
 	return validate.ValidateStruct(&e,
 		validate.Field(&e.Id, validate.Required),
 		validate.Field(&e.Name, validate.Required),
+		validate.Field(&e.AlbumType, validate.Required, validate.In(
+			AlbumTypeUnknown,
+			AlbumTypeAlbum,
+			AlbumTypeSingle,
+			AlbumTypeEP,
+			AlbumTypeCompilation,
+			AlbumTypeLive,
+			AlbumTypeSoundtrack,
+			AlbumTypeDemo,
+			AlbumTypeMixtape,
+			AlbumTypeBootleg,
+			AlbumTypeRemix,
+			AlbumTypeOther,
+		)),
 		validate.Field(&e.ArtistId, validate.Required),
 		validate.Field(&e.Path, validate.Required),
 	)

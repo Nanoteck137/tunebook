@@ -18,6 +18,7 @@ CREATE TABLE albums (
 
     cover_art TEXT,
     year INT,
+    album_type TEXT NOT NULL,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL

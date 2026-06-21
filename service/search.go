@@ -46,8 +46,9 @@ type SearchAlbum struct {
 
 	Name string `json:"name"`
 
-	CoverArt *string `json:"coverArt"`
-	Year     *int64  `json:"year"`
+	CoverArt  *string `json:"coverArt"`
+	Year      *int64  `json:"year"`
+	AlbumType string  `json:"albumType"`
 
 	Artists []string `json:"artists"`
 
@@ -252,12 +253,13 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 			}
 
 			return SearchAlbum{
-				Id:       item.Id,
-				Name:     item.Name,
-				CoverArt: utils.SqlNullToStringPtr(item.CoverArt),
-				Year:     utils.SqlNullToInt64Ptr(item.Year),
-				Artists:  artists,
-				Tags:     utils.SplitTagString(item.Tags.String),
+				Id:        item.Id,
+				Name:      item.Name,
+				CoverArt:  utils.SqlNullToStringPtr(item.CoverArt),
+				Year:      utils.SqlNullToInt64Ptr(item.Year),
+				AlbumType: string(item.AlbumType),
+				Artists:   artists,
+				Tags:      utils.SplitTagString(item.Tags.String),
 			}
 		},
 	)

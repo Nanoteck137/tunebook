@@ -8,6 +8,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
+	"github.com/nanoteck137/tunebook/library"
 	"github.com/nanoteck137/tunebook/tools/filter"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -23,8 +24,9 @@ type Album struct {
 
 	ArtistId string `db:"artist_id"`
 
-	CoverArt sql.NullString `db:"cover_art"`
-	Year     sql.NullInt64  `db:"year"`
+	CoverArt  sql.NullString    `db:"cover_art"`
+	Year      sql.NullInt64     `db:"year"`
+	AlbumType library.AlbumType `db:"album_type"`
 
 	ArtistName string `db:"artist_name"`
 
@@ -60,6 +62,7 @@ func AlbumQuery() *goqu.SelectDataset {
 
 			"albums.cover_art",
 			"albums.year",
+			"albums.album_type",
 
 			"albums.created",
 			"albums.updated",
@@ -175,8 +178,9 @@ type CreateAlbumParams struct {
 
 	ArtistId string
 
-	CoverArt sql.NullString
-	Year     sql.NullInt64
+	CoverArt  sql.NullString
+	Year      sql.NullInt64
+	AlbumType library.AlbumType
 
 	Created int64
 	Updated int64
@@ -204,8 +208,9 @@ func (db DB) CreateAlbum(
 
 			"artist_id": params.ArtistId,
 
-			"cover_art": params.CoverArt,
-			"year":      params.Year,
+			"cover_art":  params.CoverArt,
+			"year":       params.Year,
+			"album_type": params.AlbumType,
 
 			"created": params.Created,
 			"updated": params.Updated,
@@ -224,8 +229,9 @@ type AlbumChanges struct {
 
 	ArtistId Change[string]
 
-	CoverArt Change[sql.NullString]
-	Year     Change[sql.NullInt64]
+	CoverArt  Change[sql.NullString]
+	Year      Change[sql.NullInt64]
+	AlbumType Change[library.AlbumType]
 
 	Created Change[int64]
 }
@@ -243,6 +249,7 @@ func (db DB) UpdateAlbum(
 
 	addToRecord(record, "cover_art", changes.CoverArt)
 	addToRecord(record, "year", changes.Year)
+	addToRecord(record, "album_type", changes.AlbumType)
 
 	addToRecord(record, "created", changes.Created)
 
