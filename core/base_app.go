@@ -33,8 +33,8 @@ type BaseApp struct {
 	albumService    *service.AlbumService
 	trackService    *service.TrackService
 	playlistService *service.PlaylistService
-	historyService *service.HistoryService
-	queueService   *service.QueueService
+	historyService  *service.HistoryService
+	queueService    *service.QueueService
 
 	broker *broker.Broker
 }

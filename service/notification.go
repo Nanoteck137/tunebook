@@ -7,31 +7,34 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gosimple/slug"
+	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/tunebook/config"
 )
 
-// TODO(patrik): Rename to NotifyPriority or something like that
-type Priority int
+var notificationErr = NewServiceErrCreator("notification")
+
+type NotifyPriority int
 
 const (
-	PriorityMin    Priority = 1
-	PriorityLow    Priority = 2
-	PriorityNormal Priority = 3
-	PriorityHigh   Priority = 4
-	PriorityUrgent Priority = 5
+	NotifyPriorityMin    NotifyPriority = 1
+	NotifyPriorityLow    NotifyPriority = 2
+	NotifyPriorityNormal NotifyPriority = 3
+	NotifyPriorityHigh   NotifyPriority = 4
+	NotifyPriorityUrgent NotifyPriority = 5
 )
 
-func (p Priority) String() string {
+func (p NotifyPriority) String() string {
 	switch p {
-	case PriorityMin:
+	case NotifyPriorityMin:
 		return "min"
-	case PriorityLow:
+	case NotifyPriorityLow:
 		return "low"
-	case PriorityNormal:
+	case NotifyPriorityNormal:
 		return "normal"
-	case PriorityHigh:
+	case NotifyPriorityHigh:
 		return "high"
-	case PriorityUrgent:
+	case NotifyPriorityUrgent:
 		return "urgent"
 	default:
 		return "normal"
@@ -39,7 +42,11 @@ func (p Priority) String() string {
 }
 
 const (
-	NOTIFY_TAG_WARNING = "warning"
+	NotifyTagWarning       = "warning"
+	NotifyTagRotatingLight = "rotating_light"
+	NotifyTagComputer      = "computer"
+	NotifyTagCd            = "cd"
+	NotifyTagLoadspeaker   = "loudspeaker"
 )
 
 type NotificationService struct {
@@ -57,6 +64,10 @@ func NewNotificationService(logger *slog.Logger, config *config.Config) *Notific
 	}
 }
 
+func (s *NotificationService) IsEnabled() bool {
+	return s.BaseUrl != "" && s.Topic != ""
+}
+
 type notificationMessageBody struct {
 	Topic    string   `json:"topic"`
 	Message  string   `json:"message,omitempty"`
@@ -65,11 +76,6 @@ type notificationMessageBody struct {
 	Priority int      `json:"priority,omitempty"`
 
 	Markdown bool `json:"markdown"`
-}
-
-type SimpleNotificationOptions struct {
-	Tags     []string
-	Priority Priority
 }
 
 func (s *NotificationService) sendNotification(body notificationMessageBody) error {
@@ -96,43 +102,57 @@ func (s *NotificationService) sendNotification(body notificationMessageBody) err
 	return nil
 }
 
-func (s *NotificationService) IsEnabled() bool {
-	return s.BaseUrl != "" && s.Topic != ""
+type SendSimpleParams struct {
+	Title    string
+	Message  string
+	Tags     []string
+	Priority NotifyPriority
 }
 
-func (s *NotificationService) SendSimple(title, message string, opts SimpleNotificationOptions) error {
-	if s.IsEnabled() {
+func (s *NotificationService) SendSimple(params SendSimpleParams) error {
+	if !s.IsEnabled() {
 		s.logger.Debug("notification service not configured, skipping")
 		return nil
 	}
 
+	if params.Title == "" {
+		// TODO(patrik): Error?
+		return nil
+	}
+
+	if params.Priority == 0 {
+		params.Priority = NotifyPriorityNormal
+	}
+
+	params.Tags = append(params.Tags, slug.Make(tunebook.AppName))
+
 	body := notificationMessageBody{
 		Topic:    s.Topic,
-		Message:  message,
-		Title:    title,
-		Tags:     opts.Tags,
-		Priority: int(opts.Priority),
+		Message:  params.Message,
+		Title:    tunebook.AppName + ": " + params.Title,
+		Tags:     params.Tags,
+		Priority: int(params.Priority),
 		Markdown: true,
 	}
 
 	err := s.sendNotification(body)
 	if err != nil {
-		s.logger.Error("failed to send simple notification",
-			slog.String("title", title),
-			slog.String("message", message),
-			slog.String("priority", opts.Priority.String()),
-			slog.Any("tags", opts.Tags),
+		s.logger.Error("simple notification",
+			slog.String("title", params.Title),
+			slog.String("message", params.Message),
+			slog.String("priority", params.Priority.String()),
+			slog.Any("tags", params.Tags),
 			slog.Any("err", err),
 		)
 
-		return fmt.Errorf("failed to send notification: %w", err)
+		return notificationErr.Wrap("send simple", err)
 	}
 
-	s.logger.Info("sent simple notification",
-		slog.String("title", title),
-		slog.String("message", message),
-		slog.String("priority", opts.Priority.String()),
-		slog.Any("tags", opts.Tags),
+	s.logger.Debug("send simple notification",
+		slog.String("title", params.Title),
+		slog.String("message", params.Message),
+		slog.String("priority", params.Priority.String()),
+		slog.Any("tags", params.Tags),
 	)
 
 	return nil

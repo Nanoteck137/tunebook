@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gosimple/slug"
-	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/library"
@@ -654,8 +653,12 @@ func (s *LibraryService) Sync() error {
 
 	// TODO(patrik): Replace with s.logger
 	slog.Info("starting library sync...")
-	s.norificationService.SendSimple(tunebook.AppName+": "+"Starting library sync", "Starting to sync the library", SimpleNotificationOptions{
-		Tags: []string{slug.Make(tunebook.AppName), "library", "syncing"},
+
+	s.norificationService.SendSimple(SendSimpleParams{
+		Title:    "Starting library sync",
+		Message:  "Starting to sync the library",
+		Tags:     []string{"library", "syncing"},
+		Priority: 0,
 	})
 
 	defer func() {
@@ -669,14 +672,16 @@ func (s *LibraryService) Sync() error {
 			utils.PrettyDuration(s.totalSyncDuration),
 		)
 
-		tags := []string{slug.Make(tunebook.AppName), "library", "syncing"}
+		tags := []string{"library", "syncing"}
 
 		if len(s.errors) > 0 {
 			tags = append(tags, "warning")
 		}
 
-		s.norificationService.SendSimple(tunebook.AppName+": "+"Stopped library sync", message, SimpleNotificationOptions{
-			Tags: tags,
+		s.norificationService.SendSimple(SendSimpleParams{
+			Title:   "Stopped library sync",
+			Message: message,
+			Tags:    tags,
 		})
 	}()
 
