@@ -85,9 +85,8 @@ func InstallSearchHandlers(app core.App, group pyrin.Group) {
 				albums, page, err := app.SearchService().SearchAlbums(
 					ctx,
 					service.SearchParams{
-						Query:  q.Get("query"),
-						Page:   pageParams,
-						Filter: "year = 2008",
+						Query: q.Get("query"),
+						Page:  pageParams,
 					},
 				)
 				if err != nil {
