@@ -1,6 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from "$app/navigation";
-  import { getApiClient, handleApiError } from "$lib";
+  import { getApiClient, handleApiError, setApiClientAuth } from "$lib";
   import { Button } from "@nanoteck137/nano-ui";
   import toast from "svelte-5-french-toast";
 
@@ -37,7 +37,6 @@
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     return new Promise((resolve, reject) => {
       const expiresAtDate = new Date(expiresAt);
-      console.log("Request Expires At", expiresAtDate);
 
       const pollInterval = setInterval(async () => {
         try {
@@ -141,9 +140,8 @@
         return;
       }
 
-      console.log("login", res);
-
       localStorage.setItem("token", res.token);
+      setApiClientAuth(apiClient, res.token);
       invalidateAll();
     }}
   >

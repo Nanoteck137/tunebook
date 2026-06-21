@@ -1,15 +1,14 @@
 <script lang="ts">
   import { invalidateAll } from "$app/navigation";
-  import { getApiClient, handleApiError } from "$lib";
+  import { getApiClient, handleApiError, setApiClientAuth } from "$lib";
   import type { AuthQuickConnectInitiate } from "$lib/api/types.js";
-  import { onMount } from "svelte";
 
-  const { data } = $props();
+  // const {} = $props();
   const apiClient = getApiClient();
 
   let auth = $state<AuthQuickConnectInitiate | null>(null);
 
-  async function test() {
+  async function initiate() {
     const res = await apiClient.authQuickConnectInitiate();
     if (!res.success) {
       return handleApiError(res.error);
@@ -19,13 +18,9 @@
     console.log(auth);
   }
 
-  // onMount(() => {
-  //   test();
-  // });
-
   $effect(() => {
     if (!auth) {
-      test();
+      initiate();
     }
   });
 
@@ -34,19 +29,14 @@
       return;
     }
 
-    console.log("RUNNING");
-
     const expiresAtDate = new Date(auth.expiresAt);
 
     const pollInterval = setInterval(async () => {
-      console.log("INTERVAL");
       try {
         if (new Date() > expiresAtDate) {
           clearInterval(pollInterval);
 
           auth = null;
-          // win?.close();
-          // resolve({ isSuccess: false, message: `authentication timeout` });
 
           return;
         }
@@ -66,8 +56,6 @@
           return handleApiError(res.error);
         }
 
-        console.log("STATUS", res.data.status);
-
         if (res.data.status === "completed") {
           const res = await apiClient.authFinishQuickConnect({
             code: auth.code,
@@ -81,10 +69,12 @@
           }
 
           clearInterval(pollInterval);
-          console.log("Token", res.data.token);
+
           localStorage.setItem("token", res.data.token);
+          setApiClientAuth(apiClient, res.data.token);
+
           invalidateAll();
-        } else if (res.data.status === "pending") {
+          // } else if (res.data.status === "pending") {
         } else if (res.data.status === "expired") {
           clearInterval(pollInterval);
           auth = null;
@@ -104,7 +94,6 @@
 
     return () => {
       clearInterval(pollInterval);
-      console.log("ENDING RUNNING");
     };
   });
 </script>
