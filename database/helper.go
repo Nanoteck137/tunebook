@@ -9,6 +9,15 @@ import (
 	"github.com/nrednav/cuid2"
 )
 
+type RawQuery struct {
+	Query  string
+	Params []any
+}
+
+func (r RawQuery) ToSQL() (string, []any, error) {
+	return r.Query, r.Params, nil
+}
+
 type Change[T any] struct {
 	Value   T
 	Changed bool

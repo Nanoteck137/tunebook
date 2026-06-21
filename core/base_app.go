@@ -1,10 +1,12 @@
 package core
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/database/migrations"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tasks"
 	"github.com/nanoteck137/tunebook/tools/broker"
@@ -130,7 +132,7 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	if app.config.RunMigrations {
-		err = app.db.RunMigrateUp()
+		err = migrations.RunMigrateUp(context.Background(), app.db)
 		if err != nil {
 			return err
 		}

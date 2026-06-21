@@ -1,25 +1,23 @@
 package migrations
 
 import (
-	"database/sql"
+	"context"
 	"embed"
 
-	"github.com/pressly/goose/v3"
+	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/database/dup"
 )
 
 //go:embed *.sql
 var migrations embed.FS
 
-func init() {
-	// TODO(patrik): Move?
-	goose.SetBaseFS(migrations)
-	goose.SetDialect("sqlite3")
+func RunMigrateUp(ctx context.Context, db *database.Database) error {
+	ms, err := dup.MigrationsFromFS(migrations, ".")
+	if err != nil {
+		return err
+	}
+
+	return dup.RunUp(ctx, db, ms)
 }
 
-func RunMigrateUp(conn *sql.DB) error {
-	return goose.Up(conn, ".")
-}
 
-func RunMigrateDown(conn *sql.DB) error {
-	return goose.Down(conn, ".")
-}

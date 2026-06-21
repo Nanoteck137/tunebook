@@ -8,7 +8,6 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
-	"github.com/nanoteck137/tunebook/database/migrations"
 
 	"github.com/mattn/go-sqlite3"
 )
@@ -133,14 +132,6 @@ type Database struct {
 	DB
 
 	handle *sqlx.DB
-}
-
-func (db *Database) RunMigrateUp() error {
-	return migrations.RunMigrateUp(db.handle.DB)
-}
-
-func (db *Database) RunMigrateDown() error {
-	return migrations.RunMigrateDown(db.handle.DB)
 }
 
 func (db *Database) Close() error {
