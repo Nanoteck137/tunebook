@@ -250,17 +250,13 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				// TODO(patrik): Add filterId
-
-				pageParams := getPageParams(q, 100)
-				filterParams := getFilterParams(q)
-
 				items, page, err := app.UserService().GetFavoriteTracks(
 					ctx,
 					service.GetFavoriteTracksParams{
-						UserId: c.Param("userId"),
-						Page:   pageParams,
-						Filter: filterParams,
+						UserId:   c.Param("userId"),
+						Page:     getPageParams(q, 100),
+						Filter:   getFilterParams(q),
+						FilterId: q.Get("filterId"),
 					},
 				)
 				if err != nil {

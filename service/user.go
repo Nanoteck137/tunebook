@@ -94,15 +94,23 @@ func (s *UserService) GetUserStats(
 }
 
 type GetFavoriteTracksParams struct {
-	UserId string
-	Page   types.PageParams
-	Filter types.FilterParams
+	UserId   string
+	Page     types.PageParams
+	Filter   types.FilterParams
+	FilterId string
 }
 
 func (s *UserService) GetFavoriteTracks(
 	ctx context.Context,
 	params GetFavoriteTracksParams,
 ) ([]database.UserFavoriteTrack, types.Page, error) {
+	if params.FilterId != "" {
+		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
+		if err == nil {
+			params.Filter.Filter = dbFilter.Filter
+		}
+	}
+
 	tracks, page, err := s.db.GetUserFavoriteTracks(
 		ctx,
 		database.GetUserFavoriteTracksParams{
