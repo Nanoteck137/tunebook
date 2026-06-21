@@ -47,7 +47,9 @@
   </div>
 
   <div class="rounded-lg border bg-card p-3">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+    >
       <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         <Input class="h-9 sm:w-56" placeholder="Search artists..." disabled />
         <Select.Root type="single" allowDeselect={false}>
@@ -63,7 +65,7 @@
         </Select.Root>
       </div>
 
-      <Button variant="outline" size="icon" disabled>
+      <Button variant="outline" size="icon" href="/search/artists">
         <Search size={16} />
       </Button>
     </div>
@@ -71,10 +73,14 @@
     <div class="mt-3 flex flex-wrap items-center gap-1.5">
       <span class="text-xs font-medium text-muted-foreground">Tags</span>
       <div class="flex items-center gap-1">
-        <button class="rounded-l-md border px-1.5 py-1 text-xs font-medium bg-primary text-primary-foreground border-primary">
+        <button
+          class="rounded-l-md border border-primary bg-primary px-1.5 py-1 text-xs font-medium text-primary-foreground"
+        >
           + Inc
         </button>
-        <button class="-ml-px rounded-r-md border px-1.5 py-1 text-xs font-medium bg-transparent text-muted-foreground">
+        <button
+          class="-ml-px rounded-r-md border bg-transparent px-1.5 py-1 text-xs font-medium text-muted-foreground"
+        >
           - Exc
         </button>
       </div>
@@ -88,9 +94,13 @@
 
 <Spacer size="lg" />
 
-<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+<div
+  class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
+>
   {#each data.artists as artist}
-    <div class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
+    <div
+      class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
+    >
       <a href="/artists/{artist.id}">
         <img
           src={artist.coverArt.medium}
@@ -162,7 +172,9 @@
 
         <div class="flex min-w-0 flex-1 flex-col gap-2">
           <div>
-            <p class="text-lg font-semibold leading-tight">{infoArtist.name}</p>
+            <p class="text-lg font-semibold leading-tight">
+              {infoArtist.name}
+            </p>
           </div>
 
           <div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
@@ -170,7 +182,9 @@
               <span class="text-muted-foreground">Tags</span>
               <div class="flex flex-wrap gap-1">
                 {#each infoArtist.tags as tag}
-                  <span class="rounded-md bg-secondary px-1.5 py-0.5 text-xs">{tag}</span>
+                  <span class="rounded-md bg-secondary px-1.5 py-0.5 text-xs"
+                    >{tag}</span
+                  >
                 {/each}
               </div>
             {/if}

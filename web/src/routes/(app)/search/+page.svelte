@@ -90,7 +90,15 @@
 {#if data.artists.length > 0}
   <div class="flex items-center justify-between">
     <p class="text-bold">Artists</p>
-    <p class="text-xs">{data.artists.length} artist(s)</p>
+    <div class="flex items-center gap-2">
+      <p class="text-xs">{data.artists.length} artist(s)</p>
+      <a
+        href="/search/artists?query={data.query}"
+        class="text-xs font-medium text-primary hover:underline"
+      >
+        View all
+      </a>
+    </div>
   </div>
 
   {#each data.artists as artist}
@@ -101,7 +109,15 @@
 {#if data.albums.length > 0}
   <div class="flex items-center justify-between">
     <p class="text-bold">Albums</p>
-    <p class="text-xs">{data.albums.length} album(s)</p>
+    <div class="flex items-center gap-2">
+      <p class="text-xs">{data.albums.length} album(s)</p>
+      <a
+        href="/search/albums?query={data.query}"
+        class="text-xs font-medium text-primary hover:underline"
+      >
+        View all
+      </a>
+    </div>
   </div>
 
   {#each data.albums as album}
@@ -110,20 +126,38 @@
 {/if}
 
 {#if data.tracks.length > 0}
+  <div class="flex items-center justify-between">
+    <p class="text-bold">Tracks</p>
+    <div class="flex items-center gap-2">
+      <p class="text-xs">{data.tracks.length} track(s)</p>
+      <a
+        href="/search/tracks?query={data.query}"
+        class="text-xs font-medium text-primary hover:underline"
+      >
+        View all
+      </a>
+    </div>
+  </div>
+
   <TrackList
     totalTracks={data.tracks.length}
     tracks={data.tracks}
-    userPlaylists={data.userPlaylists}
-    quickPlaylist={data.user?.quickPlaylist}
     onPlay={() => {}}
   />
-  <!-- onTrackPlay={() => {}} -->
 {/if}
 
 {#if data.playlists.length > 0}
   <div class="flex items-center justify-between">
     <p class="text-bold">Playlists</p>
-    <p class="text-xs">{data.playlists.length} playlist(s)</p>
+    <div class="flex items-center gap-2">
+      <p class="text-xs">{data.playlists.length} playlist(s)</p>
+      <a
+        href="/search/playlists?query={data.query}"
+        class="text-xs font-medium text-primary hover:underline"
+      >
+        View all
+      </a>
+    </div>
   </div>
 
   {#each data.playlists as playlist}
@@ -183,7 +217,15 @@
 {#if data.users.length > 0}
   <div class="flex items-center justify-between">
     <p class="text-bold">Users</p>
-    <p class="text-xs">{data.users.length} user(s)</p>
+    <div class="flex items-center gap-2">
+      <p class="text-xs">{data.users.length} user(s)</p>
+      <a
+        href="/search/users?query={data.query}"
+        class="text-xs font-medium text-primary hover:underline"
+      >
+        View all
+      </a>
+    </div>
   </div>
 
   {#each data.users as user}
