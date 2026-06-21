@@ -1,12 +1,15 @@
 package config
 
 import (
-	"errors"
 	"fmt"
+	"os"
+	"strings"
 
+	"github.com/kr/pretty"
+	"github.com/mitchellh/mapstructure"
 	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/validate"
-	"github.com/spf13/viper"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type ConfigOidcProvider struct {
@@ -28,13 +31,15 @@ func (c ConfigOidcProvider) Validate() error {
 }
 
 type Config struct {
-	RunMigrations bool   `mapstructure:"run_migrations"`
-	ListenAddr    string `mapstructure:"listen_addr"`
-	DataDir       string `mapstructure:"data_dir"`
-	LibraryDir    string `mapstructure:"library_dir"`
-	JwtSecret     string `mapstructure:"jwt_secret"`
+	RunMigrations bool `mapstructure:"run_migrations"`
 
-	WebDir string `mapstructure:"web"`
+	ListenAddr string `mapstructure:"listen_addr"`
+
+	DataDir    string `mapstructure:"data_dir"`
+	LibraryDir string `mapstructure:"library_dir"`
+	WebDir     string `mapstructure:"web"`
+
+	JwtSecret string `mapstructure:"jwt_secret"`
 
 	MeilisearchAddress string `mapstructure:"meilisearch_address"`
 	MeilisearchApiKey  string `mapstructure:"meilisearch_api_key"`
@@ -59,69 +64,136 @@ func (c Config) Validate() error {
 	)
 }
 
-func Load(cfgFile string) (*Config, error) {
-	v := viper.New()
+func configDefaults() map[string]any {
+	return map[string]any{
+		"run_migrations": true,
+		"listen_addr":    ":3000",
+	}
+}
 
-	// NOTE(patrik): Set default values here
-	v.SetDefault("run_migrations", "true")
-	v.SetDefault("listen_addr", ":3000")
-	v.SetDefault("ntfy_base_url", "")
-	v.SetDefault("ntfy_topic", "")
-	v.BindEnv("data_dir")
-	v.BindEnv("library_dir")
-	v.BindEnv("jwt_secret")
-
-	v.BindEnv("web")
-
-	v.BindEnv("meilisearch_address")
-	v.BindEnv("meilisearch_api_key")
-
-	if cfgFile != "" {
-		v.SetConfigFile(cfgFile)
-	} else {
-		v.AddConfigPath(".")
-		v.SetConfigName("config")
+func readFileToMap(path string) (map[string]any, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
 	}
 
-	v.SetEnvPrefix(tunebook.AppName)
-	v.AutomaticEnv()
-
-	err := v.ReadInConfig()
+	var m map[string]any
+	err = toml.Unmarshal(data, &m)
 	if err != nil {
-		var confErr viper.ConfigFileNotFoundError
-		if !errors.As(err, &confErr) {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+func mergeMaps(base, overlay map[string]any) {
+	for k, v := range overlay {
+		ov, ok := v.(map[string]any)
+		if !ok {
+			base[k] = v
+			continue
+		}
+
+		bv, ok := base[k]
+		if !ok {
+			base[k] = v
+			continue
+		}
+
+		bvm, ok := bv.(map[string]any)
+		if !ok {
+			base[k] = v
+			continue
+		}
+
+		mergeMaps(bvm, ov)
+	}
+}
+
+func readConfigFromEnv() map[string]any {
+	prefix := strings.ToUpper(tunebook.AppName + "_")
+	m := make(map[string]any)
+
+	for _, e := range os.Environ() {
+		k, v, ok := strings.Cut(e, "=")
+		if !ok {
+			continue
+		}
+
+		if !strings.HasPrefix(k, prefix) {
+			continue
+		}
+
+		key := strings.ToLower(strings.TrimPrefix(k, prefix))
+		m[key] = v
+	}
+
+	return m
+}
+
+func extractConfigOverride(m map[string]any) string {
+	if raw, ok := m["config_override"]; ok {
+		s, _ := raw.(string)
+		return s
+	}
+	return ""
+}
+
+func Load(cfgFile string) (*Config, error) {
+	configMap := configDefaults()
+
+	if cfgFile != "" {
+		m, err := readFileToMap(cfgFile)
+		if err != nil {
 			return nil, fmt.Errorf("reading config: %w", err)
+		}
+
+		mergeMaps(configMap, m)
+	} else {
+		m, err := readFileToMap("config.toml")
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return nil, fmt.Errorf("reading config: %w", err)
+			}
+		} else {
+			mergeMaps(configMap, m)
 		}
 	}
 
-	override := v.GetString("config_override")
-	if override != "" {
-		v.SetConfigFile(override)
-		v.MergeInConfig()
+	key := strings.ToUpper(tunebook.AppName + "_CONFIG_OVERRIDE")
+	configOverride := os.Getenv(key)
+	if configOverride == "" {
+		configOverride = extractConfigOverride(configMap)
 	}
+
+	if configOverride != "" {
+		m, err := readFileToMap(configOverride)
+		if err != nil {
+			return nil, fmt.Errorf("reading override config: %w", err)
+		}
+
+		mergeMaps(configMap, m)
+	}
+
+	envMap := readConfigFromEnv()
+	mergeMaps(configMap, envMap)
 
 	var config Config
-	err = v.Unmarshal(&config)
+
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Metadata:         nil,
+		Result:           &config,
+		WeaklyTypedInput: true,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("parsing config: %w", err)
+		return nil, fmt.Errorf("new decoder: %w", err)
 	}
 
-	// configCopy := LoadedConfig
-	// configCopy.OidcProviders = map[string]ConfigOidcProvider{}
-	// for k, v := range LoadedConfig.OidcProviders {
-	// 	configCopy.OidcProviders[k] = v
-	// }
-	//
-	// configCopy.JwtSecret = "***"
-	// configCopy.MeilisearchApiKey = "***"
-	// for k, v := range configCopy.OidcProviders {
-	// 	v.ClientSecret = "***"
-	// 	configCopy.OidcProviders[k] = v
-	// }
-	//
-	// slog.Info("loaded config", "config", configCopy)
+	err = decoder.Decode(configMap)
+	if err != nil {
+		return nil, fmt.Errorf("decode config: %w", err)
+	}
 
-	// TODO(patrik): I hate this
 	oldTag := validate.ErrorTag
 	validate.ErrorTag = "mapstructure"
 	defer func() {
@@ -132,6 +204,8 @@ func Load(cfgFile string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
+
+	pretty.Println(config)
 
 	return &config, nil
 }
