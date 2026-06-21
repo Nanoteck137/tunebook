@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kr/pretty"
 	"github.com/mitchellh/mapstructure"
 	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/validate"
@@ -204,8 +203,6 @@ func Load(cfgFile string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
-
-	pretty.Println(config)
 
 	return &config, nil
 }
