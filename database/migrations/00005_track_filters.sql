@@ -1,4 +1,3 @@
--- +goose Up
 CREATE TABLE track_filters (
     id TEXT NOT NULL PRIMARY KEY,
 

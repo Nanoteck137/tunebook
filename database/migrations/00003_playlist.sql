@@ -1,4 +1,3 @@
--- +goose Up
 CREATE TABLE playlists (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL CHECK(name<>''),

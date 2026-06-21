@@ -1,4 +1,3 @@
--- +goose Up
 CREATE TABLE track_history (
     id TEXT NOT NULL PRIMARY KEY,
 

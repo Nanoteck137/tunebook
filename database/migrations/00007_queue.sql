@@ -1,4 +1,3 @@
--- +goose Up
 CREATE TABLE queues (
     id TEXT PRIMARY KEY,
 
