@@ -12,6 +12,7 @@ import (
 )
 
 type ConfigOidcProvider struct {
+	Id           string `mapstructure:"name"`
 	Name         string `mapstructure:"name"`
 	ClientId     string `mapstructure:"client_id"`
 	ClientSecret string `mapstructure:"client_secret"`
@@ -46,7 +47,7 @@ type Config struct {
 	NtfyBaseUrl string `mapstructure:"ntfy_base_url"`
 	NtfyTopic   string `mapstructure:"ntfy_topic"`
 
-	OidcProviders map[string]ConfigOidcProvider `mapstructure:"oidc_providers"`
+	OidcProviders []ConfigOidcProvider `mapstructure:"oidc_providers"`
 }
 
 func (c Config) Validate() error {

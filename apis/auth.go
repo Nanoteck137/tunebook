@@ -4,10 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 	"time"
 
-	"github.com/maruel/natural"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/render"
@@ -119,16 +117,12 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					Providers: make([]AuthProvider, 0, len(providers)),
 				}
 
-				for id, provider := range providers {
+				for _, provider := range providers {
 					res.Providers = append(res.Providers, AuthProvider{
-						Id:          id,
+						Id:          provider.Id,
 						DisplayName: provider.Name,
 					})
 				}
-
-				sort.Slice(res.Providers, func(i, j int) bool {
-					return natural.Less(res.Providers[i].DisplayName, res.Providers[j].DisplayName)
-				})
 
 				return res, nil
 			},

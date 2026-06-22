@@ -12,9 +12,8 @@ meilisearch_api_key="<MEILISEARCH_API_KEY>"
 # ntfy_topic = ""
 
 [oidc_providers]
-
-[oidc_providers.<PROVIDER_ID>]
-name = "<PROVIDER_NAME>"
+id = "<PROVIDER_ID>" # Example: google
+name = "<PROVIDER_NAME>" # Example: Google
 client_id = "<OIDC_CLIENT_ID>"
 client_secret = "<OIDC_CLIENT_SECRET>"
 issuer_url = "<OIDC_ISSUER_URL>"

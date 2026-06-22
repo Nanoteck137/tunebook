@@ -230,7 +230,9 @@ func NewAuthService(
 ) *AuthService {
 	providers := make(map[string]*authProvider, len(config.OidcProviders))
 
-	for id, providerConfig := range config.OidcProviders {
+	for _, providerConfig := range config.OidcProviders {
+		id := providerConfig.Id
+
 		res := &authProvider{
 			id:          id,
 			displayName: providerConfig.Name,
