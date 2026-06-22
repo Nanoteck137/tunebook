@@ -135,7 +135,7 @@ type Database struct {
 }
 
 func (db *Database) Close() error {
-	return db.Close()
+	return db.handle.Close()
 }
 
 func (db *Database) Begin() (Tx, error) {
