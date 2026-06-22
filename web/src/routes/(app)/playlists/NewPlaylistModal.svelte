@@ -1,16 +1,8 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import {
-    Button,
-    Dialog,
-    Input,
-    Label,
-    Select,
-    Separator,
-  } from "@nanoteck137/nano-ui";
+  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
@@ -47,6 +39,7 @@
           const res = await apiClient.createPlaylist({
             name: formData.name,
           });
+          console.log(res);
           if (!res.success) {
             cancel();
             return handleApiError(res.error);
@@ -55,7 +48,7 @@
           open = false;
 
           toast.success("Successfully created new playlist");
-          goto(`/playlists/${res.data.id}`, { invalidateAll: true });
+          // await goto(`/playlists/${res.data.id}`, { invalidateAll: true });
         }
       },
     },

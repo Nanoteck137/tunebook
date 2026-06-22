@@ -155,6 +155,18 @@
             <p class="truncate text-xs text-muted-foreground">
               {playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
             </p>
+            <p
+              class="flex items-center gap-1 truncate text-xs text-muted-foreground"
+            >
+              {#if playlist.ownerPicture}
+                <img
+                  src={playlist.ownerPicture.small}
+                  alt=""
+                  class="h-4 w-4 rounded-full object-cover"
+                />
+              {/if}
+              {playlist.ownerDisplayName}
+            </p>
           </div>
         </div>
       {/each}

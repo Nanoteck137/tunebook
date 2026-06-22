@@ -6,32 +6,38 @@
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import { defineEnumTypes } from "$lib/utils";
 
   let { data } = $props();
   const musicManager = getMusicManager();
 
-  const sortTypes = [
-    { label: "Name (A-Z)", value: "name-a-z" },
-    { label: "Name (Z-A)", value: "name-z-a" },
-    { label: "Artist", value: "artist" },
-    { label: "Album", value: "album" },
-    { label: "Duration", value: "duration" },
-    { label: "Year", value: "year" },
-    { label: "Added (New–Old)", value: "created-new" },
-    { label: "Added (Old-New)", value: "created-old" },
-  ] as const;
+  const { sortTypes, defaultSort } = defineEnumTypes(
+    [
+      { label: "Name (A-Z)", value: "name-a-z" },
+      { label: "Name (Z-A)", value: "name-z-a" },
+      { label: "Artist", value: "artist" },
+      { label: "Album", value: "album" },
+      { label: "Duration", value: "duration" },
+      { label: "Year", value: "year" },
+      { label: "Added (New–Old)", value: "created-new" },
+      { label: "Added (Old-New)", value: "created-old" },
+    ] as const,
+    "name-a-z",
+  );
+
+  type SortType = (typeof sortTypes)[number]["value"];
 
   let sort = $state(
-    ($page.url.searchParams.get("sort") as (typeof sortTypes)[number]["value"]) ?? "name-a-z",
+    ($page.url.searchParams.get("sort") as SortType) ?? defaultSort,
   );
 
   function updateSort(value: string) {
-    sort = value as (typeof sortTypes)[number]["value"];
+    sort = value as SortType;
 
     const query = $page.url.searchParams;
     query.delete("sort");
 
-    if (sort !== "name-a-z") {
+    if (sort !== defaultSort) {
       query.set("sort", sort);
     }
 
@@ -58,11 +64,15 @@
     </Breadcrumb.List>
   </Breadcrumb.Root>
 
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div
+    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  >
     <div class="flex items-baseline gap-2">
       <h1 class="text-xl font-bold">Tracks</h1>
       {#if data.page}
-        <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
+        <span class="text-sm text-muted-foreground"
+          >{data.page.totalItems}</span
+        >
       {/if}
     </div>
 

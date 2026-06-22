@@ -47,6 +47,11 @@ func (a *PlaylistResolverAdapter) ResolveVariableName(name string) (filter.Name,
 			Kind: filter.NameKindNumber,
 			Name: "playlists.updated",
 		}, true
+	case "trackCount":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "track_count.data",
+		}, true
 	}
 
 	return filter.Name{}, false

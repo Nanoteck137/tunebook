@@ -8,40 +8,37 @@
     Input,
     Select,
   } from "@nanoteck137/nano-ui";
-  import { Check, EllipsisVertical, FileHeart, Plus, X } from "lucide-svelte";
+  import {
+    Check,
+    EllipsisVertical,
+    FileHeart,
+    Plus,
+    Search,
+    X,
+  } from "lucide-svelte";
   import { cn } from "$lib/utils";
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import NewPlaylistModal from "./NewPlaylistModal.svelte";
   import Image from "$lib/components/Image.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import { sortTypes, defaultSort, type SortType } from "./types";
 
   let { data } = $props();
   const apiClient = getApiClient();
 
   let openNewPlaylistModal = $state(false);
 
-  const sortTypes = [
-    { label: "Name (A-Z)", value: "name-a-z" },
-    { label: "Name (Z-A)", value: "name-z-a" },
-    { label: "Tracks (Most)", value: "tracks-most" },
-    { label: "Tracks (Least)", value: "tracks-least" },
-    { label: "Created (New–Old)", value: "created-new" },
-    { label: "Created (Old-New)", value: "created-old" },
-    { label: "Updated (New–Old)", value: "updated-new" },
-    { label: "Updated (Old-New)", value: "updated-old" },
-  ] as const;
-
   let sort = $state(
-    ($page.url.searchParams.get("sort") as (typeof sortTypes)[number]["value"]) ?? "name-a-z",
+    ($page.url.searchParams.get("sort") as SortType) ?? defaultSort,
   );
   function updateSort(value: string) {
-    sort = value as (typeof sortTypes)[number]["value"];
+    sort = value as SortType;
 
     const query = $page.url.searchParams;
     query.delete("sort");
 
-    if (sort !== "name-a-z") {
+    if (sort !== defaultSort) {
       query.set("sort", sort);
     }
 
@@ -60,28 +57,56 @@
     goto("?" + query.toString(), { invalidateAll: true });
   }
 
-  function clearSearch() {
+  let showAll = $state($page.url.searchParams.get("all") === "true");
+
+  function clearFilters() {
     searchQuery = "";
+    showAll = false;
+    sort = defaultSort;
     const query = $page.url.searchParams;
     query.delete("query");
+    query.delete("all");
+    query.delete("sort");
     goto("?" + query.toString(), { invalidateAll: true });
   }
 
-  let hasActiveFilters = $derived(searchQuery !== "");
+  let hasActiveFilters = $derived(searchQuery !== "" || showAll);
+
+  function toggleAll() {
+    showAll = !showAll;
+
+    const query = $page.url.searchParams;
+    query.delete("all");
+
+    if (showAll) {
+      query.set("all", "true");
+    }
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
 </script>
 
 <div class="flex flex-col gap-4">
-  <div class="flex items-baseline gap-2">
-    <h1 class="text-xl font-bold">Playlists</h1>
-    {#if data.page}
-      <span class="text-sm text-muted-foreground">
-        {data.page.totalItems}
-      </span>
-    {/if}
+  <div class="flex items-baseline justify-between gap-2">
+    <div class="flex items-baseline gap-2">
+      <h1 class="text-xl font-bold">Playlists</h1>
+      {#if data.page}
+        <span class="text-sm text-muted-foreground">
+          {data.page.totalItems}
+        </span>
+      {/if}
+    </div>
+
+    <Button variant="ghost" onclick={() => (openNewPlaylistModal = true)}>
+      <Plus />
+      New Playlist
+    </Button>
   </div>
 
   <div class="rounded-lg border bg-card p-3">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+    >
       <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           class="h-9 sm:w-56"
@@ -111,23 +136,50 @@
       </div>
 
       <div class="flex items-center gap-1.5">
-        <Button variant="ghost" onclick={() => { openNewPlaylistModal = true; }}>
-          <Plus />
-          New Playlist
+        <Button variant="outline" size="icon" onclick={updateSearch}>
+          <Search size={16} />
         </Button>
         {#if hasActiveFilters}
-          <Button variant="ghost" size="sm" onclick={clearSearch}>
+          <Button variant="ghost" size="sm" onclick={clearFilters}>
             <X size={14} />
             Clear
           </Button>
         {/if}
       </div>
     </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-1.5">
+      <span class="text-xs font-medium text-muted-foreground">Owner</span>
+      <button
+        class="rounded-md border px-2 py-1 text-xs transition-colors {!showAll
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'bg-transparent text-muted-foreground hover:text-foreground'}"
+        onclick={() => {
+          if (showAll) toggleAll();
+        }}
+      >
+        My Playlists
+      </button>
+      <button
+        class="rounded-md border px-2 py-1 text-xs transition-colors {showAll
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'bg-transparent text-muted-foreground hover:text-foreground'}"
+        onclick={() => {
+          if (!showAll) toggleAll();
+        }}
+      >
+        All Playlists
+      </button>
+    </div>
   </div>
 
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+  <div
+    class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
+  >
     {#each data.playlists as playlist}
-      <div class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
+      <div
+        class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
+      >
         <a href="/playlists/{playlist.id}">
           <Image
             class="aspect-square w-full rounded-none border-0"
@@ -147,10 +199,24 @@
           <p class="truncate text-xs text-muted-foreground">
             {playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
           </p>
+          <p
+            class="flex items-center gap-1 truncate text-xs text-muted-foreground"
+          >
+            {#if playlist.ownerPicture}
+              <img
+                src={playlist.ownerPicture.small}
+                alt=""
+                class="h-4 w-4 rounded-full object-cover"
+              />
+            {/if}
+            {playlist.ownerDisplayName}
+          </p>
         </div>
 
         {#if data.user?.quickPlaylist === playlist.id}
-          <div class="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+          <div
+            class="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground"
+          >
             <Check size={12} />
             Quick
           </div>

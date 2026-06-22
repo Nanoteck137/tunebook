@@ -26,7 +26,7 @@ type Playlist struct {
 	OwnerDisplayName string         `db:"owner_display_name"`
 	OwnerPicture     sql.NullString `db:"owner_picture"`
 
-	TrackCount sql.NullInt64 `db:"track_count"`
+	TrackCount int64 `db:"track_count"`
 }
 
 func PlaylistQuery() *goqu.SelectDataset {
@@ -51,7 +51,7 @@ func PlaylistQuery() *goqu.SelectDataset {
 			goqu.I("owner.display_name").As("owner_display_name"),
 			goqu.I("owner.picture").As("owner_picture"),
 
-			goqu.I("track_count.data").As("track_count"),
+			goqu.COALESCE(goqu.I("track_count.data"), 0).As("track_count"),
 		).
 		Join(
 			UserQuery().As("owner"),

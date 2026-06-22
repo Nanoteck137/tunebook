@@ -1,4 +1,3 @@
-import type { Album, Page } from "$lib/api/types";
 import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
@@ -91,27 +90,17 @@ export const load: PageLoad = async ({ parent, url }) => {
     },
   });
 
-  // console.log(filter);
-
   constructFilterSort(filter, query);
-
-  // console.log(query);
-
-  let albums: Album[] = [];
-  let page: Page | null = null;
 
   const res = await data.apiClient.getAlbums({ query });
   if (!res.success) {
     throw error(res.error.code, { message: res.error.message });
   }
 
-  albums = res.data.albums;
-  page = res.data.page;
-
   return {
     ...data,
-    page,
-    albums,
+    page: res.data.page,
+    albums: res.data.albums,
     filter,
   };
 };

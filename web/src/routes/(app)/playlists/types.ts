@@ -5,6 +5,8 @@ export const { sortTypes, SortTypeEnum, defaultSort } = defineEnumTypes(
   [
     { label: "Name (A-Z)", value: "name-a-z" },
     { label: "Name (Z-A)", value: "name-z-a" },
+    { label: "Tracks (Most)", value: "tracks-most" },
+    { label: "Tracks (Least)", value: "tracks-least" },
     { label: "Created (New–Old)", value: "created-new" },
     { label: "Created (Old-New)", value: "created-old" },
     { label: "Updated (New–Old)", value: "updated-new" },
@@ -15,35 +17,17 @@ export const { sortTypes, SortTypeEnum, defaultSort } = defineEnumTypes(
 
 export type SortType = (typeof sortTypes)[number]["value"];
 
-export const {
-  sortTypes: decadeTypes,
-  SortTypeEnum: DecadeTypeEnum,
-  defaultSort: defaultDecade,
-} = defineEnumTypes(
-  [
-    { label: "None", value: "none" },
-    { label: "60s", value: "1960" },
-    { label: "70s", value: "1970" },
-    { label: "80s", value: "1980" },
-    { label: "90s", value: "1990" },
-    { label: "2000s", value: "2000" },
-    { label: "2010s", value: "2010" },
-    { label: "2020s", value: "2020" },
-  ] as const,
-  "none",
-);
-
-export type DecadeType = (typeof decadeTypes)[number]["value"];
-
 export const FullFilter = z.object({
   query: z.string(),
   sort: SortTypeEnum.default(defaultSort),
   filters: z.object({
-    decade: DecadeTypeEnum.default(defaultDecade),
-    tags: z.array(z.string()),
+    all: z
+      .string()
+      .toLowerCase()
+      .transform((x) => x === "true")
+      .pipe(z.boolean())
+      .default("false"),
   }),
-  excludes: z.object({
-    tags: z.array(z.string()),
-  }),
+  excludes: z.object({}),
 });
 export type FullFilter = z.infer<typeof FullFilter>;

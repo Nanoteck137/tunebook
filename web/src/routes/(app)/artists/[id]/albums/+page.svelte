@@ -4,31 +4,37 @@
   import { Breadcrumb, Select } from "@nanoteck137/nano-ui";
   import Image from "$lib/components/Image.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import { defineEnumTypes } from "$lib/utils";
 
   let { data } = $props();
 
-  const sortTypes = [
-    { label: "Name (A-Z)", value: "name-a-z" },
-    { label: "Name (Z-A)", value: "name-z-a" },
-    { label: "Year (New–Old)", value: "year-new" },
-    { label: "Year (Old-New)", value: "year-old" },
-    { label: "Created (New–Old)", value: "created-new" },
-    { label: "Created (Old-New)", value: "created-old" },
-    { label: "Updated (New–Old)", value: "updated-new" },
-    { label: "Updated (Old-New)", value: "updated-old" },
-  ] as const;
+  const { sortTypes, defaultSort } = defineEnumTypes(
+    [
+      { label: "Name (A-Z)", value: "name-a-z" },
+      { label: "Name (Z-A)", value: "name-z-a" },
+      { label: "Year (New–Old)", value: "year-new" },
+      { label: "Year (Old-New)", value: "year-old" },
+      { label: "Created (New–Old)", value: "created-new" },
+      { label: "Created (Old-New)", value: "created-old" },
+      { label: "Updated (New–Old)", value: "updated-new" },
+      { label: "Updated (Old-New)", value: "updated-old" },
+    ] as const,
+    "name-a-z",
+  );
+
+  type SortType = (typeof sortTypes)[number]["value"];
 
   let sort = $state(
-    ($page.url.searchParams.get("sort") as (typeof sortTypes)[number]["value"]) ?? "name-a-z",
+    ($page.url.searchParams.get("sort") as SortType) ?? defaultSort,
   );
 
   function updateSort(value: string) {
-    sort = value as (typeof sortTypes)[number]["value"];
+    sort = value as SortType;
 
     const query = $page.url.searchParams;
     query.delete("sort");
 
-    if (sort !== "name-a-z") {
+    if (sort !== defaultSort) {
       query.set("sort", sort);
     }
 
@@ -55,11 +61,15 @@
     </Breadcrumb.List>
   </Breadcrumb.Root>
 
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div
+    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  >
     <div class="flex items-baseline gap-2">
       <h1 class="text-xl font-bold">Albums</h1>
       {#if data.page}
-        <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
+        <span class="text-sm text-muted-foreground"
+          >{data.page.totalItems}</span
+        >
       {/if}
     </div>
 
@@ -80,7 +90,9 @@
     </Select.Root>
   </div>
 
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+  <div
+    class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
+  >
     {#each data.albums as album}
       <a
         href="/albums/{album.id}"
@@ -92,10 +104,16 @@
           alt={album.name}
         />
         <div class="flex flex-col gap-0.5 p-2">
-          <p class="truncate text-sm font-medium group-hover:underline" title={album.name}>
+          <p
+            class="truncate text-sm font-medium group-hover:underline"
+            title={album.name}
+          >
             {album.name}
           </p>
-          <p class="truncate text-xs text-muted-foreground" title={album.artists.map((a) => a.name).join(", ")}>
+          <p
+            class="truncate text-xs text-muted-foreground"
+            title={album.artists.map((a) => a.name).join(", ")}
+          >
             {album.artists.map((a) => a.name).join(", ")}
           </p>
         </div>

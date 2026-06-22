@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { z } from "zod";
 
 export function capitilize(s: string) {
   if (s.length === 0) return "";
@@ -58,4 +59,19 @@ export function getPagedQueryOptions(searchParams: URLSearchParams) {
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function defineEnumTypes<
+  const T extends readonly { label: string; value: string }[],
+>(entries: T, defaultVal?: T[number]["value"]) {
+  return {
+    sortTypes: entries as T,
+    SortTypeEnum: z.enum(
+      entries.map((e) => e.value) as [
+        T[number]["value"],
+        ...T[number]["value"][],
+      ],
+    ),
+    defaultSort: (defaultVal ?? entries[0].value) as T[number]["value"],
+  };
 }
