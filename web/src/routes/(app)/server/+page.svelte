@@ -2,11 +2,7 @@
   import { PUBLIC_COMMIT, PUBLIC_VERSION } from "$env/static/public";
   import { getApiClient, handleApiError } from "$lib";
   import { formatDuration } from "$lib/utils.js";
-  import {
-    Button,
-    Card,
-    Separator,
-  } from "@nanoteck137/nano-ui";
+  import { Button, Card, Separator } from "@nanoteck137/nano-ui";
   import {
     AlertCircle,
     DiscAlbum,
@@ -62,6 +58,7 @@
 
   const TaskSyncStateEventTask = z.object({
     name: z.string(),
+    displayName: z.string(),
     isRunning: z.boolean(),
   });
   type TaskSyncStateEventTaskTy = z.infer<typeof TaskSyncStateEventTask>;
@@ -171,9 +168,11 @@
 
         <div class="flex flex-col gap-2">
           {#each tasks as task}
-            <div class="flex items-center justify-between rounded-lg border p-3">
+            <div
+              class="flex items-center justify-between rounded-lg border p-3"
+            >
               <div class="flex flex-col">
-                <span class="text-sm font-medium">{task.name}</span>
+                <span class="text-sm font-medium">{task.displayName}</span>
                 <span class="text-xs text-muted-foreground">
                   {task.isRunning ? "Running..." : "Idle"}
                 </span>
@@ -213,13 +212,15 @@
         <div class="flex flex-col gap-4">
           {#if missingArtists.length > 0}
             <div>
-              <span class="text-xs font-medium text-muted-foreground">Artists ({missingArtists.length})</span>
+              <span class="text-xs font-medium text-muted-foreground"
+                >Artists ({missingArtists.length})</span
+              >
               <div class="mt-1 flex flex-col">
                 {#each missingArtists as artist}
                   <a
                     href="/artists/{artist.id}"
-                    class="text-sm hover:underline"
-                  >{artist.name}</a>
+                    class="text-sm hover:underline">{artist.name}</a
+                  >
                 {/each}
               </div>
             </div>
@@ -227,13 +228,14 @@
 
           {#if missingAlbums.length > 0}
             <div>
-              <span class="text-xs font-medium text-muted-foreground">Albums ({missingAlbums.length})</span>
+              <span class="text-xs font-medium text-muted-foreground"
+                >Albums ({missingAlbums.length})</span
+              >
               <div class="mt-1 flex flex-col">
                 {#each missingAlbums as album}
-                  <a
-                    href="/albums/{album.id}"
-                    class="text-sm hover:underline"
-                  >{album.name}</a>
+                  <a href="/albums/{album.id}" class="text-sm hover:underline"
+                    >{album.name}</a
+                  >
                 {/each}
               </div>
             </div>
@@ -241,7 +243,9 @@
 
           {#if missingTracks.length > 0}
             <div>
-              <span class="text-xs font-medium text-muted-foreground">Tracks ({missingTracks.length})</span>
+              <span class="text-xs font-medium text-muted-foreground"
+                >Tracks ({missingTracks.length})</span
+              >
               <div class="mt-1 flex flex-col">
                 {#each missingTracks as track}
                   <span class="text-sm">{track.name}</span>
@@ -288,7 +292,9 @@
 
       <div class="flex flex-col gap-6">
         <div>
-          <h3 class="mb-2 text-sm font-medium text-muted-foreground">Formats</h3>
+          <h3 class="mb-2 text-sm font-medium text-muted-foreground">
+            Formats
+          </h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead>
@@ -305,10 +311,12 @@
                 {#each data.mediaSettings.formats as format}
                   <tr class="border-t">
                     <td class="px-3 py-2">{format.name}</td>
-                    <td class="px-3 py-2 font-mono text-xs">{format.format}</td>
+                    <td class="px-3 py-2 font-mono text-xs">{format.format}</td
+                    >
                     <td class="px-3 py-2 font-mono text-xs">{format.ext}</td>
                     <td class="px-3 py-2">{format.qualityHighBitrate}kbps</td>
-                    <td class="px-3 py-2">{format.qualityMediumBitrate}kbps</td>
+                    <td class="px-3 py-2">{format.qualityMediumBitrate}kbps</td
+                    >
                     <td class="px-3 py-2">{format.qualityLowBitrate}kbps</td>
                   </tr>
                 {/each}
@@ -320,7 +328,9 @@
         <Separator />
 
         <div>
-          <h3 class="mb-2 text-sm font-medium text-muted-foreground">Device Specs</h3>
+          <h3 class="mb-2 text-sm font-medium text-muted-foreground">
+            Device Specs
+          </h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead>
@@ -334,8 +344,12 @@
                 {#each data.mediaSettings.deviceSpecs as spec}
                   <tr class="border-t">
                     <td class="px-3 py-2">{spec.name}</td>
-                    <td class="px-3 py-2 font-mono text-xs">{spec.preferedFormat}</td>
-                    <td class="px-3 py-2 font-mono text-xs">{spec.allowedFormats.join(", ")}</td>
+                    <td class="px-3 py-2 font-mono text-xs"
+                      >{spec.preferedFormat}</td
+                    >
+                    <td class="px-3 py-2 font-mono text-xs"
+                      >{spec.allowedFormats.join(", ")}</td
+                    >
                   </tr>
                 {/each}
               </tbody>

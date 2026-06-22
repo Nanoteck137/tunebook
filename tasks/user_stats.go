@@ -18,12 +18,12 @@ func NewUserStatsRecalculateTask(userService *service.UserService) *UserStatsRec
 	}
 }
 
-func (j *UserStatsRecalculateTask) Name() string {
-	return UserStatsRecalculate
-}
-
-func (j *UserStatsRecalculateTask) Schedule() string {
-	return ""
+func (j *UserStatsRecalculateTask) Info() service.TaskInfo {
+	return service.TaskInfo{
+		Name:        UserStatsRecalculate,
+		DisplayName: "User Stats Recalculate",
+		Schedule:    "",
+	}
 }
 
 func (j *UserStatsRecalculateTask) Run(ctx context.Context) error {

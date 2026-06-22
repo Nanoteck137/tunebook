@@ -21,12 +21,12 @@ func NewCacheCleanupTask(dataDir types.DataDir) *CacheCleanupTask {
 	}
 }
 
-func (j *CacheCleanupTask) Name() string {
-	return CacheCleanup
-}
-
-func (j *CacheCleanupTask) Schedule() string {
-	return ""
+func (j *CacheCleanupTask) Info() service.TaskInfo {
+	return service.TaskInfo{
+		Name:        CacheCleanup,
+		DisplayName: "Cache Cleanup",
+		Schedule:    "",
+	}
 }
 
 func (j *CacheCleanupTask) Run(ctx context.Context) error {

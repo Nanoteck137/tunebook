@@ -2,29 +2,37 @@ package service
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/maruel/natural"
 	"github.com/nanoteck137/tunebook/tools/broker"
 	"github.com/nanoteck137/tunebook/utils"
 	"github.com/robfig/cron/v3"
 )
 
+var taskErr = NewServiceErrCreator("task")
+
+type TaskInfo struct {
+	Name        string
+	DisplayName string
+	Schedule    string
+}
+
 type Task interface {
-	Name() string
-	Schedule() string
+	Info() TaskInfo
 	Run(ctx context.Context) error
 }
 
 var _ (broker.Event) = (*TaskSyncStateEvent)(nil)
 
 type TaskSyncStateEventTask struct {
-	Name      string `json:"name"`
-	IsRunning bool   `json:"isRunning"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	IsRunning   bool   `json:"isRunning"`
+
+	order int
 }
 
 type TaskSyncStateEvent struct {
@@ -37,7 +45,10 @@ func (e TaskSyncStateEvent) GetEventType() string {
 
 type taskEntry struct {
 	task    Task
+	info    *TaskInfo
 	entryId *cron.EntryID
+
+	order int
 
 	isRunning bool
 
@@ -75,14 +86,22 @@ func (s *TaskService) GetSyncStateEvent() TaskSyncStateEvent {
 	}
 
 	for _, task := range s.tasks {
+		displayName := task.info.DisplayName
+		if displayName == "" {
+			displayName = task.info.Name
+		}
+
 		res.Tasks = append(res.Tasks, TaskSyncStateEventTask{
-			Name:      task.task.Name(),
-			IsRunning: task.isRunning,
+			Name:        task.info.Name,
+			DisplayName: displayName,
+			IsRunning:   task.isRunning,
+
+			order: task.order,
 		})
 	}
 
 	sort.SliceStable(res.Tasks, func(i, j int) bool {
-		return natural.Less(res.Tasks[i].Name, res.Tasks[j].Name)
+		return res.Tasks[i].order < res.Tasks[j].order
 	})
 
 	return res
@@ -102,53 +121,47 @@ func (s *TaskService) AddTask(task Task) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, exists := s.tasks[task.Name()]
+	info := task.Info()
+
+	// TODO(patrik): Maybe add some validation for TaskInfo
+
+	_, exists := s.tasks[info.Name]
 	if exists {
-		s.logger.Error("task with name already exists",
-			slog.String("name", task.Name()),
-		)
+		s.logger.Error("task with name already exists", "name", info.Name)
 
-		return errors.New("task with name already exists: " + task.Name())
+		return taskErr.Newf("task with name already exists: %s", info.Name)
 	}
-
-	schedule := task.Schedule()
 
 	var entryId *cron.EntryID
 
-	if schedule != "" {
-		id, err := s.cron.AddFunc(task.Schedule(), func() {
-			s.RunTask(context.Background(), task.Name())
+	if info.Schedule != "" {
+		id, err := s.cron.AddFunc(info.Schedule, func() {
+			s.RunTask(context.Background(), info.Name)
 		})
 		if err != nil {
-			s.logger.Error("failed to add task to cron instance", "err", err)
-			return err
+			s.logger.Error("add task to cron instance", "err", err)
+			return taskErr.Wrap("add cron func", err)
 		}
 
 		entryId = &id
 	}
 
-	s.tasks[task.Name()] = &taskEntry{
+	order := len(s.tasks)
+	s.tasks[info.Name] = &taskEntry{
 		task:    task,
 		entryId: entryId,
+		info:    &info,
+		order:   order,
 	}
 
-	s.logger.Info("added task",
-		slog.String("name", task.Name()),
+	s.logger.Info(
+		"new task",
+		"name", info.Name,
+		"schedule", info.Schedule,
+		"order", order,
 	)
 
 	return nil
-}
-
-func (s *TaskService) DisplayTasks() {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	for _, task := range s.tasks {
-		s.logger.Info("registered task",
-			"name", task.task.Name(),
-			"schedule", task.task.Schedule(),
-		)
-	}
 }
 
 func (s *TaskService) Start() {
@@ -197,7 +210,7 @@ func (s *TaskService) RunTask(ctx context.Context, name string) {
 		s.update()
 	}()
 
-	s.logger.Info("running task", "task", entry.task.Name())
+	s.logger.Debug("running task", "task", name)
 
 	timer := utils.SimpleTimer{}
 	timer.Start()
@@ -209,11 +222,11 @@ func (s *TaskService) RunTask(ctx context.Context, name string) {
 	entry.lastRunTime = &dur
 
 	if err != nil {
-		s.logger.Error("task returned error", "err", err, "task", name, "duration", dur)
+		s.logger.Error("task error", "task", name, "err", err, "duration", dur)
 		entry.lastRunError = err
 		entry.lastRunSuccess = false
 	} else {
-		s.logger.Info("task was successfully", "task", name, "duration", dur)
+		s.logger.Info("task success", "task", name, "duration", dur)
 		entry.lastRunError = nil
 		entry.lastRunSuccess = true
 	}

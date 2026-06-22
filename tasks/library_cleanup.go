@@ -18,12 +18,12 @@ func NewLibraryCleanupTask(libraryService *service.LibraryService) *LibraryClean
 	}
 }
 
-func (j *LibraryCleanupTask) Name() string {
-	return LibraryCleanup
-}
-
-func (j *LibraryCleanupTask) Schedule() string {
-	return ""
+func (j *LibraryCleanupTask) Info() service.TaskInfo {
+	return service.TaskInfo{
+		Name:        LibraryCleanup,
+		DisplayName: "Library Cleanup",
+		Schedule:    "",
+	}
 }
 
 func (j *LibraryCleanupTask) Run(ctx context.Context) error {

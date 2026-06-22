@@ -18,12 +18,12 @@ func NewAuthCleanupTask(authService *service.AuthService) *AuthCleanupTask {
 	}
 }
 
-func (j *AuthCleanupTask) Name() string {
-	return AuthCleanup
-}
-
-func (j *AuthCleanupTask) Schedule() string {
-	return "@every 30m"
+func (j *AuthCleanupTask) Info() service.TaskInfo {
+	return service.TaskInfo{
+		Name:        AuthCleanup,
+		DisplayName: "Auth Cleanup",
+		Schedule:    "@every 30m",
+	}
 }
 
 func (j *AuthCleanupTask) Run(ctx context.Context) error {

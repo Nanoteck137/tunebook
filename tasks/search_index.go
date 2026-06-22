@@ -18,12 +18,12 @@ func NewSearchIndexTask(searchService *service.SearchService) *SearchIndexTask {
 	}
 }
 
-func (j *SearchIndexTask) Name() string {
-	return SearchIndex
-}
-
-func (j *SearchIndexTask) Schedule() string {
-	return ""
+func (j *SearchIndexTask) Info() service.TaskInfo {
+	return service.TaskInfo{
+		Name:        SearchIndex,
+		DisplayName: "Search Index",
+		Schedule:    "",
+	}
 }
 
 func (j *SearchIndexTask) Run(ctx context.Context) error {

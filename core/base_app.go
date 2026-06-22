@@ -131,6 +131,7 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
+	// TODO(patrik): Should this be in Bootstrap()?
 	if app.config.RunMigrations {
 		err = migrations.RunMigrateUp(context.Background(), app.db)
 		if err != nil {
@@ -243,40 +244,23 @@ func (app *BaseApp) Bootstrap() error {
 		app.broker.EmitEvent(app.taskService.GetSyncStateEvent())
 	})
 
-	err = app.taskService.AddTask(tasks.NewAuthCleanupTask(app.authService))
-	if err != nil {
-		return err
+	tasks := []service.Task{
+		tasks.NewLibrarySyncTask(app.libraryService),
+		tasks.NewSearchIndexTask(app.searchService),
+		tasks.NewUserStatsRecalculateTask(app.userService),
+		tasks.NewAuthCleanupTask(app.authService),
+		tasks.NewCacheCleanupTask(dataDir),
+		tasks.NewLibraryCleanupTask(app.libraryService),
 	}
 
-	err = app.taskService.AddTask(tasks.NewCacheCleanupTask(dataDir))
-	if err != nil {
-		return err
-	}
-
-	err = app.taskService.AddTask(tasks.NewLibrarySyncTask(app.libraryService))
-	if err != nil {
-		return err
-	}
-
-	err = app.taskService.AddTask(
-		tasks.NewLibraryCleanupTask(app.libraryService))
-	if err != nil {
-		return err
-	}
-
-	err = app.taskService.AddTask(tasks.NewSearchIndexTask(app.searchService))
-	if err != nil {
-		return err
-	}
-
-	err = app.taskService.AddTask(
-		tasks.NewUserStatsRecalculateTask(app.userService))
-	if err != nil {
-		return err
+	for _, task := range tasks {
+		err = app.taskService.AddTask(task)
+		if err != nil {
+			return err
+		}
 	}
 
 	// TODO(patrik): This should not be in bootstrap
-	app.taskService.DisplayTasks()
 	app.taskService.Start()
 
 	// TODO(patrik): This should not be in bootstrap

@@ -18,12 +18,12 @@ func NewLibrarySyncTask(libraryService *service.LibraryService) *LibrarySyncTask
 	}
 }
 
-func (j *LibrarySyncTask) Name() string {
-	return LibrarySync
-}
-
-func (j *LibrarySyncTask) Schedule() string {
-	return ""
+func (j *LibrarySyncTask) Info() service.TaskInfo {
+	return service.TaskInfo{
+		Name:        LibrarySync,
+		DisplayName: "Library Sync",
+		Schedule:    "",
+	}
 }
 
 func (j *LibrarySyncTask) Run(ctx context.Context) error {
