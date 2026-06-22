@@ -12,8 +12,114 @@
     buttonVariants,
   } from "@nanoteck137/nano-ui";
   import { cn } from "$lib/utils";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
+  import {
+    sortTypes,
+    defaultSort,
+    type SortType,
+  } from "./types";
 
   let { data } = $props();
+
+  let sort = $state(
+    ($page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+  );
+  function updateSort(value: string) {
+    sort = value as SortType;
+
+    const query = $page.url.searchParams;
+    query.delete("sort");
+
+    if (sort !== defaultSort) {
+      query.set("sort", sort);
+    }
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
+
+  let searchQuery = $state($page.url.searchParams.get("query") ?? "");
+  function updateSearch() {
+    const query = $page.url.searchParams;
+    query.delete("query");
+
+    if (searchQuery) {
+      query.set("query", searchQuery);
+    }
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
+
+  let tagInput = $state("");
+  let includeTags = $state(
+    $page.url.searchParams.get("tags")?.split(",").filter(Boolean) ?? [],
+  );
+  let excludeTags = $state(
+    $page.url.searchParams.get("excludeTags")?.split(",").filter(Boolean) ?? [],
+  );
+  let tagMode = $state<"include" | "exclude">("include");
+
+  function addTag() {
+    const tag = tagInput.trim();
+    if (!tag) return;
+
+    if (tagMode === "include") {
+      if (includeTags.includes(tag)) return;
+      includeTags = [...includeTags, tag];
+    } else {
+      if (excludeTags.includes(tag)) return;
+      excludeTags = [...excludeTags, tag];
+    }
+
+    tagInput = "";
+    applyTagFilters();
+  }
+
+  function removeIncludeTag(tag: string) {
+    includeTags = includeTags.filter((t) => t !== tag);
+    applyTagFilters();
+  }
+
+  function removeExcludeTag(tag: string) {
+    excludeTags = excludeTags.filter((t) => t !== tag);
+    applyTagFilters();
+  }
+
+  function applyTagFilters() {
+    const query = $page.url.searchParams;
+    query.delete("tags");
+    query.delete("excludeTags");
+
+    if (includeTags.length > 0) {
+      query.set("tags", includeTags.join(","));
+    }
+
+    if (excludeTags.length > 0) {
+      query.set("excludeTags", excludeTags.join(","));
+    }
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
+
+  function clearFilters() {
+    searchQuery = "";
+    sort = defaultSort;
+    includeTags = [];
+    excludeTags = [];
+    const query = $page.url.searchParams;
+    query.delete("query");
+    query.delete("sort");
+    query.delete("tags");
+    query.delete("excludeTags");
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
+
+  let hasActiveFilters = $derived(
+    searchQuery !== "" ||
+      sort !== defaultSort ||
+      includeTags.length > 0 ||
+      excludeTags.length > 0,
+  );
 
   let infoArtistId = $state<string | null>(null);
   let infoOpen = $state(false);
@@ -39,11 +145,17 @@
 </script>
 
 <div class="flex flex-col gap-4">
-  <div class="flex items-baseline gap-2">
-    <h1 class="text-xl font-bold">Artists</h1>
-    {#if data.page}
-      <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
-    {/if}
+  <div class="flex items-baseline justify-between gap-2">
+    <div class="flex items-baseline gap-2">
+      <h1 class="text-xl font-bold">Artists</h1>
+      {#if data.page}
+        <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
+      {/if}
+    </div>
+
+    <Button variant="outline" size="icon" href="/search/artists">
+      <Search size={16} />
+    </Button>
   </div>
 
   <div class="rounded-lg border bg-card p-3">
@@ -51,44 +163,105 @@
       class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
     >
       <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-        <Input class="h-9 sm:w-56" placeholder="Search artists..." disabled />
-        <Select.Root type="single" allowDeselect={false}>
+        <Input
+          class="h-9 sm:w-56"
+          placeholder="Search artists..."
+          bind:value={searchQuery}
+          onkeydown={(e) => {
+            if (e.key === "Enter") {
+              updateSearch();
+            }
+          }}
+        />
+        <Select.Root
+          type="single"
+          allowDeselect={false}
+          value={sort}
+          onValueChange={updateSort}
+        >
           <Select.Trigger class="h-9 w-full sm:w-40">
-            Name (A-Z)
+            {sortTypes.find((i) => i.value === sort)?.label ?? "Sort"}
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="name-a-z" label="Name (A-Z)" />
-            <Select.Item value="name-z-a" label="Name (Z-A)" />
-            <Select.Item value="created-new" label="Created (New–Old)" />
-            <Select.Item value="created-old" label="Created (Old-New)" />
+            {#each sortTypes as ty (ty.value)}
+              <Select.Item value={ty.value} label={ty.label} />
+            {/each}
           </Select.Content>
         </Select.Root>
       </div>
 
-      <Button variant="outline" size="icon" href="/search/artists">
-        <Search size={16} />
-      </Button>
+      <div class="flex items-center gap-1.5">
+        <Button variant="outline" size="icon" onclick={updateSearch}>
+          <Search size={16} />
+        </Button>
+        {#if hasActiveFilters}
+          <Button variant="ghost" size="sm" onclick={clearFilters}>
+            <X size={14} />
+            Clear
+          </Button>
+        {/if}
+      </div>
     </div>
 
     <div class="mt-3 flex flex-wrap items-center gap-1.5">
       <span class="text-xs font-medium text-muted-foreground">Tags</span>
       <div class="flex items-center gap-1">
         <button
-          class="rounded-l-md border border-primary bg-primary px-1.5 py-1 text-xs font-medium text-primary-foreground"
+          class="rounded-l-md border px-1.5 py-1 text-xs font-medium transition-colors {tagMode ===
+          'include'
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'bg-transparent text-muted-foreground hover:text-foreground'}"
+          onclick={() => (tagMode = "include")}
         >
           + Inc
         </button>
         <button
-          class="-ml-px rounded-r-md border bg-transparent px-1.5 py-1 text-xs font-medium text-muted-foreground"
+          class="-ml-px rounded-r-md border px-1.5 py-1 text-xs font-medium transition-colors {tagMode ===
+          'exclude'
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'bg-transparent text-muted-foreground hover:text-foreground'}"
+          onclick={() => (tagMode = "exclude")}
         >
           - Exc
         </button>
       </div>
-      <Input class="h-7 w-28 text-xs" placeholder="Tag name..." disabled />
-      <Button variant="ghost" size="icon" class="h-7 w-7" disabled>
+      <Input
+        class="h-7 w-28 text-xs"
+        placeholder="Tag name..."
+        bind:value={tagInput}
+        onkeydown={(e) => {
+          if (e.key === "Enter") addTag();
+        }}
+      />
+      <Button variant="ghost" size="icon" class="h-7 w-7" onclick={addTag}>
         <Plus size={14} />
       </Button>
     </div>
+
+    {#if includeTags.length > 0 || excludeTags.length > 0}
+      <div class="mt-2 flex flex-wrap items-center gap-1.5">
+        {#each includeTags as tag}
+          <span
+            class="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs text-primary"
+          >
+            +{tag}
+            <button onclick={() => removeIncludeTag(tag)} class="hover:text-destructive">
+              <X size={12} />
+            </button>
+          </span>
+        {/each}
+        {#each excludeTags as tag}
+          <span
+            class="flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs text-destructive"
+          >
+            -{tag}
+            <button onclick={() => removeExcludeTag(tag)} class="hover:text-destructive">
+              <X size={12} />
+            </button>
+          </span>
+        {/each}
+      </div>
+    {/if}
   </div>
 </div>
 
