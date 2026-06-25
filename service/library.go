@@ -409,9 +409,6 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 			return err
 		}
 
-		// TODO(patrik): Remove, test code
-		entry.AlbumType = library.AlbumTypeAlbum
-
 		err = entry.Validate()
 		if err != nil {
 			// TODO(patrik): Better error
