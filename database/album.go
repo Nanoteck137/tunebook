@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/library"
 	"github.com/nanoteck137/tunebook/tools/filter"
@@ -35,7 +34,7 @@ type Album struct {
 
 	Tags sql.NullString `db:"tags"`
 
-	FeaturingArtists ember.JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
+	FeaturingArtists JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 }
 
 func AlbumQuery() *goqu.SelectDataset {

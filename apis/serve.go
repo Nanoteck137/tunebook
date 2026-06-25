@@ -4,9 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/tunebook/core"
 )
 
@@ -61,24 +62,76 @@ func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 }
 
 func RegisterHandlers(app core.App, router pyrin.Router) {
-	RegisterStaticHandlers(app, router.Group(""))
+	RegisterStaticHandlers(app, router.Group("/"))
 
 	RegisterApiHandlers(app, router.Group("/api/v1"))
 	// TODO(patrik): Should the files be under the /api/v1 group?
 	InstallFilesHandlers(app, router.Group("/files"))
 }
 
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) Unwrap() http.ResponseWriter {
+    return r.ResponseWriter
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+// TODO(patrik): Move
+func loggerMiddleware(logName string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			sr := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+			next.ServeHTTP(sr, r)
+
+			slog.LogAttrs(r.Context(), slog.LevelInfo, logName,
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
+				slog.Int("status", sr.status),
+				slog.Duration("duration", time.Since(start)),
+			)
+		})
+	}
+}
+
+// TODO(patrik): Move
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func Server(app core.App) (*pyrin.Server, error) {
 	s := pyrin.NewServer(&pyrin.ServerConfig{
-		LogName: tunebook.AppName,
 		ErrorCallback: func(err error) {
 			// TODO(patrik): Handle this better
 			slog.Error("API Error", "err", err)
 		},
-		RegisterHandlers: func(router pyrin.Router) {
-			RegisterHandlers(app, router)
+		Middlewares: []pyrin.MiddlewareFunc{
+			loggerMiddleware("server route"),
+			corsMiddleware,
+			middleware.Recoverer,
 		},
 	})
+
+	RegisterHandlers(app, s)
 
 	return s, nil
 }

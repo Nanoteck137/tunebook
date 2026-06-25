@@ -3,8 +3,9 @@ package tunebook
 import (
 	"fmt"
 	"log/slog"
+	"os"
 
-	"github.com/nanoteck137/pyrin/trail"
+	"github.com/golang-cz/devslog"
 )
 
 var AppName = "tunebook"
@@ -20,13 +21,12 @@ func VersionTemplate(appName string) string {
 	)
 }
 
-func DefaultLogger() *trail.Logger {
-	return trail.NewLogger(&trail.Options{
-		Debug: Commit == "no-commit",
-	})
+func DefaultLogger() *slog.Logger {
+	// TODO(patrik): Don't use github.com/golang-cz/devslog for prod
+	logger := slog.New(devslog.NewHandler(os.Stdout, nil))
+	return logger 
 }
 
 func init() {
-	logger := DefaultLogger()
-	slog.SetDefault(logger.Logger)
+	slog.SetDefault(DefaultLogger())
 }
