@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { Breadcrumb, Button, Select, Separator } from "@nanoteck137/nano-ui";
   import { Play, Shuffle } from "lucide-svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
@@ -29,13 +29,13 @@
   type SortType = (typeof sortTypes)[number]["value"];
 
   let sort = $state(
-    ($page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+    (page.url.searchParams.get("sort") as SortType) ?? defaultSort,
   );
 
   function updateSort(value: string) {
     sort = value as SortType;
 
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("sort");
 
     if (sort !== defaultSort) {

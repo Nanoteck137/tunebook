@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import type { Page } from "$lib/api/types";
   import { Pagination } from "@nanoteck137/nano-ui";
   import { ChevronLeft, ChevronRight } from "lucide-svelte";
@@ -18,7 +18,7 @@
   perPage={pageInfo.perPage}
   siblingCount={0}
   onPageChange={(p) => {
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.set("page", (p - 1).toString());
 
     goto(`?${query.toString()}`, { invalidateAll: true, keepFocus: true });

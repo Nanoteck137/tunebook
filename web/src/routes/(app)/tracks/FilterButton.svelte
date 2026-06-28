@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from "$app/navigation";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { getApiClient, handleApiError } from "$lib";
   import type { TrackFilter } from "$lib/api/types";
   import { Edit, Trash } from "lucide-svelte";
@@ -18,11 +18,11 @@
   let openDropdown = $state(false);
 
   let active = $derived(
-    $page.url.searchParams.get("filterId") === filter.filterId,
+    page.url.searchParams.get("filterId") === filter.filterId,
   );
 
   function selectFilter() {
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.set("filterId", filter.filterId);
     goto("?" + query.toString(), {
       invalidateAll: true,
@@ -36,7 +36,7 @@
       return handleApiError(res.error);
     }
 
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     if (query.get("filterId") === filter.filterId) {
       query.delete("filterId");
     }

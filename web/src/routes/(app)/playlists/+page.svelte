@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import {
     Button,
     buttonVariants,
@@ -32,12 +32,12 @@
   let openNewPlaylistModal = $state(false);
 
   let sort = $state(
-    ($page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+    (page.url.searchParams.get("sort") as SortType) ?? defaultSort,
   );
   function updateSort(value: string) {
     sort = value as SortType;
 
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("sort");
 
     if (sort !== defaultSort) {
@@ -47,9 +47,9 @@
     goto("?" + query.toString(), { invalidateAll: true });
   }
 
-  let searchQuery = $state($page.url.searchParams.get("query") ?? "");
+  let searchQuery = $state(page.url.searchParams.get("query") ?? "");
   function updateSearch() {
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("query");
 
     if (searchQuery) {
@@ -59,13 +59,13 @@
     goto("?" + query.toString(), { invalidateAll: true });
   }
 
-  let showAll = $state($page.url.searchParams.get("all") === "true");
+  let showAll = $state(page.url.searchParams.get("all") === "true");
 
   function clearFilters() {
     searchQuery = "";
     showAll = false;
     sort = defaultSort;
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("query");
     query.delete("all");
     query.delete("sort");
@@ -77,7 +77,7 @@
   function toggleAll() {
     showAll = !showAll;
 
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("all");
 
     if (showAll) {

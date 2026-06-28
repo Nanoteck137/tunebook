@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { Button, Input, Select, Separator } from "@nanoteck137/nano-ui";
   import { Play, Shuffle, Plus, X } from "lucide-svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
@@ -35,7 +35,7 @@
   }
 
   function clearFilter() {
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("filterId");
     goto("?" + query.toString(), {
       invalidateAll: true,
@@ -182,7 +182,7 @@
         New Filter
       </Button>
 
-      {#if $page.url.searchParams.has("filterId")}
+      {#if page.url.searchParams.has("filterId")}
         <Button
           variant="ghost"
           size="sm"

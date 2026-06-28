@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from "$app/navigation";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { getApiClient, handleApiError } from "$lib";
   import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
   import Image from "$lib/components/Image.svelte";
@@ -219,7 +219,7 @@
   perPage={data.page.perPage}
   siblingCount={1}
   onPageChange={(p) => {
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.set("page", (p - 1).toString());
 
     goto(`?${query.toString()}`, { invalidateAll: true, keepFocus: true });

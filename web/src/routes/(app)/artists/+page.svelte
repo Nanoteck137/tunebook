@@ -13,7 +13,7 @@
   } from "@nanoteck137/nano-ui";
   import { cn } from "$lib/utils";
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import {
     sortTypes,
     defaultSort,
@@ -23,12 +23,12 @@
   let { data } = $props();
 
   let sort = $state(
-    ($page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+    (page.url.searchParams.get("sort") as SortType) ?? defaultSort,
   );
   function updateSort(value: string) {
     sort = value as SortType;
 
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("sort");
 
     if (sort !== defaultSort) {
@@ -38,9 +38,9 @@
     goto("?" + query.toString(), { invalidateAll: true });
   }
 
-  let searchQuery = $state($page.url.searchParams.get("query") ?? "");
+  let searchQuery = $state(page.url.searchParams.get("query") ?? "");
   function updateSearch() {
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("query");
 
     if (searchQuery) {
@@ -52,10 +52,10 @@
 
   let tagInput = $state("");
   let includeTags = $state(
-    $page.url.searchParams.get("tags")?.split(",").filter(Boolean) ?? [],
+    page.url.searchParams.get("tags")?.split(",").filter(Boolean) ?? [],
   );
   let excludeTags = $state(
-    $page.url.searchParams.get("excludeTags")?.split(",").filter(Boolean) ?? [],
+    page.url.searchParams.get("excludeTags")?.split(",").filter(Boolean) ?? [],
   );
   let tagMode = $state<"include" | "exclude">("include");
 
@@ -86,7 +86,7 @@
   }
 
   function applyTagFilters() {
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("tags");
     query.delete("excludeTags");
 
@@ -106,7 +106,7 @@
     sort = defaultSort;
     includeTags = [];
     excludeTags = [];
-    const query = $page.url.searchParams;
+    const query = page.url.searchParams;
     query.delete("query");
     query.delete("sort");
     query.delete("tags");
