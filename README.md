@@ -5,7 +5,6 @@
 ## Frontend Todo
 
 ### Remaining
-- [ ] Unify submit button text across modals ("Create" / "Create Playlist" / "Save" / "Submit" / "Ok")
 - [ ] Unify spacing before pagination across list pages
 - [ ] Unify Shuffle/Play button sizing (`size="sm"` on list pages vs default on detail pages)
 - [ ] Unify `$app/state` vs `$app/stores` usage
