@@ -1,11 +1,12 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { Breadcrumb, Button, Select } from "@nanoteck137/nano-ui";
+  import { Breadcrumb, Button, Select, Separator } from "@nanoteck137/nano-ui";
   import { Play, Shuffle } from "lucide-svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
   import { defineEnumTypes } from "$lib/utils";
 
   let { data } = $props();
@@ -130,6 +131,10 @@
       // TODO: queue artist tracks and start from trackId
     }}
   />
+
+  <Spacer size="lg" />
+  <Separator />
+  <Spacer size="lg" />
 
   <Pagination page={data.page} />
 </div>

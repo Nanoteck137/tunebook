@@ -1,9 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, Input } from "@nanoteck137/nano-ui";
+  import { Button, Input, Separator } from "@nanoteck137/nano-ui";
   import { Search, X } from "lucide-svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte.js";
   import { cn } from "$lib/utils";
@@ -139,6 +140,10 @@
     />
 
     {#if data.page}
+      <Spacer size="lg" />
+      <Separator />
+      <Spacer size="lg" />
+
       <Pagination page={data.page} />
     {/if}
   {/if}

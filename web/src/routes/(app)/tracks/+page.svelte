@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { Button, Input, Select } from "@nanoteck137/nano-ui";
+  import { Button, Input, Select, Separator } from "@nanoteck137/nano-ui";
   import { Play, Shuffle, Plus, X } from "lucide-svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
@@ -210,6 +210,8 @@
   }}
 />
 
+<Spacer size="lg" />
+<Separator />
 <Spacer size="lg" />
 
 <Pagination page={data.page} />

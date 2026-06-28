@@ -1,9 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, Input } from "@nanoteck137/nano-ui";
+  import { Button, Input, Separator } from "@nanoteck137/nano-ui";
   import { Search, X } from "lucide-svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
   import Image from "$lib/components/Image.svelte";
   import { cn } from "$lib/utils";
   import { onMount } from "svelte";
@@ -173,6 +174,10 @@
     </div>
 
     {#if data.page}
+      <Spacer size="lg" />
+      <Separator />
+      <Spacer size="lg" />
+
       <Pagination page={data.page} />
     {/if}
   {/if}

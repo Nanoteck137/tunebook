@@ -7,6 +7,7 @@
     DropdownMenu,
     Input,
     Select,
+    Separator,
   } from "@nanoteck137/nano-ui";
   import {
     Check,
@@ -17,6 +18,7 @@
     X,
   } from "lucide-svelte";
   import { cn } from "$lib/utils";
+  import Spacer from "$lib/components/Spacer.svelte";
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import NewPlaylistModal from "./NewPlaylistModal.svelte";
@@ -259,6 +261,10 @@
       </div>
     {/each}
   </div>
+
+  <Spacer size="lg" />
+  <Separator />
+  <Spacer size="lg" />
 
   <Pagination page={data.page} />
 </div>

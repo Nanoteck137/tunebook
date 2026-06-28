@@ -1,9 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { Breadcrumb, Select } from "@nanoteck137/nano-ui";
+  import { Breadcrumb, Select, Separator } from "@nanoteck137/nano-ui";
   import Image from "$lib/components/Image.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
   import { defineEnumTypes } from "$lib/utils";
 
   let { data } = $props();
@@ -120,6 +121,10 @@
       </a>
     {/each}
   </div>
+
+  <Spacer size="lg" />
+  <Separator />
+  <Spacer size="lg" />
 
   <Pagination page={data.page} />
 </div>

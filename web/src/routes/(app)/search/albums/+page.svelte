@@ -7,9 +7,11 @@
     Dialog,
     DropdownMenu,
     Input,
+    Separator,
   } from "@nanoteck137/nano-ui";
   import { EllipsisVertical, Info, Search, X } from "lucide-svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
   import { cn } from "$lib/utils";
   import { onMount } from "svelte";
 
@@ -212,6 +214,10 @@
     </div>
 
     {#if data.page}
+      <Spacer size="lg" />
+      <Separator />
+      <Spacer size="lg" />
+
       <Pagination page={data.page} />
     {/if}
   {/if}
