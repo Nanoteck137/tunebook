@@ -2,6 +2,26 @@
 
 [Logo](https://icon.kitchen/i/H4sIAAAAAAAAA0VSTW-DMAz9K5V3RVVaKG25bf06TZq03qpqCvmASIGgENZWiP8-J5SVA7Kf_Oxnv_TwS3UnWsh6kMX50QjIgGnVUOsggnyCCku5EvWInaYESa0zTWCTOdmusfJNyjwmBAvJPE23I7ImSRyQbZKMSEI2CxgioHWhcUCywjgvvks6KlCWIRyhpp3Rxo4c_wXsIKVgDsdCW1JubgH8opyruvBaUBNki2UEVhUlyvRhbpwz1RhrIQOKM10pKsEhk1S3AqsoL8Rr5FLEqyTs_Cna0rdujKr95EsPd8jIfLmK4DEFbCKu4nR_POB-z6r1VOWD_6r0Pd4fNjBcUQceX9xRFJzDMkcznlfSSmlkwodyzHS1m52s4rO96fJwn9zol3jlqFbsmYaeu6eT3ijhu3Mhaae9jYqZGoGqaxX7qY0T3g30G1V0Fj3oB8wrwzvtX8cFjeLWKO6ZpsX_TeRwHf4AdxWk6EACAAA)
 
+## Frontend Todo
+
+### Critical
+- [ ] Remove dead `web/src/lib/components/TrackListItem.svelte` (duplicate — the used one is in `components/track-list/`)
+- [ ] Remove "Test: Load lots of tracks" button from homepage (`web/src/routes/(app)/+page.svelte:93`)
+
+### Remaining
+- [ ] Unify submit button text across modals ("Create" / "Create Playlist" / "Save" / "Submit" / "Ok")
+- [ ] Unify close button behavior (some call `reset()`, some don't)
+- [ ] Unify spacing before pagination across list pages
+- [ ] Unify Shuffle/Play button sizing (`size="sm"` on list pages vs default on detail pages)
+- [ ] Make "New Filter" button in tracks page use `<Button variant="ghost">` instead of custom inline pill
+- [ ] Make "Clear" button in tracks page use `<Button>` instead of custom inline pill
+- [ ] Unify `$app/state` vs `$app/stores` usage
+- [ ] Add missing `key` attributes in `{#each}` blocks
+- [ ] Move hardcoded sort options in tracks page to `types.ts`
+- [ ] Clean up commented-out code and dead code stubs
+- [ ] Rename/move `EditPlaylistFilterModal.svelte` (lives in `tracks/` but named as playlist filter)
+- [ ] Consolidate `ConfirmBox.svelte` and `ConfirmModal.svelte` into one pattern
+
 ```bash
 # Useful command to find every TODO in the project, and then use gF in 
 # nvim to goto them
