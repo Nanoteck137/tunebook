@@ -8,45 +8,9 @@
   import { Button } from "@nanoteck137/nano-ui";
   import { ChevronRight } from "lucide-svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
-  import { handleApiError } from "$lib";
-
   let { data } = $props();
 
   const musicManager = getMusicManager();
-
-  async function loadLotsOfTracks() {
-    const trackIds: string[] = [];
-    const perPage = 50;
-    let page = 0;
-
-    while (trackIds.length < 2000) {
-      const res = await data.apiClient.getTracks({
-        query: {
-          page: page.toString(),
-          perPage: perPage.toString(),
-        },
-      });
-
-      if (!res.success) {
-        handleApiError(res.error);
-        break;
-      }
-
-      for (const track of res.data.tracks) {
-        trackIds.push(track.id);
-      }
-
-      if (res.data.tracks.length < perPage) {
-        break;
-      }
-
-      page++;
-    }
-
-    if (trackIds.length > 0) {
-      await musicManager.addTracks({ trackIds });
-    }
-  }
 </script>
 
 {#if !data.user}
@@ -90,9 +54,6 @@
         Welcome, {data.user.displayName}!
       </h1>
 
-      <Button variant="outline" onclick={loadLotsOfTracks}>
-        Test: Load lots of tracks
-      </Button>
     </div>
 
     <!-- <div class="flex items-center gap-4">
