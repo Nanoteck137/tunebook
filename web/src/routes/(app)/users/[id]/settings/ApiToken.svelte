@@ -2,7 +2,7 @@
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import type { ApiToken as ApiTokenType } from "$lib/api/types";
-  import ConfirmBox from "$lib/components/ConfirmBox.svelte";
+  import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
   import { Button, Dialog, Input, Label, Separator } from "@nanoteck137/nano-ui";
   import { Copy, Eye, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
@@ -102,11 +102,12 @@
   </Dialog.Content>
 </Dialog.Root>
 
-<ConfirmBox
+<ConfirmModal
   bind:open={openDeleteModal}
+  removeTrigger
   title="Delete Token?"
   description="Are you sure you want to delete this token? This action cannot be undone."
-  confirmText="Delete"
+  confirmDelete
   onResult={async () => {
     const res = await apiClient.deleteApiToken(token.id);
     if (!res.success) {
