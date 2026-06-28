@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import { Button, Input, Select } from "@nanoteck137/nano-ui";
   import { Play, Shuffle, Plus, X } from "lucide-svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
@@ -31,14 +33,27 @@
   function removeTag(value: string, mode: "include" | "exclude") {
     tags = tags.filter((t) => !(t.value === value && t.mode === mode));
   }
+
+  function clearFilter() {
+    const query = $page.url.searchParams;
+    query.delete("filterId");
+    goto("?" + query.toString(), {
+      invalidateAll: true,
+      replaceState: true,
+    });
+  }
 </script>
 
 <div class="flex flex-col gap-4">
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div
+    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  >
     <div class="flex items-baseline gap-2">
       <h1 class="text-xl font-bold">Tracks</h1>
       {#if data.page}
-        <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
+        <span class="text-sm text-muted-foreground"
+          >{data.page.totalItems}</span
+        >
       {/if}
     </div>
 
@@ -55,7 +70,9 @@
   </div>
 
   <div class="rounded-lg border bg-card p-3">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+    >
       <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         <Input class="h-9 sm:w-56" placeholder="Search tracks..." disabled />
         <Select.Root type="single" allowDeselect={false}>
@@ -75,12 +92,6 @@
         </Select.Root>
       </div>
 
-      <div class="flex items-center gap-1.5">
-        <Button variant="ghost" size="sm" onclick={() => (openNewFilterModal = true)}>
-          <Plus size={14} />
-          New Filter
-        </Button>
-      </div>
     </div>
 
     <div class="mt-3 flex flex-wrap items-center gap-1.5">
@@ -133,7 +144,10 @@
             : 'bg-destructive/10 text-destructive'}"
         >
           {t.mode === "include" ? "+" : "-"}{t.value}
-          <button class="hover:text-inherit/80" onclick={() => removeTag(t.value, t.mode)}>
+          <button
+            class="hover:text-inherit/80"
+            onclick={() => removeTag(t.value, t.mode)}
+          >
             <X size={11} />
           </button>
         </span>
@@ -148,15 +162,36 @@
         </button>
       {/if}
     </div>
-  </div>
 
-  {#if data.filters && data.filters.length > 0}
-    <div class="flex flex-wrap gap-2">
-      {#each data.filters as filter}
-        <FilterButton {filter} />
-      {/each}
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      {#if data.filters && data.filters.length > 0}
+        <span class="text-xs font-medium text-muted-foreground"
+          >Saved Filters</span
+        >
+        {#each data.filters as filter}
+          <FilterButton {filter} />
+        {/each}
+      {/if}
+
+      <button
+        class="flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+        onclick={() => (openNewFilterModal = true)}
+      >
+        <Plus size={12} />
+        New Filter
+      </button>
+
+      {#if $page.url.searchParams.has("filterId")}
+        <button
+          class="flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          onclick={clearFilter}
+        >
+          <X size={12} />
+          Clear
+        </button>
+      {/if}
     </div>
-  {/if}
+  </div>
 </div>
 
 <Spacer size="md" />
@@ -164,8 +199,6 @@
 <TrackList
   totalTracks={data.page.totalItems}
   tracks={data.tracks}
-  userPlaylists={data.userPlaylists}
-  quickPlaylist={data.user?.quickPlaylist}
   onPlay={async (trackId) => {
     await musicManager.addTracks({
       trackIds: data.tracks.map((t) => t.id),

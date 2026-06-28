@@ -4,6 +4,7 @@
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
   import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
+  import { ListFilter } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
@@ -24,6 +25,8 @@
   let { open = $bindable(), filter }: Props = $props();
   const apiClient = getApiClient();
 
+  let nameInput: HTMLInputElement | undefined = $state();
+
   $effect(() => {
     if (open) {
       reset({
@@ -32,10 +35,10 @@
           filter: filter.filter,
         },
       });
+      nameInput?.focus();
     }
   });
 
-  // TODO(patrik): Move to utils
   const toFieldError = (val: unknown): [string] | undefined =>
     typeof val === "string" && val ? [val] : undefined;
 
@@ -50,7 +53,7 @@
         if (form.valid) {
           const formData = form.data;
 
-          const res = await apiClient.editTrackFilter(filter.filterId, {
+          const res = await apiClient.updateTrackFilter(filter.filterId, {
             name: formData.name,
             filter: formData.filter,
           });
@@ -58,8 +61,6 @@
             cancel();
 
             if (res.error.type === "VALIDATION_ERROR" && res.error.extra) {
-              // TODO(patrik): Figure out a better way to handle errors
-              // for the api client
               const rec = res.error.extra as Record<string, unknown>;
               $errors.name = toFieldError(rec["name"]);
               $errors.filter = toFieldError(rec["filter"]);
@@ -81,15 +82,45 @@
 </script>
 
 <Dialog.Root bind:open>
-  <Dialog.Content class="max-h-[420px] overflow-y-scroll">
-    <Dialog.Header>
-      <Dialog.Title>Edit playlist filter</Dialog.Title>
-    </Dialog.Header>
+  <Dialog.Content class="overflow-hidden sm:max-w-md">
+    <div class="relative">
+      <div
+        class="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-to-tr from-logo-1/10 via-logo-2/10 to-logo-3/10 blur-xl"
+      ></div>
 
-    <form class="flex flex-col gap-4 px-[1px]" use:enhance>
+      <Dialog.Header class="relative text-left">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3">
+            <ListFilter size={18} class="text-white" />
+          </div>
+          <div>
+            <Dialog.Title class="text-xl sm:text-2xl">
+              <span
+                class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-transparent"
+              >
+                Edit Filter
+              </span>
+            </Dialog.Title>
+            <Dialog.Description>
+              Update your saved track filter
+            </Dialog.Description>
+          </div>
+        </div>
+      </Dialog.Header>
+    </div>
+
+    <form class="flex flex-col gap-4" use:enhance>
       <FormItem>
         <Label for="name">Name</Label>
-        <Input id="name" name="name" type="text" bind:value={$form.name} />
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          bind:value={$form.name}
+          autocomplete="off"
+          placeholder="e.g. Jazz Favorites, 80s Rock..."
+          ref={nameInput}
+        />
         <Errors errors={$errors.name} />
       </FormItem>
 
@@ -100,6 +131,8 @@
           name="filter"
           type="text"
           bind:value={$form.filter}
+          autocomplete="off"
+          placeholder="e.g. genre == 'Jazz'"
         />
         <Errors errors={$errors.filter} />
       </FormItem>
