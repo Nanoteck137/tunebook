@@ -9,11 +9,13 @@
   import NewFilterModal from "./NewFilterModal.svelte";
   import FilterButton from "./FilterButton.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import { sortTypes, defaultSort, type SortType } from "./types";
 
   let { data } = $props();
   const musicManager = getMusicManager();
 
   let openNewFilterModal = $state(false);
+  let selectedSort = $state<SortType>(defaultSort);
 
   let tagInput = $state("");
   let tagMode = $state<"include" | "exclude">("include");
@@ -75,19 +77,14 @@
     >
       <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         <Input class="h-9 sm:w-56" placeholder="Search tracks..." disabled />
-        <Select.Root type="single" allowDeselect={false}>
+        <Select.Root type="single" allowDeselect={false} onValueChange={(v) => selectedSort = v as SortType}>
           <Select.Trigger class="h-9 w-full sm:w-40">
-            Name (A-Z)
+            {sortTypes.find((i) => i.value === selectedSort)?.label ?? "Sort"}
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="name-a-z" label="Name (A-Z)" />
-            <Select.Item value="name-z-a" label="Name (Z-A)" />
-            <Select.Item value="artist" label="Artist" />
-            <Select.Item value="album" label="Album" />
-            <Select.Item value="duration" label="Duration" />
-            <Select.Item value="year" label="Year" />
-            <Select.Item value="created-new" label="Added (New–Old)" />
-            <Select.Item value="created-old" label="Added (Old-New)" />
+            {#each sortTypes as ty (ty.value)}
+              <Select.Item value={ty.value} label={ty.label} />
+            {/each}
           </Select.Content>
         </Select.Root>
       </div>
