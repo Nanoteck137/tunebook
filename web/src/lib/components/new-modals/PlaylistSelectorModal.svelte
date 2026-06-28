@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getManager } from "$lib/playlist-modal.svelte";
-  import { Button, Dialog, ScrollArea } from "@nanoteck137/nano-ui";
-  import { Check } from "lucide-svelte";
+  import { Button, Dialog, Input, ScrollArea } from "@nanoteck137/nano-ui";
+  import { Check, ListMusic, Search } from "lucide-svelte";
 
   const manager = getManager();
 
@@ -15,10 +15,48 @@
 </script>
 
 <Dialog.Root bind:open={manager.open}>
-  <Dialog.Content>
-    <Dialog.Header>
-      <Dialog.Title>Select Playlist</Dialog.Title>
-    </Dialog.Header>
+  <Dialog.Content class="overflow-hidden sm:max-w-md">
+    <div class="relative">
+      <div
+        class="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-to-tr from-logo-1/10 via-logo-2/10 to-logo-3/10 blur-xl"
+      ></div>
+
+      <Dialog.Header class="relative text-left">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3"
+          >
+            <ListMusic size={18} class="text-white" />
+          </div>
+          <div>
+            <Dialog.Title class="text-xl sm:text-2xl">
+              <span
+                class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-transparent"
+              >
+                Select Playlist
+              </span>
+            </Dialog.Title>
+            <Dialog.Description>
+              Choose a playlist to add tracks to
+            </Dialog.Description>
+          </div>
+        </div>
+      </Dialog.Header>
+    </div>
+
+    <div class="relative mb-3">
+      <Search
+        size={16}
+        class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+      />
+      <Input
+        class="h-9 w-full pl-9"
+        placeholder="Search playlists..."
+        bind:value={manager.searchQuery}
+        oninput={() => manager.search(manager.searchQuery)}
+        tabindex={-1}
+      />
+    </div>
 
     <ScrollArea class="max-h-[320px]">
       <div class="flex flex-col gap-1">
@@ -43,6 +81,10 @@
               <Check class="shrink-0 text-primary" size={18} />
             {/if}
           </button>
+        {:else}
+          <p class="py-8 text-center text-sm text-muted-foreground">
+            No playlists found
+          </p>
         {/each}
       </div>
     </ScrollArea>
