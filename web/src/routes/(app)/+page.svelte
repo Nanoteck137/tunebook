@@ -37,7 +37,6 @@
       Tunebook
     </h1>
     <p class="text-muted-foreground">Your personal music streaming server</p>
-    <!-- <GradientButton href="/login">Login</GradientButton> -->
     <Button size="lg" href="/login">Login</Button>
   </div>
 {:else}
@@ -55,21 +54,6 @@
       </h1>
 
     </div>
-
-    <!-- <div class="flex items-center gap-4">
-      <a
-        class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-2xl font-medium text-transparent"
-        href="/"
-      >
-        Tunebook
-      </a>
-
-      <span class="text-xl font-bold">|</span>
-
-      <h1 class="text-2xl font-bold">
-        Welcome, {data.user.displayName}!
-      </h1>
-    </div> -->
 
     <section>
       <a

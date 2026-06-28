@@ -164,28 +164,6 @@
   </div>
 
   <!-- TODO: Replace with API data when available -->
-  <!-- <Card.Root>
-    <div class="p-6">
-      <div class="flex items-center gap-2">
-        <Clock size={18} />
-        <h2 class="text-lg font-semibold">Recently Played</h2>
-      </div>
-      <p class="mt-1 text-sm text-muted-foreground">
-        Recently played tracks.
-      </p>
-
-      <Separator class="my-4" />
-
-      {#if recentTracks.length === 0}
-        <div class="flex flex-col items-center gap-2 py-8 text-sm text-muted-foreground">
-          <Play size={24} class="text-muted-foreground/50" />
-          <p>No listening history yet</p>
-          <p class="text-xs">Start playing music to see your history here.</p>
-        </div>
-      {/if}
-    </div>
-  </Card.Root> -->
-
   <Card.Root>
     <div class="p-6">
       <div class="flex items-center gap-2">
