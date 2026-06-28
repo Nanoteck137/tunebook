@@ -83,6 +83,7 @@
 
     <div class="flex gap-2 pt-2">
       <Button
+        size="sm"
         onclick={async () => {
           await musicManager.queueRequest(
             { type: "addPlaylist", playlistId: data.playlist.id },
@@ -90,12 +91,13 @@
           );
         }}
       >
-        <Play />
+        <Play size={14} />
         Play
       </Button>
 
       <Button
         variant="outline"
+        size="sm"
         onclick={async () => {
           await musicManager.queueRequest(
             { type: "addPlaylist", playlistId: data.playlist.id },
@@ -103,7 +105,7 @@
           );
         }}
       >
-        <Shuffle />
+        <Shuffle size={14} />
         Shuffle
       </Button>
 

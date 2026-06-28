@@ -72,6 +72,7 @@
 
     <div class="flex gap-2 pt-2">
       <Button
+        size="sm"
         onclick={async () => {
           await musicManager.addAlbumTracks({
             albumId: data.album.id,
@@ -79,12 +80,13 @@
           });
         }}
       >
-        <Play />
+        <Play size={14} />
         Play
       </Button>
 
       <Button
         variant="outline"
+        size="sm"
         onclick={async () => {
           await musicManager.addAlbumTracks({
             albumId: data.album.id,
@@ -93,7 +95,7 @@
           // TODO: shuffle after adding
         }}
       >
-        <Shuffle />
+        <Shuffle size={14} />
         Shuffle
       </Button>
 
