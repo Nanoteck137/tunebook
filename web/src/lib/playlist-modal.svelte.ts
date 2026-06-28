@@ -4,6 +4,8 @@ import type { Playlist } from "$lib/api/types";
 
 export type ShowPlaylistModalOptions = {
   selectedId?: string;
+  title?: string;
+  description?: string;
 };
 
 function sanitizeFilterValue(value: string): string {
@@ -17,6 +19,8 @@ class PlaylistModalManager {
   playlists = $state<Playlist[]>([]);
   selectedId: string | null = $state(null);
   searchQuery = $state("");
+  title = $state("Select Playlist");
+  description = $state("Choose a playlist to add tracks to");
   // eslint-disable-next-line no-unused-vars
   resolve: ((id: string | null) => void) | null = null;
   promise: Promise<string | null> | null = null;
@@ -49,6 +53,8 @@ class PlaylistModalManager {
     this.playlists = res.data.playlists;
     this.selectedId = options?.selectedId ?? null;
     this.searchQuery = "";
+    this.title = options?.title ?? "Select Playlist";
+    this.description = options?.description ?? "Choose a playlist to add tracks to";
     this.open = true;
 
     return new Promise((resolve) => {

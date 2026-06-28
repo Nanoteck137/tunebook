@@ -150,6 +150,8 @@
           onclick={async () => {
             const id = await showPlaylistModal({
               selectedId: data.user?.quickPlaylist ?? undefined,
+              title: "Set Quick Playlist",
+              description: "Choose which playlist to use for quick adds",
             });
             if (!id) return;
 

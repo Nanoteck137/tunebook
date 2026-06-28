@@ -33,11 +33,11 @@
               <span
                 class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-transparent"
               >
-                Select Playlist
+                {manager.title}
               </span>
             </Dialog.Title>
             <Dialog.Description>
-              Choose a playlist to add tracks to
+              {manager.description}
             </Dialog.Description>
           </div>
         </div>
