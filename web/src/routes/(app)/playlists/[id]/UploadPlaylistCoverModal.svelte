@@ -3,7 +3,8 @@
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
+  import { Button, Dialog, Label } from "@nanoteck137/nano-ui";
+  import { ImageUp } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
@@ -58,7 +59,7 @@
 
           open = false;
 
-          toast.success("Successfully updated playlist");
+          toast.success("Successfully uploaded cover");
           invalidateAll();
         }
       },
@@ -67,13 +68,35 @@
 </script>
 
 <Dialog.Root bind:open>
-  <Dialog.Content class="max-h-[420px] overflow-y-scroll">
-    <Dialog.Header>
-      <Dialog.Title>Edit playlist</Dialog.Title>
-    </Dialog.Header>
+  <Dialog.Content class="overflow-hidden sm:max-w-md">
+    <div class="relative">
+      <div
+        class="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-to-tr from-logo-1/10 via-logo-2/10 to-logo-3/10 blur-xl"
+      ></div>
+
+      <Dialog.Header class="relative text-left">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3">
+            <ImageUp size={18} class="text-white" />
+          </div>
+          <div>
+            <Dialog.Title class="text-xl sm:text-2xl">
+              <span
+                class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-transparent"
+              >
+                Upload Cover
+              </span>
+            </Dialog.Title>
+            <Dialog.Description>
+              Upload a new cover image for your playlist
+            </Dialog.Description>
+          </div>
+        </div>
+      </Dialog.Header>
+    </div>
 
     <form
-      class="flex flex-col gap-4 px-[1px]"
+      class="flex flex-col gap-4"
       enctype="multipart/form-data"
       use:enhance
     >
@@ -95,7 +118,7 @@
         </Button>
 
         <Button type="submit" disabled={$submitting}>
-          Save
+          Upload
           {#if $submitting}
             <Spinner />
           {/if}

@@ -4,6 +4,7 @@
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
   import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
+  import { ListMusic } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
@@ -24,6 +25,8 @@
   let { open = $bindable(), playlist }: Props = $props();
   const apiClient = getApiClient();
 
+  let nameInput: HTMLInputElement | undefined = $state();
+
   $effect(() => {
     if (open) {
       reset({
@@ -31,6 +34,7 @@
           name: playlist.name,
         },
       });
+      nameInput?.focus();
     }
   });
 
@@ -66,15 +70,45 @@
 </script>
 
 <Dialog.Root bind:open>
-  <Dialog.Content class="max-h-[420px] overflow-y-scroll">
-    <Dialog.Header>
-      <Dialog.Title>Edit playlist</Dialog.Title>
-    </Dialog.Header>
+  <Dialog.Content class="overflow-hidden sm:max-w-md">
+    <div class="relative">
+      <div
+        class="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-to-tr from-logo-1/10 via-logo-2/10 to-logo-3/10 blur-xl"
+      ></div>
 
-    <form class="flex flex-col gap-4 px-[1px]" use:enhance>
+      <Dialog.Header class="relative text-left">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3">
+            <ListMusic size={18} class="text-white" />
+          </div>
+          <div>
+            <Dialog.Title class="text-xl sm:text-2xl">
+              <span
+                class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-transparent"
+              >
+                Edit Playlist
+              </span>
+            </Dialog.Title>
+            <Dialog.Description>
+              Update your playlist details
+            </Dialog.Description>
+          </div>
+        </div>
+      </Dialog.Header>
+    </div>
+
+    <form class="flex flex-col gap-4" use:enhance>
       <FormItem>
         <Label for="name">Name</Label>
-        <Input id="name" name="name" type="text" bind:value={$form.name} />
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          bind:value={$form.name}
+          autocomplete="off"
+          placeholder="e.g. Chill Vibes, Road Trip..."
+          ref={nameInput}
+        />
         <Errors errors={$errors.name} />
       </FormItem>
 
@@ -85,6 +119,8 @@
           name="coverUrl"
           type="text"
           bind:value={$form.coverUrl}
+          autocomplete="off"
+          placeholder="https://example.com/cover.jpg"
         />
         <Errors errors={$errors.coverUrl} />
       </FormItem>
@@ -101,7 +137,7 @@
         </Button>
 
         <Button type="submit" disabled={$submitting}>
-          Save
+          Save Changes
           {#if $submitting}
             <Spinner />
           {/if}
