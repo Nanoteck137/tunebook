@@ -172,7 +172,7 @@
               <p class="text-xl font-medium">{currentMediaItem?.name}</p>
               <p class="text-sm text-muted-foreground">
                 {#if currentMediaItem}
-                  {#each currentMediaItem.artists as artist, i}
+                  {#each currentMediaItem.artists as artist, i (artist.id)}
                     {#if i > 0},
                     {/if}
                     <a href="/artists/{artist.id}" class="hover:underline"
@@ -349,7 +349,7 @@
                         {mediaItem.name}
                       </p>
                       <p class="truncate text-xs text-muted-foreground">
-                        {#each mediaItem.artists as artist, j}
+                        {#each mediaItem.artists as artist, j (artist.id)}
                           {#if j > 0},
                           {/if}{artist.name}
                         {/each}

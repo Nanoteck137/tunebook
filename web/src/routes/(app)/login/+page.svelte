@@ -221,7 +221,7 @@
   <p class="text-muted-foreground">Your personal music streaming server</p>
 
   <div class="flex flex-col gap-3">
-    {#each data.providers as provider}
+    {#each data.providers as provider (provider.id)}
       <Button
         class="h-12 w-full justify-start gap-3 px-4 text-base"
         variant="outline"

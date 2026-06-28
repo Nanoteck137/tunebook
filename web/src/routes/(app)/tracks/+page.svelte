@@ -136,7 +136,7 @@
         <Plus size={14} />
       </button>
 
-      {#each tags as t}
+      {#each tags as t (t.value + t.mode)}
         <span
           class="flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs {t.mode ===
           'include'
@@ -168,7 +168,7 @@
         <span class="text-xs font-medium text-muted-foreground"
           >Saved Filters</span
         >
-        {#each data.filters as filter}
+        {#each data.filters as filter (filter.filterId)}
           <FilterButton {filter} />
         {/each}
       {/if}

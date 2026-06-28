@@ -102,7 +102,7 @@
   {/if}
 
   <div class="flex flex-col">
-    {#each tracks as track}
+    {#each tracks as track (track.id)}
       <div class="group">
         <TrackListItem
           showNumber={isAlbumShowcase}
@@ -293,7 +293,7 @@
           <div>
             <p class="text-lg font-semibold leading-tight">{infoTrack.name}</p>
             <p class="text-sm text-muted-foreground">
-              {#each infoTrack.artists as artist, i}
+              {#each infoTrack.artists as artist, i (artist.id)}
                 {#if i > 0}{", "}{/if}
                 <a
                   href="/artists/{artist.id}"
@@ -328,7 +328,7 @@
             {#if infoTrack.tags.length > 0}
               <span class="text-muted-foreground">Tags</span>
               <div class="flex flex-wrap gap-1">
-                {#each infoTrack.tags as tag}
+                {#each infoTrack.tags as tag (tag)}
                   <span class="rounded-md bg-secondary px-1.5 py-0.5 text-xs"
                     >{tag}</span
                   >

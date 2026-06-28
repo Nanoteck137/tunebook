@@ -147,7 +147,7 @@
 
 <div class="flex flex-col gap-6">
   <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-    {#each stats as stat}
+    {#each stats as stat (stat.label)}
       <Card.Root>
         <div class="flex flex-col gap-2 p-4">
           <div class="flex items-center gap-2">
@@ -200,7 +200,7 @@
       <Separator class="my-4" />
 
       <div class="flex flex-col">
-        {#each topTracks as track}
+        {#each topTracks as track (track.id)}
           <TrackListItem {track} onPlayClicked={() => {}} />
         {/each}
       </div>
@@ -221,7 +221,7 @@
       <Separator class="my-4" />
 
       <div class="flex flex-col gap-4">
-        {#each yearStats as stat}
+        {#each yearStats as stat (stat.year)}
           <a
             href="/users/{data.userData.id}/history?year={stat.year}"
             class="flex items-center gap-4 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/50"

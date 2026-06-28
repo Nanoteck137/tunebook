@@ -18,7 +18,7 @@
   class={cn("line-clamp-1 w-full text-xs", className)}
   title={artists.map((a) => a.name).join(", ")}
 >
-  {#each artists as artist, i}
+  {#each artists as artist, i (artist.id)}
     {#if i > 0}
       {", "}
     {/if}

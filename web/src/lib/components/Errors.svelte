@@ -7,7 +7,7 @@
 </script>
 
 {#if errors}
-  {#each errors as error}
+  {#each errors as error (error)}
     {#if error.length > 0}
       <p class="text-sm text-destructive">{error}</p>
     {/if}

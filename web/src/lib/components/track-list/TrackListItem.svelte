@@ -88,7 +88,7 @@
       <div
         class="flex min-w-0 gap-1 overflow-hidden text-ellipsis whitespace-nowrap"
       >
-        {#each track.tags as tag}
+        {#each track.tags as tag (tag)}
           <span
             class="shrink-0 rounded bg-secondary/50 px-1 py-0.5 text-[10px] text-muted-foreground"
             >{tag}</span

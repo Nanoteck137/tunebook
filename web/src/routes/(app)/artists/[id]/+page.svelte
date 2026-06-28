@@ -68,7 +68,7 @@
 
     {#if data.artist.tags.length > 0}
       <div class="flex flex-wrap gap-1">
-        {#each data.artist.tags as tag}
+        {#each data.artist.tags as tag (tag)}
           <span
             class="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-secondary-foreground"
             >{tag}</span
@@ -150,7 +150,7 @@
         <ChevronRight class="h-4 w-4" />
       </Button>
     </div>
-    {#each data.tracks as track}
+    {#each data.tracks as track (track.id)}
       <TrackListItem {track} />
       {#if track !== data.tracks[data.tracks.length - 1]}
         <Separator />
@@ -173,7 +173,7 @@
     <div
       class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
     >
-      {#each data.albums as album}
+      {#each data.albums as album (album.id)}
         <a
           href="/albums/{album.id}"
           class="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
@@ -232,7 +232,7 @@
         <p class="font-semibold">Related Artists</p>
       </div>
       <div class="flex gap-3 overflow-x-auto p-4 pb-2">
-        {#each mockRelatedArtists as related}
+        {#each mockRelatedArtists as related (related.id)}
           <a
             href="/artists/{related.id}"
             class="flex w-32 shrink-0 flex-col items-center gap-1"

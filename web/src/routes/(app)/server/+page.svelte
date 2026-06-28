@@ -167,7 +167,7 @@
         <Separator class="my-4" />
 
         <div class="flex flex-col gap-2">
-          {#each tasks as task}
+          {#each tasks as task (task.name)}
             <div
               class="flex items-center justify-between rounded-lg border p-3"
             >
@@ -216,7 +216,7 @@
                 >Artists ({missingArtists.length})</span
               >
               <div class="mt-1 flex flex-col">
-                {#each missingArtists as artist}
+                {#each missingArtists as artist (artist.id)}
                   <a
                     href="/artists/{artist.id}"
                     class="text-sm hover:underline">{artist.name}</a
@@ -232,7 +232,7 @@
                 >Albums ({missingAlbums.length})</span
               >
               <div class="mt-1 flex flex-col">
-                {#each missingAlbums as album}
+                {#each missingAlbums as album (album.id)}
                   <a href="/albums/{album.id}" class="text-sm hover:underline"
                     >{album.name}</a
                   >
@@ -247,7 +247,7 @@
                 >Tracks ({missingTracks.length})</span
               >
               <div class="mt-1 flex flex-col">
-                {#each missingTracks as track}
+                {#each missingTracks as track (track.name)}
                   <span class="text-sm">{track.name}</span>
                 {/each}
               </div>
@@ -273,7 +273,7 @@
         <Separator class="my-4" />
 
         <div class="flex flex-col gap-1">
-          {#each errors as err}
+          {#each errors as err (err)}
             <p class="font-mono text-sm text-destructive">{err}</p>
           {/each}
         </div>
@@ -308,7 +308,7 @@
                 </tr>
               </thead>
               <tbody>
-                {#each data.mediaSettings.formats as format}
+                {#each data.mediaSettings.formats as format (format.name)}
                   <tr class="border-t">
                     <td class="px-3 py-2">{format.name}</td>
                     <td class="px-3 py-2 font-mono text-xs">{format.format}</td
@@ -341,7 +341,7 @@
                 </tr>
               </thead>
               <tbody>
-                {#each data.mediaSettings.deviceSpecs as spec}
+                {#each data.mediaSettings.deviceSpecs as spec (spec.name)}
                   <tr class="border-t">
                     <td class="px-3 py-2">{spec.name}</td>
                     <td class="px-3 py-2 font-mono text-xs"

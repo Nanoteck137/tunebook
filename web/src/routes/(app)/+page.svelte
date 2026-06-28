@@ -84,11 +84,11 @@
 
       <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.playlists}
-          {#each Array(5) as _i}
+          {#each Array(5) as _i (_i)}
             <PlaylistSkeletonTile />
           {/each}
         {:then playlists}
-          {#each playlists as playlist}
+          {#each playlists as playlist (playlist.id)}
             <PlaylistTile
               id={playlist.id}
               cover={playlist.coverArt.medium}
@@ -115,11 +115,11 @@
 
       <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.favorites}
-          {#each Array(5) as _i}
+          {#each Array(5) as _i (_i)}
             <TrackSkeletonTile />
           {/each}
         {:then favorites}
-          {#each favorites as track}
+          {#each favorites as track (track.id)}
             <TrackTile
               id={track.id}
               cover={track.coverArt.medium}
@@ -144,11 +144,11 @@
 
       <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.recentAlbums}
-          {#each Array(5) as _i}
+          {#each Array(5) as _i (_i)}
             <AlbumSkeletonTile />
           {/each}
         {:then albums}
-          {#each albums as album}
+          {#each albums as album (album.id)}
             <AlbumTile
               id={album.id}
               cover={album.coverArt.medium}

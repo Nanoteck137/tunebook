@@ -94,7 +94,7 @@
   <div
     class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
   >
-    {#each data.albums as album}
+    {#each data.albums as album (album.id)}
       <a
         href="/albums/{album.id}"
         class="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"

@@ -4,7 +4,7 @@
   const { data } = $props();
 </script>
 
-{#each data.history as history}
+{#each data.history as history (history.id)}
   <p>
     {history.id} - {history.track.id} - {history.status} - {history.percentPlayed}
   </p>

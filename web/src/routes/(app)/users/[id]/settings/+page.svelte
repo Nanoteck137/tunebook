@@ -71,7 +71,7 @@
       </div>
       <Separator class="my-4" />
       <div class="flex flex-col">
-        {#each data.tokens as token}
+        {#each data.tokens as token (token.id)}
           <ApiToken {token} />
         {/each}
       </div>

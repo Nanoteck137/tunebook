@@ -22,7 +22,7 @@
 <Spacer size="lg" />
 
 <div class="flex flex-shrink flex-wrap justify-center gap-4">
-  {#each data.users as user}
+  {#each data.users as user (user.id)}
     <div class="flex shrink-0 flex-col items-center">
       <a href="/users/{user.id}" class="group w-40 cursor-pointer">
         <img

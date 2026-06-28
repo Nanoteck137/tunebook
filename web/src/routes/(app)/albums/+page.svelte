@@ -210,7 +210,7 @@
 
     <div class="mt-3 flex flex-wrap items-center gap-1.5">
       <span class="text-xs font-medium text-muted-foreground">Decade</span>
-      {#each decadeTypes as d}
+      {#each decadeTypes as d (d.value)}
         <button
           class="rounded-md border px-2 py-1 text-xs transition-colors {decade ===
           d.value
@@ -262,7 +262,7 @@
         <Plus size={14} />
       </Button>
 
-      {#each includeTags as tag}
+      {#each includeTags as tag (tag)}
         <span
           class="flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary"
         >
@@ -275,7 +275,7 @@
           </button>
         </span>
       {/each}
-      {#each excludeTags as tag}
+      {#each excludeTags as tag (tag)}
         <span
           class="flex items-center gap-0.5 rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive"
         >
@@ -297,7 +297,7 @@
 <div
   class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
 >
-  {#each data.albums as album}
+  {#each data.albums as album (album.id)}
     <div
       class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
     >
@@ -380,7 +380,7 @@
           <div>
             <p class="text-lg font-semibold leading-tight">{infoAlbum.name}</p>
             <p class="text-sm text-muted-foreground">
-              {#each infoAlbum.artists as artist, i}
+              {#each infoAlbum.artists as artist, i (artist.id)}
                 {#if i > 0}
                   {", "}
                 {/if}
@@ -404,7 +404,7 @@
             {#if infoAlbum.tags.length > 0}
               <span class="text-muted-foreground">Tags</span>
               <div class="flex flex-wrap gap-1">
-                {#each infoAlbum.tags as tag}
+                {#each infoAlbum.tags as tag (tag)}
                   <span class="rounded-md bg-secondary px-1.5 py-0.5 text-xs"
                     >{tag}</span
                   >

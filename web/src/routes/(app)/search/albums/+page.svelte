@@ -128,7 +128,7 @@
   </div>
 
   <nav class="flex flex-wrap gap-1">
-    {#each tabs as { label, href }}
+    {#each tabs as { label, href } ({ label })}
       <a
         href="{href}?query={data.query}"
         class={cn(
@@ -161,7 +161,7 @@
     <div
       class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
     >
-      {#each data.albums as album}
+      {#each data.albums as album (album.id)}
         <div
           class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
         >
@@ -246,7 +246,7 @@
           <div>
             <p class="text-lg font-semibold leading-tight">{infoAlbum.name}</p>
             <p class="text-sm text-muted-foreground">
-              {#each infoAlbum.artists as artist, i}
+              {#each infoAlbum.artists as artist, i (artist.id)}
                 {#if i > 0}
                   {", "}
                 {/if}
@@ -270,7 +270,7 @@
             {#if infoAlbum.tags.length > 0}
               <span class="text-muted-foreground">Tags</span>
               <div class="flex flex-wrap gap-1">
-                {#each infoAlbum.tags as tag}
+                {#each infoAlbum.tags as tag (tag)}
                   <span class="rounded-md bg-secondary px-1.5 py-0.5 text-xs"
                     >{tag}</span
                   >

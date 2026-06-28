@@ -103,7 +103,7 @@
   </div>
 
   <nav class="flex flex-wrap gap-1">
-    {#each tabs as { label, href }}
+      {#each tabs as { label, href } ({ label })}
       <a
         href="{href}?query={data.query}"
         class={cn(
@@ -183,7 +183,7 @@
       <div
         class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
       >
-        {#each data.artists.slice(0, 6) as artist}
+        {#each data.artists.slice(0, 6) as artist (artist.id)}
           <a
             href="/artists/{artist.id}"
             class="flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
@@ -224,7 +224,7 @@
       <div
         class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
       >
-        {#each data.albums.slice(0, 6) as album}
+        {#each data.albums.slice(0, 6) as album (album.id)}
           <a
             href="/albums/{album.id}"
             class="flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
@@ -271,7 +271,7 @@
       <div
         class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
       >
-        {#each data.playlists.slice(0, 6) as playlist}
+        {#each data.playlists.slice(0, 6) as playlist (playlist.id)}
           <a
             href="/playlists/{playlist.id}"
             class="flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
@@ -314,7 +314,7 @@
       <div
         class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
       >
-        {#each data.users.slice(0, 6) as user}
+        {#each data.users.slice(0, 6) as user (user.id)}
           <a
             href="/users/{user.id}"
             class="flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"

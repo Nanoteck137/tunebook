@@ -61,7 +61,7 @@
 
     {#if data.album.tags.length > 0}
       <div class="flex flex-wrap gap-1">
-        {#each data.album.tags as tag}
+        {#each data.album.tags as tag (tag)}
           <span
             class="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-secondary-foreground"
             >{tag}</span
