@@ -11,7 +11,6 @@
   let { data } = $props();
 
   const musicManager = getMusicManager();
-  console.log(Array(5).map((_, i) => i));
 </script>
 
 {#if !data.user}
