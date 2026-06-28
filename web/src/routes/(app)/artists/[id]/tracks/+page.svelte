@@ -125,8 +125,6 @@
   <TrackList
     totalTracks={data.tracks.length}
     tracks={data.tracks}
-    userPlaylists={data.userPlaylists}
-    quickPlaylist={data.user?.quickPlaylist}
     onPlay={async (trackId) => {
       // TODO: queue artist tracks and start from trackId
     }}

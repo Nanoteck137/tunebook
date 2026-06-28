@@ -73,9 +73,12 @@
 <!-- Bottom mini bar -->
 {#if !open}
   <div class="fixed bottom-14 z-[60] w-full md:hidden">
-    <button
+    <div
       class="flex w-full items-center gap-3 border-t bg-background px-3 py-2 text-foreground"
+      role="button"
+      tabindex="0"
       onclick={openPlayer}
+      onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPlayer(); } }}
     >
       <div in:receive={{ key: "cover" }} out:send={{ key: "cover" }}>
         <Image
@@ -98,7 +101,7 @@
       <div class="flex-grow"></div>
 
       {#if musicManager.loading}
-        <div class="h-8 w-8 animate-pulse rounded-full bg-muted" />
+        <div class="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
       {:else if musicManager.playing}
         <button
           class="flex h-8 w-8 items-center justify-center"
@@ -122,7 +125,7 @@
       {/if}
 
       <ChevronDown size="20" class="shrink-0 text-muted-foreground" />
-    </button>
+    </div>
   </div>
 {/if}
 
@@ -216,7 +219,7 @@
               </button>
 
               {#if musicManager.loading}
-                <div class="h-16 w-16 animate-pulse rounded-full bg-muted" />
+                <div class="h-16 w-16 animate-pulse rounded-full bg-muted"></div>
               {:else if musicManager.playing}
                 <button
                   class="flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition-colors hover:scale-105"
@@ -290,7 +293,7 @@
               </p>
             </div>
             {#if musicManager.loading}
-              <div class="h-10 w-10 animate-pulse rounded-full bg-muted" />
+              <div class="h-10 w-10 animate-pulse rounded-full bg-muted"></div>
             {:else if musicManager.playing}
               <button
                 class="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background"
