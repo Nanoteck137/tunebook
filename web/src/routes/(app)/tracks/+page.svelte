@@ -173,22 +173,24 @@
         {/each}
       {/if}
 
-      <button
-        class="flex items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+      <Button
+        variant="ghost"
+        size="sm"
         onclick={() => (openNewFilterModal = true)}
       >
-        <Plus size={12} />
+        <Plus size={14} />
         New Filter
-      </button>
+      </Button>
 
       {#if $page.url.searchParams.has("filterId")}
-        <button
-          class="flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        <Button
+          variant="ghost"
+          size="sm"
           onclick={clearFilter}
         >
-          <X size={12} />
+          <X size={14} />
           Clear
-        </button>
+        </Button>
       {/if}
     </div>
   </div>
