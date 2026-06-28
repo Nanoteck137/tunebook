@@ -11,6 +11,7 @@
   let { data } = $props();
 
   const musicManager = getMusicManager();
+  console.log(Array(5).map((_, i) => i));
 </script>
 
 {#if !data.user}
@@ -52,7 +53,6 @@
       <h1 class="text-center text-2xl font-bold">
         Welcome, {data.user.displayName}!
       </h1>
-
     </div>
 
     <section>
@@ -68,7 +68,7 @@
 
       <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.playlists}
-          {#each Array(5) as _i (_i)}
+          {#each Array(5) as _i}
             <PlaylistSkeletonTile />
           {/each}
         {:then playlists}
@@ -99,7 +99,7 @@
 
       <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.favorites}
-          {#each Array(5) as _i (_i)}
+          {#each Array(5) as _i}
             <TrackSkeletonTile />
           {/each}
         {:then favorites}
@@ -128,7 +128,7 @@
 
       <div class="flex gap-2 overflow-x-auto pb-4">
         {#await data.recentAlbums}
-          {#each Array(5) as _i (_i)}
+          {#each Array(5) as _i}
             <AlbumSkeletonTile />
           {/each}
         {:then albums}
