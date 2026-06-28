@@ -113,7 +113,7 @@
         </Button>
 
         <Button type="submit" disabled={$submitting}>
-          Submit
+          Sign In
           {#if $submitting}
             <Spinner />
           {/if}

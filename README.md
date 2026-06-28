@@ -4,17 +4,10 @@
 
 ## Frontend Todo
 
-### Critical
-- [ ] Remove dead `web/src/lib/components/TrackListItem.svelte` (duplicate — the used one is in `components/track-list/`)
-- [ ] Remove "Test: Load lots of tracks" button from homepage (`web/src/routes/(app)/+page.svelte:93`)
-
 ### Remaining
 - [ ] Unify submit button text across modals ("Create" / "Create Playlist" / "Save" / "Submit" / "Ok")
-- [ ] Unify close button behavior (some call `reset()`, some don't)
 - [ ] Unify spacing before pagination across list pages
 - [ ] Unify Shuffle/Play button sizing (`size="sm"` on list pages vs default on detail pages)
-- [ ] Make "New Filter" button in tracks page use `<Button variant="ghost">` instead of custom inline pill
-- [ ] Make "Clear" button in tracks page use `<Button>` instead of custom inline pill
 - [ ] Unify `$app/state` vs `$app/stores` usage
 - [ ] Add missing `key` attributes in `{#each}` blocks
 - [ ] Move hardcoded sort options in tracks page to `types.ts`

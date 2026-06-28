@@ -117,7 +117,7 @@
         </Button>
 
         <Button type="submit" disabled={$submitting}>
-          Upload
+          Upload Cover
           {#if $submitting}
             <Spinner />
           {/if}
