@@ -4,7 +4,7 @@
   import { getApiClient, handleApiError } from "$lib";
   import type { TrackFilter } from "$lib/api/types";
   import { Edit, Trash } from "lucide-svelte";
-  import EditPlaylistFilterModal from "./EditPlaylistFilterModal.svelte";
+  import EditFilterModal from "./EditFilterModal.svelte";
   import toast from "svelte-5-french-toast";
 
   type Props = {
@@ -119,4 +119,4 @@
   </div>
 </div>
 
-<EditPlaylistFilterModal bind:open={openFilterEditModal} {filter} />
+<EditFilterModal bind:open={openFilterEditModal} {filter} />
