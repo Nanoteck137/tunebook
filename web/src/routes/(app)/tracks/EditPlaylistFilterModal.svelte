@@ -142,7 +142,6 @@
           variant="outline"
           onclick={() => {
             open = false;
-            reset();
           }}
         >
           Close
