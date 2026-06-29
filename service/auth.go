@@ -36,10 +36,12 @@ var (
 
 const (
 	authProviderRequestExpireDuration   = 5 * time.Minute
-	authProviderRequestDeletionDuration = authProviderRequestExpireDuration + 10*time.Minute
+	authProviderRequestDeletionDuration = 
+		authProviderRequestExpireDuration + 10*time.Minute
 
 	authQuickRequestExpireDuration   = 5 * time.Minute
-	authQuickRequestDeletionDuration = authQuickRequestExpireDuration + 10*time.Minute
+	authQuickRequestDeletionDuration = 
+		authQuickRequestExpireDuration + 10*time.Minute
 )
 
 type AuthProviderRequestStatus string
@@ -116,7 +118,10 @@ type providerClaim struct {
 	Sub         string `json:"sub"`
 }
 
-func (p *authProvider) claim(ctx context.Context, code string) (providerClaim, error) {
+func (p *authProvider) claim(
+	ctx context.Context, 
+	code string,
+) (providerClaim, error) {
 	oauth2Token, err := p.oauth2Config.Exchange(ctx, code)
 	if err != nil {
 		return providerClaim{}, fmt.Errorf("exchange: %w", err)
@@ -199,7 +204,9 @@ type ProviderRequestResult struct {
 	Expires   time.Time
 }
 
-func (a *AuthService) CreateProviderRequest(providerId string) (ProviderRequestResult, error) {
+func (a *AuthService) CreateProviderRequest(
+	providerId string,
+) (ProviderRequestResult, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -210,12 +217,14 @@ func (a *AuthService) CreateProviderRequest(providerId string) (ProviderRequestR
 
 	err := provider.init(context.TODO())
 	if err != nil {
-		return ProviderRequestResult{}, authErr.Newf("initialize AuthProvider(%s): %w", provider.id, err)
+		return ProviderRequestResult{}, authErr.Newf(
+			"initialize AuthProvider(%s): %w", provider.id, err)
 	}
 
 	challenge, err := generateAuthChallenge()
 	if err != nil {
-		return ProviderRequestResult{}, authErr.Newf("generate auth challenge: %w", err)
+		return ProviderRequestResult{}, authErr.Newf(
+			"generate auth challenge: %w", err)
 	}
 
 	id := createAuthId()
@@ -256,12 +265,16 @@ type QuickConnectRequestResult struct {
 func (a *AuthService) CreateQuickConnectRequest() (QuickConnectRequestResult, error) {
 	code, err := generateCode()
 	if err != nil {
-		return QuickConnectRequestResult{}, fmt.Errorf("failed to generate code: %w", err)
+		// TODO(patrik): Fix error
+		return QuickConnectRequestResult{}, fmt.Errorf(
+			"failed to generate code: %w", err)
 	}
 
 	challenge, err := generateAuthChallenge()
 	if err != nil {
-		return QuickConnectRequestResult{}, fmt.Errorf("failed to generate challenge: %w", err)
+		// TODO(patrik): Fix error
+		return QuickConnectRequestResult{}, fmt.Errorf(
+			"failed to generate challenge: %w", err)
 	}
 
 	t := time.Now()
@@ -290,7 +303,10 @@ func (a *AuthService) CreateQuickConnectRequest() (QuickConnectRequestResult, er
 	}, nil
 }
 
-func (a *AuthService) CompleteQuickConnectRequest(requestCode, userId string) error {
+func (a *AuthService) CompleteQuickConnectRequest(
+	requestCode, 
+	userId string,
+) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -334,7 +350,9 @@ func (a *AuthService) CompleteProviderRequest(requestId, code string) error {
 	return nil
 }
 
-func (a *AuthService) CheckProviderRequestStatus(requestId, challenge string) (AuthProviderRequestStatus, error) {
+func (a *AuthService) CheckProviderRequestStatus(
+	requestId, challenge string,
+) (AuthProviderRequestStatus, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -356,7 +374,9 @@ func (a *AuthService) CheckProviderRequestStatus(requestId, challenge string) (A
 	return request.status, nil
 }
 
-func (a *AuthService) CheckQuickConnectRequestStatus(requestCode, challenge string) (AuthQuickRequestStatus, error) {
+func (a *AuthService) CheckQuickConnectRequestStatus(
+	requestCode, challenge string,
+) (AuthQuickRequestStatus, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -377,7 +397,9 @@ func (a *AuthService) CheckQuickConnectRequestStatus(requestCode, challenge stri
 	return request.status, nil
 }
 
-func (a *AuthService) CreateAuthTokenForProvider(requestId, challenge string) (string, error) {
+func (a *AuthService) CreateAuthTokenForProvider(
+	requestId, challenge string,
+) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -402,7 +424,8 @@ func (a *AuthService) CreateAuthTokenForProvider(requestId, challenge string) (s
 		return "", ErrAuthServiceRequestInvalid
 	}
 
-	userId, err := a.getUserFromCode(context.TODO(), provider, request.oauth2Code)
+	userId, err := a.getUserFromCode(
+		context.TODO(), provider, request.oauth2Code)
 	if err != nil {
 		request.status = AuthProviderRequestStatusFailed
 		return "", err
@@ -424,7 +447,9 @@ func (a *AuthService) CreateAuthTokenForProvider(requestId, challenge string) (s
 	return token, nil
 }
 
-func (a *AuthService) CreateAuthTokenForQuickConnect(requestCode, challenge string) (string, error) {
+func (a *AuthService) CreateAuthTokenForQuickConnect(
+	requestCode, challenge string,
+) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -455,7 +480,11 @@ func (a *AuthService) CreateAuthTokenForQuickConnect(requestCode, challenge stri
 	return token, nil
 }
 
-func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvider, code string) (string, error) {
+func (a *AuthService) getUserFromCode(
+	ctx context.Context, 
+	provider *authProvider, 
+	code string,
+) (string, error) {
 	oidcClaims, err := provider.claim(ctx, code)
 	if err != nil {
 		return "", authErr.Newf("provider claim: %w", err)
@@ -514,7 +543,9 @@ func (a *AuthService) getUserFromCode(ctx context.Context, provider *authProvide
 					},
 				})
 				if err != nil {
-					return "", fmt.Errorf("failed to update user picture: %w", err)
+					// TODO(patrik): Fix error
+					return "", fmt.Errorf(
+						"failed to update user picture: %w", err)
 				}
 			}
 
