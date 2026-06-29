@@ -147,7 +147,12 @@ func (s *LibraryService) addError(err error) bool {
 	return len(s.errors) >= 5
 }
 
-func setArtistTags(ctx context.Context, db database.DB, artistId string, tags []string) error {
+func setArtistTags(
+	ctx context.Context,
+	db database.DB,
+	artistId string,
+	tags []string,
+) error {
 	err := db.RemoveAllTagsFromArtist(ctx, artistId)
 	if err != nil {
 		return err
@@ -226,7 +231,10 @@ func (s *LibraryService) syncSingleArtist(
 	return nil
 }
 
-func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) error {
+func (s *LibraryService) syncArtists(
+	ctx context.Context,
+	libraryDir string,
+) error {
 	p := path.Join(libraryDir, "artists")
 	file, err := os.Open(p)
 	if err != nil {
@@ -236,6 +244,7 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 
 	decoder := json.NewDecoder(file)
 
+	// TODO(patrik): This need to match the syncTracks loop and report errors
 	for decoder.More() {
 		var entry library.ArtistEntry
 		err := decoder.Decode(&entry)
@@ -266,7 +275,12 @@ func (s *LibraryService) syncArtists(ctx context.Context, libraryDir string) err
 	return nil
 }
 
-func setAlbumFeaturingArtists(ctx context.Context, db database.DB, albumId string, artistIds []string) error {
+func setAlbumFeaturingArtists(
+	ctx context.Context,
+	db database.DB,
+	albumId string,
+	artistIds []string,
+) error {
 	err := db.RemoveAllAlbumFeaturingArtists(ctx, albumId)
 	if err != nil {
 		return err
@@ -282,7 +296,12 @@ func setAlbumFeaturingArtists(ctx context.Context, db database.DB, albumId strin
 	return nil
 }
 
-func setAlbumTags(ctx context.Context, db database.DB, albumId string, tags []string) error {
+func setAlbumTags(
+	ctx context.Context,
+	db database.DB,
+	albumId string,
+	tags []string,
+) error {
 	err := db.RemoveAllTagsFromAlbum(ctx, albumId)
 	if err != nil {
 		return err
@@ -305,7 +324,10 @@ func setAlbumTags(ctx context.Context, db database.DB, albumId string, tags []st
 	return nil
 }
 
-func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.AlbumEntry) error {
+func (s *LibraryService) syncSingleAlbum(
+	ctx context.Context,
+	entry *library.AlbumEntry,
+) error {
 	coverArt := entry.GetCoverArt()
 
 	dbAlbum, err := s.db.GetAlbumById(ctx, entry.Id)
@@ -392,7 +414,10 @@ func (s *LibraryService) syncSingleAlbum(ctx context.Context, entry *library.Alb
 	return nil
 }
 
-func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) error {
+func (s *LibraryService) syncAlbums(
+	ctx context.Context,
+	libraryDir string,
+) error {
 	p := path.Join(libraryDir, "albums")
 	file, err := os.Open(p)
 	if err != nil {
@@ -402,6 +427,7 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 
 	decoder := json.NewDecoder(file)
 
+	// TODO(patrik): This need to match the syncTracks loop and report errors
 	for decoder.More() {
 		var entry library.AlbumEntry
 		err := decoder.Decode(&entry)
@@ -432,7 +458,12 @@ func (s *LibraryService) syncAlbums(ctx context.Context, libraryDir string) erro
 	return nil
 }
 
-func setTrackFeaturingArtists(ctx context.Context, db database.DB, trackId string, artistIds []string) error {
+func setTrackFeaturingArtists(
+	ctx context.Context,
+	db database.DB,
+	trackId string,
+	artistIds []string,
+) error {
 	err := db.RemoveAllTrackFeaturingArtists(ctx, trackId)
 	if err != nil {
 		return err
@@ -448,7 +479,12 @@ func setTrackFeaturingArtists(ctx context.Context, db database.DB, trackId strin
 	return nil
 }
 
-func setTrackTags(ctx context.Context, db database.DB, trackId string, tags []string) error {
+func setTrackTags(
+	ctx context.Context,
+	db database.DB,
+	trackId string,
+	tags []string,
+) error {
 	err := db.RemoveAllTagsFromTrack(ctx, trackId)
 	if err != nil {
 		return err
@@ -471,7 +507,10 @@ func setTrackTags(ctx context.Context, db database.DB, trackId string, tags []st
 	return nil
 }
 
-func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.TrackEntry) error {
+func (s *LibraryService) syncSingleTrack(
+	ctx context.Context,
+	entry *library.TrackEntry,
+) error {
 	trackFile := entry.GetTrackFile()
 
 	stat, err := os.Stat(trackFile)
@@ -485,28 +524,11 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 	dbTrack, err := s.db.GetTrackById(ctx, entry.Id)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
-			// Id:           track.Id,
-			// Filename:     track.File,
-			// ModifiedTime: modifiedTime,
-			// MediaType:    probeResult.MediaType,
-			// Name:         track.Name,
-			// OtherName:    sql.NullString{},
-			// AlbumId:      dbAlbum.Id,
-			// ArtistId:     artist,
-			// Duration:     int64(probeResult.Duration),
-			// Number: sql.NullInt64{
-			// 	Int64: track.Number,
-			// 	Valid: track.Number != 0,
-			// },
-			// Year: sql.NullInt64{
-			// 	Int64: track.Year,
-			// 	Valid: track.Year != 0,
-			// },
-
 			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
 				// TODO(patrik): Better error
-				return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
+				return fmt.Errorf(
+					"failed to probe track file (%s): %w", trackFile, err)
 			}
 
 			_, err = s.db.CreateTrack(ctx, database.CreateTrackParams{
@@ -540,7 +562,8 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
 				// TODO(patrik): Better error
-				return fmt.Errorf("failed to probe track file (%s): %w", trackFile, err)
+				return fmt.Errorf(
+					"failed to probe track file (%s): %w", trackFile, err)
 			}
 
 			dur := int64(probeResult.Duration.Seconds())
@@ -625,7 +648,10 @@ func (s *LibraryService) syncSingleTrack(ctx context.Context, entry *library.Tra
 	return nil
 }
 
-func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) error {
+func (s *LibraryService) syncTracks(
+	ctx context.Context,
+	libraryDir string,
+) error {
 	p := path.Join(libraryDir, "tracks")
 	file, err := os.Open(p)
 	if err != nil {
@@ -639,7 +665,9 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 		var entry library.TrackEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
-			stop := s.addError(fmt.Errorf("failed to decode next track entry[%d]: %w", idx, err))
+			stop := s.addError(
+				fmt.Errorf(
+					"failed to decode next track entry[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -665,7 +693,8 @@ func (s *LibraryService) syncTracks(ctx context.Context, libraryDir string) erro
 
 		err = s.syncSingleTrack(ctx, &entry)
 		if err != nil {
-			stop := s.addError(fmt.Errorf("failed to sync track[%d]: %w", idx, err))
+			stop := s.addError(
+				fmt.Errorf("failed to sync track[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -774,10 +803,12 @@ func (s *LibraryService) Sync() error {
 	if err != nil {
 		return fmt.Errorf("failed to get all artist ids: %w", err)
 	}
+
 	existingAlbumIds, err := s.db.GetAllAlbumIds(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get all album ids: %w", err)
 	}
+
 	existingTrackIds, err := s.db.GetAllTrackIds(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get all track ids: %w", err)
@@ -793,7 +824,10 @@ func (s *LibraryService) Sync() error {
 					"name", artist.Name,
 				)
 
-				s.missingArtists = append(s.missingArtists, MissingItem{Id: id, Name: artist.Name})
+				s.missingArtists = append(s.missingArtists, MissingItem{
+					Id:   id,
+					Name: artist.Name,
+				})
 			}
 		}
 	}
@@ -809,8 +843,13 @@ func (s *LibraryService) Sync() error {
 					"artist", album.ArtistName,
 				)
 
-				displayName := fmt.Sprintf("%s (%s)", album.Name, album.ArtistName)
-				s.missingAlbums = append(s.missingAlbums, MissingItem{Id: id, Name: displayName})
+				displayName := fmt.Sprintf(
+					"%s (%s)", album.Name, album.ArtistName)
+
+				s.missingAlbums = append(s.missingAlbums, MissingItem{
+					Id:   id,
+					Name: displayName,
+				})
 			}
 		}
 	}
@@ -827,8 +866,14 @@ func (s *LibraryService) Sync() error {
 					"artist", track.ArtistName,
 				)
 
-				displayName := fmt.Sprintf("%s (%s) (%s)", track.Name, track.AlbumName, track.ArtistName)
-				s.missingTracks = append(s.missingTracks, MissingItem{Id: id, Name: displayName})
+				displayName := fmt.Sprintf(
+					"%s (%s) (%s)",
+					track.Name, track.AlbumName, track.ArtistName)
+
+				s.missingTracks = append(s.missingTracks, MissingItem{
+					Id:   id,
+					Name: displayName,
+				})
 			}
 		}
 	}
@@ -838,7 +883,8 @@ func (s *LibraryService) Sync() error {
 	s.tracksSyncDuration = trackTimer.Duration()
 	s.totalSyncDuration = s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
 
-	// TODO(patrik): Make this better
+	// TODO(patrik): Move this an CacheService/DataDirService/PathService
+	// to unify cache handling
 	dir := s.dataDir.Cache()
 	s.logger.Info("clearing the cache", "path", dir)
 
@@ -865,27 +911,48 @@ func (s *LibraryService) Cleanup(ctx context.Context) error {
 	for _, item := range s.missingTracks {
 		err := s.db.DeleteTrack(ctx, item.Id)
 		if err != nil {
-			s.logger.Warn("failed to delete track", "id", item.Id, "name", item.Name, "err", err)
+			s.logger.Warn(
+				"delete track",
+				"id", item.Id,
+				"name", item.Name,
+				"err", err,
+			)
+
 			continue
 		}
+
 		deletedTracks++
 	}
 
 	for _, item := range s.missingAlbums {
 		err := s.db.DeleteAlbum(ctx, item.Id)
 		if err != nil {
-			s.logger.Warn("failed to delete album", "id", item.Id, "name", item.Name, "err", err)
+			s.logger.Warn(
+				"delete album",
+				"id", item.Id,
+				"name", item.Name,
+				"err", err,
+			)
+
 			continue
 		}
+
 		deletedAlbums++
 	}
 
 	for _, item := range s.missingArtists {
 		err := s.db.DeleteArtist(ctx, item.Id)
 		if err != nil {
-			s.logger.Warn("failed to delete artist", "id", item.Id, "name", item.Name, "err", err)
+			s.logger.Warn(
+				"delete artist",
+				"id", item.Id,
+				"name", item.Name,
+				"err", err,
+			)
+
 			continue
 		}
+
 		deletedArtists++
 	}
 
