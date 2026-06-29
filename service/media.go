@@ -52,6 +52,8 @@ const (
 	QualityLow    Quality = "low"
 	QualityMedium Quality = "medium"
 	QualityHigh   Quality = "high"
+
+	DefaultQuality = QualityMedium
 )
 
 type QualitySpec struct {
@@ -195,8 +197,7 @@ func (s *MediaService) GetTrackStream(
 	}
 
 	if opts.Quality == QualityEmpty {
-		// TODO(patrik): Set constant
-		opts.Quality = QualityMedium
+		opts.Quality = DefaultQuality
 	}
 
 	log := s.logger.With(
