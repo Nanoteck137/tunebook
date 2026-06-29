@@ -26,7 +26,8 @@ const (
 
 	ErrTypeFilterNotFound pyrin.ErrorType = "FILTER_NOT_FOUND"
 
-	ErrTypeHistoryNotFound pyrin.ErrorType = "HISTORY_NOT_FOUND"
+	ErrTypeHistoryNotFound    pyrin.ErrorType = "HISTORY_NOT_FOUND"
+	ErrTypeUnsupportedImageType pyrin.ErrorType = "UNSUPPORTED_IMAGE_TYPE"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -154,5 +155,13 @@ func PlaylistAlreadyHasTrack() *pyrin.Error {
 		Code:    http.StatusBadRequest,
 		Type:    ErrTypePlaylistAlreadyHasTrack,
 		Message: "Playlist already has track",
+	}
+}
+
+func UnsupportedImageType() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeUnsupportedImageType,
+		Message: "Unsupported image type",
 	}
 }

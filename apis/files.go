@@ -9,7 +9,29 @@ import (
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/service"
 )
+
+func handleImageServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrImageServiceAlbumNotFound):
+		return AlbumNotFound()
+	case errors.Is(err, service.ErrImageServiceArtistNotFound):
+		return ArtistNotFound()
+	case errors.Is(err, service.ErrImageServicePlaylistNotFound):
+		return PlaylistNotFound()
+	case errors.Is(err, service.ErrImageServiceUserNotFound):
+		return UserNotFound()
+	case errors.Is(err, service.ErrImageServiceUnknownImageType):
+		return UnsupportedImageType()
+	case errors.Is(err, service.ErrImageServiceUnknownType):
+		return UnsupportedImageType()
+	case errors.Is(err, service.ErrImageServiceInvalidImageType):
+		return UnsupportedImageType()
+	}
+
+	return err
+}
 
 func InstallFilesHandlers(app core.App, g pyrin.Group) {
 	g.Register(
@@ -26,15 +48,15 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 
 				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
 				if !ok {
-					// TODO(patrik): Better error
-					return errors.New("unsupported image ext")
+					return UnsupportedImageType()
 				}
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetAlbumImage(ctx, albumId, name, imageType)
+				p, err := app.ImageService().GetAlbumImage(
+					ctx, albumId, name, imageType)
 				if err != nil {
-					return err
+					return handleImageServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))
@@ -55,15 +77,15 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 
 				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
 				if !ok {
-					// TODO(patrik): Better error
-					return errors.New("unsupported image ext")
+					return UnsupportedImageType()
 				}
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetArtistImage(ctx, artistId, name, imageType)
+				p, err := app.ImageService().GetArtistImage(
+					ctx, artistId, name, imageType)
 				if err != nil {
-					return err
+					return handleImageServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))
@@ -84,15 +106,15 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 
 				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
 				if !ok {
-					// TODO(patrik): Better error
-					return errors.New("unsupported image ext")
+					return UnsupportedImageType()
 				}
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetPlaylistImage(ctx, playlistId, name, imageType)
+				p, err := app.ImageService().GetPlaylistImage(
+					ctx, playlistId, name, imageType)
 				if err != nil {
-					return err
+					return handleImageServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))
@@ -113,15 +135,15 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 
 				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
 				if !ok {
-					// TODO(patrik): Better error
-					return errors.New("unsupported image ext")
+					return UnsupportedImageType()
 				}
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetUserImage(ctx, userId, name, imageType)
+				p, err := app.ImageService().GetUserImage(
+					ctx, userId, name, imageType)
 				if err != nil {
-					return err
+					return handleImageServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))
