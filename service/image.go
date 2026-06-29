@@ -3,6 +3,8 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -20,24 +22,28 @@ import (
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
+	"github.com/nrednav/cuid2"
 )
 
 var imageErr = NewServiceErrCreator("image")
+
+var newTempFileId, _ = cuid2.Init(cuid2.WithLength(16))
 
 var (
 	ErrImageServiceAlbumNotFound        = imageErr.New("album not found")
 	ErrImageServiceArtistNotFound       = imageErr.New("artist not found")
 	ErrImageServicePlaylistNotFound     = imageErr.New("playlist not found")
 	ErrImageServiceUserNotFound         = imageErr.New("user not found")
+	// TODO(patrik): Change from type to format??
 	ErrImageServiceUnknownImageType     = imageErr.New("unknown image type")
 	ErrImageServiceUnknownType          = imageErr.New("unknown type")
 	ErrImageServiceInvalidImageType     = imageErr.New("invalid image type")
 	ErrImageServiceUnsupportedMediaType = imageErr.New("unsupported media type")
 )
 
-var magickImageMapping = map[string]ImageType{
-	"PNG":  ImageTypePng,
-	"JPEG": ImageTypeJpeg,
+var magickImageMapping = map[string]types.ImageFormat{
+	"PNG":  types.ImageFormatPng,
+	"JPEG": types.ImageFormatJpeg,
 }
 
 type ImageService struct {
@@ -77,6 +83,10 @@ func (s *ImageService) convertImage(input, outputDir, name string, size int) (st
 	return p, nil
 }
 
+func (s *ImageService) createTempFilename(ext string) string {
+	return path.Join(s.dataDir.Temp(), newTempFileId()+ext)
+}
+
 func (s *ImageService) convertSquareImage(input, outputDir, name string) (string, error) {
 	p := path.Join(outputDir, name)
 
@@ -98,14 +108,7 @@ func (s *ImageService) convertSquareImage(input, outputDir, name string) (string
 func (s *ImageService) copyDefaultToTemp(filename string) (string, error) {
 	ext := path.Ext(filename)
 
-	// TODO(patrik): Make sure that temp direct
-	tmpDir := s.dataDir.Temp()
-
-	dest, err := os.CreateTemp(tmpDir, "default*"+ext)
-	if err != nil {
-		return "", err
-	}
-	defer dest.Close()
+	dest := s.createTempFilename(ext)
 
 	src, err := assets.DefaultImagesFS.Open(filename)
 	if err != nil {
@@ -113,59 +116,32 @@ func (s *ImageService) copyDefaultToTemp(filename string) (string, error) {
 	}
 	defer src.Close()
 
-	_, err = io.Copy(dest, src)
+	f, err := os.Create(dest)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, src)
 	if err != nil {
 		return "", err
 	}
 
-	return dest.Name(), nil
+	return dest, nil
 }
 
-// TODO(patrik): Rename to ImageFormat
-// TODO(patrik): Move to types package
-type ImageType string
-
-const (
-	ImageTypeEmpty   ImageType = ""
-	ImageTypeUnknown ImageType = "unknown"
-	ImageTypePng     ImageType = "png"
-	ImageTypeJpeg    ImageType = "jpeg"
-)
-
-func (t ImageType) IsValid() bool {
-	switch t {
-	case ImageTypePng:
-		return true
-	case ImageTypeJpeg:
-		return true
-	}
-
-	return false
-}
-
-func (t ImageType) ToExt() (string, bool) {
-	switch t {
-	case ImageTypePng:
-		return ".png", true
-	case ImageTypeJpeg:
-		return ".jpeg", true
-	}
-
-	return "", false
-}
-
-func (s *ImageService) GetImageTypeFromExt(ext string) (ImageType, bool) {
+func (s *ImageService) GetImageFormatFromExt(ext string) (types.ImageFormat, bool) {
 	switch ext {
 	case ".png":
-		return ImageTypePng, true
+		return types.ImageFormatPng, true
 	case ".jpg", ".jpeg":
-		return ImageTypeJpeg, true
+		return types.ImageFormatJpeg, true
 	}
 
 	return "", false
 }
 
-func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, imageType ImageType) (string, error) {
+func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, imageType types.ImageFormat) (string, error) {
 	album, err := s.db.GetAlbumById(ctx, albumId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -223,7 +199,7 @@ func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, i
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string, imageType ImageType) (string, error) {
+func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string, imageType types.ImageFormat) (string, error) {
 	artist, err := s.db.GetArtistById(ctx, artistId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -281,7 +257,7 @@ func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string,
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ string, imageType ImageType) (string, error) {
+func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ string, imageType types.ImageFormat) (string, error) {
 	playlist, err := s.db.GetPlaylistById(ctx, playlistId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -341,7 +317,7 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, imageType ImageType) (string, error) {
+func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, imageType types.ImageFormat) (string, error) {
 	user, err := s.db.GetUserById(ctx, userId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -401,8 +377,47 @@ func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, ima
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) ValidateImage(p string) (ImageType, error) {
+func (s *ImageService) getImageFormat(p string) (types.ImageFormat, error) {
+	cmd := exec.Command("magick", "identify", "-ping", "-format", "%m", p)
 
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	var errOut bytes.Buffer
+	cmd.Stderr = &errOut
+
+	err := cmd.Run()
+	if err != nil {
+		details := strings.TrimSpace(errOut.String())
+
+		s.logger.Error("get image format",
+			slog.Any("err", err),
+			slog.String("output", details),
+		)
+
+		var execErr *exec.ExitError
+		if errors.As(err, &execErr) {
+			if !execErr.Success() {
+				return types.ImageFormatUnknown, nil
+			}
+		}
+
+		return types.ImageFormatUnknown, err
+	}
+
+	ty := strings.TrimSpace(out.String())
+
+	res, exists := magickImageMapping[ty]
+	if !exists {
+		s.logger.Warn("get image format: no mapping found", "mapping", ty)
+
+		return types.ImageFormatUnknown, nil
+	}
+
+	return res, nil
+}
+
+func (s *ImageService) ValidateImage(p string) (types.ImageFormat, error) {
 	// out, err := exec.Command("magick", "identify", "-ping", "-format", "%m", p).CombinedOutput()
 
 	cmd := exec.Command("magick", "identify", "-ping", "-format", "%m", p)
@@ -425,18 +440,18 @@ func (s *ImageService) ValidateImage(p string) (ImageType, error) {
 		var execErr *exec.ExitError
 		if errors.As(err, &execErr) {
 			if !execErr.Success() {
-				return ImageTypeUnknown, nil
+				return types.ImageFormatUnknown, nil
 			}
 		}
 
-		return ImageTypeUnknown, err
+		return types.ImageFormatUnknown, err
 	}
 
 	ty := strings.TrimSpace(out.String())
 
 	res, exists := magickImageMapping[ty]
 	if !exists {
-		return ImageTypeUnknown, imageErr.Newf("no mapping: %s", ty)
+		return types.ImageFormatUnknown, imageErr.Newf("no mapping: %s", ty)
 	}
 
 	return res, nil
@@ -454,52 +469,47 @@ func (s *ImageService) DownloadCoverForPlaylist(
 	params DownloadCoverForPlaylistParams,
 ) (string, error) {
 	// TODO(patrik): Cleanup, move to utils
-	getImageExtFromContentType := func(contentType string) (string, error) {
-		mediaType, _, err := mime.ParseMediaType(contentType)
-		if err != nil {
-			return "", imageErr.Wrap("failed to parse content type", err)
-		}
-
-		// TODO(patrik): Add support for more exts
-		switch mediaType {
-		case "image/png":
-			return ".png", nil
-		case "image/jpeg":
-			return ".jpeg", nil
-		default:
-			return "", imageErr.Newf("unsupported media type: %s", mediaType)
-		}
-	}
-
+	// getImageExtFromContentType := func(contentType string) (string, error) {
+	// 	mediaType, _, err := mime.ParseMediaType(contentType)
+	// 	if err != nil {
+	// 		return "", imageErr.Wrap("failed to parse content type", err)
+	// 	}
+	//
+	// 	// TODO(patrik): Add support for more exts
+	// 	switch mediaType {
+	// 	case "image/png":
+	// 		return ".png", nil
+	// 	case "image/jpeg":
+	// 		return ".jpeg", nil
+	// 	default:
+	// 		return "", imageErr.Newf("unsupported media type: %s", mediaType)
+	// 	}
+	// }
+	//
 	resp, err := http.Get(params.Url)
 	if err != nil {
+		// TODO(patrik): Better error
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	contentType := resp.Header.Get("Content-Type")
-	ext, err := getImageExtFromContentType(contentType)
+	// contentType := resp.Header.Get("Content-Type")
+	// ext, err := getImageExtFromContentType(contentType)
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	// ---- CopyReaderToTempFile
+	// NOTE(patrik): WORK HERE
+	tmpPath := s.createTempFilename("")
+	tmp, err := os.Create(tmpPath)
 	if err != nil {
 		return "", err
 	}
-
-	// TODO(patrik): Make sure that temp direct
-	tmpDir := s.dataDir.Temp()
-
-	// TODO(patrik): The tmp dir should be inside the work dir
-	tmp, err := os.CreateTemp(tmpDir, "tmp-image-*"+ext)
-	if err != nil {
-		return "", imageErr.Wrap("failed to create temp file", err)
-	}
-	tmpPath := tmp.Name()
-	defer tmp.Close()
-
 	// always clean up temp file if something goes wrong
 	defer func() {
-		_, err := os.Stat(tmpPath)
-		if err == nil {
-			os.Remove(tmpPath)
-		}
+		tmp.Close()
+		os.Remove(tmpPath)
 	}()
 
 	_, err = io.Copy(tmp, resp.Body)
@@ -508,8 +518,9 @@ func (s *ImageService) DownloadCoverForPlaylist(
 	}
 
 	tmp.Close()
+	// ---- CopyReaderToTempFile
 
-	imageType, err := s.ValidateImage(tmpPath)
+	format, err := s.getImageFormat(tmpPath)
 	if err != nil {
 		return "", err
 	}
@@ -520,20 +531,29 @@ func (s *ImageService) DownloadCoverForPlaylist(
 		playlistDir,
 	})
 	if err != nil {
+		// TODO(patrik): Better error
 		return "", err
 	}
 
-	imageExt, ok := imageType.ToExt()
+	// ---- CopyFinalImage
+	imageExt, ok := format.ToExt()
 	if !ok {
 		return "", ErrImageServiceInvalidImageType
 	}
 
-	cover := "downloaded" + imageExt
+	hash, err := hashFile(tmpPath)
+	if err != nil {
+		// TODO(patrik): Better error
+		return "", err
+	}
+
+	cover := hash + imageExt
 	output := filepath.Join(playlistDir, cover)
 	err = os.Rename(tmpPath, output)
 	if err != nil {
 		return "", imageErr.Wrap("failed to promote temp file", err)
 	}
+	// ---- CopyFinalImage
 
 	return cover, nil
 }
@@ -598,15 +618,11 @@ func (s *ImageService) UploadImageForPlaylist(
 ) (string, error) {
 	ext := path.Ext(params.File.Filename)
 
-	// TODO(patrik): Make sure that temp direct
-	tmpDir := s.dataDir.Temp()
-
-	// TODO(patrik): The tmp dir should be inside the work dir
-	tmp, err := os.CreateTemp(tmpDir, "tmp-image-*"+ext)
+	tmpPath := s.createTempFilename(ext)
+	tmp, err := os.Create(tmpPath)
 	if err != nil {
-		return "", imageErr.Wrap("failed to create temp file", err)
+		return "", err
 	}
-	tmpPath := tmp.Name()
 	defer tmp.Close()
 
 	// always clean up temp file if something goes wrong
@@ -699,15 +715,11 @@ func (s *ImageService) DownloadPictureForUser(
 		return "", err
 	}
 
-	// TODO(patrik): Make sure that temp direct
-	tmpDir := s.dataDir.Temp()
-
-	// TODO(patrik): The tmp dir should be inside the work dir
-	tmp, err := os.CreateTemp(tmpDir, "tmp-image-*"+ext)
+	tmpPath := s.createTempFilename(ext)
+	tmp, err := os.Create(tmpPath)
 	if err != nil {
-		return "", imageErr.Wrap("failed to create temp file", err)
+		return "", err
 	}
-	tmpPath := tmp.Name()
 	defer tmp.Close()
 
 	// always clean up temp file if something goes wrong
@@ -845,4 +857,19 @@ func convertImage(src string, dest string) error {
 	}
 
 	return nil
+}
+
+func hashFile(p string) (string, error) {
+	f, err := os.Open(p)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

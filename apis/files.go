@@ -46,7 +46,7 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 				ext := path.Ext(image)
 				name := strings.TrimRight(image, ext)
 
-				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
+				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
 				if !ok {
 					return UnsupportedImageType()
 				}
@@ -75,7 +75,7 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 				ext := path.Ext(image)
 				name := strings.TrimRight(image, ext)
 
-				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
+				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
 				if !ok {
 					return UnsupportedImageType()
 				}
@@ -104,7 +104,7 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 				ext := path.Ext(image)
 				name := strings.TrimRight(image, ext)
 
-				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
+				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
 				if !ok {
 					return UnsupportedImageType()
 				}
@@ -133,7 +133,7 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 				ext := path.Ext(image)
 				name := strings.TrimRight(image, ext)
 
-				imageType, ok := app.ImageService().GetImageTypeFromExt(ext)
+				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
 				if !ok {
 					return UnsupportedImageType()
 				}
