@@ -558,8 +558,7 @@ func (s *LibraryService) syncSingleTrack(
 
 	stat, err := os.Stat(trackFile)
 	if err != nil {
-		// TODO(patrik): Better error
-		return fmt.Errorf("failed to stat track file (%s): %w", trackFile, err)
+		return fmt.Errorf("failed to stat track file for track %q (%s): %w", entry.Name, trackFile, err)
 	}
 
 	modifiedTime := stat.ModTime().UnixMilli()
@@ -569,9 +568,8 @@ func (s *LibraryService) syncSingleTrack(
 		if errors.Is(err, database.ErrItemNotFound) {
 			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
-				// TODO(patrik): Better error
 				return fmt.Errorf(
-					"failed to probe track file (%s): %w", trackFile, err)
+					"failed to probe new track %q (%s): %w", entry.Name, trackFile, err)
 			}
 
 			_, err = s.db.CreateTrack(ctx, database.CreateTrackParams{
@@ -604,9 +602,8 @@ func (s *LibraryService) syncSingleTrack(
 		if modifiedTime > dbTrack.ModifiedTime || dbTrack.Filename != trackFile {
 			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
-				// TODO(patrik): Better error
 				return fmt.Errorf(
-					"failed to probe track file (%s): %w", trackFile, err)
+					"failed to probe updated track %q (%s): %w", entry.Name, trackFile, err)
 			}
 
 			dur := int64(probeResult.Duration.Seconds())
