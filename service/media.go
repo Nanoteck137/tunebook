@@ -153,7 +153,11 @@ func NewMediaService(
 }
 
 func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Quality) (int, error) {
-	// TODO(patrik): Check for valid quality
+	switch quality {
+	case QualityLow, QualityMedium, QualityHigh:
+	default:
+		return 0, ErrMediaServiceInvalidQuality
+	}
 
 	q, ok := s.QualityMapping[format]
 	if !ok {
