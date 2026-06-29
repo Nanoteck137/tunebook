@@ -182,8 +182,7 @@ type MediaStreamOptions struct {
 	Format types.MediaFormat
 }
 
-// TODO(patrik): Rename, ProcessTrackStream
-func (s *MediaService) GetTrackStream(
+func (s *MediaService) ProcessTrackStream(
 	trackId string,
 	opts MediaStreamOptions,
 ) (string, error) {

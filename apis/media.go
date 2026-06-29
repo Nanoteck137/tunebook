@@ -97,7 +97,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				query := c.Request().URL.Query()
 
-				filename, err := app.MediaService().GetTrackStream(
+				filename, err := app.MediaService().ProcessTrackStream(
 					trackId,
 					service.MediaStreamOptions{
 						Device:  service.Device(query.Get("device")),
