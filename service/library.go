@@ -257,7 +257,7 @@ func (s *LibraryService) syncArtists(
 		if err != nil {
 			stop := s.addError(
 				fmt.Errorf(
-					"failed to decode next artist entry[%d]: %w", idx, err))
+					"decode next artist entry[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -284,7 +284,7 @@ func (s *LibraryService) syncArtists(
 		err = s.syncSingleArtist(ctx, &entry)
 		if err != nil {
 			stop := s.addError(
-				fmt.Errorf("failed to sync artist[%d]: %w", idx, err))
+				fmt.Errorf("sync artist[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -412,7 +412,7 @@ func (s *LibraryService) syncSingleAlbum(
 
 		err = s.db.UpdateAlbum(ctx, dbAlbum.Id, changes)
 		if err != nil {
-			return fmt.Errorf("failed to update album: %w", err)
+			return fmt.Errorf("update album: %w", err)
 		}
 	}
 
@@ -458,7 +458,7 @@ func (s *LibraryService) syncAlbums(
 		if err != nil {
 			stop := s.addError(
 				fmt.Errorf(
-					"failed to decode next album entry[%d]: %w", idx, err))
+					"decode next album entry[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -485,7 +485,7 @@ func (s *LibraryService) syncAlbums(
 		err = s.syncSingleAlbum(ctx, &entry)
 		if err != nil {
 			stop := s.addError(
-				fmt.Errorf("failed to sync album[%d]: %w", idx, err))
+				fmt.Errorf("sync album[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -558,7 +558,7 @@ func (s *LibraryService) syncSingleTrack(
 
 	stat, err := os.Stat(trackFile)
 	if err != nil {
-		return fmt.Errorf("failed to stat track file for track %q (%s): %w", entry.Name, trackFile, err)
+		return fmt.Errorf("stat track file %q (%s): %w", entry.Name, trackFile, err)
 	}
 
 	modifiedTime := stat.ModTime().UnixMilli()
@@ -569,7 +569,7 @@ func (s *LibraryService) syncSingleTrack(
 			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
 				return fmt.Errorf(
-					"failed to probe new track %q (%s): %w", entry.Name, trackFile, err)
+					"probe new track %q (%s): %w", entry.Name, trackFile, err)
 			}
 
 			_, err = s.db.CreateTrack(ctx, database.CreateTrackParams{
@@ -603,7 +603,7 @@ func (s *LibraryService) syncSingleTrack(
 			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
 				return fmt.Errorf(
-					"failed to probe updated track %q (%s): %w", entry.Name, trackFile, err)
+					"probe updated track %q (%s): %w", entry.Name, trackFile, err)
 			}
 
 			dur := int64(probeResult.Duration.Seconds())
@@ -707,7 +707,7 @@ func (s *LibraryService) syncTracks(
 		if err != nil {
 			stop := s.addError(
 				fmt.Errorf(
-					"failed to decode next track entry[%d]: %w", idx, err))
+					"decode next track entry[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -734,7 +734,7 @@ func (s *LibraryService) syncTracks(
 		err = s.syncSingleTrack(ctx, &entry)
 		if err != nil {
 			stop := s.addError(
-				fmt.Errorf("failed to sync track[%d]: %w", idx, err))
+				fmt.Errorf("sync track[%d]: %w", idx, err))
 			if stop {
 				break
 			}
@@ -838,17 +838,17 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 
 	existingArtistIds, err := s.db.GetAllArtistIds(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get all artist ids: %w", err)
+		return fmt.Errorf("get all artist ids: %w", err)
 	}
 
 	existingAlbumIds, err := s.db.GetAllAlbumIds(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get all album ids: %w", err)
+		return fmt.Errorf("get all album ids: %w", err)
 	}
 
 	existingTrackIds, err := s.db.GetAllTrackIds(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get all track ids: %w", err)
+		return fmt.Errorf("get all track ids: %w", err)
 	}
 
 	for _, id := range existingArtistIds {
