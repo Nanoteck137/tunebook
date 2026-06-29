@@ -222,7 +222,13 @@ func (s *MediaService) ProcessTrackStream(
 		return "", err
 	}
 
-	// TODO(patrik): Add checks for the track here
+	if track.Filename == "" {
+		return "", mediaErr.New("track has no file")
+	}
+
+	if !track.MediaFormat.IsValid() {
+		return "", mediaErr.Newf("track has invalid media format: %s", track.MediaFormat)
+	}
 
 	format := types.MediaFormatUnknown
 
