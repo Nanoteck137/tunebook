@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"log/slog"
+	"os"
 	"testing"
 
 	"github.com/nanoteck137/tunebook/config"
@@ -10,6 +11,12 @@ import (
 )
 
 func TestQualityMappingHasAllFormats(t *testing.T) {
+	dir, err := os.MkdirTemp("", "tunebook-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
 	cfg := &config.Config{
 		Media: config.MediaConfig{
 			Opus:   config.MediaQualityConfig{High: 128, Medium: 96, Low: 64},
@@ -19,7 +26,7 @@ func TestQualityMappingHasAllFormats(t *testing.T) {
 		},
 	}
 
-	s := service.NewMediaService(slog.Default(), nil, types.DataDir("/tmp"), cfg)
+	s := service.NewMediaService(slog.Default(), nil, types.DataDir(dir), cfg)
 
 	for _, format := range types.ValidMediaFormats {
 		spec, ok := s.QualityMapping[format]
