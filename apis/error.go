@@ -28,6 +28,9 @@ const (
 
 	ErrTypeHistoryNotFound      pyrin.ErrorType = "HISTORY_NOT_FOUND"
 	ErrTypeUnsupportedImageType pyrin.ErrorType = "UNSUPPORTED_IMAGE_TYPE"
+
+	ErrTypeChallengeMismatch pyrin.ErrorType = "CHALLENGE_MISMATCH"
+	ErrTypeProviderNotFound  pyrin.ErrorType = "PROVIDER_NOT_FOUND"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -163,5 +166,21 @@ func UnsupportedImageType() *pyrin.Error {
 		Code:    http.StatusBadRequest,
 		Type:    ErrTypeUnsupportedImageType,
 		Message: "Unsupported image type",
+	}
+}
+
+func ChallengeMismatch() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeChallengeMismatch,
+		Message: "Challenge mismatch",
+	}
+}
+
+func ProviderNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeProviderNotFound,
+		Message: "Provider not found",
 	}
 }

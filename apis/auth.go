@@ -210,6 +210,14 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 						return nil, errors.New("request not found")
 					}
 
+					if errors.Is(err, service.ErrAuthServiceProviderNotFound) {
+						return nil, ProviderNotFound()
+					}
+
+					if errors.Is(err, service.ErrAuthServiceChallengeMismatch) {
+						return nil, ChallengeMismatch()
+					}
+
 					return nil, err
 				}
 
@@ -239,6 +247,10 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
 						// TODO(patrik): Better error
 						return nil, errors.New("request not found")
+					}
+
+					if errors.Is(err, service.ErrAuthServiceChallengeMismatch) {
+						return nil, ChallengeMismatch()
 					}
 
 					return nil, err

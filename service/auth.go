@@ -32,6 +32,7 @@ var (
 	ErrAuthServiceRequestExpired       = authErr.New("request expired")
 	ErrAuthServiceRequestNotReady      = authErr.New("request not ready")
 	ErrAuthServiceRequestInvalid       = authErr.New("request invalid")
+	ErrAuthServiceChallengeMismatch    = authErr.New("challenge mismatch")
 )
 
 const (
@@ -265,15 +266,13 @@ type QuickConnectRequestResult struct {
 func (a *AuthService) CreateQuickConnectRequest() (QuickConnectRequestResult, error) {
 	code, err := generateCode()
 	if err != nil {
-		// TODO(patrik): Fix error
-		return QuickConnectRequestResult{}, fmt.Errorf(
+		return QuickConnectRequestResult{}, authErr.Newf(
 			"failed to generate code: %w", err)
 	}
 
 	challenge, err := generateAuthChallenge()
 	if err != nil {
-		// TODO(patrik): Fix error
-		return QuickConnectRequestResult{}, fmt.Errorf(
+		return QuickConnectRequestResult{}, authErr.Newf(
 			"failed to generate challenge: %w", err)
 	}
 
@@ -362,8 +361,7 @@ func (a *AuthService) CheckProviderRequestStatus(
 	}
 
 	if request.challenge != challenge {
-		// TODO(patrik): Give this it's own error
-		return AuthProviderRequestStatusFailed, ErrAuthServiceRequestNotFound
+		return AuthProviderRequestStatusFailed, ErrAuthServiceChallengeMismatch
 	}
 
 	now := time.Now()
@@ -416,8 +414,11 @@ func (a *AuthService) CreateAuthTokenForProvider(
 		return "", ErrAuthServiceRequestNotReady
 	}
 
-	// TODO(patrik): Check provider?
-	provider := a.providers[request.providerId]
+	provider, exists := a.providers[request.providerId]
+	if !exists {
+		request.status = AuthProviderRequestStatusFailed
+		return "", ErrAuthServiceProviderNotFound
+	}
 
 	if request.oauth2Code == "" {
 		request.status = AuthProviderRequestStatusFailed
@@ -543,9 +544,8 @@ func (a *AuthService) getUserFromCode(
 					},
 				})
 				if err != nil {
-					// TODO(patrik): Fix error
-					return "", fmt.Errorf(
-						"failed to update user picture: %w", err)
+				return "", authErr.Newf(
+					"failed to update user picture: %w", err)
 				}
 			}
 
