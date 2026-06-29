@@ -251,18 +251,30 @@ func (s *LibraryService) syncArtists(
 
 	decoder := json.NewDecoder(file)
 
-	// TODO(patrik): This need to match the syncTracks loop and report errors
-	for decoder.More() {
+	for idx := 0; decoder.More(); idx++ {
 		var entry library.ArtistEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
-			return err
+			stop := s.addError(
+				fmt.Errorf(
+					"failed to decode next artist entry[%d]: %w", idx, err))
+			if stop {
+				break
+			}
+
+			continue
 		}
 
 		err = entry.Validate()
 		if err != nil {
-			// TODO(patrik): Better error
-			return err
+			stop := s.addError(
+				fmt.Errorf("entry validation[%d]: %w", idx, err),
+			)
+			if stop {
+				break
+			}
+
+			continue
 		}
 
 		if entry.Path != "" {
@@ -271,7 +283,13 @@ func (s *LibraryService) syncArtists(
 
 		err = s.syncSingleArtist(ctx, &entry)
 		if err != nil {
-			return err
+			stop := s.addError(
+				fmt.Errorf("failed to sync artist[%d]: %w", idx, err))
+			if stop {
+				break
+			}
+
+			continue
 		}
 
 		s.syncedArtistIds[entry.Id] = struct{}{}
@@ -434,18 +452,30 @@ func (s *LibraryService) syncAlbums(
 
 	decoder := json.NewDecoder(file)
 
-	// TODO(patrik): This need to match the syncTracks loop and report errors
-	for decoder.More() {
+	for idx := 0; decoder.More(); idx++ {
 		var entry library.AlbumEntry
 		err := decoder.Decode(&entry)
 		if err != nil {
-			return err
+			stop := s.addError(
+				fmt.Errorf(
+					"failed to decode next album entry[%d]: %w", idx, err))
+			if stop {
+				break
+			}
+
+			continue
 		}
 
 		err = entry.Validate()
 		if err != nil {
-			// TODO(patrik): Better error
-			return err
+			stop := s.addError(
+				fmt.Errorf("entry validation[%d]: %w", idx, err),
+			)
+			if stop {
+				break
+			}
+
+			continue
 		}
 
 		if entry.Path != "" {
@@ -454,7 +484,13 @@ func (s *LibraryService) syncAlbums(
 
 		err = s.syncSingleAlbum(ctx, &entry)
 		if err != nil {
-			return err
+			stop := s.addError(
+				fmt.Errorf("failed to sync album[%d]: %w", idx, err))
+			if stop {
+				break
+			}
+
+			continue
 		}
 
 		s.syncedAlbumIds[entry.Id] = struct{}{}
