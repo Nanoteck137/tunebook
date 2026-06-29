@@ -18,3 +18,26 @@ client_id = "<OIDC_CLIENT_ID>"
 client_secret = "<OIDC_CLIENT_SECRET>"
 issuer_url = "<OIDC_ISSUER_URL>"
 redirect_url = "<ADDRESS_TO_API>/api/v1/auth/providers/callback" # Example: https://customdomain.com/api/v1/auth/providers/callback
+
+[media]
+# audio_normalization = true
+
+# [media.opus]
+# high = 128
+# medium = 96
+# low = 64
+
+# [media.vorbis]
+# high = 192
+# medium = 128
+# low = 96
+
+# [media.mp3]
+# high = 320
+# medium = 192
+# low = 128
+
+# [media.aac]
+# high = 256
+# medium = 192
+# low = 96

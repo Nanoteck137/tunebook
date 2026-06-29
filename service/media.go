@@ -11,6 +11,7 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/probe"
 	"github.com/nanoteck137/tunebook/types"
@@ -78,21 +79,6 @@ type DeviceSpec struct {
 	AllowedFormats []types.MediaFormat
 }
 
-func getDefaultQualityMapping() map[types.MediaFormat]QualitySpec {
-	return map[types.MediaFormat]QualitySpec{
-		types.MediaFormatFlac:     {},
-		types.MediaFormatPcmS16LE: {},
-		types.MediaFormatOpus: {
-			High:   128,
-			Medium: 96,
-			Low:    64,
-		},
-		types.MediaFormatVorbis: {High: 192, Medium: 128, Low: 96},
-		types.MediaFormatMp3:    {High: 320, Medium: 192, Low: 128},
-		types.MediaFormatAac:    {High: 256, Medium: 192, Low: 96},
-	}
-}
-
 func getDefaultDeviceSpecs() map[Device]DeviceSpec {
 	return map[Device]DeviceSpec{
 		DeviceIOS: {
@@ -114,11 +100,12 @@ type MediaService struct {
 	db      *database.Database
 	dataDir types.DataDir
 
-	// TODO(patrik): Make this configureble through the config
 	// TODO(patrik): I want to add test for this, test if every format has
 	// quality specs set
 	QualityMapping map[types.MediaFormat]QualitySpec
 	DeviceSpecs    map[Device]DeviceSpec
+
+	audioNormalization bool
 
 	transcodeLocks sync.Map
 }
@@ -127,14 +114,42 @@ func NewMediaService(
 	logger *slog.Logger,
 	db *database.Database,
 	dataDir types.DataDir,
+	cfg *config.Config,
 ) *MediaService {
-	return &MediaService{
-		logger:         logger,
-		db:             db,
-		dataDir:        dataDir,
-		QualityMapping: getDefaultQualityMapping(),
-		DeviceSpecs:    getDefaultDeviceSpecs(),
+	s := &MediaService{
+		logger:             logger,
+		db:                 db,
+		dataDir:            dataDir,
+		DeviceSpecs:        getDefaultDeviceSpecs(),
+		audioNormalization: cfg.Media.AudioNormalization,
 	}
+
+	s.QualityMapping = map[types.MediaFormat]QualitySpec{
+		types.MediaFormatFlac:     {},
+		types.MediaFormatPcmS16LE: {},
+		types.MediaFormatOpus: {
+			High:   cfg.Media.Opus.High,
+			Medium: cfg.Media.Opus.Medium,
+			Low:    cfg.Media.Opus.Low,
+		},
+		types.MediaFormatVorbis: {
+			High:   cfg.Media.Vorbis.High,
+			Medium: cfg.Media.Vorbis.Medium,
+			Low:    cfg.Media.Vorbis.Low,
+		},
+		types.MediaFormatMp3: {
+			High:   cfg.Media.Mp3.High,
+			Medium: cfg.Media.Mp3.Medium,
+			Low:    cfg.Media.Mp3.Low,
+		},
+		types.MediaFormatAac: {
+			High:   cfg.Media.Aac.High,
+			Medium: cfg.Media.Aac.Medium,
+			Low:    cfg.Media.Aac.Low,
+		},
+	}
+
+	return s
 }
 
 func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Quality) (int, error) {
@@ -323,8 +338,10 @@ func (s *MediaService) GetTrackStream(
 			"-map", "0:a:0",
 			"-vn",
 			"-map_metadata", "-1",
-			// TODO(patrik): Make option
-			"-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+		}
+
+		if s.audioNormalization {
+			args = append(args, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11")
 		}
 
 		switch format {

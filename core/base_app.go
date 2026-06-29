@@ -186,6 +186,7 @@ func (app *BaseApp) Bootstrap() error {
 		newServiceLogger("media"),
 		app.db,
 		dataDir,
+		app.config,
 	)
 
 	app.libraryService = service.NewLibraryService(
