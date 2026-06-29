@@ -17,19 +17,15 @@ import (
 	"github.com/nanoteck137/tunebook/utils"
 )
 
-var ErrInternalError = errors.New("internal error")
+var mediaErr = NewServiceErrCreator("media")
 
 var (
-	ErrMediaServiceTrackNotFound  = errors.New("media-service: track not found")
-	ErrMediaServiceInvalidFormat  = errors.New("media-service: invalid format")
-	ErrMediaServiceInvalidQuality = errors.New("media-service: invalid quality")
-	ErrMediaServiceInvalidPolicy  = errors.New("media-service: invalid policy")
-	ErrMediaServiceBitrateNotSet  = errors.New("media-service: bitrate not set")
+	ErrMediaServiceTrackNotFound  = mediaErr.New("track not found")
+	ErrMediaServiceInvalidFormat  = mediaErr.New("invalid format")
+	ErrMediaServiceInvalidQuality = mediaErr.New("invalid quality")
+	ErrMediaServiceInvalidPolicy  = mediaErr.New("invalid policy")
+	ErrMediaServiceBitrateNotSet  = mediaErr.New("bitrate not set")
 )
-
-func WrapInternalError(err error) error {
-	return fmt.Errorf("%w: %w", ErrInternalError, err)
-}
 
 type Device string
 
@@ -146,9 +142,7 @@ func (s *MediaService) getBitrateFromQuality(format types.MediaFormat, quality Q
 
 	q, ok := s.QualityMapping[format]
 	if !ok {
-		// TODO(patrik): Better error
-		// return 0, fmt.Errorf("format '%s' missing from quality mapping", format)
-		return 0, WrapInternalError(errors.New("format not mapped '" + string(format) + "'"))
+		return 0, mediaErr.Newf("format not mapped '%s'", format)
 	}
 
 	bitrate, ok := q.MapFromQuality(quality)
@@ -227,7 +221,7 @@ func (s *MediaService) GetTrackStream(
 		if opts.Device != DeviceEmpty {
 			device, ok := s.DeviceSpecs[opts.Device]
 			if !ok {
-				return "", errors.New("unknown device: " + string(opts.Device))
+				return "", mediaErr.Newf("unknown device: %s", opts.Device)
 			}
 
 			if slices.Contains(device.AllowedFormats, track.MediaFormat) {
@@ -250,7 +244,7 @@ func (s *MediaService) GetTrackStream(
 			slog.String("format", string(format)),
 		)
 
-		return "", errors.New("media-service: selected format is not valid: " + string(format))
+		return "", mediaErr.Newf("selected format is not valid: %s", format)
 	}
 
 	// TODO(patrik): Maybe here we should still "transcode" the media but
@@ -284,8 +278,7 @@ func (s *MediaService) GetTrackStream(
 			slog.String("format", string(format)),
 		)
 
-		// TODO(patrik): Better error
-		return "", errors.New("media-service: bitrate not set for lossy format")
+		return "", ErrMediaServiceBitrateNotSet
 	}
 
 	// filename: format-bitrate.ext
@@ -295,7 +288,7 @@ func (s *MediaService) GetTrackStream(
 			slog.String("format", string(format)),
 		)
 
-		return "", errors.New("media-service: format has no extention" + string(format))
+		return "", mediaErr.Newf("format has no extension: %s", format)
 	}
 
 	filename := ""
@@ -348,7 +341,7 @@ func (s *MediaService) GetTrackStream(
 		case types.MediaFormatAac:
 			args = append(args, "-codec:a", "aac", "-b:a", fmt.Sprintf("%dk", bitrate), "-aac_coder", "twoloop", "-movflags", "+faststart")
 		default:
-			return errors.New("unsupported media format: " + string(format))
+			return mediaErr.Newf("unsupported media format: %s", format)
 		}
 
 		args = append(args, tmpOut)
