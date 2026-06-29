@@ -20,6 +20,14 @@ import (
 	"github.com/nanoteck137/tunebook/utils"
 )
 
+const (
+	maxSyncErrors = 5
+
+	syncArtistsFile = "artists"
+	syncAlbumsFile  = "albums"
+	syncTracksFile  = "tracks"
+)
+
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
 
 type MissingItem struct {
@@ -143,8 +151,7 @@ func (s *LibraryService) addError(err error) bool {
 
 	s.update()
 
-	// TODO(patrik): Make constant
-	return len(s.errors) >= 5
+	return len(s.errors) >= maxSyncErrors
 }
 
 func setArtistTags(
@@ -235,7 +242,7 @@ func (s *LibraryService) syncArtists(
 	ctx context.Context,
 	libraryDir string,
 ) error {
-	p := path.Join(libraryDir, "artists")
+	p := path.Join(libraryDir, syncArtistsFile)
 	file, err := os.Open(p)
 	if err != nil {
 		return err
@@ -418,7 +425,7 @@ func (s *LibraryService) syncAlbums(
 	ctx context.Context,
 	libraryDir string,
 ) error {
-	p := path.Join(libraryDir, "albums")
+	p := path.Join(libraryDir, syncAlbumsFile)
 	file, err := os.Open(p)
 	if err != nil {
 		return err
@@ -652,7 +659,7 @@ func (s *LibraryService) syncTracks(
 	ctx context.Context,
 	libraryDir string,
 ) error {
-	p := path.Join(libraryDir, "tracks")
+	p := path.Join(libraryDir, syncTracksFile)
 	file, err := os.Open(p)
 	if err != nil {
 		return err
@@ -713,7 +720,6 @@ func (s *LibraryService) syncTracks(
 func (s *LibraryService) Sync() error {
 	p := s.config.LibraryDir
 
-	// TODO(patrik): Replace with s.logger
 	s.logger.Info("starting library sync...")
 
 	s.norificationService.SendSimple(SendSimpleParams{
@@ -881,7 +887,8 @@ func (s *LibraryService) Sync() error {
 	s.artistsSyncDuration = artistTimer.Duration()
 	s.albumsSyncDuration = albumTimer.Duration()
 	s.tracksSyncDuration = trackTimer.Duration()
-	s.totalSyncDuration = s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
+	s.totalSyncDuration = 
+		s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
 
 	// TODO(patrik): Move this an CacheService/DataDirService/PathService
 	// to unify cache handling
