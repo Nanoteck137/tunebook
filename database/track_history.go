@@ -180,7 +180,7 @@ func (db DB) DeleteTrackHistory(ctx context.Context, track_historyId string) err
 }
 
 func (db DB) GetCompletedPlayCount(
-	ctx context.Context, 
+	ctx context.Context,
 	userId string,
 ) (int, error) {
 	tbl := goqu.T("track_history")
@@ -195,7 +195,7 @@ func (db DB) GetCompletedPlayCount(
 }
 
 func (db DB) GetSkippedPlayCount(
-	ctx context.Context, 
+	ctx context.Context,
 	userId string,
 ) (int, error) {
 	tbl := goqu.T("track_history")
@@ -210,7 +210,7 @@ func (db DB) GetSkippedPlayCount(
 }
 
 func (db DB) GetCompletedListeningTime(
-	ctx context.Context, 
+	ctx context.Context,
 	userId string,
 ) (int64, error) {
 	historyTbl := goqu.T("track_history")
@@ -230,7 +230,7 @@ func (db DB) GetCompletedListeningTime(
 			historyTbl.Col("user_id").Eq(userId),
 			historyTbl.Col("status").Eq("completed"),
 		)
-	
+
 	listeningTime, err := Single[sql.NullInt64](db, ctx, query)
 	if err != nil {
 		return 0, err
@@ -240,7 +240,7 @@ func (db DB) GetCompletedListeningTime(
 }
 
 func (db DB) GetLastListenedAt(
-	ctx context.Context, 
+	ctx context.Context,
 	userId string,
 ) (sql.NullInt64, error) {
 	tbl := goqu.T("track_history")

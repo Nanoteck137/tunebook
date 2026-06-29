@@ -75,7 +75,7 @@ type statusRecorder struct {
 }
 
 func (r *statusRecorder) Unwrap() http.ResponseWriter {
-    return r.ResponseWriter
+	return r.ResponseWriter
 }
 
 func (r *statusRecorder) WriteHeader(code int) {

@@ -26,7 +26,7 @@ const (
 
 	ErrTypeFilterNotFound pyrin.ErrorType = "FILTER_NOT_FOUND"
 
-	ErrTypeHistoryNotFound    pyrin.ErrorType = "HISTORY_NOT_FOUND"
+	ErrTypeHistoryNotFound      pyrin.ErrorType = "HISTORY_NOT_FOUND"
 	ErrTypeUnsupportedImageType pyrin.ErrorType = "UNSUPPORTED_IMAGE_TYPE"
 )
 

@@ -155,7 +155,7 @@ func NewMediaService(
 }
 
 func (s *MediaService) getBitrateFromQuality(
-	format types.MediaFormat, 
+	format types.MediaFormat,
 	quality Quality,
 ) (int, error) {
 	switch quality {
@@ -366,31 +366,31 @@ func (s *MediaService) ProcessTrackStream(
 			args = append(args, "-codec:a", "pcm_s16le")
 		case types.MediaFormatOpus:
 			args = append(
-				args, 
-				"-codec:a", "libopus", 
-				"-b:a", fmt.Sprintf("%dk", bitrate), 
-				"-vbr", "on", 
+				args,
+				"-codec:a", "libopus",
+				"-b:a", fmt.Sprintf("%dk", bitrate),
+				"-vbr", "on",
 				"-compression_level", "10",
 			)
 		case types.MediaFormatVorbis:
 			args = append(
-				args, 
-				"-codec:a", "libvorbis", 
+				args,
+				"-codec:a", "libvorbis",
 				"-b:a", fmt.Sprintf("%dk", bitrate),
 			)
 		case types.MediaFormatMp3:
 			args = append(
-				args, 
-				"-codec:a", "libmp3lame", 
-				"-b:a", fmt.Sprintf("%dk", bitrate), 
+				args,
+				"-codec:a", "libmp3lame",
+				"-b:a", fmt.Sprintf("%dk", bitrate),
 				"-q:a", "0",
 			)
 		case types.MediaFormatAac:
 			args = append(
-				args, 
-				"-codec:a", "aac", 
-				"-b:a", fmt.Sprintf("%dk", bitrate), 
-				"-aac_coder", "twoloop", 
+				args,
+				"-codec:a", "aac",
+				"-b:a", fmt.Sprintf("%dk", bitrate),
+				"-aac_coder", "twoloop",
 				"-movflags", "+faststart",
 			)
 		default:
@@ -446,7 +446,7 @@ func (s *MediaService) ProcessTrackStream(
 }
 
 func (s *MediaService) ProbeMedia(
-	ctx context.Context, 
+	ctx context.Context,
 	filepath string,
 ) (*probe.ProbeResult, error) {
 	s.logger.Info("Probing media", "filepath", filepath)

@@ -25,13 +25,13 @@ import (
 var imageErr = NewServiceErrCreator("image")
 
 var (
-	ErrImageServiceAlbumNotFound      = imageErr.New("album not found")
-	ErrImageServiceArtistNotFound     = imageErr.New("artist not found")
-	ErrImageServicePlaylistNotFound   = imageErr.New("playlist not found")
-	ErrImageServiceUserNotFound       = imageErr.New("user not found")
-	ErrImageServiceUnknownImageType   = imageErr.New("unknown image type")
-	ErrImageServiceUnknownType        = imageErr.New("unknown type")
-	ErrImageServiceInvalidImageType   = imageErr.New("invalid image type")
+	ErrImageServiceAlbumNotFound        = imageErr.New("album not found")
+	ErrImageServiceArtistNotFound       = imageErr.New("artist not found")
+	ErrImageServicePlaylistNotFound     = imageErr.New("playlist not found")
+	ErrImageServiceUserNotFound         = imageErr.New("user not found")
+	ErrImageServiceUnknownImageType     = imageErr.New("unknown image type")
+	ErrImageServiceUnknownType          = imageErr.New("unknown type")
+	ErrImageServiceInvalidImageType     = imageErr.New("invalid image type")
 	ErrImageServiceUnsupportedMediaType = imageErr.New("unsupported media type")
 )
 
@@ -398,7 +398,7 @@ func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, ima
 		return s.convertImage(input, userCache, "512"+ext, 512)
 	}
 
-			return "", ErrImageServiceUnknownType
+	return "", ErrImageServiceUnknownType
 }
 
 func (s *ImageService) ValidateImage(p string) (ImageType, error) {

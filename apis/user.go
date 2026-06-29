@@ -233,9 +233,9 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					NumPlaylistsCreated: stats.NumPlaylistsCreated,
 					NumFavoriteTracks:   stats.NumFavoriteTracks,
 					ListeningTime:       stats.ListeningTime,
-					LastListenedAt:      utils.SqlNullToInt64Ptr(
+					LastListenedAt: utils.SqlNullToInt64Ptr(
 						stats.LastListenedAt),
-					Updated:             formatTime(stats.Updated),
+					Updated: formatTime(stats.Updated),
 				}, nil
 			},
 		},

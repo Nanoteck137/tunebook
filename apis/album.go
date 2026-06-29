@@ -16,7 +16,7 @@ type Album struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 
-	Year      *int64  `json:"year"`
+	Year      *int64 `json:"year"`
 	AlbumType string `json:"albumType"`
 
 	CoverArt types.Images `json:"coverArt"`

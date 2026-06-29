@@ -918,7 +918,7 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 	s.artistsSyncDuration = artistTimer.Duration()
 	s.albumsSyncDuration = albumTimer.Duration()
 	s.tracksSyncDuration = trackTimer.Duration()
-	s.totalSyncDuration = 
+	s.totalSyncDuration =
 		s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
 
 	// TODO(patrik): Move this an CacheService/DataDirService/PathService

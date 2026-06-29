@@ -24,7 +24,7 @@ func VersionTemplate(appName string) string {
 func DefaultLogger() *slog.Logger {
 	// TODO(patrik): Don't use github.com/golang-cz/devslog for prod
 	logger := slog.New(devslog.NewHandler(os.Stdout, nil))
-	return logger 
+	return logger
 }
 
 func init() {
