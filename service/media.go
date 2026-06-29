@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -373,12 +374,15 @@ func (s *MediaService) ProcessTrackStream(
 
 		args = append(args, tmpOut)
 
+		var stderr bytes.Buffer
 		cmd := exec.Command("ffmpeg", args...)
-		// TODO(patrik): Print when error
-		// cmd.Stderr = os.Stderr
-		// cmd.Stdout = os.Stdout
+		cmd.Stderr = &stderr
 		err = cmd.Run()
 		if err != nil {
+			log.Error("ffmpeg failed",
+				slog.String("stderr", stderr.String()),
+				slog.Any("err", err),
+			)
 			return err
 		}
 
