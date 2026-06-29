@@ -198,8 +198,6 @@ export const AuthQuickConnectInitiate = z.object({
   "code": z.string(),
   // Name: AuthQuickConnectInitiate.challenge
   "challenge": z.string(),
-  // Name: AuthQuickConnectInitiate.authUrl
-  "authUrl": z.string(),
   // Name: AuthQuickConnectInitiate.expiresAt
   "expiresAt": z.string(),
 });

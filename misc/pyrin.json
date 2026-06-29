@@ -325,11 +325,6 @@
           "omitEmpty": false
         },
         {
-          "name": "authUrl",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
           "name": "expiresAt",
           "type": "string",
           "omitEmpty": false

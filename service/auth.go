@@ -206,7 +206,7 @@ type ProviderRequestResult struct {
 }
 
 func (a *AuthService) CreateProviderRequest(
-	providerId string,
+	ctx context.Context, providerId string,
 ) (ProviderRequestResult, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -216,7 +216,7 @@ func (a *AuthService) CreateProviderRequest(
 		return ProviderRequestResult{}, ErrAuthServiceProviderNotFound
 	}
 
-	err := provider.init(context.TODO())
+	err := provider.init(ctx)
 	if err != nil {
 		return ProviderRequestResult{}, authErr.Newf(
 			"initialize AuthProvider(%s): %w", provider.id, err)
@@ -396,6 +396,7 @@ func (a *AuthService) CheckQuickConnectRequestStatus(
 }
 
 func (a *AuthService) CreateAuthTokenForProvider(
+	ctx context.Context, 
 	requestId, challenge string,
 ) (string, error) {
 	a.mu.Lock()
@@ -426,7 +427,7 @@ func (a *AuthService) CreateAuthTokenForProvider(
 	}
 
 	userId, err := a.getUserFromCode(
-		context.TODO(), provider, request.oauth2Code)
+		ctx, provider, request.oauth2Code)
 	if err != nil {
 		request.status = AuthProviderRequestStatusFailed
 		return "", err

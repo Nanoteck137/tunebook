@@ -31,6 +31,7 @@ const (
 
 	ErrTypeChallengeMismatch pyrin.ErrorType = "CHALLENGE_MISMATCH"
 	ErrTypeProviderNotFound  pyrin.ErrorType = "PROVIDER_NOT_FOUND"
+	ErrTypeRequestNotFound   pyrin.ErrorType = "REQUEST_NOT_FOUND"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -182,5 +183,13 @@ func ProviderNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeProviderNotFound,
 		Message: "Provider not found",
+	}
+}
+
+func RequestNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeRequestNotFound,
+		Message: "Request not found",
 	}
 }

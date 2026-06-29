@@ -2,7 +2,6 @@ package apis
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -39,7 +38,6 @@ type AuthInitiateBody struct {
 type AuthQuickConnectInitiate struct {
 	Code      string `json:"code"`
 	Challenge string `json:"challenge"`
-	AuthUrl   string `json:"authUrl"`
 	ExpiresAt string `json:"expiresAt"`
 }
 
@@ -102,6 +100,19 @@ type AuthGetProviderStatusBody struct {
 	Challenge string `json:"challenge"`
 }
 
+func handleAuthServiceErrors(err error) error {
+	switch {
+	case errors.Is(err, service.ErrAuthServiceRequestNotFound):
+		return RequestNotFound()
+	case errors.Is(err, service.ErrAuthServiceProviderNotFound):
+		return ProviderNotFound()
+	case errors.Is(err, service.ErrAuthServiceChallengeMismatch):
+		return ChallengeMismatch()
+	}
+
+	return err
+}
+
 func InstallAuthHandlers(app core.App, group pyrin.Group) {
 	// NOTE(patrik): Provider Authentication
 	group.Register(
@@ -140,11 +151,14 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				ctx := c.Request().Context()
+
 				authService := app.AuthService()
 
-				res, err := authService.CreateProviderRequest(body.ProviderId)
+				res, err := authService.CreateProviderRequest(
+					ctx, body.ProviderId)
 				if err != nil {
-					return nil, err
+					return nil, handleAuthServiceErrors(err)
 				}
 
 				return AuthInitiate{
@@ -201,24 +215,14 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				ctx := c.Request().Context()
+
 				authService := app.AuthService()
 
-				token, err := authService.CreateAuthTokenForProvider(body.RequestId, body.Challenge)
+				token, err := authService.CreateAuthTokenForProvider(
+					ctx, body.RequestId, body.Challenge)
 				if err != nil {
-					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
-						// TODO(patrik): Better error
-						return nil, errors.New("request not found")
-					}
-
-					if errors.Is(err, service.ErrAuthServiceProviderNotFound) {
-						return nil, ProviderNotFound()
-					}
-
-					if errors.Is(err, service.ErrAuthServiceChallengeMismatch) {
-						return nil, ChallengeMismatch()
-					}
-
-					return nil, err
+					return nil, handleAuthServiceErrors(err)
 				}
 
 				return AuthFinishProvider{
@@ -241,19 +245,10 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 
 				authService := app.AuthService()
 
-				status, err := authService.CheckProviderRequestStatus(body.RequestId, body.Challenge)
+				status, err := authService.CheckProviderRequestStatus(
+					body.RequestId, body.Challenge)
 				if err != nil {
-					fmt.Printf("err: %v\n", err)
-					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
-						// TODO(patrik): Better error
-						return nil, errors.New("request not found")
-					}
-
-					if errors.Is(err, service.ErrAuthServiceChallengeMismatch) {
-						return nil, ChallengeMismatch()
-					}
-
-					return nil, err
+					return nil, handleAuthServiceErrors(err)
 				}
 
 				return AuthGetProviderStatus{
@@ -275,13 +270,12 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 
 				res, err := authService.CreateQuickConnectRequest()
 				if err != nil {
-					return nil, err
+					return nil, handleAuthServiceErrors(err)
 				}
 
 				return AuthQuickConnectInitiate{
 					Code:      res.Code,
 					Challenge: res.Challenge,
-					AuthUrl:   "FIX ME",
 					ExpiresAt: res.Expires.Format(time.RFC3339Nano),
 				}, nil
 			},
@@ -305,9 +299,10 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 
 				authService := app.AuthService()
 
-				err = authService.CompleteQuickConnectRequest(body.Code, user.Id)
+				err = authService.CompleteQuickConnectRequest(
+					body.Code, user.Id)
 				if err != nil {
-					return nil, err
+					return nil, handleAuthServiceErrors(err)
 				}
 
 				return nil, nil
@@ -328,14 +323,10 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 
 				authService := app.AuthService()
 
-				status, err := authService.CheckQuickConnectRequestStatus(body.Code, body.Challenge)
+				status, err := authService.CheckQuickConnectRequestStatus(
+					body.Code, body.Challenge)
 				if err != nil {
-					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
-						// TODO(patrik): Better error
-						return nil, errors.New("request not found")
-					}
-
-					return nil, err
+					return nil, handleAuthServiceErrors(err)
 				}
 
 				return AuthGetQuickConnectStatus{
@@ -358,14 +349,10 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 
 				authService := app.AuthService()
 
-				token, err := authService.CreateAuthTokenForQuickConnect(body.Code, body.Challenge)
+				token, err := authService.CreateAuthTokenForQuickConnect(
+					body.Code, body.Challenge)
 				if err != nil {
-					if errors.Is(err, service.ErrAuthServiceRequestNotFound) {
-						// TODO(patrik): Better error
-						return nil, errors.New("request not found")
-					}
-
-					return nil, err
+					return nil, handleAuthServiceErrors(err)
 				}
 
 				return AuthFinishQuickConnect{
@@ -394,7 +381,8 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					DisplayName:   user.DisplayName,
 					Role:          user.Role,
 					Picture:       ConvertUserPictureURL(c, user.Id),
-					QuickPlaylist: utils.SqlNullToStringPtr(user.QuickPlaylist),
+					QuickPlaylist: utils.SqlNullToStringPtr(
+						user.QuickPlaylist),
 				}, nil
 			},
 		},
