@@ -753,7 +753,7 @@ func (s *LibraryService) syncTracks(
 	return nil
 }
 
-func (s *LibraryService) Sync() error {
+func (s *LibraryService) Sync(ctx context.Context) error {
 	p := s.config.LibraryDir
 
 	s.logger.Info("starting library sync...")
@@ -808,8 +808,6 @@ func (s *LibraryService) Sync() error {
 	s.syncedTrackIds = make(map[string]struct{})
 
 	s.update()
-
-	ctx := context.TODO()
 
 	artistTimer := utils.SimpleTimer{}
 	artistTimer.Start()

@@ -27,5 +27,5 @@ func (j *LibrarySyncTask) Info() service.TaskInfo {
 }
 
 func (j *LibrarySyncTask) Run(ctx context.Context) error {
-	return j.libraryService.Sync()
+	return j.libraryService.Sync(ctx)
 }
