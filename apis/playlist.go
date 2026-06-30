@@ -154,6 +154,11 @@ func handlePlaylistServiceErrors(err error) error {
 	case errors.Is(err, service.ErrPlaylistServiceNotAuthorized):
 		// TODO(patrik): Replace with its own error
 		return PlaylistNotFound()
+
+	// TODO(patrik): How should other services be handled
+	case errors.Is(err, service.ErrImageServiceInvalidImageType):
+		// TODO(patrik): Replace with its own error
+		return UnsupportedImageType()
 	}
 
 	return err

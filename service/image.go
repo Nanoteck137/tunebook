@@ -30,10 +30,10 @@ var imageErr = NewServiceErrCreator("image")
 var newTempFileId, _ = cuid2.Init(cuid2.WithLength(16))
 
 var (
-	ErrImageServiceAlbumNotFound        = imageErr.New("album not found")
-	ErrImageServiceArtistNotFound       = imageErr.New("artist not found")
-	ErrImageServicePlaylistNotFound     = imageErr.New("playlist not found")
-	ErrImageServiceUserNotFound         = imageErr.New("user not found")
+	ErrImageServiceAlbumNotFound    = imageErr.New("album not found")
+	ErrImageServiceArtistNotFound   = imageErr.New("artist not found")
+	ErrImageServicePlaylistNotFound = imageErr.New("playlist not found")
+	ErrImageServiceUserNotFound     = imageErr.New("user not found")
 	// TODO(patrik): Change from type to format??
 	ErrImageServiceUnknownImageType     = imageErr.New("unknown image type")
 	ErrImageServiceUnknownType          = imageErr.New("unknown type")
@@ -462,67 +462,20 @@ type DownloadCoverForPlaylistParams struct {
 	Url        string
 }
 
-// TODO(patrik): Cleanup
-// TODO(patrik): Hash for files
 func (s *ImageService) DownloadCoverForPlaylist(
 	ctx context.Context,
 	params DownloadCoverForPlaylistParams,
 ) (string, error) {
-	// TODO(patrik): Cleanup, move to utils
-	// getImageExtFromContentType := func(contentType string) (string, error) {
-	// 	mediaType, _, err := mime.ParseMediaType(contentType)
-	// 	if err != nil {
-	// 		return "", imageErr.Wrap("failed to parse content type", err)
-	// 	}
-	//
-	// 	// TODO(patrik): Add support for more exts
-	// 	switch mediaType {
-	// 	case "image/png":
-	// 		return ".png", nil
-	// 	case "image/jpeg":
-	// 		return ".jpeg", nil
-	// 	default:
-	// 		return "", imageErr.Newf("unsupported media type: %s", mediaType)
-	// 	}
-	// }
-	//
-	resp, err := http.Get(params.Url)
+	tmpPath, err := s.downloadToTempFile(params.Url)
 	if err != nil {
-		// TODO(patrik): Better error
-		return "", err
+		return "", imageErr.Wrap("download cover for playlist: download", err)
 	}
-	defer resp.Body.Close()
-
-	// contentType := resp.Header.Get("Content-Type")
-	// ext, err := getImageExtFromContentType(contentType)
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// ---- CopyReaderToTempFile
-	// NOTE(patrik): WORK HERE
-	tmpPath := s.createTempFilename("")
-	tmp, err := os.Create(tmpPath)
-	if err != nil {
-		return "", err
-	}
-	// always clean up temp file if something goes wrong
-	defer func() {
-		tmp.Close()
-		os.Remove(tmpPath)
-	}()
-
-	_, err = io.Copy(tmp, resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	tmp.Close()
-	// ---- CopyReaderToTempFile
+	defer os.Remove(tmpPath)
 
 	format, err := s.getImageFormat(tmpPath)
 	if err != nil {
-		return "", err
+		return "", imageErr.Wrap(
+			"download cover for playlist: image format", err)
 	}
 
 	playlistDir := s.dataDir.Playlist(params.PlaylistId)
@@ -531,46 +484,31 @@ func (s *ImageService) DownloadCoverForPlaylist(
 		playlistDir,
 	})
 	if err != nil {
-		// TODO(patrik): Better error
-		return "", err
+		return "", imageErr.Wrap(
+			"download cover for playlist: mkdir", err)
 	}
 
-	// ---- CopyFinalImage
-	imageExt, ok := format.ToExt()
-	if !ok {
-		return "", ErrImageServiceInvalidImageType
-	}
-
-	hash, err := hashFile(tmpPath)
+	filename, err := s.finalizeImage(tmpPath, format, playlistDir)
 	if err != nil {
-		// TODO(patrik): Better error
-		return "", err
+		return "", imageErr.Wrap(
+			"download cover for playlist: finalize", err)
 	}
 
-	cover := hash + imageExt
-	output := filepath.Join(playlistDir, cover)
-	err = os.Rename(tmpPath, output)
-	if err != nil {
-		return "", imageErr.Wrap("failed to promote temp file", err)
-	}
-	// ---- CopyFinalImage
-
-	return cover, nil
+	return filename, nil
 }
 
 type GenerateImageForPlaylistParams struct {
 	PlaylistId string
 }
 
-// TODO(patrik): Cleanup
-// TODO(patrik): Hash for files
 func (s *ImageService) GenerateImageForPlaylist(
 	ctx context.Context,
 	params GenerateImageForPlaylistParams,
 ) (string, error) {
 	images, err := s.db.GetPlaylistTrackImages(ctx, params.PlaylistId, 4)
 	if err != nil {
-		return "", imageErr.Wrap("generate playlist image: get images", err)
+		return "", imageErr.Wrap(
+			"generate image for playlist: images", err)
 	}
 
 	imgs := [4]string{}
@@ -589,19 +527,23 @@ func (s *ImageService) GenerateImageForPlaylist(
 		playlistDir,
 	})
 	if err != nil {
-		// TODO(patrik): Handle error
-		return "", err
+		return "", imageErr.Wrap("generate image for playlist: mkdir", err)
 	}
 
-	cover := "generated.png"
-	out := path.Join(playlistDir, cover)
-	err = generatePlaylistCover(imgs, out, 512)
+	tmpPath := s.createTempFilename(".png")
+
+	err = generatePlaylistCover(imgs, tmpPath, 512)
 	if err != nil {
-		// TODO(patrik): Handle error
-		return "", err
+		return "", imageErr.Wrap("generate image for playlist: generate", err)
 	}
 
-	return cover, nil
+	filename, err := s.finalizeImage(
+		tmpPath, types.ImageFormatPng, playlistDir)
+	if err != nil {
+		return "", imageErr.Wrap("generate image for playlist: finalize", err)
+	}
+
+	return filename, nil
 }
 
 type UploadImageForPlaylistParams struct {
@@ -610,45 +552,16 @@ type UploadImageForPlaylistParams struct {
 	File *multipart.FileHeader
 }
 
-// TODO(patrik): Cleanup
-// TODO(patrik): Hash for files
 func (s *ImageService) UploadImageForPlaylist(
 	ctx context.Context,
 	params UploadImageForPlaylistParams,
 ) (string, error) {
-	ext := path.Ext(params.File.Filename)
-
-	tmpPath := s.createTempFilename(ext)
-	tmp, err := os.Create(tmpPath)
+	tmpPath, err := s.copyMultipartFileToTempFile(params.File)
 	if err != nil {
-		return "", err
+		return "", imageErr.Wrap(
+			"upload image for playlist: file to temp", err)
 	}
-	defer tmp.Close()
-
-	// always clean up temp file if something goes wrong
-	defer func() {
-		_, err := os.Stat(tmpPath)
-		if err == nil {
-			os.Remove(tmpPath)
-		}
-	}()
-
-	srcImage, err := params.File.Open()
-	if err != nil {
-		return "", err
-	}
-
-	_, err = io.Copy(tmp, srcImage)
-	if err != nil {
-		return "", err
-	}
-
-	tmp.Close()
-
-	imageType, err := s.ValidateImage(tmpPath)
-	if err != nil {
-		return "", err
-	}
+	defer os.Remove(tmpPath) 
 
 	playlistDir := s.dataDir.Playlist(params.PlaylistId)
 
@@ -656,22 +569,23 @@ func (s *ImageService) UploadImageForPlaylist(
 		playlistDir,
 	})
 	if err != nil {
-		return "", err
+		return "", imageErr.Wrap(
+			"upload image for playlist: mkdir", err)
 	}
 
-	imageExt, ok := imageType.ToExt()
-	if !ok {
-		return "", ErrImageServiceInvalidImageType
-	}
-
-	cover := "uploaded" + imageExt
-	output := path.Join(playlistDir, cover)
-	err = os.Rename(tmpPath, output)
+	format, err := s.getImageFormat(tmpPath)
 	if err != nil {
-		return "", imageErr.Wrap("failed to promote temp file", err)
+		return "", imageErr.Wrap(
+			"upload image for playlist: image format", err)
 	}
 
-	return cover, nil
+	filename, err := s.finalizeImage(tmpPath, format, playlistDir)
+	if err != nil {
+		return "", imageErr.Wrap(
+			"upload image for playlist: finalize", err)
+	}
+
+	return filename, nil
 }
 
 type DownloadPictureForUserParams struct {
@@ -679,68 +593,16 @@ type DownloadPictureForUserParams struct {
 	Url    string
 }
 
-// TODO(patrik): Cleanup
-// TODO(patrik): Hash for files
 func (s *ImageService) DownloadPictureForUser(
 	ctx context.Context,
 	params DownloadPictureForUserParams,
 ) (string, error) {
-	// TODO(patrik): Cleanup, move to utils
-	getImageExtFromContentType := func(contentType string) (string, error) {
-		mediaType, _, err := mime.ParseMediaType(contentType)
-		if err != nil {
-			return "", imageErr.Wrap("failed to parse content type", err)
-		}
-
-		// TODO(patrik): Add support for more exts
-		switch mediaType {
-		case "image/png":
-			return ".png", nil
-		case "image/jpeg":
-			return ".jpeg", nil
-		default:
-			return "", imageErr.Newf("unsupported media type: %s", mediaType)
-		}
-	}
-
-	resp, err := http.Get(params.Url)
+	tmpPath, err := s.downloadToTempFile(params.Url)
 	if err != nil {
-		return "", err
+		return "", imageErr.Wrap(
+			"download picture for user: download", err)
 	}
-	defer resp.Body.Close()
-
-	contentType := resp.Header.Get("Content-Type")
-	ext, err := getImageExtFromContentType(contentType)
-	if err != nil {
-		return "", err
-	}
-
-	tmpPath := s.createTempFilename(ext)
-	tmp, err := os.Create(tmpPath)
-	if err != nil {
-		return "", err
-	}
-	defer tmp.Close()
-
-	// always clean up temp file if something goes wrong
-	defer func() {
-		_, err := os.Stat(tmpPath)
-		if err == nil {
-			os.Remove(tmpPath)
-		}
-	}()
-
-	_, err = io.Copy(tmp, resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	tmp.Close()
-
-	imageType, err := s.ValidateImage(tmpPath)
-	if err != nil {
-		return "", err
-	}
+	defer os.Remove(tmpPath)
 
 	userDir := s.dataDir.User(params.UserId)
 
@@ -748,22 +610,100 @@ func (s *ImageService) DownloadPictureForUser(
 		userDir,
 	})
 	if err != nil {
+		return "", imageErr.Wrap(
+			"download picture for user: mkdir", err)
+	}
+
+	format, err := s.getImageFormat(tmpPath)
+	if err != nil {
+		return "", imageErr.Wrap(
+			"download picture for user: image format", err)
+	}
+
+	picture, err := s.finalizeImage(tmpPath, format, userDir)
+	if err != nil {
+		return "", imageErr.Wrap(
+			"download picture for user: finalize", err)
+	}
+
+	return picture, nil
+}
+
+func (s *ImageService) copyReaderToTempFile(r io.Reader) (string, error) {
+	tmpPath := s.createTempFilename("")
+	tmp, err := os.Create(tmpPath)
+	if err != nil {
+		return "", err
+	}
+	defer tmp.Close()
+
+	_, err = io.Copy(tmp, r)
+	if err != nil {
 		return "", err
 	}
 
-	imageExt, ok := imageType.ToExt()
+	return tmpPath, nil
+}
+
+func (s *ImageService) copyMultipartFileToTempFile(
+	file *multipart.FileHeader,
+) (string, error) {
+	f, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	tmpPath, err := s.copyReaderToTempFile(f)
+	if err != nil {
+		return "", err
+	}
+
+	return tmpPath, nil
+}
+
+func (s *ImageService) downloadToTempFile(
+	url string,
+) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// TODO(patrik): Check for success
+
+	tmpPath, err := s.copyReaderToTempFile(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return tmpPath, nil
+}
+
+func (s *ImageService) finalizeImage(
+	tmpPath string,
+	imageFormat types.ImageFormat,
+	dir string,
+) (string, error) {
+	imageExt, ok := imageFormat.ToExt()
 	if !ok {
 		return "", ErrImageServiceInvalidImageType
 	}
 
-	picture := "uploaded" + imageExt
-	output := path.Join(userDir, picture)
-	err = os.Rename(tmpPath, output)
+	hash, err := hashFile(tmpPath)
 	if err != nil {
-		return "", imageErr.Wrap("failed to promote temp file", err)
+		return "", err
 	}
 
-	return picture, nil
+	name := hash + imageExt
+	output := filepath.Join(dir, name)
+	err = os.Rename(tmpPath, output)
+	if err != nil {
+		return "", imageErr.Wrap("promote temp file", err)
+	}
+
+	return name, nil
 }
 
 func createSquareImage(src, dest string) error {
@@ -872,4 +812,20 @@ func hashFile(p string) (string, error) {
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func getImageExtFromContentType(contentType string) (string, error) {
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return "", imageErr.Wrap("failed to parse content type", err)
+	}
+
+	switch mediaType {
+	case "image/png":
+		return ".png", nil
+	case "image/jpeg":
+		return ".jpeg", nil
+	default:
+		return "", imageErr.Newf("unsupported media type: %s", mediaType)
+	}
 }
