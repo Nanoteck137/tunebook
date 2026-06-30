@@ -586,6 +586,48 @@ func (s *ImageService) UploadImageForPlaylist(
 	return filename, nil
 }
 
+type UploadImageForUserParams struct {
+	UserId string
+
+	File *multipart.FileHeader
+}
+
+func (s *ImageService) UploadImageForUser(
+	ctx context.Context,
+	params UploadImageForUserParams,
+) (string, error) {
+	tmpPath, err := s.copyMultipartFileToTempFile(params.File)
+	if err != nil {
+		return "", imageErr.Wrap(
+			"upload image for user: file to temp", err)
+	}
+	defer os.Remove(tmpPath)
+
+	userDir := s.dataDir.User(params.UserId)
+
+	err = utils.CreateDirectories([]string{
+		userDir,
+	})
+	if err != nil {
+		return "", imageErr.Wrap(
+			"upload image for user: mkdir", err)
+	}
+
+	format, err := s.getImageFormat(tmpPath)
+	if err != nil {
+		return "", imageErr.Wrap(
+			"upload image for user: image format", err)
+	}
+
+	filename, err := s.finalizeImage(tmpPath, format, userDir)
+	if err != nil {
+		return "", imageErr.Wrap(
+			"upload image for user: finalize", err)
+	}
+
+	return filename, nil
+}
+
 type DownloadPictureForUserParams struct {
 	UserId string
 	Url    string

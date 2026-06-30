@@ -273,6 +273,10 @@ export class ApiClient extends BaseApiClient {
   uploadPlaylistImage(playlistId: string, body: FormData, options?: ExtraOptions) {
     return this.requestForm(`/api/v1/playlists/${playlistId}/image/upload`, "POST", z.undefined(), z.any(), body, options)
   }
+  
+  uploadUserImage(body: FormData, options?: ExtraOptions) {
+    return this.requestForm("/api/v1/me/image/upload", "POST", z.undefined(), z.any(), body, options)
+  }
 }
 
 export class ClientUrls {
@@ -564,5 +568,9 @@ export class ClientUrls {
   
   uploadPlaylistImage(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/image/upload`)
+  }
+  
+  uploadUserImage() {
+    return createUrl(this.baseUrl, "/api/v1/me/image/upload")
   }
 }

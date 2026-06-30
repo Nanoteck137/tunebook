@@ -1855,6 +1855,12 @@
       "name": "UploadPlaylistImage",
       "method": "POST",
       "path": "/api/v1/playlists/:playlistId/image/upload"
+    },
+    {
+      "type": "form",
+      "name": "UploadUserImage",
+      "method": "POST",
+      "path": "/api/v1/me/image/upload"
     }
   ]
 }

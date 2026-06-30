@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Button, Card, Separator } from "@nanoteck137/nano-ui";
   import ChangeDisplayName from "./ChangeDisplayName.svelte";
+  import ChangeProfilePicture from "./ChangeProfilePicture.svelte";
   import ApiToken from "./ApiToken.svelte";
   import NewApiTokenModal from "./NewApiTokenModal.svelte";
   import { Plus, QrCode } from "lucide-svelte";
@@ -16,6 +17,17 @@
   <div>
     <h1 class="text-xl font-bold">Settings</h1>
   </div>
+
+  <Card.Root>
+    <div class="p-6">
+      <h2 class="text-lg font-semibold">Profile Picture</h2>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Change your profile picture.
+      </p>
+      <Separator class="my-4" />
+      <ChangeProfilePicture currentPicture={data.userData.picture.large} />
+    </div>
+  </Card.Root>
 
   <Card.Root>
     <div class="p-6">

@@ -172,6 +172,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.userService = service.NewUserService(
 		newServiceLogger("user"),
 		app.db,
+		dataDir,
 		app.imageService,
 	)
 

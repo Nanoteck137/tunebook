@@ -178,6 +178,8 @@ func handleUserServiceErrors(err error) error {
 	case errors.Is(err, service.ErrUserServiceUnauthorized):
 		// TODO(patrik): Custom error
 		return UserNotFound()
+	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
+		return UnsupportedImageType()
 	}
 
 	return err
@@ -338,6 +340,42 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				err = app.UserService().UpdateMe(ctx, service.UpdateMeParams{
 					UserId:      user.Id,
 					DisplayName: body.DisplayName,
+				})
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.FormApiHandler{
+			Name:   "UploadUserImage",
+			Method: http.MethodPost,
+			Path:   "/me/image/upload",
+			Spec: pyrin.FormSpec{
+				Files: map[string]pyrin.FormFileSpec{
+					"image": {
+						NumExpected: 1,
+					},
+				},
+			},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				files, err := pyrin.FormFiles(c, "image")
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				err = app.UserService().UploadUserImage(ctx, service.UploadUserImageParams{
+					UserId: user.Id,
+					File:   files[0],
 				})
 				if err != nil {
 					return nil, handleUserServiceErrors(err)

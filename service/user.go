@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
+	"mime/multipart"
+	"os"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
@@ -25,7 +27,8 @@ var (
 type UserService struct {
 	logger *slog.Logger
 
-	db *database.Database
+	db      *database.Database
+	dataDir types.DataDir
 
 	imageService *ImageService
 }
@@ -33,11 +36,13 @@ type UserService struct {
 func NewUserService(
 	logger *slog.Logger,
 	db *database.Database,
+	dataDir types.DataDir,
 	imageService *ImageService,
 ) *UserService {
 	return &UserService{
 		logger:       logger,
 		db:           db,
+		dataDir:      dataDir,
 		imageService: imageService,
 	}
 }
@@ -175,6 +180,55 @@ func (s *UserService) UpdateMe(
 	err = s.db.UpdateUser(ctx, user.Id, changes)
 	if err != nil {
 		return userErr.Wrap("update me: db update", err)
+	}
+
+	return nil
+}
+
+type UploadUserImageParams struct {
+	UserId string
+
+	File *multipart.FileHeader
+}
+
+func (s *UserService) UploadUserImage(
+	ctx context.Context,
+	params UploadUserImageParams,
+) error {
+	user, err := s.GetUserById(ctx, GetUserByIdParams{
+		UserId: params.UserId,
+	})
+	if err != nil {
+		return userErr.Wrap("upload user image: get user", err)
+	}
+
+	picture, err := s.imageService.UploadImageForUser(
+		ctx,
+		UploadImageForUserParams{
+			UserId: user.Id,
+			File:   params.File,
+		},
+	)
+	if err != nil {
+		return userErr.Wrap("upload user image: upload", err)
+	}
+
+	err = s.db.UpdateUser(ctx, user.Id, database.UserChanges{
+		Picture: database.Change[sql.NullString]{
+			Value: sql.NullString{
+				String: picture,
+				Valid:  picture != "",
+			},
+			Changed: picture != user.Picture.String,
+		},
+	})
+	if err != nil {
+		return userErr.Wrap("upload user image: db update", err)
+	}
+
+	err = os.RemoveAll(s.dataDir.CacheImages().User(user.Id))
+	if err != nil {
+		return userErr.Wrap("upload user image: remove cache", err)
 	}
 
 	return nil
