@@ -769,6 +769,8 @@ export type SetQuickPlaylistBody = z.infer<typeof SetQuickPlaylistBody>;
 export const UpdateMeBody = z.object({
   // Name: UpdateMeBody.displayName
   "displayName": z.string().nullable().optional(),
+  // Name: UpdateMeBody.pictureUrl
+  "pictureUrl": z.string().nullable().optional(),
 });
 export type UpdateMeBody = z.infer<typeof UpdateMeBody>;
 

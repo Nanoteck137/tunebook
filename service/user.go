@@ -155,6 +155,7 @@ type UpdateMeParams struct {
 	UserId string
 
 	DisplayName *string
+	PictureUrl  *string
 }
 
 func (s *UserService) UpdateMe(
@@ -177,9 +178,37 @@ func (s *UserService) UpdateMe(
 		}
 	}
 
+	if params.PictureUrl != nil {
+		picture, err := s.imageService.DownloadPictureForUser(
+			ctx,
+			DownloadPictureForUserParams{
+				UserId: user.Id,
+				Url:    *params.PictureUrl,
+			},
+		)
+		if err != nil {
+			return userErr.Wrap("update me: download picture", err)
+		}
+
+		changes.Picture = database.Change[sql.NullString]{
+			Value: sql.NullString{
+				String: picture,
+				Valid:  picture != "",
+			},
+			Changed: picture != user.Picture.String,
+		}
+	}
+
 	err = s.db.UpdateUser(ctx, user.Id, changes)
 	if err != nil {
 		return userErr.Wrap("update me: db update", err)
+	}
+
+	if params.PictureUrl != nil {
+		err = os.RemoveAll(s.dataDir.CacheImages().User(user.Id))
+		if err != nil {
+			return userErr.Wrap("update me: remove cache", err)
+		}
 	}
 
 	return nil

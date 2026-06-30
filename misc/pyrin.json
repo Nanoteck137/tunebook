@@ -1318,6 +1318,11 @@
           "name": "displayName",
           "type": "*string",
           "omitEmpty": true
+        },
+        {
+          "name": "pictureUrl",
+          "type": "*string",
+          "omitEmpty": true
         }
       ]
     },

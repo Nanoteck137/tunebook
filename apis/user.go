@@ -66,15 +66,18 @@ type GetUserFavorites struct {
 
 type UpdateMeBody struct {
 	DisplayName *string `json:"displayName,omitempty"`
+	PictureUrl  *string `json:"pictureUrl,omitempty"`
 }
 
 func (b *UpdateMeBody) Transform() {
 	b.DisplayName = anvil.StringPtr(b.DisplayName)
+	b.PictureUrl = anvil.StringPtr(b.PictureUrl)
 }
 
 func (b UpdateMeBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.DisplayName, validate.Required.When(b.DisplayName != nil)),
+		validate.Field(&b.PictureUrl, validate.Required.When(b.PictureUrl != nil)),
 	)
 }
 
@@ -340,6 +343,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				err = app.UserService().UpdateMe(ctx, service.UpdateMeParams{
 					UserId:      user.Id,
 					DisplayName: body.DisplayName,
+					PictureUrl:  body.PictureUrl,
 				})
 				if err != nil {
 					return nil, handleUserServiceErrors(err)
