@@ -449,16 +449,14 @@ func (s *MediaService) ProbeMedia(
 	ctx context.Context,
 	filepath string,
 ) (*probe.ProbeResult, error) {
-	s.logger.Info("Probing media", "filepath", filepath)
-
 	result, err := probe.ProbeMedia(ctx, filepath)
 	if err != nil {
-		s.logger.Info(
-			"failed to probe media", "err", err, "filepath", filepath)
+		s.logger.Error(
+			"probe media", "err", err, "filepath", filepath)
 		return nil, err
 	}
 
-	s.logger.Info("Probing result",
+	s.logger.Debug("probe media",
 		"filepath", filepath,
 		"format", result.MediaFormat,
 		"duration", result.Duration,
