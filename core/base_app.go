@@ -202,11 +202,15 @@ func (app *BaseApp) Bootstrap() error {
 	app.artistService = service.NewArtistService(
 		newServiceLogger("artist"),
 		app.db,
+		app.imageService,
+		dataDir,
 	)
 
 	app.albumService = service.NewAlbumService(
 		newServiceLogger("album"),
 		app.db,
+		app.imageService,
+		dataDir,
 	)
 
 	app.trackService = service.NewTrackService(

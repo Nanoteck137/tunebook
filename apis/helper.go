@@ -128,50 +128,43 @@ func ConvertURL(c pyrin.Context, path string) string {
 	return fmt.Sprintf("%s://%s%s", scheme, host, path)
 }
 
-const (
-	IMAGE_ORIGINAL = "original.png"
-	IMAGE_SMALL    = "128.png"
-	IMAGE_MEDIUM   = "256.png"
-	IMAGE_LARGE    = "512.png"
-)
-
 func ConvertArtistCoverURL(c pyrin.Context, artistId string) types.Images {
-	first := "/files/artists/images/" + artistId + "/"
+	base := "/files/artists/images/" + artistId
 	return types.Images{
-		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
-		Small:    ConvertURL(c, first+IMAGE_SMALL),
-		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
-		Large:    ConvertURL(c, first+IMAGE_LARGE),
+		Original: ConvertURL(c, base),
+		Small:    ConvertURL(c, base+"?size=128"),
+		Medium:   ConvertURL(c, base+"?size=256"),
+		Large:    ConvertURL(c, base+"?size=512"),
 	}
 }
 
 func ConvertAlbumCoverURL(c pyrin.Context, albumId string) types.Images {
-	first := "/files/albums/images/" + albumId + "/"
+	base := "/files/albums/images/" + albumId
 	return types.Images{
-		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
-		Small:    ConvertURL(c, first+IMAGE_SMALL),
-		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
-		Large:    ConvertURL(c, first+IMAGE_LARGE),
+		Original: ConvertURL(c, base),
+		Small:    ConvertURL(c, base+"?size=128"),
+		Medium:   ConvertURL(c, base+"?size=256"),
+		Large:    ConvertURL(c, base+"?size=512"),
 	}
 }
 
 func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string) types.Images {
-	first := "/files/playlists/images/" + playlistId + "/"
+	base := "/files/playlists/images/" + playlistId
 	return types.Images{
-		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
-		Small:    ConvertURL(c, first+IMAGE_SMALL),
-		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
-		Large:    ConvertURL(c, first+IMAGE_LARGE),
+		Original: ConvertURL(c, base),
+		Small:    ConvertURL(c, base+"?size=128"),
+		Medium:   ConvertURL(c, base+"?size=256"),
+		Large:    ConvertURL(c, base+"?size=512"),
 	}
 }
 
 func ConvertUserPictureURL(c pyrin.Context, userId string) types.Images {
-	first := "/files/users/images/" + userId + "/"
+	base := "/files/users/images/" + userId
 	return types.Images{
-		Original: ConvertURL(c, first+IMAGE_ORIGINAL),
-		Small:    ConvertURL(c, first+IMAGE_SMALL),
-		Medium:   ConvertURL(c, first+IMAGE_MEDIUM),
-		Large:    ConvertURL(c, first+IMAGE_LARGE),
+		Original: ConvertURL(c, base),
+		Small:    ConvertURL(c, base+"?size=128"),
+		Medium:   ConvertURL(c, base+"?size=256"),
+		Large:    ConvertURL(c, base+"?size=512"),
 	}
 }
 

@@ -17,17 +17,23 @@ var (
 )
 
 type AlbumService struct {
-	logger *slog.Logger
-	db     *database.Database
+	logger       *slog.Logger
+	db           *database.Database
+	imageService *ImageService
+	dataDir      types.DataDir
 }
 
 func NewAlbumService(
 	logger *slog.Logger,
 	db *database.Database,
+	imageService *ImageService,
+	dataDir types.DataDir,
 ) *AlbumService {
 	return &AlbumService{
-		logger: logger,
-		db:     db,
+		logger:       logger,
+		db:           db,
+		imageService: imageService,
+		dataDir:      dataDir,
 	}
 }
 
@@ -114,4 +120,50 @@ func (s *AlbumService) GetAlbumTracks(
 	}
 
 	return tracks, nil
+}
+
+type GetAlbumImageParams struct {
+	AlbumId     string
+	Size        int
+	ImageFormat types.ImageFormat
+}
+
+func (s *AlbumService) GetAlbumImage(
+	ctx context.Context,
+	params GetAlbumImageParams,
+) (string, error) {
+	album, err := s.GetAlbumById(ctx, GetAlbumByIdParams{
+		AlbumId: params.AlbumId,
+	})
+	if err != nil {
+		return "", albumErr.Wrap("get album image: get album", err)
+	}
+
+	cacheDir := s.dataDir.CacheImages()
+
+	input := ""
+	if album.CoverArt.Valid {
+		input = album.CoverArt.String
+	}
+
+	if err := utils.CreateDirectories([]string{
+		cacheDir.String(),
+		cacheDir.Albums(),
+		cacheDir.Album(album.Id),
+	}); err != nil {
+		return "", albumErr.Wrap("get album image: mkdir", err)
+	}
+
+	p, err := s.imageService.ProcessImage(ProcessImageParams{
+		Input:       input,
+		Default:     "default_album.png",
+		OutputDir:   cacheDir.Album(album.Id),
+		Size:        params.Size,
+		ImageFormat: params.ImageFormat,
+	})
+	if err != nil {
+		return "", albumErr.Wrap("get album image: process image", err)
+	}
+
+	return p, nil
 }

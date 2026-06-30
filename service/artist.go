@@ -7,6 +7,7 @@ import (
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
+	"github.com/nanoteck137/tunebook/utils"
 )
 
 var artistErr = NewServiceErrCreator("artist")
@@ -16,17 +17,23 @@ var (
 )
 
 type ArtistService struct {
-	logger *slog.Logger
-	db     *database.Database
+	logger      *slog.Logger
+	db          *database.Database
+	imageService *ImageService
+	dataDir     types.DataDir
 }
 
 func NewArtistService(
 	logger *slog.Logger,
 	db *database.Database,
+	imageService *ImageService,
+	dataDir types.DataDir,
 ) *ArtistService {
 	return &ArtistService{
-		logger: logger,
-		db:     db,
+		logger:       logger,
+		db:           db,
+		imageService: imageService,
+		dataDir:      dataDir,
 	}
 }
 
@@ -105,4 +112,48 @@ func (s *ArtistService) GetArtistAlbums(
 	}
 
 	return albums, nil
+}
+
+type GetArtistImageParams struct {
+	ArtistId    string
+	Size        int
+	ImageFormat types.ImageFormat
+}
+
+func (s *ArtistService) GetArtistImage(
+	ctx context.Context,
+	params GetArtistImageParams,
+) (string, error) {
+	artist, err := s.GetArtistById(ctx, GetArtistByIdParams{ArtistId: params.ArtistId})
+	if err != nil {
+		return "", err
+	}
+
+	cacheDir := s.dataDir.CacheImages()
+
+	if err := utils.CreateDirectories([]string{
+		cacheDir.String(),
+		cacheDir.Artists(),
+		cacheDir.Artist(artist.Id),
+	}); err != nil {
+		return "", artistErr.Wrap("get artist image", err)
+	}
+
+	input := ""
+	if artist.CoverArt.Valid {
+		input = artist.CoverArt.String
+	}
+
+	p, err := s.imageService.ProcessImage(ProcessImageParams{
+		Input:       input,
+		Default:     "default_artist.png",
+		OutputDir:   cacheDir.Artist(artist.Id),
+		Size:        params.Size,
+		ImageFormat: params.ImageFormat,
+	})
+	if err != nil {
+		return "", artistErr.Wrap("get artist image", err)
+	}
+
+	return p, nil
 }

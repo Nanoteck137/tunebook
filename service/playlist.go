@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"mime/multipart"
 	"os"
+	"path"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
@@ -94,6 +95,51 @@ func (s *PlaylistService) GetPlaylistById(
 	}
 
 	return playlist, nil
+}
+
+type GetPlaylistImageParams struct {
+	PlaylistId  string
+	Size        int
+	ImageFormat types.ImageFormat
+}
+
+func (s *PlaylistService) GetPlaylistImage(
+	ctx context.Context,
+	params GetPlaylistImageParams,
+) (string, error) {
+	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{PlaylistId: params.PlaylistId})
+	if err != nil {
+		return "", err
+	}
+
+	cacheDir := s.dataDir.CacheImages()
+
+	if err := utils.CreateDirectories([]string{
+		cacheDir.String(),
+		cacheDir.Playlists(),
+		cacheDir.Playlist(playlist.Id),
+	}); err != nil {
+		return "", playlistErr.Wrap("get playlist image", err)
+	}
+
+	input := ""
+	if playlist.CoverArt.Valid {
+		playlistDir := s.dataDir.Playlist(playlist.Id)
+		input = path.Join(playlistDir, playlist.CoverArt.String)
+	}
+
+	p, err := s.imageService.ProcessImage(ProcessImageParams{
+		Input:       input,
+		Default:     "default_album.png",
+		OutputDir:   cacheDir.Playlist(playlist.Id),
+		Size:        params.Size,
+		ImageFormat: params.ImageFormat,
+	})
+	if err != nil {
+		return "", playlistErr.Wrap("get playlist image", err)
+	}
+
+	return p, nil
 }
 
 type CreatePlaylistParams struct {

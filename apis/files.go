@@ -1,60 +1,42 @@
 package apis
 
 import (
-	"errors"
 	"net/http"
 	"os"
 	"path"
-	"strings"
+	"strconv"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/types"
 )
-
-func handleImageServiceErrors(err error) error {
-	switch {
-	case errors.Is(err, service.ErrImageServiceAlbumNotFound):
-		return AlbumNotFound()
-	case errors.Is(err, service.ErrImageServiceArtistNotFound):
-		return ArtistNotFound()
-	case errors.Is(err, service.ErrImageServicePlaylistNotFound):
-		return PlaylistNotFound()
-	case errors.Is(err, service.ErrImageServiceUserNotFound):
-		return UserNotFound()
-	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
-		return UnsupportedImageType()
-	case errors.Is(err, service.ErrImageServiceUnknownType):
-		return UnsupportedImageType()
-	}
-
-	return err
-}
 
 func InstallFilesHandlers(app core.App, g pyrin.Group) {
 	g.Register(
 		pyrin.NormalHandler{
 			Name:   "GetAlbumImage",
 			Method: http.MethodGet,
-			Path:   "/albums/images/:albumId/:image",
+			Path:   "/albums/images/:albumId",
 			HandlerFunc: func(c pyrin.Context) error {
 				albumId := c.Param("albumId")
-				image := c.Param("image")
 
-				ext := path.Ext(image)
-				name := strings.TrimRight(image, ext)
+				q := c.Request().URL.Query()
 
-				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
-				if !ok {
-					return UnsupportedImageType()
-				}
+				size, _ := strconv.Atoi(q.Get("size"))
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetAlbumImage(
-					ctx, albumId, name, imageType)
+				p, err := app.AlbumService().GetAlbumImage(
+					ctx,
+					service.GetAlbumImageParams{
+						AlbumId:     albumId,
+						Size:        size,
+						ImageFormat: types.ImageFormatPng,
+					},
+				)
 				if err != nil {
-					return handleImageServiceErrors(err)
+					return handleAlbumServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))
@@ -65,25 +47,25 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 		pyrin.NormalHandler{
 			Name:   "GetArtistImage",
 			Method: http.MethodGet,
-			Path:   "/artists/images/:artistId/:image",
+			Path:   "/artists/images/:artistId",
 			HandlerFunc: func(c pyrin.Context) error {
 				artistId := c.Param("artistId")
-				image := c.Param("image")
 
-				ext := path.Ext(image)
-				name := strings.TrimRight(image, ext)
-
-				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
-				if !ok {
-					return UnsupportedImageType()
-				}
+				q := c.Request().URL.Query()
+				size, _ := strconv.Atoi(q.Get("size"))
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetArtistImage(
-					ctx, artistId, name, imageType)
+				p, err := app.ArtistService().GetArtistImage(
+					ctx,
+					service.GetArtistImageParams{
+						ArtistId:    artistId,
+						Size:        size,
+						ImageFormat: types.ImageFormatPng,
+					},
+				)
 				if err != nil {
-					return handleImageServiceErrors(err)
+					return handleArtistServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))
@@ -94,25 +76,24 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 		pyrin.NormalHandler{
 			Name:   "GetPlaylistImage",
 			Method: http.MethodGet,
-			Path:   "/playlists/images/:playlistId/:image",
+			Path:   "/playlists/images/:playlistId",
 			HandlerFunc: func(c pyrin.Context) error {
 				playlistId := c.Param("playlistId")
-				image := c.Param("image")
 
-				ext := path.Ext(image)
-				name := strings.TrimRight(image, ext)
-
-				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
-				if !ok {
-					return UnsupportedImageType()
-				}
+				q := c.Request().URL.Query()
+				size, _ := strconv.Atoi(q.Get("size"))
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetPlaylistImage(
-					ctx, playlistId, name, imageType)
+				p, err := app.PlaylistService().GetPlaylistImage(ctx,
+					service.GetPlaylistImageParams{
+						PlaylistId:  playlistId,
+						Size:        size,
+						ImageFormat: types.ImageFormatPng,
+					},
+				)
 				if err != nil {
-					return handleImageServiceErrors(err)
+					return handlePlaylistServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))
@@ -123,25 +104,25 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 		pyrin.NormalHandler{
 			Name:   "GetUserImage",
 			Method: http.MethodGet,
-			Path:   "/users/images/:userId/:image",
+			Path:   "/users/images/:userId",
 			HandlerFunc: func(c pyrin.Context) error {
 				userId := c.Param("userId")
-				image := c.Param("image")
 
-				ext := path.Ext(image)
-				name := strings.TrimRight(image, ext)
-
-				imageType, ok := app.ImageService().GetImageFormatFromExt(ext)
-				if !ok {
-					return UnsupportedImageType()
-				}
+				q := c.Request().URL.Query()
+				size, _ := strconv.Atoi(q.Get("size"))
 
 				ctx := c.Request().Context()
 
-				p, err := app.ImageService().GetUserImage(
-					ctx, userId, name, imageType)
+				p, err := app.UserService().GetUserImage(
+					ctx,
+					service.GetUserImageParams{
+						UserId:      userId,
+						Size:        size,
+						ImageFormat: types.ImageFormatPng,
+					},
+				)
 				if err != nil {
-					return handleImageServiceErrors(err)
+					return handleUserServiceErrors(err)
 				}
 
 				f := os.DirFS(path.Dir(p))

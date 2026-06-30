@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/nanoteck137/tunebook/assets"
@@ -27,21 +28,20 @@ import (
 
 var imageErr = NewServiceErrCreator("image")
 
-var newTempFileId, _ = cuid2.Init(cuid2.WithLength(16))
-
 var (
-	ErrImageServiceAlbumNotFound          = imageErr.New("album not found")
-	ErrImageServiceArtistNotFound         = imageErr.New("artist not found")
-	ErrImageServicePlaylistNotFound       = imageErr.New("playlist not found")
-	ErrImageServiceUserNotFound           = imageErr.New("user not found")
-	ErrImageServiceUnknownType            = imageErr.New("unknown type")
 	ErrImageServiceUnsupportedImageFormat = imageErr.New("unsupported image format")
+)
+
+const (
+	MaxImageSize = 2048
 )
 
 var magickImageMapping = map[string]types.ImageFormat{
 	"PNG":  types.ImageFormatPng,
 	"JPEG": types.ImageFormatJpeg,
 }
+
+var newTempFileId, _ = cuid2.Init(cuid2.WithLength(16))
 
 type ImageService struct {
 	logger *slog.Logger
@@ -62,8 +62,8 @@ func NewImageService(
 	}
 }
 
-func (s *ImageService) convertImage(
-	input, outputDir, name string, 
+func (s *ImageService) ConvertImage(
+	input, outputDir, name string,
 	size int,
 ) (string, error) {
 	p := path.Join(outputDir, name)
@@ -87,7 +87,7 @@ func (s *ImageService) createTempFilename(ext string) string {
 	return path.Join(s.dataDir.Temp(), newTempFileId()+ext)
 }
 
-func (s *ImageService) convertSquareImage(
+func (s *ImageService) ConvertSquareImage(
 	input, outputDir, name string,
 ) (string, error) {
 	p := path.Join(outputDir, name)
@@ -132,269 +132,52 @@ func (s *ImageService) copyDefaultToTemp(filename string) (string, error) {
 	return dest, nil
 }
 
-func (s *ImageService) GetImageFormatFromExt(
-	ext string,
-) (types.ImageFormat, bool) {
-	switch ext {
-	case ".png":
-		return types.ImageFormatPng, true
-	case ".jpg", ".jpeg":
-		return types.ImageFormatJpeg, true
-	}
-
-	return "", false
+type ProcessImageParams struct {
+	Input       string
+	Default     string
+	OutputDir   string
+	Size        int
+	ImageFormat types.ImageFormat
 }
 
-func (s *ImageService) GetAlbumImage(
-	ctx context.Context, 
-	albumId, typ string, 
-	imageFormat types.ImageFormat,
-) (string, error) {
-	album, err := s.db.GetAlbumById(ctx, albumId)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return "", ErrImageServiceAlbumNotFound
-		}
-
-		return "", err
-	}
-
-	cacheDir := s.dataDir.CacheImages()
-	albumCache := cacheDir.Album(album.Id)
-
-	// Make sure that the cache directory is setup
-	dirs := []string{
-		cacheDir.String(),
-		cacheDir.Albums(),
-		albumCache,
-	}
-
-	for _, dir := range dirs {
-		err = os.Mkdir(dir, 0755)
-		if err != nil && !errors.Is(err, os.ErrExist) {
-			return "", err
-		}
-	}
-
-	ext, ok := imageFormat.ToExt()
+func (s *ImageService) ProcessImage(params ProcessImageParams) (string, error) {
+	ext, ok := params.ImageFormat.ToExt()
 	if !ok {
 		return "", ErrImageServiceUnsupportedImageFormat
 	}
 
-	input := ""
+	size := params.Size
+	if size > MaxImageSize {
+		size = MaxImageSize
+	}
 
-	if album.CoverArt.Valid {
-		input = album.CoverArt.String
-	} else {
-		input, err = s.copyDefaultToTemp("default_album.png")
+	input := params.Input
+	if input == "" {
+		var err error
+		input, err = s.copyDefaultToTemp(params.Default)
 		if err != nil {
-			return "", err
+			return "", imageErr.Wrap("process image: copy default", err)
 		}
 		defer os.Remove(input)
 	}
 
-	switch typ {
-	case "original":
-		return s.convertSquareImage(input, albumCache, "original_square"+ext)
-	case "128":
-		return s.convertImage(input, albumCache, "128"+ext, 128)
-	case "256":
-		return s.convertImage(input, albumCache, "256"+ext, 256)
-	case "512":
-		return s.convertImage(input, albumCache, "512"+ext, 512)
+	if size == 0 {
+		p, err := s.ConvertSquareImage(
+			input, params.OutputDir, "original_square"+ext)
+		if err != nil {
+			return "", imageErr.Wrap("process image: convert square original", err)
+		}
+
+		return p, nil
 	}
 
-	return "", ErrImageServiceUnknownType
-}
-
-func (s *ImageService) GetArtistImage(
-	ctx context.Context, 
-	artistId, typ string, 
-	imageFormat types.ImageFormat,
-) (string, error) {
-	artist, err := s.db.GetArtistById(ctx, artistId)
+	name := strconv.Itoa(size)
+	p, err := s.ConvertImage(input, params.OutputDir, name+ext, size)
 	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return "", ErrImageServiceArtistNotFound
-		}
-
-		return "", err
+		return "", imageErr.Wrap("process image: convert sized", err)
 	}
 
-	cacheDir := s.dataDir.CacheImages()
-	artistCache := cacheDir.Artist(artist.Id)
-
-	// Make sure that the cache directory is setup
-	dirs := []string{
-		cacheDir.String(),
-		cacheDir.Artists(),
-		artistCache,
-	}
-
-	for _, dir := range dirs {
-		err = os.Mkdir(dir, 0755)
-		if err != nil && !errors.Is(err, os.ErrExist) {
-			return "", err
-		}
-	}
-
-	ext, ok := imageFormat.ToExt()
-	if !ok {
-		return "", ErrImageServiceUnsupportedImageFormat
-	}
-
-	input := ""
-
-	if artist.CoverArt.Valid {
-		input = artist.CoverArt.String
-	} else {
-		input, err = s.copyDefaultToTemp("default_artist.png")
-		if err != nil {
-			return "", err
-		}
-		defer os.Remove(input)
-	}
-
-	switch typ {
-	case "original":
-		return s.convertSquareImage(input, artistCache, "original_square"+ext)
-	case "128":
-		return s.convertImage(input, artistCache, "128"+ext, 128)
-	case "256":
-		return s.convertImage(input, artistCache, "256"+ext, 256)
-	case "512":
-		return s.convertImage(input, artistCache, "512"+ext, 512)
-	}
-
-	return "", ErrImageServiceUnknownType
-}
-
-func (s *ImageService) GetPlaylistImage(
-	ctx context.Context, 
-	playlistId, typ string, 
-	imageFormat types.ImageFormat,
-) (string, error) {
-	playlist, err := s.db.GetPlaylistById(ctx, playlistId)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return "", ErrImageServicePlaylistNotFound
-		}
-
-		return "", err
-	}
-
-	cacheDir := s.dataDir.CacheImages()
-	playlistCache := cacheDir.Playlist(playlist.Id)
-
-	// Make sure that the cache directory is setup
-	dirs := []string{
-		cacheDir.String(),
-		cacheDir.Playlists(),
-		playlistCache,
-	}
-
-	for _, dir := range dirs {
-		err = os.Mkdir(dir, 0755)
-		if err != nil && !errors.Is(err, os.ErrExist) {
-			return "", err
-		}
-	}
-
-	ext, ok := imageFormat.ToExt()
-	if !ok {
-		return "", ErrImageServiceUnsupportedImageFormat
-	}
-
-	input := ""
-
-	if playlist.CoverArt.Valid {
-		playlistDir := s.dataDir.Playlist(playlist.Id)
-
-		input = path.Join(playlistDir, playlist.CoverArt.String)
-	} else {
-		input, err = s.copyDefaultToTemp("default_album.png")
-		if err != nil {
-			return "", err
-		}
-		defer os.Remove(input)
-	}
-
-	switch typ {
-	case "original":
-		return s.convertSquareImage(input, playlistCache, "original_square"+ext)
-	case "128":
-		return s.convertImage(input, playlistCache, "128"+ext, 128)
-	case "256":
-		return s.convertImage(input, playlistCache, "256"+ext, 256)
-	case "512":
-		return s.convertImage(input, playlistCache, "512"+ext, 512)
-	}
-
-	return "", ErrImageServiceUnknownType
-}
-
-func (s *ImageService) GetUserImage(
-	ctx context.Context, 
-	userId, typ string, 
-	imageFormat types.ImageFormat,
-) (string, error) {
-	user, err := s.db.GetUserById(ctx, userId)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return "", ErrImageServiceUserNotFound
-		}
-
-		return "", err
-	}
-
-	cacheDir := s.dataDir.CacheImages()
-	userCache := cacheDir.User(user.Id)
-
-	// Make sure that the cache directory is setup
-	dirs := []string{
-		cacheDir.String(),
-		cacheDir.Users(),
-		userCache,
-	}
-
-	for _, dir := range dirs {
-		err = os.Mkdir(dir, 0755)
-		if err != nil && !errors.Is(err, os.ErrExist) {
-			return "", err
-		}
-	}
-
-	ext, ok := imageFormat.ToExt()
-	if !ok {
-		return "", ErrImageServiceUnsupportedImageFormat
-	}
-
-	input := ""
-
-	if user.Picture.Valid {
-		dir := s.dataDir.User(user.Id)
-		input = path.Join(dir, user.Picture.String)
-	} else {
-		// TODO(patrik): Create a default user picture
-		input, err = s.copyDefaultToTemp("default_album.png")
-		if err != nil {
-			return "", err
-		}
-		defer os.Remove(input)
-	}
-
-	switch typ {
-	case "original":
-		return s.convertSquareImage(input, userCache, "original_square"+ext)
-	case "128":
-		return s.convertImage(input, userCache, "128"+ext, 128)
-	case "256":
-		return s.convertImage(input, userCache, "256"+ext, 256)
-	case "512":
-		return s.convertImage(input, userCache, "512"+ext, 512)
-	}
-
-	return "", ErrImageServiceUnknownType
+	return p, nil
 }
 
 func (s *ImageService) getImageFormat(p string) (types.ImageFormat, error) {
@@ -818,11 +601,11 @@ func generatePlaylistCover(images [4]string, output string, tileSize int) error 
 		}
 
 		return []string{
-			"(", 
-			img, 
-			"-resize", size + "^", 
-			"-gravity", "center", 
-			"-extent", size, 
+			"(",
+			img,
+			"-resize", size + "^",
+			"-gravity", "center",
+			"-extent", size,
 			")",
 		}
 	}

@@ -57,6 +57,8 @@ func handleArtistServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrArtistServiceArtistNotFound):
 		return ArtistNotFound()
+	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
+		return UnsupportedImageType()
 	}
 
 	var invalidFilter *service.InvalidFilterError

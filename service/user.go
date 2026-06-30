@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"mime/multipart"
 	"os"
+	"path"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
@@ -65,6 +66,51 @@ func (s *UserService) GetUserById(
 	}
 
 	return user, nil
+}
+
+type GetUserImageParams struct {
+	UserId      string
+	Size        int
+	ImageFormat types.ImageFormat
+}
+
+func (s *UserService) GetUserImage(
+	ctx context.Context,
+	params GetUserImageParams,
+) (string, error) {
+	user, err := s.GetUserById(ctx, GetUserByIdParams{UserId: params.UserId})
+	if err != nil {
+		return "", err
+	}
+
+	cacheDir := s.dataDir.CacheImages()
+
+	if err := utils.CreateDirectories([]string{
+		cacheDir.String(),
+		cacheDir.Users(),
+		cacheDir.User(user.Id),
+	}); err != nil {
+		return "", userErr.Wrap("get user image", err)
+	}
+
+	input := ""
+	if user.Picture.Valid {
+		dir := s.dataDir.User(user.Id)
+		input = path.Join(dir, user.Picture.String)
+	}
+
+	p, err := s.imageService.ProcessImage(ProcessImageParams{
+		Input:       input,
+		Default:     "default_album.png",
+		OutputDir:   cacheDir.User(user.Id),
+		Size:        params.Size,
+		ImageFormat: params.ImageFormat,
+	})
+	if err != nil {
+		return "", userErr.Wrap("get user image", err)
+	}
+
+	return p, nil
 }
 
 type GetUserStatsParams struct {
