@@ -10,8 +10,10 @@ import (
 	"github.com/nanoteck137/tunebook/utils"
 )
 
+var albumErr = NewServiceErrCreator("album")
+
 var (
-	ErrAlbumServiceAlbumNotFound = errors.New("album service: album not found")
+	ErrAlbumServiceAlbumNotFound = albumErr.New("album not found")
 )
 
 type AlbumService struct {
@@ -57,7 +59,7 @@ func (s *AlbumService) GetAlbums(
 			}
 		}
 
-		return nil, types.Page{}, err
+		return nil, types.Page{}, albumErr.Wrap("get albums", err)
 	}
 
 	return albums, page, nil
@@ -77,7 +79,7 @@ func (s *AlbumService) GetAlbumById(
 			return database.Album{}, ErrAlbumServiceAlbumNotFound
 		}
 
-		return database.Album{}, err
+		return database.Album{}, albumErr.Wrap("get album by id", err)
 	}
 
 	return album, nil
@@ -100,7 +102,7 @@ func (s *AlbumService) GetAlbumTracks(
 
 	tracks, err := s.db.GetTracksByAlbum(ctx, album.Id)
 	if err != nil {
-		return nil, err
+		return nil, albumErr.Wrap("get album tracks", err)
 	}
 
 	for i, track := range tracks {

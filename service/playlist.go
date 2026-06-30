@@ -160,7 +160,7 @@ func (s *PlaylistService) EditPlaylist(
 			},
 		)
 		if err != nil {
-			return err
+			return playlistErr.Wrap("edit: download cover", err)
 		}
 
 		changes.CoverArt = database.Change[sql.NullString]{

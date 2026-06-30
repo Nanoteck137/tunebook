@@ -10,8 +10,10 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
+var historyErr = NewServiceErrCreator("history")
+
 var (
-	ErrHistoryServiceHistoryNotFound = errors.New("user history service: history not found")
+	ErrHistoryServiceHistoryNotFound = historyErr.New("history not found")
 )
 
 type HistoryService struct {
@@ -62,7 +64,7 @@ func (s *HistoryService) GetTrackHistory(
 			}
 		}
 
-		return nil, types.Page{}, err
+		return nil, types.Page{}, historyErr.Wrap("get track history", err)
 	}
 
 	return items, page, nil
@@ -102,7 +104,7 @@ func (s *HistoryService) PushTrackHistory(
 		PercentPlayed: params.PercentPlayed,
 	})
 	if err != nil {
-		return "", err
+		return "", historyErr.Wrap("push track history", err)
 	}
 
 	return id, nil
@@ -118,7 +120,7 @@ func (s *HistoryService) GetTrackHistoryById(
 			return database.TrackHistory{}, ErrHistoryServiceHistoryNotFound
 		}
 
-		return database.TrackHistory{}, err
+		return database.TrackHistory{}, historyErr.Wrap("get track history by id", err)
 	}
 
 	if history.UserId != params.UserId {

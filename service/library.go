@@ -56,6 +56,8 @@ func (e LibrarySyncStateEvent) GetEventType() string {
 	return "library-sync-state"
 }
 
+var libraryErr = NewServiceErrCreator("library")
+
 type UpdateFunc func()
 
 type LibraryService struct {
@@ -811,7 +813,7 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 
 	err := s.syncArtists(ctx, p)
 	if err != nil {
-		return err
+		return libraryErr.Wrap("sync artists", err)
 	}
 
 	artistTimer.Stop()
@@ -821,7 +823,7 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 
 	err = s.syncAlbums(ctx, p)
 	if err != nil {
-		return err
+		return libraryErr.Wrap("sync albums", err)
 	}
 
 	albumTimer.Stop()
@@ -831,24 +833,24 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 
 	err = s.syncTracks(ctx, p)
 	if err != nil {
-		return err
+		return libraryErr.Wrap("sync tracks", err)
 	}
 
 	trackTimer.Stop()
 
 	existingArtistIds, err := s.db.GetAllArtistIds(ctx)
 	if err != nil {
-		return fmt.Errorf("get all artist ids: %w", err)
+		return libraryErr.Wrap("get all artist ids", err)
 	}
 
 	existingAlbumIds, err := s.db.GetAllAlbumIds(ctx)
 	if err != nil {
-		return fmt.Errorf("get all album ids: %w", err)
+		return libraryErr.Wrap("get all album ids", err)
 	}
 
 	existingTrackIds, err := s.db.GetAllTrackIds(ctx)
 	if err != nil {
-		return fmt.Errorf("get all track ids: %w", err)
+		return libraryErr.Wrap("get all track ids", err)
 	}
 
 	for _, id := range existingArtistIds {
@@ -928,14 +930,14 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 
 	err = os.RemoveAll(dir)
 	if err != nil {
-		return err
+		return libraryErr.Wrap("clear cache", err)
 	}
 
 	err = utils.CreateDirectories([]string{
 		dir,
 	})
 	if err != nil {
-		return err
+		return libraryErr.Wrap("create cache dir", err)
 	}
 
 	return nil

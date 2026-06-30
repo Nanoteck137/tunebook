@@ -26,8 +26,6 @@ func handleImageServiceErrors(err error) error {
 		return UnsupportedImageType()
 	case errors.Is(err, service.ErrImageServiceUnknownType):
 		return UnsupportedImageType()
-	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
-		return UnsupportedImageType()
 	}
 
 	return err

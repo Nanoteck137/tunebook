@@ -10,8 +10,10 @@ import (
 	"github.com/nanoteck137/tunebook/utils"
 )
 
+var trackErr = NewServiceErrCreator("track")
+
 var (
-	ErrTrackServiceTrackNotFound = errors.New("track service: track not found")
+	ErrTrackServiceTrackNotFound = trackErr.New("track not found")
 )
 
 type TrackService struct {
@@ -39,7 +41,7 @@ func (s *TrackService) LoadTracksFromIds(
 ) ([]database.Track, error) {
 	tracks, err := s.db.GetTracksIn(ctx, params.Ids, "")
 	if err != nil {
-		return nil, err
+		return nil, trackErr.Wrap("load tracks from ids", err)
 	}
 
 	for i := range tracks {
@@ -87,7 +89,7 @@ func (s *TrackService) GetTracks(
 			}
 		}
 
-		return nil, types.Page{}, err
+		return nil, types.Page{}, trackErr.Wrap("get tracks", err)
 	}
 
 	for i := range tracks {
@@ -111,7 +113,7 @@ func (s *TrackService) GetTrackById(
 			return database.Track{}, ErrTrackServiceTrackNotFound
 		}
 
-		return database.Track{}, err
+		return database.Track{}, trackErr.Wrap("get track by id", err)
 	}
 
 	return track, nil

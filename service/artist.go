@@ -9,8 +9,10 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
+var artistErr = NewServiceErrCreator("artist")
+
 var (
-	ErrArtistServiceArtistNotFound = errors.New("artist service: artist not found")
+	ErrArtistServiceArtistNotFound = artistErr.New("artist not found")
 )
 
 type ArtistService struct {
@@ -56,7 +58,7 @@ func (s *ArtistService) GetArtists(
 			}
 		}
 
-		return nil, types.Page{}, err
+		return nil, types.Page{}, artistErr.Wrap("get artists", err)
 	}
 
 	return artists, page, nil
@@ -76,7 +78,7 @@ func (s *ArtistService) GetArtistById(
 			return database.Artist{}, ErrArtistServiceArtistNotFound
 		}
 
-		return database.Artist{}, err
+		return database.Artist{}, artistErr.Wrap("get artist by id", err)
 	}
 
 	return artist, nil
@@ -99,7 +101,7 @@ func (s *ArtistService) GetArtistAlbums(
 
 	albums, err := s.db.GetAlbumsByArtist(ctx, artist.Id)
 	if err != nil {
-		return nil, err
+		return nil, artistErr.Wrap("get artist albums", err)
 	}
 
 	return albums, nil

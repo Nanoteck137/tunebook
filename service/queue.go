@@ -10,9 +10,11 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
+var queueErr = NewServiceErrCreator("queue")
+
 var (
-	ErrQueueServiceQueueNotFound = errors.New("queue service: queue not found")
-	ErrQueueServiceItemNotFound  = errors.New("queue service: item not found")
+	ErrQueueServiceQueueNotFound = queueErr.New("queue not found")
+	ErrQueueServiceItemNotFound  = queueErr.New("item not found")
 )
 
 type QueueService struct {
@@ -53,7 +55,7 @@ func (s *QueueService) GetQueue(
 		QueueId: queue.Id,
 	})
 	if err != nil {
-		return GetQueueResult{}, err
+		return GetQueueResult{}, queueErr.Wrap("get queue", err)
 	}
 
 	return GetQueueResult{
@@ -79,7 +81,7 @@ func (s *QueueService) GetQueueIds(
 
 	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id)
 	if err != nil {
-		return QueueIdsResult{}, err
+		return QueueIdsResult{}, queueErr.Wrap("get queue ids", err)
 	}
 
 	return QueueIdsResult{
@@ -104,7 +106,7 @@ func (s *QueueService) GetQueueItemAtIndex(
 
 	item, err := s.db.GetQueueItemAtPosition(ctx, queue.Id, params.Index)
 	if err != nil {
-		return database.QueueItemTrack{}, err
+		return database.QueueItemTrack{}, queueErr.Wrap("get queue item at index", err)
 	}
 
 	return item, nil
@@ -122,18 +124,18 @@ func (s *QueueService) getOrCreateQueue(
 				CurrentIndex: 0,
 			})
 			if err != nil {
-				return database.Queue{}, err
+				return database.Queue{}, queueErr.Wrap("create queue", err)
 			}
 
 			queue, err = s.db.GetQueueById(ctx, userId)
 			if err != nil {
-				return database.Queue{}, err
+				return database.Queue{}, queueErr.Wrap("get queue by id", err)
 			}
 
 			return queue, nil
 		}
 
-		return database.Queue{}, err
+		return database.Queue{}, queueErr.Wrap("get or create queue", err)
 	}
 
 	return queue, nil
@@ -167,13 +169,13 @@ func (s *QueueService) ReplaceQueue(
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return queueErr.Wrap("replace queue: begin", err)
 	}
 	defer tx.Rollback()
 
 	err = tx.ClearQueueItems(ctx, queue.Id)
 	if err != nil {
-		return err
+		return queueErr.Wrap("replace queue: clear items", err)
 	}
 
 	items := make([]database.CreateQueueItemParams, len(trackIds))
@@ -189,7 +191,7 @@ func (s *QueueService) ReplaceQueue(
 		Items:   items,
 	})
 	if err != nil {
-		return err
+		return queueErr.Wrap("replace queue: create items", err)
 	}
 
 	currentIndex := params.CurrentIndex
@@ -204,12 +206,12 @@ func (s *QueueService) ReplaceQueue(
 		},
 	})
 	if err != nil {
-		return err
+		return queueErr.Wrap("replace queue: update", err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return queueErr.Wrap("replace queue: commit", err)
 	}
 
 	return nil
@@ -339,7 +341,7 @@ func (s *QueueService) SetPosition(
 		},
 	})
 	if err != nil {
-		return err
+		return queueErr.Wrap("set position", err)
 	}
 
 	return nil
@@ -353,13 +355,13 @@ func (s *QueueService) ClearQueue(ctx context.Context, userId string) error {
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return queueErr.Wrap("clear queue: begin", err)
 	}
 	defer tx.Rollback()
 
 	err = tx.ClearQueueItems(ctx, queue.Id)
 	if err != nil {
-		return err
+		return queueErr.Wrap("clear queue: clear items", err)
 	}
 
 	err = tx.UpdateQueue(ctx, queue.Id, database.QueueChanges{
@@ -369,13 +371,13 @@ func (s *QueueService) ClearQueue(ctx context.Context, userId string) error {
 		},
 	})
 	if err != nil {
-		return err
+		return queueErr.Wrap("clear queue: update", err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return queueErr.Wrap("clear queue: commit", err)
 	}
 
-	return err
+	return nil
 }

@@ -30,11 +30,10 @@ var imageErr = NewServiceErrCreator("image")
 var newTempFileId, _ = cuid2.Init(cuid2.WithLength(16))
 
 var (
-	ErrImageServiceAlbumNotFound    = imageErr.New("album not found")
-	ErrImageServiceArtistNotFound   = imageErr.New("artist not found")
-	ErrImageServicePlaylistNotFound = imageErr.New("playlist not found")
-	ErrImageServiceUserNotFound     = imageErr.New("user not found")
-	// TODO(patrik): Change from type to format??
+	ErrImageServiceAlbumNotFound          = imageErr.New("album not found")
+	ErrImageServiceArtistNotFound         = imageErr.New("artist not found")
+	ErrImageServicePlaylistNotFound       = imageErr.New("playlist not found")
+	ErrImageServiceUserNotFound           = imageErr.New("user not found")
 	ErrImageServiceUnknownType            = imageErr.New("unknown type")
 	ErrImageServiceUnsupportedImageFormat = imageErr.New("unsupported image format")
 )

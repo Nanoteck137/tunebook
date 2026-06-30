@@ -506,7 +506,7 @@ func (a *AuthService) getUserFromCode(
 
 			userCount, err := a.db.CountUsers(ctx)
 			if err != nil {
-				return "", err
+				return "", authErr.Wrap("count users", err)
 			}
 
 			role := types.RoleUser
@@ -532,7 +532,7 @@ func (a *AuthService) getUserFromCode(
 					},
 				)
 				if err != nil {
-					return "", err
+					return "", authErr.Wrap("download picture for user", err)
 				}
 
 				err = a.db.UpdateUser(ctx, userId, database.UserChanges{
