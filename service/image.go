@@ -35,10 +35,8 @@ var (
 	ErrImageServicePlaylistNotFound = imageErr.New("playlist not found")
 	ErrImageServiceUserNotFound     = imageErr.New("user not found")
 	// TODO(patrik): Change from type to format??
-	ErrImageServiceUnknownImageType     = imageErr.New("unknown image type")
-	ErrImageServiceUnknownType          = imageErr.New("unknown type")
-	ErrImageServiceInvalidImageType     = imageErr.New("invalid image type")
-	ErrImageServiceUnsupportedMediaType = imageErr.New("unsupported media type")
+	ErrImageServiceUnknownType            = imageErr.New("unknown type")
+	ErrImageServiceUnsupportedImageFormat = imageErr.New("unsupported image format")
 )
 
 var magickImageMapping = map[string]types.ImageFormat{
@@ -141,7 +139,7 @@ func (s *ImageService) GetImageFormatFromExt(ext string) (types.ImageFormat, boo
 	return "", false
 }
 
-func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, imageType types.ImageFormat) (string, error) {
+func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, imageFormat types.ImageFormat) (string, error) {
 	album, err := s.db.GetAlbumById(ctx, albumId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -168,9 +166,9 @@ func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, i
 		}
 	}
 
-	ext, ok := imageType.ToExt()
+	ext, ok := imageFormat.ToExt()
 	if !ok {
-		return "", ErrImageServiceUnknownImageType
+		return "", ErrImageServiceUnsupportedImageFormat
 	}
 
 	input := ""
@@ -199,7 +197,7 @@ func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, i
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string, imageType types.ImageFormat) (string, error) {
+func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string, imageFormat types.ImageFormat) (string, error) {
 	artist, err := s.db.GetArtistById(ctx, artistId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -226,9 +224,9 @@ func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string,
 		}
 	}
 
-	ext, ok := imageType.ToExt()
+	ext, ok := imageFormat.ToExt()
 	if !ok {
-		return "", ErrImageServiceUnknownImageType
+		return "", ErrImageServiceUnsupportedImageFormat
 	}
 
 	input := ""
@@ -257,7 +255,7 @@ func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string,
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ string, imageType types.ImageFormat) (string, error) {
+func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ string, imageFormat types.ImageFormat) (string, error) {
 	playlist, err := s.db.GetPlaylistById(ctx, playlistId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -284,9 +282,9 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 		}
 	}
 
-	ext, ok := imageType.ToExt()
+	ext, ok := imageFormat.ToExt()
 	if !ok {
-		return "", ErrImageServiceUnknownImageType
+		return "", ErrImageServiceUnsupportedImageFormat
 	}
 
 	input := ""
@@ -317,7 +315,7 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, imageType types.ImageFormat) (string, error) {
+func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, imageFormat types.ImageFormat) (string, error) {
 	user, err := s.db.GetUserById(ctx, userId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -344,9 +342,9 @@ func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, ima
 		}
 	}
 
-	ext, ok := imageType.ToExt()
+	ext, ok := imageFormat.ToExt()
 	if !ok {
-		return "", ErrImageServiceUnknownImageType
+		return "", ErrImageServiceUnsupportedImageFormat
 	}
 
 	input := ""
@@ -561,7 +559,7 @@ func (s *ImageService) UploadImageForPlaylist(
 		return "", imageErr.Wrap(
 			"upload image for playlist: file to temp", err)
 	}
-	defer os.Remove(tmpPath) 
+	defer os.Remove(tmpPath)
 
 	playlistDir := s.dataDir.Playlist(params.PlaylistId)
 
@@ -688,7 +686,7 @@ func (s *ImageService) finalizeImage(
 ) (string, error) {
 	imageExt, ok := imageFormat.ToExt()
 	if !ok {
-		return "", ErrImageServiceInvalidImageType
+		return "", ErrImageServiceUnsupportedImageFormat
 	}
 
 	hash, err := hashFile(tmpPath)

@@ -22,11 +22,11 @@ func handleImageServiceErrors(err error) error {
 		return PlaylistNotFound()
 	case errors.Is(err, service.ErrImageServiceUserNotFound):
 		return UserNotFound()
-	case errors.Is(err, service.ErrImageServiceUnknownImageType):
+	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
 		return UnsupportedImageType()
 	case errors.Is(err, service.ErrImageServiceUnknownType):
 		return UnsupportedImageType()
-	case errors.Is(err, service.ErrImageServiceInvalidImageType):
+	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
 		return UnsupportedImageType()
 	}
 

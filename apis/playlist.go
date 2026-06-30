@@ -156,7 +156,7 @@ func handlePlaylistServiceErrors(err error) error {
 		return PlaylistNotFound()
 
 	// TODO(patrik): How should other services be handled
-	case errors.Is(err, service.ErrImageServiceInvalidImageType):
+	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
 		// TODO(patrik): Replace with its own error
 		return UnsupportedImageType()
 	}
