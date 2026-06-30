@@ -62,7 +62,10 @@ func NewImageService(
 	}
 }
 
-func (s *ImageService) convertImage(input, outputDir, name string, size int) (string, error) {
+func (s *ImageService) convertImage(
+	input, outputDir, name string, 
+	size int,
+) (string, error) {
 	p := path.Join(outputDir, name)
 
 	_, err := os.Stat(p)
@@ -84,7 +87,9 @@ func (s *ImageService) createTempFilename(ext string) string {
 	return path.Join(s.dataDir.Temp(), newTempFileId()+ext)
 }
 
-func (s *ImageService) convertSquareImage(input, outputDir, name string) (string, error) {
+func (s *ImageService) convertSquareImage(
+	input, outputDir, name string,
+) (string, error) {
 	p := path.Join(outputDir, name)
 
 	_, err := os.Stat(p)
@@ -127,7 +132,9 @@ func (s *ImageService) copyDefaultToTemp(filename string) (string, error) {
 	return dest, nil
 }
 
-func (s *ImageService) GetImageFormatFromExt(ext string) (types.ImageFormat, bool) {
+func (s *ImageService) GetImageFormatFromExt(
+	ext string,
+) (types.ImageFormat, bool) {
 	switch ext {
 	case ".png":
 		return types.ImageFormatPng, true
@@ -138,7 +145,11 @@ func (s *ImageService) GetImageFormatFromExt(ext string) (types.ImageFormat, boo
 	return "", false
 }
 
-func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, imageFormat types.ImageFormat) (string, error) {
+func (s *ImageService) GetAlbumImage(
+	ctx context.Context, 
+	albumId, typ string, 
+	imageFormat types.ImageFormat,
+) (string, error) {
 	album, err := s.db.GetAlbumById(ctx, albumId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -196,7 +207,11 @@ func (s *ImageService) GetAlbumImage(ctx context.Context, albumId, typ string, i
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string, imageFormat types.ImageFormat) (string, error) {
+func (s *ImageService) GetArtistImage(
+	ctx context.Context, 
+	artistId, typ string, 
+	imageFormat types.ImageFormat,
+) (string, error) {
 	artist, err := s.db.GetArtistById(ctx, artistId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -254,7 +269,11 @@ func (s *ImageService) GetArtistImage(ctx context.Context, artistId, typ string,
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ string, imageFormat types.ImageFormat) (string, error) {
+func (s *ImageService) GetPlaylistImage(
+	ctx context.Context, 
+	playlistId, typ string, 
+	imageFormat types.ImageFormat,
+) (string, error) {
 	playlist, err := s.db.GetPlaylistById(ctx, playlistId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -314,7 +333,11 @@ func (s *ImageService) GetPlaylistImage(ctx context.Context, playlistId, typ str
 	return "", ErrImageServiceUnknownType
 }
 
-func (s *ImageService) GetUserImage(ctx context.Context, userId, typ string, imageFormat types.ImageFormat) (string, error) {
+func (s *ImageService) GetUserImage(
+	ctx context.Context, 
+	userId, typ string, 
+	imageFormat types.ImageFormat,
+) (string, error) {
 	user, err := s.db.GetUserById(ctx, userId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
@@ -415,8 +438,6 @@ func (s *ImageService) getImageFormat(p string) (types.ImageFormat, error) {
 }
 
 func (s *ImageService) ValidateImage(p string) (types.ImageFormat, error) {
-	// out, err := exec.Command("magick", "identify", "-ping", "-format", "%m", p).CombinedOutput()
-
 	cmd := exec.Command("magick", "identify", "-ping", "-format", "%m", p)
 
 	var out bytes.Buffer
@@ -795,7 +816,15 @@ func generatePlaylistCover(images [4]string, output string, tileSize int) error 
 		if img == "" {
 			return []string{"(", "xc:black", "-resize", size, ")"}
 		}
-		return []string{"(", img, "-resize", size + "^", "-gravity", "center", "-extent", size, ")"}
+
+		return []string{
+			"(", 
+			img, 
+			"-resize", size + "^", 
+			"-gravity", "center", 
+			"-extent", size, 
+			")",
+		}
 	}
 
 	args := []string{}
