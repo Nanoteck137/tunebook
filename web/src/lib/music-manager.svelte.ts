@@ -261,13 +261,30 @@ export class MusicManager {
 
     this.volume = getVolume();
     this.muted = getMuted();
-
-    this.loadInitialQueue();
   }
 
-  private async loadInitialQueue() {
+  async initQueue() {
     await this.queue.loadEntries();
     await this.queueUpdate();
+  }
+
+  reset() {
+    this.audio.pause();
+    this.audio.removeAttribute("src");
+    this.audio.load();
+
+    this.queue.setQueue([], 0, 0);
+
+    this.playing = false;
+    this.loading = false;
+    this.showPlayer = false;
+    this.currentItem = null;
+    this.currentTime = 0;
+    this.duration = 0;
+    this.buffered = 0;
+    this.trackEventSent = false;
+
+    this.updateMediaSession();
   }
 
   private async refreshQueue() {

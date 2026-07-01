@@ -2,12 +2,14 @@
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError, setApiClientAuth } from "$lib";
   import type { AuthQuickConnectInitiate } from "$lib/api/types.js";
+  import { getMusicManager } from "$lib/music-manager.svelte";
   import { Button } from "@nanoteck137/nano-ui";
   import { LogIn, QrCode, RefreshCw } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
 
   const { data } = $props();
   const apiClient = getApiClient();
+  const musicManager = getMusicManager();
 
   type LoginSuccess = {
     isSuccess: true;
@@ -170,6 +172,7 @@
           localStorage.setItem("token", res.data.token);
           setApiClientAuth(apiClient, res.data.token);
 
+          musicManager.initQueue();
           invalidateAll();
         } else if (res.data.status === "pending") {
           return;
@@ -234,6 +237,7 @@
 
           localStorage.setItem("token", res.token);
           setApiClientAuth(apiClient, res.token);
+          musicManager.initQueue();
           invalidateAll();
         }}
       >

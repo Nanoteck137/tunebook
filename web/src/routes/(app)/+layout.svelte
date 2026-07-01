@@ -20,6 +20,7 @@
   import Link from "$lib/components/Link.svelte";
   import { browser } from "$app/environment";
   import { fade, fly } from "svelte/transition";
+  import { onMount } from "svelte";
   import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
   import toast, { Toaster } from "svelte-5-french-toast";
   import { getApiAddress, handleApiError, setApiClient } from "$lib";
@@ -42,7 +43,13 @@
     localStorage.getItem("token") ?? undefined,
   );
 
-  setMusicManager(apiClient);
+  const musicManager = setMusicManager(apiClient);
+
+  onMount(() => {
+    if (data.user) {
+      musicManager.initQueue();
+    }
+  });
 
   setFavorites(apiClient);
 
@@ -220,6 +227,7 @@
               <DropdownMenu.Item
                 onSelect={() => {
                   localStorage.removeItem("token");
+                  musicManager.reset();
                   goto("/", { invalidateAll: true });
                 }}
               >
@@ -369,6 +377,7 @@
           icon={LogOut}
           onClick={() => {
             localStorage.removeItem("token");
+            musicManager.reset();
             invalidateAll();
             goto("/");
 
