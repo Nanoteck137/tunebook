@@ -1,7 +1,7 @@
 import { getApiAddress, setApiClientAuth } from "$lib";
 import { ApiClient } from "$lib/api/client";
 import type { GetMe } from "$lib/api/types";
-import { error } from "@sveltejs/kit";
+import { redirect } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 
 export const prerender = false;
@@ -18,11 +18,13 @@ export const load: LayoutLoad = async ({ url }) => {
     if (!res.success) {
       console.error("Get Me API Error", res.error.message);
       user = null;
-
-      throw error(res.error.code, { message: res.error.message });
     } else {
       user = res.data;
     }
+  }
+
+  if (!user && !url.pathname.startsWith("/login")) {
+    throw redirect(303, "/login");
   }
 
   return {
