@@ -41,10 +41,12 @@ class Queue {
   totalItems = $state(0);
 
   private apiClient: ApiClient;
+  private queueId: string;
   private loadedItems = $state(new Map<number, MediaItem>());
 
-  constructor(apiClient: ApiClient) {
+  constructor(apiClient: ApiClient, queueId: string) {
     this.apiClient = apiClient;
+    this.queueId = queueId;
   }
 
   setQueue(entries: QueueEntry[], index: number, totalItems: number) {
@@ -55,7 +57,7 @@ class Queue {
   }
 
   async loadEntries() {
-    const res = await this.apiClient.getQueueIds();
+    const res = await this.apiClient.getQueueIds(this.queueId);
     if (!res.success) {
       handleApiError(res.error);
       return;
@@ -74,7 +76,7 @@ class Queue {
     const cached = this.loadedItems.get(index);
     if (cached) return cached;
 
-    const res = await this.apiClient.getQueueItemAtIndex(index.toString());
+    const res = await this.apiClient.getQueueItemAtIndex(this.queueId, index.toString());
     if (!res.success) {
       handleApiError(res.error);
       return null;
@@ -99,7 +101,7 @@ class Queue {
       }
 
       for (const page of pages.keys()) {
-        const res = await this.apiClient.getQueue({
+        const res = await this.apiClient.getQueue(this.queueId, {
           query: {
             page: page.toString(),
             perPage: QUEUE_PAGE_SIZE.toString(),
@@ -177,6 +179,15 @@ class Queue {
   }
 }
 
+function getDeviceId(): string {
+  let deviceId = localStorage.getItem("device-id");
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+    localStorage.setItem("device-id", deviceId);
+  }
+  return deviceId;
+}
+
 function getVolume(): number {
   const volume = localStorage.getItem("player-volume");
   if (volume) {
@@ -237,11 +248,13 @@ export class MusicManager {
 
   private trackEventSent = $state(false);
 
+  #deviceId = getDeviceId();
+
   constructor(apiClient: ApiClient) {
     this.audio = new Audio();
 
     this.apiClient = apiClient;
-    this.queue = new Queue(apiClient);
+    this.queue = new Queue(apiClient, this.#deviceId);
 
     this.setupAudio();
     this.setupMediaSession();
@@ -393,7 +406,7 @@ export class MusicManager {
     const entry = this.queue.entries[index];
     if (!entry) return;
 
-    const res = await this.apiClient.removeQueueItem(entry.queueItemId);
+    const res = await this.apiClient.removeQueueItem(this.#deviceId, entry.queueItemId);
     if (!res.success) {
       handleApiError(res.error);
       return;
@@ -405,7 +418,7 @@ export class MusicManager {
   async clearQueue(update = true) {
     await this.sendTrackEvent();
 
-    const res = await this.apiClient.clearQueue();
+    const res = await this.apiClient.clearQueue(this.#deviceId);
     if (!res.success) {
       handleApiError(res.error);
       return;
@@ -419,7 +432,7 @@ export class MusicManager {
   async setQueueIndex(index: number) {
     await this.sendTrackEvent();
 
-    const res = await this.apiClient.setQueuePosition({ index });
+    const res = await this.apiClient.setQueuePosition(this.#deviceId, { index });
     if (!res.success) {
       handleApiError(res.error);
       return;
@@ -514,7 +527,7 @@ export class MusicManager {
     if (trackIds.length === 0) return;
 
     if (options.append === "back") {
-      const res = await this.apiClient.addQueueItems({
+      const res = await this.apiClient.addQueueItems(this.#deviceId, {
         trackIds,
         position: "end",
       });
@@ -531,7 +544,7 @@ export class MusicManager {
         }
       }
 
-      const res = await this.apiClient.replaceQueue({
+      const res = await this.apiClient.replaceQueue(this.#deviceId, {
         trackIds,
         currentIndex,
         shuffle: options.shuffle,
@@ -579,7 +592,7 @@ export class MusicManager {
       }
     }
 
-    const res = await this.apiClient.replaceQueue({
+    const res = await this.apiClient.replaceQueue(this.#deviceId, {
       trackIds: params.trackIds,
       currentIndex,
       shuffle: false,

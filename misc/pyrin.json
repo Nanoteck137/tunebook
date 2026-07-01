@@ -1384,7 +1384,7 @@
       "type": "api",
       "name": "AddQueueItems",
       "method": "POST",
-      "path": "/api/v1/queue/items",
+      "path": "/api/v1/queues/:queueId/items",
       "body": "AddQueueItemsBody"
     },
     {
@@ -1458,7 +1458,7 @@
       "type": "api",
       "name": "ClearQueue",
       "method": "DELETE",
-      "path": "/api/v1/queue"
+      "path": "/api/v1/queues/:queueId"
     },
     {
       "type": "api",
@@ -1531,7 +1531,7 @@
       "type": "normal",
       "name": "GetAlbumImage",
       "method": "GET",
-      "path": "/files/albums/images/:albumId/:image"
+      "path": "/files/albums/images/:albumId"
     },
     {
       "type": "api",
@@ -1572,7 +1572,7 @@
       "type": "normal",
       "name": "GetArtistImage",
       "method": "GET",
-      "path": "/files/artists/images/:artistId/:image"
+      "path": "/files/artists/images/:artistId"
     },
     {
       "type": "api",
@@ -1613,7 +1613,7 @@
       "type": "normal",
       "name": "GetPlaylistImage",
       "method": "GET",
-      "path": "/files/playlists/images/:playlistId/:image"
+      "path": "/files/playlists/images/:playlistId"
     },
     {
       "type": "api",
@@ -1640,21 +1640,21 @@
       "type": "api",
       "name": "GetQueue",
       "method": "GET",
-      "path": "/api/v1/queue",
+      "path": "/api/v1/queues/:queueId",
       "response": "GetQueue"
     },
     {
       "type": "api",
       "name": "GetQueueIds",
       "method": "GET",
-      "path": "/api/v1/queue/ids",
+      "path": "/api/v1/queues/:queueId/ids",
       "response": "GetQueueIds"
     },
     {
       "type": "api",
       "name": "GetQueueItemAtIndex",
       "method": "GET",
-      "path": "/api/v1/queue/items/:position",
+      "path": "/api/v1/queues/:queueId/items/:position",
       "response": "GetQueueItem"
     },
     {
@@ -1710,7 +1710,7 @@
       "type": "normal",
       "name": "GetUserImage",
       "method": "GET",
-      "path": "/files/users/images/:userId/:image"
+      "path": "/files/users/images/:userId"
     },
     {
       "type": "api",
@@ -1752,7 +1752,7 @@
       "type": "api",
       "name": "RemoveQueueItem",
       "method": "DELETE",
-      "path": "/api/v1/queue/items/:itemId"
+      "path": "/api/v1/queues/:queueId/items/:itemId"
     },
     {
       "type": "api",
@@ -1765,7 +1765,7 @@
       "type": "api",
       "name": "ReplaceQueue",
       "method": "PUT",
-      "path": "/api/v1/queue",
+      "path": "/api/v1/queues/:queueId",
       "body": "ReplaceQueueBody"
     },
     {
@@ -1813,7 +1813,7 @@
       "type": "api",
       "name": "SetQueuePosition",
       "method": "PATCH",
-      "path": "/api/v1/queue/position",
+      "path": "/api/v1/queues/:queueId/position",
       "body": "SetQueuePositionBody"
     },
     {

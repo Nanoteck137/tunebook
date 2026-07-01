@@ -8,6 +8,7 @@
   let { data } = $props();
 
   const musicManager = getMusicManager();
+  const deviceId = localStorage.getItem("device-id") ?? "";
 
   type QueueListItem = {
     queueItemId: string;
@@ -35,7 +36,7 @@
     if (loading || !hasMore) return;
     loading = true;
 
-    const res = await data.apiClient.getQueue({
+    const res = await data.apiClient.getQueue(deviceId, {
       query: { page: page.toString() },
     });
 

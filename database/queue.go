@@ -10,7 +10,8 @@ import (
 var createQueueId = createIdGenerator(10)
 
 type Queue struct {
-	Id string `db:"id"`
+	Id     string `db:"id"`
+	UserId string `db:"user_id"`
 
 	CurrentIndex int `db:"current_index"`
 
@@ -22,6 +23,7 @@ func QueueQuery() *goqu.SelectDataset {
 	query := dialect.From("queues").
 		Select(
 			"queues.id",
+			"queues.user_id",
 
 			"queues.current_index",
 
@@ -43,7 +45,8 @@ func (db DB) GetQueueById(
 }
 
 type CreateQueueParams struct {
-	Id string
+	Id     string
+	UserId string
 
 	CurrentIndex int
 
@@ -66,7 +69,8 @@ func (db DB) CreateQueue(
 	}
 
 	query := dialect.Insert("queues").Rows(goqu.Record{
-		"id": params.Id,
+		"id":     params.Id,
+		"user_id": params.UserId,
 
 		"current_index": params.CurrentIndex,
 
@@ -83,8 +87,6 @@ func (db DB) CreateQueue(
 }
 
 type QueueChanges struct {
-	Name Change[string]
-
 	CurrentIndex Change[int]
 
 	Created Change[int64]
@@ -96,8 +98,6 @@ func (db DB) UpdateQueue(
 	changes QueueChanges,
 ) error {
 	record := goqu.Record{}
-
-	addToRecord(record, "name", changes.Name)
 
 	addToRecord(record, "current_index", changes.CurrentIndex)
 

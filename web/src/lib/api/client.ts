@@ -15,8 +15,8 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  addQueueItems(body: api.AddQueueItemsBody, options?: ExtraOptions) {
-    return this.request("/api/v1/queue/items", "POST", z.undefined(), z.any(), body, options)
+  addQueueItems(queueId: string, body: api.AddQueueItemsBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
   
@@ -52,8 +52,8 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/auth/quick-connect/initiate", "POST", api.AuthQuickConnectInitiate, z.any(), undefined, options)
   }
   
-  clearQueue(options?: ExtraOptions) {
-    return this.request("/api/v1/queue", "DELETE", z.undefined(), z.any(), undefined, options)
+  clearQueue(queueId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
@@ -151,16 +151,16 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/playlists", "GET", api.GetPlaylists, z.any(), undefined, options)
   }
   
-  getQueue(options?: ExtraOptions) {
-    return this.request("/api/v1/queue", "GET", api.GetQueue, z.any(), undefined, options)
+  getQueue(queueId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}`, "GET", api.GetQueue, z.any(), undefined, options)
   }
   
-  getQueueIds(options?: ExtraOptions) {
-    return this.request("/api/v1/queue/ids", "GET", api.GetQueueIds, z.any(), undefined, options)
+  getQueueIds(queueId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/ids`, "GET", api.GetQueueIds, z.any(), undefined, options)
   }
   
-  getQueueItemAtIndex(position: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/queue/items/${position}`, "GET", api.GetQueueItem, z.any(), undefined, options)
+  getQueueItemAtIndex(queueId: string, position: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/items/${position}`, "GET", api.GetQueueItem, z.any(), undefined, options)
   }
   
   getQuickPlaylistIds(options?: ExtraOptions) {
@@ -212,16 +212,16 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "DELETE", z.undefined(), z.any(), body, options)
   }
   
-  removeQueueItem(itemId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/queue/items/${itemId}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  removeQueueItem(queueId: string, itemId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/items/${itemId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   reorderPlaylistItems(playlistId: string, body: api.ReorderPlaylistItemsBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  replaceQueue(body: api.ReplaceQueueBody, options?: ExtraOptions) {
-    return this.request("/api/v1/queue", "PUT", z.undefined(), z.any(), body, options)
+  replaceQueue(queueId: string, body: api.ReplaceQueueBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}`, "PUT", z.undefined(), z.any(), body, options)
   }
   
   runTask(taskName: string, options?: ExtraOptions) {
@@ -248,8 +248,8 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/search/users", "GET", api.SearchUsers, z.any(), undefined, options)
   }
   
-  setQueuePosition(body: api.SetQueuePositionBody, options?: ExtraOptions) {
-    return this.request("/api/v1/queue/position", "PATCH", z.undefined(), z.any(), body, options)
+  setQueuePosition(queueId: string, body: api.SetQueuePositionBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/position`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   setQuickPlaylist(body: api.SetQuickPlaylistBody, options?: ExtraOptions) {
@@ -290,8 +290,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
-  addQueueItems() {
-    return createUrl(this.baseUrl, "/api/v1/queue/items")
+  addQueueItems(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/items`)
   }
   
   authCallback() {
@@ -330,8 +330,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/auth/quick-connect/initiate")
   }
   
-  clearQueue() {
-    return createUrl(this.baseUrl, "/api/v1/queue")
+  clearQueue(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}`)
   }
   
   createApiToken() {
@@ -374,8 +374,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/albums/${id}`)
   }
   
-  getAlbumImage(albumId: string, image: string) {
-    return createUrl(this.baseUrl, `/files/albums/images/${albumId}/${image}`)
+  getAlbumImage(albumId: string) {
+    return createUrl(this.baseUrl, `/files/albums/images/${albumId}`)
   }
   
   getAlbumTracks(id: string) {
@@ -398,8 +398,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/artists/${id}`)
   }
   
-  getArtistImage(artistId: string, image: string) {
-    return createUrl(this.baseUrl, `/files/artists/images/${artistId}/${image}`)
+  getArtistImage(artistId: string) {
+    return createUrl(this.baseUrl, `/files/artists/images/${artistId}`)
   }
   
   getArtists() {
@@ -422,8 +422,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}`)
   }
   
-  getPlaylistImage(playlistId: string, image: string) {
-    return createUrl(this.baseUrl, `/files/playlists/images/${playlistId}/${image}`)
+  getPlaylistImage(playlistId: string) {
+    return createUrl(this.baseUrl, `/files/playlists/images/${playlistId}`)
   }
   
   getPlaylistItemIds(playlistId: string) {
@@ -438,16 +438,16 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/playlists")
   }
   
-  getQueue() {
-    return createUrl(this.baseUrl, "/api/v1/queue")
+  getQueue(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}`)
   }
   
-  getQueueIds() {
-    return createUrl(this.baseUrl, "/api/v1/queue/ids")
+  getQueueIds(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/ids`)
   }
   
-  getQueueItemAtIndex(position: string) {
-    return createUrl(this.baseUrl, `/api/v1/queue/items/${position}`)
+  getQueueItemAtIndex(queueId: string, position: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/items/${position}`)
   }
   
   getQuickPlaylistIds() {
@@ -478,8 +478,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}`)
   }
   
-  getUserImage(userId: string, image: string) {
-    return createUrl(this.baseUrl, `/files/users/images/${userId}/${image}`)
+  getUserImage(userId: string) {
+    return createUrl(this.baseUrl, `/files/users/images/${userId}`)
   }
   
   getUserStats(userId: string) {
@@ -502,16 +502,16 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
   }
   
-  removeQueueItem(itemId: string) {
-    return createUrl(this.baseUrl, `/api/v1/queue/items/${itemId}`)
+  removeQueueItem(queueId: string, itemId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/items/${itemId}`)
   }
   
   reorderPlaylistItems(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items/reorder`)
   }
   
-  replaceQueue() {
-    return createUrl(this.baseUrl, "/api/v1/queue")
+  replaceQueue(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}`)
   }
   
   runTask(taskName: string) {
@@ -538,8 +538,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/search/users")
   }
   
-  setQueuePosition() {
-    return createUrl(this.baseUrl, "/api/v1/queue/position")
+  setQueuePosition(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/position`)
   }
   
   setQuickPlaylist() {

@@ -14,6 +14,7 @@ var createQueueItemId = createIdGenerator(32)
 type QueueItem struct {
 	Id       string `db:"id"`
 	QueueId  string `db:"queue_id"`
+	UserId   string `db:"user_id"`
 	TrackId  string `db:"track_id"`
 	Position int    `db:"position"`
 	Created  int64  `db:"created"`
@@ -36,6 +37,7 @@ func QueueItemQuery() *goqu.SelectDataset {
 		Select(
 			"queue_items.id",
 			"queue_items.queue_id",
+			"queue_items.user_id",
 			"queue_items.track_id",
 			"queue_items.position",
 			"queue_items.created",
@@ -55,6 +57,7 @@ func QueueItemTrackQuery() *goqu.SelectDataset {
 
 type CreateQueueItemsParams struct {
 	QueueId string
+	UserId  string
 	Items   []CreateQueueItemParams
 }
 
@@ -71,6 +74,7 @@ func (db DB) CreateQueueItems(ctx context.Context, params CreateQueueItemsParams
 		rows[i] = goqu.Record{
 			"id":       createQueueItemId(),
 			"queue_id": params.QueueId,
+			"user_id":  params.UserId,
 			"track_id": item.TrackId,
 			"position": item.Position,
 			"created":  t,

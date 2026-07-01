@@ -83,7 +83,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetQueue",
-			Path:         "/queue",
+			Path:         "/queues/:queueId",
 			Method:       http.MethodGet,
 			ResponseType: GetQueue{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -98,8 +98,9 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				result, err := app.QueueService().GetQueue(
 					ctx,
 					service.GetQueueParams{
-						Page:   getPageParams(q, 50),
-						UserId: user.Id,
+						Page:    getPageParams(q, 50),
+						QueueId: c.Param("queueId"),
+						UserId:  user.Id,
 					},
 				)
 				if err != nil {
@@ -121,7 +122,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:         "GetQueueIds",
-			Path:         "/queue/ids",
+			Path:         "/queues/:queueId/ids",
 			Method:       http.MethodGet,
 			ResponseType: GetQueueIds{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -132,7 +133,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				result, err := app.QueueService().GetQueueIds(ctx, user.Id)
+				result, err := app.QueueService().GetQueueIds(ctx, c.Param("queueId"), user.Id)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
@@ -151,7 +152,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:         "GetQueueItemAtIndex",
-			Path:         "/queue/items/:position",
+			Path:         "/queues/:queueId/items/:position",
 			Method:       http.MethodGet,
 			ResponseType: GetQueueItem{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -171,8 +172,9 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				item, err := app.QueueService().GetQueueItemAtIndex(
 					ctx,
 					service.GetQueueItemAtIndexParams{
-						UserId: user.Id,
-						Index:  position,
+						QueueId: c.Param("queueId"),
+						UserId:  user.Id,
+						Index:   position,
 					},
 				)
 				if err != nil {
@@ -187,7 +189,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:     "ReplaceQueue",
-			Path:     "/queue",
+			Path:     "/queues/:queueId",
 			Method:   http.MethodPut,
 			BodyType: ReplaceQueueBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -210,6 +212,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 				err = app.QueueService().ReplaceQueue(ctx,
 					service.ReplaceQueueParams{
+						QueueId:      c.Param("queueId"),
 						UserId:       user.Id,
 						TrackIds:     body.TrackIds,
 						CurrentIndex: currentIndex,
@@ -226,7 +229,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:     "AddQueueItems",
-			Path:     "/queue/items",
+			Path:     "/queues/:queueId/items",
 			Method:   http.MethodPost,
 			BodyType: AddQueueItemsBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -245,6 +248,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				err = app.QueueService().AddItems(
 					ctx,
 					service.AddItemsParams{
+						QueueId:  c.Param("queueId"),
 						UserId:   user.Id,
 						TrackIds: body.TrackIds,
 						Position: body.Position,
@@ -260,7 +264,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:   "RemoveQueueItem",
-			Path:   "/queue/items/:itemId",
+			Path:   "/queues/:queueId/items/:itemId",
 			Method: http.MethodDelete,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				ctx := context.Background()
@@ -273,8 +277,9 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				err = app.QueueService().RemoveItem(
 					ctx,
 					service.RemoveItemParams{
-						UserId: user.Id,
-						ItemId: c.Param("itemId"),
+						QueueId: c.Param("queueId"),
+						UserId:  user.Id,
+						ItemId:  c.Param("itemId"),
 					},
 				)
 				if err != nil {
@@ -287,7 +292,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:     "SetQueuePosition",
-			Path:     "/queue/position",
+			Path:     "/queues/:queueId/position",
 			Method:   http.MethodPatch,
 			BodyType: SetQueuePositionBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -306,8 +311,9 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				err = app.QueueService().SetPosition(
 					ctx,
 					service.SetPositionParams{
-						UserId: user.Id,
-						Index:  body.Index,
+						QueueId: c.Param("queueId"),
+						UserId:  user.Id,
+						Index:   body.Index,
 					},
 				)
 				if err != nil {
@@ -320,7 +326,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 
 		pyrin.ApiHandler{
 			Name:   "ClearQueue",
-			Path:   "/queue",
+			Path:   "/queues/:queueId",
 			Method: http.MethodDelete,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				ctx := context.Background()
@@ -330,7 +336,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.QueueService().ClearQueue(ctx, user.Id)
+				err = app.QueueService().ClearQueue(ctx, c.Param("queueId"), user.Id)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
