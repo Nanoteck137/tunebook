@@ -1,11 +1,44 @@
 <script lang="ts">
+  import { Button, Separator } from "@nanoteck137/nano-ui";
+  import { Play } from "lucide-svelte";
+  import { getMusicManager } from "$lib/music-manager.svelte";
+  import Pagination from "$lib/components/Pagination.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import Pagination from "$lib/components/Pagination.svelte";
-  import { Separator } from "@nanoteck137/nano-ui";
 
   let { data } = $props();
+
+  const musicManager = getMusicManager();
+
+  async function playAll() {
+    const trackIds = data.tracks.map((t) => t.id);
+    await musicManager.addTracks({ trackIds });
+  }
 </script>
+
+<div class="flex flex-col gap-4">
+  <div
+    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <div class="flex items-baseline gap-2">
+      <h1 class="text-xl font-bold">Favorites</h1>
+      {#if data.page}
+        <span class="text-sm text-muted-foreground"
+          >{data.page.totalItems}</span
+        >
+      {/if}
+    </div>
+
+    <div class="flex items-center gap-2">
+      <Button size="sm" onclick={() => playAll()}>
+        <Play size={14} />
+        Play All
+      </Button>
+    </div>
+  </div>
+</div>
+
+<Spacer size="lg" />
 
 <TrackList
   totalTracks={data.page.totalItems}
