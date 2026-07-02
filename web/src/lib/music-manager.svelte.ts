@@ -76,7 +76,10 @@ class Queue {
     const cached = this.loadedItems.get(index);
     if (cached) return cached;
 
-    const res = await this.apiClient.getQueueItemAtIndex(this.queueId, index.toString());
+    const res = await this.apiClient.getQueueItemAtIndex(
+      this.queueId,
+      index.toString(),
+    );
     if (!res.success) {
       handleApiError(res.error);
       return null;
@@ -132,42 +135,29 @@ class Queue {
     return this.loadedItems.get(this.index) ?? null;
   }
 
-  getCurrentItem(): MediaItem | null {
-    return this.getCurrentMediaItem();
+  async #loadRange(start: number, end: number): Promise<MediaItem[]> {
+    const indices: number[] = [];
+    for (let i = start; i < end; i++) indices.push(i);
+
+    const loaded = await this.loadItems(indices);
+    const result: MediaItem[] = [];
+    for (let i = start; i < end; i++) {
+      const item = loaded.get(i);
+      if (item) result.push(item);
+    }
+    return result;
   }
 
   async getPreviousItems(page: number, perPage: number): Promise<MediaItem[]> {
     const start = page * perPage;
     const end = Math.min(this.index, start + perPage);
-    const indices: number[] = [];
-    for (let i = start; i < end; i++) indices.push(i);
-
-    const loaded = await this.loadItems(indices);
-    const result: MediaItem[] = [];
-    for (let i = start; i < end; i++) {
-      const item = loaded.get(i);
-      if (item) result.push(item);
-    }
-    return result;
+    return this.#loadRange(start, end);
   }
 
   async getNextItems(page: number, perPage: number): Promise<MediaItem[]> {
     const start = this.index + 1 + page * perPage;
     const end = Math.min(this.totalItems, start + perPage);
-    const indices: number[] = [];
-    for (let i = start; i < end; i++) indices.push(i);
-
-    const loaded = await this.loadItems(indices);
-    const result: MediaItem[] = [];
-    for (let i = start; i < end; i++) {
-      const item = loaded.get(i);
-      if (item) result.push(item);
-    }
-    return result;
-  }
-
-  async getItemAtIndex(index: number): Promise<MediaItem | null> {
-    return this.loadItem(index);
+    return this.#loadRange(start, end);
   }
 
   isEndOfQueue() {
@@ -207,7 +197,7 @@ function getMuted(): boolean {
 }
 
 export class MusicManager {
-  private audio: HTMLAudioElement;
+  #audio: HTMLAudioElement;
 
   private apiClient: ApiClient;
   queue: Queue;
@@ -228,7 +218,7 @@ export class MusicManager {
 
   set volume(v: number) {
     this.#volume = v;
-    this.audio.volume = v;
+    this.#audio.volume = v;
     localStorage.setItem("player-volume", v.toString());
   }
 
@@ -238,7 +228,7 @@ export class MusicManager {
 
   set muted(m: boolean) {
     this.#muted = m;
-    this.audio.volume = m ? 0 : this.#volume;
+    this.#audio.volume = m ? 0 : this.#volume;
     localStorage.setItem("player-muted", m.toString());
   }
 
@@ -246,32 +236,31 @@ export class MusicManager {
 
   currentItem = $state<MediaItem | null>(null);
 
-  private trackEventSent = $state(false);
+  #trackEventSent = $state(false);
 
   #deviceId = getDeviceId();
 
   constructor(apiClient: ApiClient) {
-    this.audio = new Audio();
+    this.#audio = new Audio();
 
     this.apiClient = apiClient;
     this.queue = new Queue(apiClient, this.#deviceId);
 
-    this.setupAudio();
-    this.setupMediaSession();
+    this.#setupAudio();
+    this.#setupMediaSession();
 
-    this.volume = getVolume();
-    this.muted = getMuted();
+    this.#audio.volume = this.#muted ? 0 : this.#volume;
   }
 
   async initQueue() {
     await this.queue.loadEntries();
-    await this.queueUpdate();
+    await this.#queueUpdate();
   }
 
   reset() {
-    this.audio.pause();
-    this.audio.removeAttribute("src");
-    this.audio.load();
+    this.#audio.pause();
+    this.#audio.removeAttribute("src");
+    this.#audio.load();
 
     this.queue.setQueue([], 0, 0);
 
@@ -282,66 +271,58 @@ export class MusicManager {
     this.currentTime = 0;
     this.duration = 0;
     this.buffered = 0;
-    this.trackEventSent = false;
+    this.#trackEventSent = false;
 
-    this.updateMediaSession();
+    this.#updateMediaSession();
   }
 
-  private async refreshQueue() {
+  async #refreshQueue() {
     await this.queue.loadEntries();
-    await this.queueUpdate();
+    await this.#queueUpdate();
   }
 
-  setupAudio() {
-    this.audio.addEventListener("canplay", () => {
+  #setupAudio() {
+    this.#audio.addEventListener("canplay", () => {
       this.loading = false;
     });
 
-    this.audio.addEventListener("loadstart", () => {
+    this.#audio.addEventListener("loadstart", () => {
       this.loading = true;
     });
 
-    this.audio.addEventListener("loadedmetadata", () => {
-      this.currentTime = this.audio.currentTime;
-      this.duration = this.audio.duration;
+    this.#audio.addEventListener("loadedmetadata", () => {
+      this.currentTime = this.#audio.currentTime;
+      this.duration = this.#audio.duration;
     });
 
-    this.audio.addEventListener("progress", () => {
-      const tr = this.audio.buffered;
+    this.#audio.addEventListener("progress", () => {
+      const tr = this.#audio.buffered;
       if (tr.length > 0) {
         const end = tr.end(tr.length - 1);
         this.buffered = this.duration > 0 ? end / this.duration : 0;
       }
     });
 
-    this.audio.addEventListener("timeupdate", () => {
-      this.currentTime = this.audio.currentTime;
+    this.#audio.addEventListener("timeupdate", () => {
+      this.currentTime = this.#audio.currentTime;
     });
 
-    this.audio.addEventListener("loadeddata", () => {
-      // console.log("loadeddata");
-    });
-
-    this.audio.addEventListener("playing", () => {
+    this.#audio.addEventListener("playing", () => {
       this.playing = true;
-      this.updateMediaSession();
+      this.#updateMediaSession();
     });
 
-    this.audio.addEventListener("pause", () => {
+    this.#audio.addEventListener("pause", () => {
       this.playing = false;
-      this.updateMediaSession();
+      this.#updateMediaSession();
     });
 
-    this.audio.addEventListener("load", () => {
-      // console.log("load");
-    });
-
-    this.audio.addEventListener("ended", async () => {
+    this.#audio.addEventListener("ended", async () => {
       await this.nextTrack();
     });
   }
 
-  private setupMediaSession() {
+  #setupMediaSession() {
     if (!("mediaSession" in navigator)) return;
 
     navigator.mediaSession.setActionHandler("play", () => this.play());
@@ -358,14 +339,14 @@ export class MusicManager {
       }
     });
     navigator.mediaSession.setActionHandler("seekforward", () => {
-      this.setPosition(Math.min(this.audio.currentTime + 10, this.duration));
+      this.setPosition(Math.min(this.#audio.currentTime + 10, this.duration));
     });
     navigator.mediaSession.setActionHandler("seekbackward", () => {
-      this.setPosition(Math.max(this.audio.currentTime - 10, 0));
+      this.setPosition(Math.max(this.#audio.currentTime - 10, 0));
     });
   }
 
-  private updateMediaSession() {
+  #updateMediaSession() {
     if (!("mediaSession" in navigator)) return;
 
     const item = this.currentItem;
@@ -384,21 +365,11 @@ export class MusicManager {
     navigator.mediaSession.playbackState = this.playing ? "playing" : "paused";
   }
 
-  private resetTrackEventTracking() {
-    this.trackEventSent = false;
-  }
-
-  private async sendTrackEvent() {
-    if (this.trackEventSent) {
-      return;
-    }
-
-    if (!this.currentItem) {
-      return;
-    }
+  async #checkSendTrackEvent() {
+    if (this.#trackEventSent) return;
+    if (!this.currentItem) return;
 
     const pct = this.duration > 0 ? this.currentTime / this.duration : 0;
-
     const percentPlayed = Math.round(pct * 100);
 
     const res = await this.apiClient.pushTrackHistory({
@@ -408,32 +379,35 @@ export class MusicManager {
     });
 
     if (!res.success) {
-      console.log("failed to push track history", res.error);
+      handleApiError(res.error);
       return;
     }
 
-    this.trackEventSent = true;
+    this.#trackEventSent = true;
   }
 
   setPosition(position: number) {
-    this.audio.currentTime = position;
+    this.#audio.currentTime = position;
   }
 
   async removeQueueItem(index: number) {
     const entry = this.queue.entries[index];
     if (!entry) return;
 
-    const res = await this.apiClient.removeQueueItem(this.#deviceId, entry.queueItemId);
+    const res = await this.apiClient.removeQueueItem(
+      this.#deviceId,
+      entry.queueItemId,
+    );
     if (!res.success) {
       handleApiError(res.error);
       return;
     }
 
-    await this.refreshQueue();
+    await this.#refreshQueue();
   }
 
   async clearQueue(update = true) {
-    await this.sendTrackEvent();
+    await this.#checkSendTrackEvent();
 
     const res = await this.apiClient.clearQueue(this.#deviceId);
     if (!res.success) {
@@ -442,47 +416,55 @@ export class MusicManager {
     }
 
     if (update) {
-      await this.refreshQueue();
+      await this.#refreshQueue();
     }
   }
 
   async setQueueIndex(index: number) {
-    await this.sendTrackEvent();
+    await this.#checkSendTrackEvent();
 
-    const res = await this.apiClient.setQueuePosition(this.#deviceId, { index });
+    const res = await this.apiClient.setQueuePosition(this.#deviceId, {
+      index,
+    });
     if (!res.success) {
       handleApiError(res.error);
       return;
     }
 
     await this.queue.loadEntries();
-    await this.queueUpdate();
+    await this.#queueUpdate();
   }
 
-  async queueUpdate() {
-    this.showPlayer = !this.queue.isQueueEmpty();
-
+  async #resolveCurrentMediaItem(): Promise<MediaItem | null> {
     let mediaItem = this.queue.getCurrentMediaItem();
     if (!mediaItem && !this.queue.isQueueEmpty()) {
       mediaItem = await this.queue.loadItem(this.queue.index);
     }
+    return mediaItem;
+  }
 
+  #applyMediaItem(mediaItem: MediaItem | null) {
     if (mediaItem) {
-      if (mediaItem?.trackId !== this.currentItem?.trackId) {
-        this.resetTrackEventTracking();
+      if (mediaItem.trackId !== this.currentItem?.trackId) {
+        this.#trackEventSent = false;
       }
 
       const src = this.apiClient.url.streamTrack(mediaItem.trackId).toString();
-      this.audio.src = src;
+      this.#audio.src = src;
 
       this.currentItem = mediaItem;
     } else {
-      this.audio.removeAttribute("src");
-      this.audio.load();
+      this.#audio.removeAttribute("src");
+      this.#audio.load();
       this.currentItem = null;
     }
+  }
 
-    this.updateMediaSession();
+  async #queueUpdate() {
+    this.showPlayer = !this.queue.isQueueEmpty();
+    const mediaItem = await this.#resolveCurrentMediaItem();
+    this.#applyMediaItem(mediaItem);
+    this.#updateMediaSession();
   }
 
   async nextTrack() {
@@ -496,11 +478,11 @@ export class MusicManager {
   }
 
   play() {
-    this.audio.play();
+    this.#audio.play();
   }
 
   pause() {
-    this.audio.pause();
+    this.#audio.pause();
   }
 
   async queueRequest(
@@ -526,10 +508,18 @@ export class MusicManager {
 
     let sourceId: string;
     switch (request.type) {
-      case "addArtist": sourceId = request.artistId; break;
-      case "addAlbum": sourceId = request.albumId; break;
-      case "addPlaylist": sourceId = request.playlistId; break;
-      case "addFilter": sourceId = request.filterId; break;
+      case "addArtist":
+        sourceId = request.artistId;
+        break;
+      case "addAlbum":
+        sourceId = request.albumId;
+        break;
+      case "addPlaylist":
+        sourceId = request.playlistId;
+        break;
+      case "addFilter":
+        sourceId = request.filterId;
+        break;
     }
 
     const position = options.append === "back" ? "end" : "replace";
@@ -547,7 +537,7 @@ export class MusicManager {
       return;
     }
 
-    await this.refreshQueue();
+    await this.#refreshQueue();
 
     if (!options.append) {
       this.play();
@@ -590,7 +580,7 @@ export class MusicManager {
       return;
     }
 
-    await this.refreshQueue();
+    await this.#refreshQueue();
     this.play();
   }
 }
