@@ -63,6 +63,16 @@ type AddQueueItemsBody struct {
 	Position string   `json:"position"`
 }
 
+type AddToQueueBody struct {
+	Source              string   `json:"source"`
+	SourceId            string   `json:"sourceId"`
+	TrackIds            []string `json:"trackIds,omitempty"`
+	Position            string   `json:"position"`
+	Shuffle             bool     `json:"shuffle,omitempty"`
+	CurrentIndex        *int     `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+}
+
 type SetQueuePositionBody struct {
 	Index int `json:"index"`
 }
@@ -133,7 +143,8 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				result, err := app.QueueService().GetQueueIds(ctx, c.Param("queueId"), user.Id)
+				result, err := app.QueueService().GetQueueIds(
+					ctx, c.Param("queueId"), user.Id)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
@@ -210,7 +221,8 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					currentIndex = *body.CurrentIndex
 				}
 
-				err = app.QueueService().ReplaceQueue(ctx,
+				err = app.QueueService().ReplaceQueue(
+					ctx,
 					service.ReplaceQueueParams{
 						QueueId:      c.Param("queueId"),
 						UserId:       user.Id,
@@ -291,6 +303,56 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
+			Name:     "AddToQueue",
+			Path:     "/queues/:queueId/add",
+			Method:   http.MethodPost,
+			BodyType: AddToQueueBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[AddToQueueBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				currentIndex := 0
+				if body.CurrentIndex != nil {
+					currentIndex = *body.CurrentIndex
+				}
+
+				queueIndexToTrackId := ""
+				if body.QueueIndexToTrackId != nil {
+					queueIndexToTrackId = *body.QueueIndexToTrackId
+				}
+
+				err = app.QueueService().AddToQueue(
+					ctx,
+					service.AddToQueueParams{
+						QueueId:             c.Param("queueId"),
+						UserId:              user.Id,
+						Source:              body.Source,
+						SourceId:            body.SourceId,
+						TrackIds:            body.TrackIds,
+						Position:            body.Position,
+						Shuffle:             body.Shuffle,
+						CurrentIndex:        currentIndex,
+						QueueIndexToTrackId: queueIndexToTrackId,
+					},
+				)
+				if err != nil {
+					return nil, handleQueueServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
 			Name:     "SetQueuePosition",
 			Path:     "/queues/:queueId/position",
 			Method:   http.MethodPatch,
@@ -336,7 +398,8 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.QueueService().ClearQueue(ctx, c.Param("queueId"), user.Id)
+				err = app.QueueService().ClearQueue(
+					ctx, c.Param("queueId"), user.Id)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}

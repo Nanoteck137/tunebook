@@ -17,6 +17,25 @@ export const AddQueueItemsBody = z.object({
 });
 export type AddQueueItemsBody = z.infer<typeof AddQueueItemsBody>;
 
+// Name: AddToQueueBody
+export const AddToQueueBody = z.object({
+  // Name: AddToQueueBody.source
+  "source": z.string(),
+  // Name: AddToQueueBody.sourceId
+  "sourceId": z.string(),
+  // Name: AddToQueueBody.trackIds
+  "trackIds": z.array(z.string()).optional(),
+  // Name: AddToQueueBody.position
+  "position": z.string(),
+  // Name: AddToQueueBody.shuffle
+  "shuffle": z.boolean().optional(),
+  // Name: AddToQueueBody.currentIndex
+  "currentIndex": z.number().nullable().optional(),
+  // Name: AddToQueueBody.queueIndexToTrackId
+  "queueIndexToTrackId": z.string().nullable().optional(),
+});
+export type AddToQueueBody = z.infer<typeof AddToQueueBody>;
+
 // Name: Images
 export const Images = z.object({
   // Name: Images.original
@@ -230,6 +249,13 @@ export const CreatePlaylistBody = z.object({
   "name": z.string(),
 });
 export type CreatePlaylistBody = z.infer<typeof CreatePlaylistBody>;
+
+// Name: CreateTrackFilter
+export const CreateTrackFilter = z.object({
+  // Name: CreateTrackFilter.filterId
+  "filterId": z.string(),
+});
+export type CreateTrackFilter = z.infer<typeof CreateTrackFilter>;
 
 // Name: CreateTrackFilterBody
 export const CreateTrackFilterBody = z.object({

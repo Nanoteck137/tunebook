@@ -92,6 +92,20 @@ func (db DB) GetTracksByIds(ctx context.Context, ids []string) ([]Track, error) 
 	return Multiple[Track](db, ctx, query)
 }
 
+func (db DB) GetTrackIdsByFilter(ctx context.Context, filterStr string) ([]string, error) {
+	query := TrackQuery().Select(goqu.I("tracks.id"))
+
+	a := adapter.TrackResolverAdapter{}
+	query, err := applyFilterParams(types.FilterParams{
+		Filter: filterStr,
+	}, &a, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return Multiple[string](db, ctx, query)
+}
+
 func (db DB) GetAllTrackIds(ctx context.Context) ([]string, error) {
 	query := dialect.From("tracks").
 		Select("tracks.id")
@@ -131,6 +145,27 @@ func (db DB) GetTracks(
 	}
 
 	return items, page, nil
+}
+
+func (db DB) GetTrackIdsByAlbum(ctx context.Context, albumId string) ([]string, error) {
+	query := dialect.From("tracks").
+		Select("tracks.id").
+		Where(goqu.I("tracks.album_id").Eq(albumId)).
+		Order(
+			goqu.I("tracks.number").Asc().NullsLast(),
+			goqu.I("tracks.name").Asc(),
+		)
+
+	return Multiple[string](db, ctx, query)
+}
+
+func (db DB) GetTrackIdsByArtist(ctx context.Context, artistId string) ([]string, error) {
+	query := dialect.From("tracks").
+		Select("tracks.id").
+		Where(goqu.I("tracks.artist_id").Eq(artistId)).
+		Order(goqu.I("tracks.name").Asc())
+
+	return Multiple[string](db, ctx, query)
 }
 
 func (db DB) GetTracksByAlbum(ctx context.Context, albumId string) ([]Track, error) {

@@ -507,69 +507,44 @@ export class MusicManager {
     request:
       | { type: "addArtist"; artistId: string }
       | { type: "addAlbum"; albumId: string }
-      | { type: "addPlaylist"; playlistId: string; filterId?: string },
+      | { type: "addPlaylist"; playlistId: string; filterId?: string }
+      | { type: "addFilter"; filterId: string },
     options: {
       shuffle?: boolean;
       append?: "back";
       queueIndexToTrackId?: string;
     } = {},
   ) {
-    let trackIds: string[] = [];
+    const sourceMap: Record<string, string> = {
+      addArtist: "artist",
+      addAlbum: "album",
+      addPlaylist: "playlist",
+      addFilter: "filter",
+    };
 
+    const sourceType = sourceMap[request.type];
+
+    let sourceId: string;
     switch (request.type) {
-      case "addAlbum": {
-        const res = await this.apiClient.getAlbumTracks(request.albumId);
-        if (!res.success) {
-          handleApiError(res.error);
-          return;
-        }
-        trackIds = res.data.tracks.map((t) => t.id);
-        break;
-      }
-      case "addPlaylist": {
-        const res = await this.apiClient.getPlaylistItems(request.playlistId);
-        if (!res.success) {
-          handleApiError(res.error);
-          return;
-        }
-        trackIds = res.data.items.map((t) => t.id);
-        break;
-      }
-      case "addArtist":
-        // TODO: Backend does not yet have an artist tracks endpoint
-        console.error("queueRequest for artist not implemented");
-        return;
+      case "addArtist": sourceId = request.artistId; break;
+      case "addAlbum": sourceId = request.albumId; break;
+      case "addPlaylist": sourceId = request.playlistId; break;
+      case "addFilter": sourceId = request.filterId; break;
     }
 
-    if (trackIds.length === 0) return;
+    const position = options.append === "back" ? "end" : "replace";
 
-    if (options.append === "back") {
-      const res = await this.apiClient.addQueueItems(this.#deviceId, {
-        trackIds,
-        position: "end",
-      });
-      if (!res.success) {
-        handleApiError(res.error);
-        return;
-      }
-    } else {
-      let currentIndex = 0;
-      if (options.queueIndexToTrackId) {
-        const idx = trackIds.indexOf(options.queueIndexToTrackId);
-        if (idx !== -1) {
-          currentIndex = idx;
-        }
-      }
-
-      const res = await this.apiClient.replaceQueue(this.#deviceId, {
-        trackIds,
-        currentIndex,
-        shuffle: options.shuffle,
-      });
-      if (!res.success) {
-        handleApiError(res.error);
-        return;
-      }
+    const res = await this.apiClient.addToQueue(this.#deviceId, {
+      source: sourceType,
+      sourceId,
+      position,
+      shuffle: options.shuffle ?? false,
+      currentIndex: undefined,
+      queueIndexToTrackId: options.queueIndexToTrackId ?? undefined,
+    });
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
     }
 
     await this.refreshQueue();
@@ -601,18 +576,14 @@ export class MusicManager {
       return;
     }
 
-    let currentIndex = 0;
-    if (params.trackId) {
-      const idx = params.trackIds.indexOf(params.trackId);
-      if (idx !== -1) {
-        currentIndex = idx;
-      }
-    }
-
-    const res = await this.apiClient.replaceQueue(this.#deviceId, {
+    const res = await this.apiClient.addToQueue(this.#deviceId, {
+      source: "tracks",
+      sourceId: "",
       trackIds: params.trackIds,
-      currentIndex,
+      position: "replace",
       shuffle: false,
+      currentIndex: undefined,
+      queueIndexToTrackId: params.trackId ?? undefined,
     });
     if (!res.success) {
       handleApiError(res.error);

@@ -90,7 +90,7 @@ func (db DB) CreateTrackFilter(ctx context.Context, params CreateTrackFilterPara
 		"updated": params.Updated,
 	})
 
-	_, err := Single[string](db, ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return "", err
 	}

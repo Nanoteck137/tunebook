@@ -27,6 +27,46 @@
       ]
     },
     {
+      "name": "AddToQueueBody",
+      "fields": [
+        {
+          "name": "source",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "sourceId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackIds",
+          "type": "[]string",
+          "omitEmpty": true
+        },
+        {
+          "name": "position",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "shuffle",
+          "type": "bool",
+          "omitEmpty": true
+        },
+        {
+          "name": "currentIndex",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "queueIndexToTrackId",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
       "name": "Album",
       "fields": [
         {
@@ -366,6 +406,16 @@
       "fields": [
         {
           "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "CreateTrackFilter",
+      "fields": [
+        {
+          "name": "filterId",
           "type": "string",
           "omitEmpty": false
         }
@@ -1388,6 +1438,13 @@
       "body": "AddQueueItemsBody"
     },
     {
+      "type": "api",
+      "name": "AddToQueue",
+      "method": "POST",
+      "path": "/api/v1/queues/:queueId/add",
+      "body": "AddToQueueBody"
+    },
+    {
       "type": "normal",
       "name": "AuthCallback",
       "method": "GET",
@@ -1481,6 +1538,7 @@
       "name": "CreateTrackFilter",
       "method": "POST",
       "path": "/api/v1/me/filters/tracks",
+      "response": "CreateTrackFilter",
       "body": "CreateTrackFilterBody"
     },
     {

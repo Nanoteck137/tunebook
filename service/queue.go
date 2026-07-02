@@ -275,6 +275,93 @@ func (s *QueueService) AddItems(
 	return nil
 }
 
+type AddToQueueParams struct {
+	QueueId      string
+	UserId       string
+	Source       string   // "album", "playlist", "artist", "tracks"
+	SourceId     string
+	TrackIds     []string
+	Position     string // "replace", "next", "end"
+	Shuffle      bool
+	CurrentIndex int
+	QueueIndexToTrackId string
+}
+
+func (s *QueueService) AddToQueue(
+	ctx context.Context,
+	params AddToQueueParams,
+) error {
+	var trackIds []string
+	var err error
+
+	switch params.Source {
+	case "album":
+		trackIds, err = s.db.GetTrackIdsByAlbum(ctx, params.SourceId)
+	case "playlist":
+		trackIds, err = s.db.GetPlaylistItemIds(ctx, database.GetPlaylistItemIdsParams{
+			PlaylistId: params.SourceId,
+		})
+	case "artist":
+		trackIds, err = s.db.GetTrackIdsByArtist(ctx, params.SourceId)
+	case "tracks":
+		trackIds = params.TrackIds
+	case "filter":
+		filter, err := s.db.GetTrackFilterById(ctx, params.SourceId)
+		if err != nil {
+			return queueErr.Wrap("get track filter", err)
+		}
+
+		trackIds, err = s.db.GetTrackIdsByFilter(ctx, filter.Filter)
+		if err != nil {
+			return queueErr.Wrap("get track ids by filter", err)
+		}
+	default:
+		return queueErr.New("unknown source: " + params.Source)
+	}
+
+	if err != nil {
+		return queueErr.Wrap("fetch track ids", err)
+	}
+
+	if len(trackIds) == 0 {
+		return nil
+	}
+
+	switch params.Position {
+	case "next", "end":
+		return s.AddItems(ctx, AddItemsParams{
+			QueueId:  params.QueueId,
+			UserId:   params.UserId,
+			TrackIds: trackIds,
+			Position: params.Position,
+		})
+	case "replace":
+		currentIndex := params.CurrentIndex
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					currentIndex = i
+					break
+				}
+			}
+		}
+
+		if currentIndex < 0 || currentIndex >= len(trackIds) {
+			currentIndex = 0
+		}
+
+		return s.ReplaceQueue(ctx, ReplaceQueueParams{
+			QueueId:      params.QueueId,
+			UserId:       params.UserId,
+			TrackIds:     trackIds,
+			CurrentIndex: currentIndex,
+			Shuffle:      params.Shuffle,
+		})
+	default:
+		return queueErr.New("unknown position: " + params.Position)
+	}
+}
+
 type RemoveItemParams struct {
 	QueueId string
 	UserId  string

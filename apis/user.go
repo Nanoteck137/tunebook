@@ -544,10 +544,11 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:     "CreateTrackFilter",
-			Method:   http.MethodPost,
-			Path:     "/me/filters/tracks",
-			BodyType: CreateTrackFilterBody{},
+			Name:         "CreateTrackFilter",
+			Method:       http.MethodPost,
+			Path:         "/me/filters/tracks",
+			ResponseType: CreateTrackFilter{},
+			BodyType:     CreateTrackFilterBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				body, err := pyrin.Body[CreateTrackFilterBody](c)
 				if err != nil {

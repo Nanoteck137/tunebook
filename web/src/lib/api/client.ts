@@ -19,6 +19,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/queues/${queueId}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  addToQueue(queueId: string, body: api.AddToQueueBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/add`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   
   authClaimQuickConnectCode(body: api.AuthClaimQuickConnectCodeBody, options?: ExtraOptions) {
     return this.request("/api/v1/auth/quick-connect/claim", "POST", z.undefined(), z.any(), body, options)
@@ -65,7 +69,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   createTrackFilter(body: api.CreateTrackFilterBody, options?: ExtraOptions) {
-    return this.request("/api/v1/me/filters/tracks", "POST", z.undefined(), z.any(), body, options)
+    return this.request("/api/v1/me/filters/tracks", "POST", api.CreateTrackFilter, z.any(), body, options)
   }
   
   deleteApiToken(tokenId: string, options?: ExtraOptions) {
@@ -292,6 +296,10 @@ export class ClientUrls {
   
   addQueueItems(queueId: string) {
     return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/items`)
+  }
+  
+  addToQueue(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add`)
   }
   
   authCallback() {

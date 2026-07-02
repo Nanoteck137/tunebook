@@ -36,6 +36,8 @@
     tags = tags.filter((t) => !(t.value === value && t.mode === mode));
   }
 
+  let filterId = $derived(page.url.searchParams.get("filterId"));
+
   function clearFilter() {
     const query = page.url.searchParams;
     query.delete("filterId");
@@ -43,6 +45,20 @@
       invalidateAll: true,
       replaceState: true,
     });
+  }
+
+  async function playTracks(options: { shuffle?: boolean } = {}) {
+    if (filterId) {
+      await musicManager.queueRequest(
+        { type: "addFilter", filterId },
+        options,
+      );
+    } else {
+      await musicManager.addTracks({
+        trackIds: data.tracks.map((t) => t.id),
+        clear: true,
+      });
+    }
   }
 </script>
 
@@ -60,11 +76,11 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <Button variant="outline" size="sm">
+      <Button variant="outline" size="sm" onclick={() => playTracks({ shuffle: true })}>
         <Shuffle size={14} />
         Shuffle
       </Button>
-      <Button size="sm">
+      <Button size="sm" onclick={() => playTracks()}>
         <Play size={14} />
         Play All
       </Button>
@@ -199,11 +215,18 @@
   totalTracks={data.page.totalItems}
   tracks={data.tracks}
   onPlay={async (trackId) => {
-    await musicManager.addTracks({
-      trackIds: data.tracks.map((t) => t.id),
-      trackId,
-      clear: true,
-    });
+    if (filterId) {
+      await musicManager.queueRequest(
+        { type: "addFilter", filterId },
+        { queueIndexToTrackId: trackId },
+      );
+    } else {
+      await musicManager.addTracks({
+        trackIds: data.tracks.map((t) => t.id),
+        trackId,
+        clear: true,
+      });
+    }
   }}
 />
 
