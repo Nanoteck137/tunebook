@@ -2,12 +2,132 @@
   "version": 1,
   "structures": [
     {
+      "name": "AddAlbumToQueueBody",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "position",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "shuffle",
+          "type": "bool",
+          "omitEmpty": true
+        },
+        {
+          "name": "currentIndex",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "queueIndexToTrackId",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "AddArtistToQueueBody",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "position",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "shuffle",
+          "type": "bool",
+          "omitEmpty": true
+        },
+        {
+          "name": "currentIndex",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "queueIndexToTrackId",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "AddFavoritesToQueueBody",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "position",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "shuffle",
+          "type": "bool",
+          "omitEmpty": true
+        },
+        {
+          "name": "currentIndex",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "queueIndexToTrackId",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
       "name": "AddItemToPlaylistBody",
       "fields": [
         {
           "name": "trackId",
           "type": "string",
           "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AddPlaylistToQueueBody",
+      "fields": [
+        {
+          "name": "filterId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "position",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "shuffle",
+          "type": "bool",
+          "omitEmpty": true
+        },
+        {
+          "name": "currentIndex",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "queueIndexToTrackId",
+          "type": "*string",
+          "omitEmpty": true
         }
       ]
     },
@@ -42,6 +162,41 @@
         {
           "name": "trackIds",
           "type": "[]string",
+          "omitEmpty": true
+        },
+        {
+          "name": "position",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "shuffle",
+          "type": "bool",
+          "omitEmpty": true
+        },
+        {
+          "name": "currentIndex",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "queueIndexToTrackId",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "AddTracksToQueueBody",
+      "fields": [
+        {
+          "name": "trackIds",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filterId",
+          "type": "string",
           "omitEmpty": true
         },
         {
@@ -1425,10 +1580,38 @@
   "endpoints": [
     {
       "type": "api",
+      "name": "AddAlbumToQueue",
+      "method": "POST",
+      "path": "/api/v1/queues/:queueId/add/albums/:albumId",
+      "body": "AddAlbumToQueueBody"
+    },
+    {
+      "type": "api",
+      "name": "AddArtistToQueue",
+      "method": "POST",
+      "path": "/api/v1/queues/:queueId/add/artists/:artistId",
+      "body": "AddArtistToQueueBody"
+    },
+    {
+      "type": "api",
+      "name": "AddFavoritesToQueue",
+      "method": "POST",
+      "path": "/api/v1/queues/:queueId/add/favorites/:userId",
+      "body": "AddFavoritesToQueueBody"
+    },
+    {
+      "type": "api",
       "name": "AddItemToPlaylist",
       "method": "POST",
       "path": "/api/v1/playlists/:playlistId/items",
       "body": "AddItemToPlaylistBody"
+    },
+    {
+      "type": "api",
+      "name": "AddPlaylistToQueue",
+      "method": "POST",
+      "path": "/api/v1/queues/:queueId/add/playlists/:playlistId",
+      "body": "AddPlaylistToQueueBody"
     },
     {
       "type": "api",
@@ -1443,6 +1626,13 @@
       "method": "POST",
       "path": "/api/v1/queues/:queueId/add",
       "body": "AddToQueueBody"
+    },
+    {
+      "type": "api",
+      "name": "AddTracksToQueue",
+      "method": "POST",
+      "path": "/api/v1/queues/:queueId/add/tracks",
+      "body": "AddTracksToQueueBody"
     },
     {
       "type": "normal",

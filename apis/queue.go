@@ -73,6 +73,47 @@ type AddToQueueBody struct {
 	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
 }
 
+type AddAlbumToQueueBody struct {
+	FilterId            string   `json:"filterId,omitempty"`
+	Position            string   `json:"position"`
+	Shuffle             bool     `json:"shuffle,omitempty"`
+	CurrentIndex        *int     `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+}
+
+type AddArtistToQueueBody struct {
+	FilterId            string   `json:"filterId,omitempty"`
+	Position            string   `json:"position"`
+	Shuffle             bool     `json:"shuffle,omitempty"`
+	CurrentIndex        *int     `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+}
+
+type AddPlaylistToQueueBody struct {
+	FilterId            string   `json:"filterId,omitempty"`
+	Position            string   `json:"position"`
+	Shuffle             bool     `json:"shuffle,omitempty"`
+	CurrentIndex        *int     `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+}
+
+type AddFavoritesToQueueBody struct {
+	FilterId            string   `json:"filterId,omitempty"`
+	Position            string   `json:"position"`
+	Shuffle             bool     `json:"shuffle,omitempty"`
+	CurrentIndex        *int     `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+}
+
+type AddTracksToQueueBody struct {
+	TrackIds            []string `json:"trackIds"`
+	FilterId            string   `json:"filterId,omitempty"`
+	Position            string   `json:"position"`
+	Shuffle             bool     `json:"shuffle,omitempty"`
+	CurrentIndex        *int     `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+}
+
 type SetQueuePositionBody struct {
 	Index int `json:"index"`
 }
@@ -292,6 +333,251 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						QueueId: c.Param("queueId"),
 						UserId:  user.Id,
 						ItemId:  c.Param("itemId"),
+					},
+				)
+				if err != nil {
+					return nil, handleQueueServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "AddAlbumToQueue",
+			Path:     "/queues/:queueId/add/albums/:albumId",
+			Method:   http.MethodPost,
+			BodyType: AddAlbumToQueueBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[AddAlbumToQueueBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				currentIndex := 0
+				if body.CurrentIndex != nil {
+					currentIndex = *body.CurrentIndex
+				}
+
+				queueIndexToTrackId := ""
+				if body.QueueIndexToTrackId != nil {
+					queueIndexToTrackId = *body.QueueIndexToTrackId
+				}
+
+				err = app.QueueService().AddAlbumToQueue(
+					ctx,
+					service.AddAlbumToQueueParams{
+						QueueId:             c.Param("queueId"),
+						UserId:              user.Id,
+						AlbumId:             c.Param("albumId"),
+						FilterId:            body.FilterId,
+						Position:            body.Position,
+						Shuffle:             body.Shuffle,
+						CurrentIndex:        currentIndex,
+						QueueIndexToTrackId: queueIndexToTrackId,
+					},
+				)
+				if err != nil {
+					return nil, handleQueueServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "AddArtistToQueue",
+			Path:     "/queues/:queueId/add/artists/:artistId",
+			Method:   http.MethodPost,
+			BodyType: AddArtistToQueueBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[AddArtistToQueueBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				currentIndex := 0
+				if body.CurrentIndex != nil {
+					currentIndex = *body.CurrentIndex
+				}
+
+				queueIndexToTrackId := ""
+				if body.QueueIndexToTrackId != nil {
+					queueIndexToTrackId = *body.QueueIndexToTrackId
+				}
+
+				err = app.QueueService().AddArtistToQueue(
+					ctx,
+					service.AddArtistToQueueParams{
+						QueueId:             c.Param("queueId"),
+						UserId:              user.Id,
+						ArtistId:            c.Param("artistId"),
+						FilterId:            body.FilterId,
+						Position:            body.Position,
+						Shuffle:             body.Shuffle,
+						CurrentIndex:        currentIndex,
+						QueueIndexToTrackId: queueIndexToTrackId,
+					},
+				)
+				if err != nil {
+					return nil, handleQueueServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "AddPlaylistToQueue",
+			Path:     "/queues/:queueId/add/playlists/:playlistId",
+			Method:   http.MethodPost,
+			BodyType: AddPlaylistToQueueBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[AddPlaylistToQueueBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				currentIndex := 0
+				if body.CurrentIndex != nil {
+					currentIndex = *body.CurrentIndex
+				}
+
+				queueIndexToTrackId := ""
+				if body.QueueIndexToTrackId != nil {
+					queueIndexToTrackId = *body.QueueIndexToTrackId
+				}
+
+				err = app.QueueService().AddPlaylistToQueue(
+					ctx,
+					service.AddPlaylistToQueueParams{
+						QueueId:             c.Param("queueId"),
+						UserId:              user.Id,
+						PlaylistId:          c.Param("playlistId"),
+						FilterId:            body.FilterId,
+						Position:            body.Position,
+						Shuffle:             body.Shuffle,
+						CurrentIndex:        currentIndex,
+						QueueIndexToTrackId: queueIndexToTrackId,
+					},
+				)
+				if err != nil {
+					return nil, handleQueueServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "AddFavoritesToQueue",
+			Path:     "/queues/:queueId/add/favorites/:userId",
+			Method:   http.MethodPost,
+			BodyType: AddFavoritesToQueueBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[AddFavoritesToQueueBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				currentIndex := 0
+				if body.CurrentIndex != nil {
+					currentIndex = *body.CurrentIndex
+				}
+
+				queueIndexToTrackId := ""
+				if body.QueueIndexToTrackId != nil {
+					queueIndexToTrackId = *body.QueueIndexToTrackId
+				}
+
+				err = app.QueueService().AddFavoritesToQueue(
+					ctx,
+					service.AddFavoritesToQueueParams{
+						QueueId:             c.Param("queueId"),
+						UserId:              user.Id,
+						FavoriteUserId:      c.Param("userId"),
+						FilterId:            body.FilterId,
+						Position:            body.Position,
+						Shuffle:             body.Shuffle,
+						CurrentIndex:        currentIndex,
+						QueueIndexToTrackId: queueIndexToTrackId,
+					},
+				)
+				if err != nil {
+					return nil, handleQueueServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "AddTracksToQueue",
+			Path:     "/queues/:queueId/add/tracks",
+			Method:   http.MethodPost,
+			BodyType: AddTracksToQueueBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[AddTracksToQueueBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				currentIndex := 0
+				if body.CurrentIndex != nil {
+					currentIndex = *body.CurrentIndex
+				}
+
+				queueIndexToTrackId := ""
+				if body.QueueIndexToTrackId != nil {
+					queueIndexToTrackId = *body.QueueIndexToTrackId
+				}
+
+				err = app.QueueService().AddTracksToQueue(
+					ctx,
+					service.AddTracksToQueueParams{
+						QueueId:             c.Param("queueId"),
+						UserId:              user.Id,
+						TrackIds:            body.TrackIds,
+						FilterId:            body.FilterId,
+						Position:            body.Position,
+						Shuffle:             body.Shuffle,
+						CurrentIndex:        currentIndex,
+						QueueIndexToTrackId: queueIndexToTrackId,
 					},
 				)
 				if err != nil {

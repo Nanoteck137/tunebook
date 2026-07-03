@@ -497,41 +497,46 @@ export class MusicManager {
       queueIndexToTrackId?: string;
     } = {},
   ) {
-    const sourceMap: Record<string, string> = {
-      addArtist: "artist",
-      addAlbum: "album",
-      addPlaylist: "playlist",
-      addFilter: "filter",
+    const position = options.append === "back" ? "end" : "replace";
+    const body = {
+      position,
+      shuffle: options.shuffle ?? false,
+      currentIndex: undefined as number | undefined,
+      queueIndexToTrackId: options.queueIndexToTrackId ?? undefined,
     };
 
-    const sourceType = sourceMap[request.type];
-
-    let sourceId: string;
+    let res: Awaited<ReturnType<typeof this.apiClient.addToQueue>>;
     switch (request.type) {
-      case "addArtist":
-        sourceId = request.artistId;
-        break;
       case "addAlbum":
-        sourceId = request.albumId;
+        res = await this.apiClient.addAlbumToQueue(
+          this.#deviceId,
+          request.albumId,
+          body,
+        );
+        break;
+      case "addArtist":
+        res = await this.apiClient.addArtistToQueue(
+          this.#deviceId,
+          request.artistId,
+          body,
+        );
         break;
       case "addPlaylist":
-        sourceId = request.playlistId;
+        res = await this.apiClient.addPlaylistToQueue(
+          this.#deviceId,
+          request.playlistId,
+          body,
+        );
         break;
       case "addFilter":
-        sourceId = request.filterId;
+        res = await this.apiClient.addTracksToQueue(this.#deviceId, {
+          ...body,
+          trackIds: [],
+          filterId: request.filterId,
+        });
         break;
     }
 
-    const position = options.append === "back" ? "end" : "replace";
-
-    const res = await this.apiClient.addToQueue(this.#deviceId, {
-      source: sourceType,
-      sourceId,
-      position,
-      shuffle: options.shuffle ?? false,
-      currentIndex: undefined,
-      queueIndexToTrackId: options.queueIndexToTrackId ?? undefined,
-    });
     if (!res.success) {
       handleApiError(res.error);
       return;
@@ -566,9 +571,7 @@ export class MusicManager {
       return;
     }
 
-    const res = await this.apiClient.addToQueue(this.#deviceId, {
-      source: "tracks",
-      sourceId: "",
+    const res = await this.apiClient.addTracksToQueue(this.#deviceId, {
       trackIds: params.trackIds,
       position: "replace",
       shuffle: false,

@@ -287,6 +287,17 @@ type AddToQueueParams struct {
 	QueueIndexToTrackId string
 }
 
+type AddAlbumToQueueParams struct {
+	QueueId             string
+	UserId              string
+	AlbumId             string
+	FilterId            string
+	Position            string // "replace", "next", "end"
+	Shuffle             bool
+	CurrentIndex        int
+	QueueIndexToTrackId string
+}
+
 func (s *QueueService) AddToQueue(
 	ctx context.Context,
 	params AddToQueueParams,
@@ -296,13 +307,13 @@ func (s *QueueService) AddToQueue(
 
 	switch params.Source {
 	case "album":
-		trackIds, err = s.db.GetTrackIdsByAlbum(ctx, params.SourceId)
+		trackIds, err = s.db.GetTrackIdsByAlbum(ctx, params.SourceId, "")
 	case "playlist":
 		trackIds, err = s.db.GetPlaylistItemIds(ctx, database.GetPlaylistItemIdsParams{
 			PlaylistId: params.SourceId,
 		})
 	case "artist":
-		trackIds, err = s.db.GetTrackIdsByArtist(ctx, params.SourceId)
+		trackIds, err = s.db.GetTrackIdsByArtist(ctx, params.SourceId, "")
 	case "tracks":
 		trackIds = params.TrackIds
 	case "filter":
@@ -321,6 +332,356 @@ func (s *QueueService) AddToQueue(
 
 	if err != nil {
 		return queueErr.Wrap("fetch track ids", err)
+	}
+
+	if len(trackIds) == 0 {
+		return nil
+	}
+
+	switch params.Position {
+	case "next", "end":
+		return s.AddItems(ctx, AddItemsParams{
+			QueueId:  params.QueueId,
+			UserId:   params.UserId,
+			TrackIds: trackIds,
+			Position: params.Position,
+		})
+	case "replace":
+		currentIndex := params.CurrentIndex
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					currentIndex = i
+					break
+				}
+			}
+		}
+
+		if currentIndex < 0 || currentIndex >= len(trackIds) {
+			currentIndex = 0
+		}
+
+		return s.ReplaceQueue(ctx, ReplaceQueueParams{
+			QueueId:      params.QueueId,
+			UserId:       params.UserId,
+			TrackIds:     trackIds,
+			CurrentIndex: currentIndex,
+			Shuffle:      params.Shuffle,
+		})
+	default:
+		return queueErr.New("unknown position: " + params.Position)
+	}
+}
+
+func (s *QueueService) AddAlbumToQueue(
+	ctx context.Context,
+	params AddAlbumToQueueParams,
+) error {
+	filterStr := ""
+
+	if params.FilterId != "" {
+		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
+		if err != nil {
+			// TODO(patrik): Handle not found error
+			return queueErr.Wrap("get track filter", err)
+		}
+
+		filterStr = filter.Filter
+	} 
+
+	trackIds, err := s.db.GetTrackIdsByAlbum(ctx, params.AlbumId, filterStr)
+	if err != nil {
+		return queueErr.Wrap("get track ids by album", err)
+	}
+
+	// pretty.Println(trackIds)
+
+	if len(trackIds) == 0 {
+		return nil
+	}
+
+	switch params.Position {
+	case "next", "end":
+		return s.AddItems(ctx, AddItemsParams{
+			QueueId:  params.QueueId,
+			UserId:   params.UserId,
+			TrackIds: trackIds,
+			Position: params.Position,
+		})
+	case "replace":
+		currentIndex := params.CurrentIndex
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					currentIndex = i
+					break
+				}
+			}
+		}
+
+		if currentIndex < 0 || currentIndex >= len(trackIds) {
+			currentIndex = 0
+		}
+
+		return s.ReplaceQueue(ctx, ReplaceQueueParams{
+			QueueId:      params.QueueId,
+			UserId:       params.UserId,
+			TrackIds:     trackIds,
+			CurrentIndex: currentIndex,
+			Shuffle:      params.Shuffle,
+		})
+	default:
+		return queueErr.New("unknown position: " + params.Position)
+	}
+}
+
+type AddArtistToQueueParams struct {
+	QueueId             string
+	UserId              string
+	ArtistId            string
+	FilterId            string
+	Position            string
+	Shuffle             bool
+	CurrentIndex        int
+	QueueIndexToTrackId string
+}
+
+func (s *QueueService) AddArtistToQueue(
+	ctx context.Context,
+	params AddArtistToQueueParams,
+) error {
+	filterStr := ""
+
+	if params.FilterId != "" {
+		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
+		if err != nil {
+			// TODO(patrik): Handle not found error
+			return queueErr.Wrap("get track filter", err)
+		}
+
+		filterStr = filter.Filter
+	}
+
+	trackIds, err := s.db.GetTrackIdsByArtist(ctx, params.ArtistId, filterStr)
+	if err != nil {
+		return queueErr.Wrap("get track ids by artist", err)
+	}
+
+	if len(trackIds) == 0 {
+		return nil
+	}
+
+	switch params.Position {
+	case "next", "end":
+		return s.AddItems(ctx, AddItemsParams{
+			QueueId:  params.QueueId,
+			UserId:   params.UserId,
+			TrackIds: trackIds,
+			Position: params.Position,
+		})
+	case "replace":
+		currentIndex := params.CurrentIndex
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					currentIndex = i
+					break
+				}
+			}
+		}
+
+		if currentIndex < 0 || currentIndex >= len(trackIds) {
+			currentIndex = 0
+		}
+
+		return s.ReplaceQueue(ctx, ReplaceQueueParams{
+			QueueId:      params.QueueId,
+			UserId:       params.UserId,
+			TrackIds:     trackIds,
+			CurrentIndex: currentIndex,
+			Shuffle:      params.Shuffle,
+		})
+	default:
+		return queueErr.New("unknown position: " + params.Position)
+	}
+}
+
+type AddPlaylistToQueueParams struct {
+	QueueId             string
+	UserId              string
+	PlaylistId          string
+	FilterId            string
+	Position            string
+	Shuffle             bool
+	CurrentIndex        int
+	QueueIndexToTrackId string
+}
+
+func (s *QueueService) AddPlaylistToQueue(
+	ctx context.Context,
+	params AddPlaylistToQueueParams,
+) error {
+	filterStr := ""
+
+	if params.FilterId != "" {
+		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
+		if err != nil {
+			// TODO(patrik): Handle not found error
+			return queueErr.Wrap("get track filter", err)
+		}
+
+		filterStr = filter.Filter
+	}
+
+	filterStr = "hasTag(\"anime\")"
+
+	trackIds, err := s.db.GetTrackIdsByPlaylist(ctx, database.GetTrackIdsByPlaylistParams{
+		PlaylistId: params.PlaylistId,
+		FilterStr:  filterStr,
+	})
+	if err != nil {
+		return queueErr.Wrap("get track ids by playlist", err)
+	}
+
+	if len(trackIds) == 0 {
+		return nil
+	}
+
+	switch params.Position {
+	case "next", "end":
+		return s.AddItems(ctx, AddItemsParams{
+			QueueId:  params.QueueId,
+			UserId:   params.UserId,
+			TrackIds: trackIds,
+			Position: params.Position,
+		})
+	case "replace":
+		currentIndex := params.CurrentIndex
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					currentIndex = i
+					break
+				}
+			}
+		}
+
+		if currentIndex < 0 || currentIndex >= len(trackIds) {
+			currentIndex = 0
+		}
+
+		return s.ReplaceQueue(ctx, ReplaceQueueParams{
+			QueueId:      params.QueueId,
+			UserId:       params.UserId,
+			TrackIds:     trackIds,
+			CurrentIndex: currentIndex,
+			Shuffle:      params.Shuffle,
+		})
+	default:
+		return queueErr.New("unknown position: " + params.Position)
+	}
+}
+
+type AddFavoritesToQueueParams struct {
+	QueueId             string
+	UserId              string
+	FavoriteUserId      string
+	FilterId            string
+	Position            string
+	Shuffle             bool
+	CurrentIndex        int
+	QueueIndexToTrackId string
+}
+
+func (s *QueueService) AddFavoritesToQueue(
+	ctx context.Context,
+	params AddFavoritesToQueueParams,
+) error {
+	filterStr := ""
+
+	if params.FilterId != "" {
+		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
+		if err != nil {
+			return queueErr.Wrap("get track filter", err)
+		}
+
+		filterStr = filter.Filter
+	}
+
+	trackIds, err := s.db.GetTrackIdsByUserFavorites(ctx, database.GetTrackIdsByUserFavoritesParams{
+		UserId:    params.FavoriteUserId,
+		FilterStr: filterStr,
+	})
+	if err != nil {
+		return queueErr.Wrap("get track ids by favorites", err)
+	}
+
+	if len(trackIds) == 0 {
+		return nil
+	}
+
+	switch params.Position {
+	case "next", "end":
+		return s.AddItems(ctx, AddItemsParams{
+			QueueId:  params.QueueId,
+			UserId:   params.UserId,
+			TrackIds: trackIds,
+			Position: params.Position,
+		})
+	case "replace":
+		currentIndex := params.CurrentIndex
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					currentIndex = i
+					break
+				}
+			}
+		}
+
+		if currentIndex < 0 || currentIndex >= len(trackIds) {
+			currentIndex = 0
+		}
+
+		return s.ReplaceQueue(ctx, ReplaceQueueParams{
+			QueueId:      params.QueueId,
+			UserId:       params.UserId,
+			TrackIds:     trackIds,
+			CurrentIndex: currentIndex,
+			Shuffle:      params.Shuffle,
+		})
+	default:
+		return queueErr.New("unknown position: " + params.Position)
+	}
+}
+
+type AddTracksToQueueParams struct {
+	QueueId             string
+	UserId              string
+	TrackIds            []string
+	FilterId            string
+	Position            string
+	Shuffle             bool
+	CurrentIndex        int
+	QueueIndexToTrackId string
+}
+
+func (s *QueueService) AddTracksToQueue(
+	ctx context.Context,
+	params AddTracksToQueueParams,
+) error {
+	trackIds := params.TrackIds
+
+	if params.FilterId != "" {
+		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
+		if err != nil {
+			return queueErr.Wrap("get track filter", err)
+		}
+
+		trackIds, err = s.db.GetTrackIdsByFilter(ctx, filter.Filter)
+		if err != nil {
+			return queueErr.Wrap("get track ids by filter", err)
+		}
 	}
 
 	if len(trackIds) == 0 {

@@ -11,8 +11,24 @@ export class ApiClient extends BaseApiClient {
     this.url = new ClientUrls(baseUrl);
   }
   
+  addAlbumToQueue(queueId: string, albumId: string, body: api.AddAlbumToQueueBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/add/albums/${albumId}`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  addArtistToQueue(queueId: string, artistId: string, body: api.AddArtistToQueueBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/add/artists/${artistId}`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  addFavoritesToQueue(queueId: string, userId: string, body: api.AddFavoritesToQueueBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/add/favorites/${userId}`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   addItemToPlaylist(playlistId: string, body: api.AddItemToPlaylistBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  addPlaylistToQueue(queueId: string, playlistId: string, body: api.AddPlaylistToQueueBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/add/playlists/${playlistId}`, "POST", z.undefined(), z.any(), body, options)
   }
   
   addQueueItems(queueId: string, body: api.AddQueueItemsBody, options?: ExtraOptions) {
@@ -21,6 +37,10 @@ export class ApiClient extends BaseApiClient {
   
   addToQueue(queueId: string, body: api.AddToQueueBody, options?: ExtraOptions) {
     return this.request(`/api/v1/queues/${queueId}/add`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  addTracksToQueue(queueId: string, body: api.AddTracksToQueueBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/add/tracks`, "POST", z.undefined(), z.any(), body, options)
   }
   
   
@@ -290,8 +310,24 @@ export class ClientUrls {
     this.baseUrl = baseUrl;
   }
   
+  addAlbumToQueue(queueId: string, albumId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add/albums/${albumId}`)
+  }
+  
+  addArtistToQueue(queueId: string, artistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add/artists/${artistId}`)
+  }
+  
+  addFavoritesToQueue(queueId: string, userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add/favorites/${userId}`)
+  }
+  
   addItemToPlaylist(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items`)
+  }
+  
+  addPlaylistToQueue(queueId: string, playlistId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add/playlists/${playlistId}`)
   }
   
   addQueueItems(queueId: string) {
@@ -300,6 +336,10 @@ export class ClientUrls {
   
   addToQueue(queueId: string) {
     return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add`)
+  }
+  
+  addTracksToQueue(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add/tracks`)
   }
   
   authCallback() {

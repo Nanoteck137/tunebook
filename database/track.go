@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -147,23 +148,92 @@ func (db DB) GetTracks(
 	return items, page, nil
 }
 
-func (db DB) GetTrackIdsByAlbum(ctx context.Context, albumId string) ([]string, error) {
-	query := dialect.From("tracks").
-		Select("tracks.id").
-		Where(goqu.I("tracks.album_id").Eq(albumId)).
-		Order(
-			goqu.I("tracks.number").Asc().NullsLast(),
-			goqu.I("tracks.name").Asc(),
-		)
+func (db DB) GetTrackIdsByAlbum(ctx context.Context, albumId, filterStr string) ([]string, error) {
+	var err error
+
+	query := TrackQuery().Select("tracks.id")
+
+	r := filter.New(&adapter.TrackResolverAdapter{})
+	query, err = applyFilterCustom(query, r, filterStr, goqu.I("tracks.album_id").Eq(albumId))
+	if err != nil {
+		return nil, err
+	}
+
+	query = query.Order(
+		goqu.I("tracks.number").Asc().NullsLast(),
+		goqu.I("tracks.name").Asc(),
+	)
+
+	s, _, _ := query.ToSQL()
+	fmt.Printf("s: %v\n", s)
+
+	// dialect.From("tracks").
+	// 	Select("tracks.id").
+	// 	Where(goqu.I("tracks.album_id").Eq(albumId)).
+	// 	Order(
+	// 		goqu.I("tracks.number").Asc().NullsLast(),
+	// 		goqu.I("tracks.name").Asc(),
+	// 	)
 
 	return Multiple[string](db, ctx, query)
 }
 
-func (db DB) GetTrackIdsByArtist(ctx context.Context, artistId string) ([]string, error) {
-	query := dialect.From("tracks").
-		Select("tracks.id").
-		Where(goqu.I("tracks.artist_id").Eq(artistId)).
-		Order(goqu.I("tracks.name").Asc())
+func (db DB) GetTrackIdsByArtist(ctx context.Context, artistId, filterStr string) ([]string, error) {
+	var err error
+
+	query := TrackQuery().Select("tracks.id")
+
+	r := filter.New(&adapter.TrackResolverAdapter{})
+	query, err = applyFilterCustom(query, r, filterStr, goqu.I("tracks.artist_id").Eq(artistId))
+	if err != nil {
+		return nil, err
+	}
+
+	query = query.Order(goqu.I("tracks.name").Asc())
+
+	return Multiple[string](db, ctx, query)
+}
+
+type GetTrackIdsByPlaylistParams struct {
+	PlaylistId string
+	FilterStr  string
+}
+
+func (db DB) GetTrackIdsByPlaylist(ctx context.Context, params GetTrackIdsByPlaylistParams) ([]string, error) {
+	var err error
+
+	query := TrackQuery().Select("tracks.id").
+		Join(goqu.I("playlist_items"), goqu.On(tracksTbl.Col("id").Eq(goqu.I("playlist_items.track_id"))))
+
+	r := filter.New(&adapter.TrackResolverAdapter{})
+	query, err = applyFilterCustom(query, r, params.FilterStr, goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
+	if err != nil {
+		return nil, err
+	}
+
+	query = query.Order(goqu.I("playlist_items.position").Asc())
+
+	return Multiple[string](db, ctx, query)
+}
+
+type GetTrackIdsByUserFavoritesParams struct {
+	UserId    string
+	FilterStr string
+}
+
+func (db DB) GetTrackIdsByUserFavorites(ctx context.Context, params GetTrackIdsByUserFavoritesParams) ([]string, error) {
+	var err error
+
+	query := TrackQuery().Select("tracks.id").
+		Join(goqu.I("user_favorites"), goqu.On(tracksTbl.Col("id").Eq(goqu.I("user_favorites.track_id"))))
+
+	r := filter.New(&adapter.TrackResolverAdapter{})
+	query, err = applyFilterCustom(query, r, params.FilterStr, goqu.I("user_favorites.user_id").Eq(params.UserId))
+	if err != nil {
+		return nil, err
+	}
+
+	query = query.Order(goqu.I("user_favorites.added").Desc().NullsLast())
 
 	return Multiple[string](db, ctx, query)
 }
