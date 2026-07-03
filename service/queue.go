@@ -533,8 +533,6 @@ func (s *QueueService) AddPlaylistToQueue(
 		filterStr = filter.Filter
 	}
 
-	filterStr = "hasTag(\"anime\")"
-
 	trackIds, err := s.db.GetTrackIdsByPlaylist(ctx, database.GetTrackIdsByPlaylistParams{
 		PlaylistId: params.PlaylistId,
 		FilterStr:  filterStr,
