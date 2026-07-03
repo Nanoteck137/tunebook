@@ -11,8 +11,9 @@
   const musicManager = getMusicManager();
 
   async function playAll() {
-    const trackIds = data.tracks.map((t) => t.id);
-    await musicManager.addTracks({ trackIds });
+    await musicManager.queueRequest(
+      { type: "addFavorites", userId: data.userData.id },
+    );
   }
 </script>
 

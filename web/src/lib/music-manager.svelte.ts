@@ -490,6 +490,7 @@ export class MusicManager {
       | { type: "addArtist"; artistId: string }
       | { type: "addAlbum"; albumId: string }
       | { type: "addPlaylist"; playlistId: string; filterId?: string }
+      | { type: "addFavorites"; userId: string }
       | { type: "addFilter"; filterId: string },
     options: {
       shuffle?: boolean;
@@ -525,6 +526,13 @@ export class MusicManager {
         res = await this.apiClient.addPlaylistToQueue(
           this.#deviceId,
           request.playlistId,
+          body,
+        );
+        break;
+      case "addFavorites":
+        res = await this.apiClient.addFavoritesToQueue(
+          this.#deviceId,
+          request.userId,
           body,
         );
         break;
