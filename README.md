@@ -11,14 +11,6 @@ rg --no-heading -in "TODO"
 rg --no-heading -in "TODO" | cut -d: -f1,2
 ```
 
-- Track Filters
-
-- Albums
-- Artists
-- Playlists
-- Favorites
-- TrackIds
-
 ## Old Versions
 
 | Version | Commit | Date |
