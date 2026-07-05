@@ -11,6 +11,7 @@ import (
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/service"
+	"github.com/nanoteck137/tunebook/tasks"
 	"github.com/nanoteck137/tunebook/tools/anvil"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/validate"
@@ -371,22 +372,21 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method: http.MethodPost,
 			Path:   "/playlists/:playlistId/images/generate",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.Background()
-
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
 
-				err = app.PlaylistService().GeneratePlaylistImage(
-					ctx,
+				err = app.JobQueueService().PushJob(
+					context.Background(),
+					tasks.GeneratePlaylistImage,
 					service.GeneratePlaylistImageParams{
 						PlaylistId: c.Param("playlistId"),
 						UserId:     user.Id,
 					},
 				)
 				if err != nil {
-					return nil, handlePlaylistServiceErrors(err)
+					return nil, err
 				}
 
 				return nil, nil

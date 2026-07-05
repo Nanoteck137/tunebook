@@ -7,4 +7,6 @@ const (
 	LibraryCleanup       = "library-cleanup"
 	SearchIndex          = "search-index"
 	UserStatsRecalculate = "user-stats-recalculate"
+
+	GeneratePlaylistImage = "generate-playlist-image"
 )

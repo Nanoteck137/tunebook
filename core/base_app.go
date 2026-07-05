@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/nanoteck137/tunebook/config"
@@ -35,6 +36,7 @@ type BaseApp struct {
 	playlistService *service.PlaylistService
 	historyService  *service.HistoryService
 	queueService    *service.QueueService
+	jobQueueService *service.JobQueueService
 
 	broker *broker.Broker
 }
@@ -65,6 +67,10 @@ func (app *BaseApp) HistoryService() *service.HistoryService {
 
 func (app *BaseApp) QueueService() *service.QueueService {
 	return app.queueService
+}
+
+func (app *BaseApp) JobQueueService() *service.JobQueueService {
+	return app.jobQueueService
 }
 
 func (app *BaseApp) TaskService() *service.TaskService {
@@ -155,6 +161,11 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	app.taskService = service.NewTaskService(newServiceLogger("task"))
+
+	app.jobQueueService = service.NewJobQueueService(
+		newServiceLogger("job_queue"),
+		app.db,
+	)
 
 	app.imageService = service.NewImageService(
 		newServiceLogger("image"),
@@ -250,7 +261,7 @@ func (app *BaseApp) Bootstrap() error {
 		app.broker.EmitEvent(app.taskService.GetSyncStateEvent())
 	})
 
-	tasks := []service.Task{
+	taskList := []service.Task{
 		tasks.NewLibrarySyncTask(app.libraryService),
 		tasks.NewSearchIndexTask(app.searchService),
 		tasks.NewUserStatsRecalculateTask(app.userService),
@@ -259,12 +270,24 @@ func (app *BaseApp) Bootstrap() error {
 		tasks.NewLibraryCleanupTask(app.libraryService),
 	}
 
-	for _, task := range tasks {
+	for _, task := range taskList {
 		err = app.taskService.AddTask(task)
 		if err != nil {
 			return err
 		}
 	}
+
+	app.jobQueueService.RegisterJob(tasks.GeneratePlaylistImage, func(ctx context.Context, data string) error {
+		var params service.GeneratePlaylistImageParams
+		err := json.Unmarshal([]byte(data), &params)
+		if err != nil {
+			return err
+		}
+
+		return app.PlaylistService().GeneratePlaylistImage(ctx, params)
+	})
+
+	app.jobQueueService.Start()
 
 	// TODO(patrik): This should not be in bootstrap
 	app.taskService.Start()
@@ -276,6 +299,7 @@ func (app *BaseApp) Bootstrap() error {
 }
 
 func (app *BaseApp) Shutdown() error {
+	app.jobQueueService.Stop()
 	app.taskService.Stop()
 
 	err := app.db.Close()
