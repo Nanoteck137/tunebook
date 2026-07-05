@@ -13,7 +13,10 @@ type UserStatsRecalculateTask struct {
 	jobService  *service.JobService
 }
 
-func NewUserStatsRecalculateTask(userService *service.UserService, jobService *service.JobService) *UserStatsRecalculateTask {
+func NewUserStatsRecalculateTask(
+	userService *service.UserService, 
+	jobService *service.JobService,
+) *UserStatsRecalculateTask {
 	return &UserStatsRecalculateTask{
 		userService: userService,
 		jobService:  jobService,
@@ -29,15 +32,19 @@ func (j *UserStatsRecalculateTask) Info() service.TaskInfo {
 }
 
 func (j *UserStatsRecalculateTask) Run(ctx context.Context) error {
-	users, err := j.userService.GetAllUsers(ctx, service.GetAllUsersParams{})
+	users, err := j.userService.GetAllUsers(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, user := range users {
-		err := j.jobService.PushJob(ctx, UserStatsUpdate, service.UpdateUserStatsParams{
-			UserId: user.Id,
-		})
+		err := j.jobService.PushJob(
+			ctx,
+			UserStatsUpdate,
+			service.UpdateUserStatsParams{
+				UserId: user.Id,
+			},
+		)
 		if err != nil {
 			return err
 		}

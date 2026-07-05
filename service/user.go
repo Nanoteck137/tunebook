@@ -48,18 +48,18 @@ func NewUserService(
 	}
 }
 
-type GetUserByIdParams struct {
+// TODO(patrik): This is part of the task/job
+type UpdateUserStatsParams struct {
 	UserId string
 }
 
-type GetAllUsersParams struct {
-}
-
-func (s *UserService) GetAllUsers(ctx context.Context, params GetAllUsersParams) ([]database.User, error) {
+func (s *UserService) GetAllUsers(
+	ctx context.Context,
+) ([]database.User, error) {
 	return s.db.GetAllUsers(ctx)
 }
 
-type UpdateUserStatsParams struct {
+type GetUserByIdParams struct {
 	UserId string
 }
 
@@ -596,7 +596,7 @@ func (s *UserService) RecalculateUserStats(ctx context.Context, userId string) e
 	}
 
 	numFavoriteTracks, err := s.db.GetUserFavoriteCount(ctx, userId)
-	if err != nil && !errors.Is(err, database.ErrItemNotFound){
+	if err != nil && !errors.Is(err, database.ErrItemNotFound) {
 		return userErr.Wrap("recalculate stats: get favorite count", err)
 	}
 
