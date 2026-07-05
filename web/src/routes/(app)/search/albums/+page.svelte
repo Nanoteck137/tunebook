@@ -128,7 +128,7 @@
   </div>
 
   <nav class="flex flex-wrap gap-1">
-    {#each tabs as { label, href } ({ label })}
+    {#each tabs as { label, href }}
       <a
         href="{href}?query={data.query}"
         class={cn(
