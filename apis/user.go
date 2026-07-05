@@ -128,8 +128,8 @@ func (b UpdateTrackFilterBody) Validate() error {
 		// TODO(patrik): Test if we need '.When()' on validate filter when
 		// b.Filter is nil
 		validate.Field(
-			&b.Filter, 
-			validate.Required.When(b.Filter != nil), 
+			&b.Filter,
+			validate.Required.When(b.Filter != nil),
 			validateFilter,
 		),
 	)
@@ -383,10 +383,13 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				err = app.UserService().UploadUserImage(ctx, service.UploadUserImageParams{
-					UserId: user.Id,
-					File:   files[0],
-				})
+				err = app.UserService().UploadUserImage(
+					ctx,
+					service.UploadUserImageParams{
+						UserId: user.Id,
+						File:   files[0],
+					},
+				)
 				if err != nil {
 					return nil, handleUserServiceErrors(err)
 				}
