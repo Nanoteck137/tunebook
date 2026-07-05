@@ -27,7 +27,10 @@ type TrackHistory struct {
 	Updated string `json:"updated"`
 }
 
-func ConvertDBTrackHistory(c pyrin.Context, history database.TrackHistory) TrackHistory {
+func ConvertDBTrackHistory(
+	c pyrin.Context, 
+	history database.TrackHistory,
+) TrackHistory {
 	return TrackHistory{
 		Id: history.Id,
 

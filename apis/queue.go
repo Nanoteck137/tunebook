@@ -18,7 +18,10 @@ type QueueItem struct {
 	Track       Track  `json:"track"`
 }
 
-func ConvertDBQueueItem(c pyrin.Context, item database.QueueItemTrack) QueueItem {
+func ConvertDBQueueItem(
+	c pyrin.Context, 
+	item database.QueueItemTrack,
+) QueueItem {
 	return QueueItem{
 		QueueItemId: item.Id,
 		Track:       ConvertDBTrack(c, item.Track),

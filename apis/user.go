@@ -76,8 +76,10 @@ func (b *UpdateMeBody) Transform() {
 
 func (b UpdateMeBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.DisplayName, validate.Required.When(b.DisplayName != nil)),
-		validate.Field(&b.PictureUrl, validate.Required.When(b.PictureUrl != nil)),
+		validate.Field(
+			&b.DisplayName, validate.Required.When(b.DisplayName != nil)),
+		validate.Field(
+			&b.PictureUrl, validate.Required.When(b.PictureUrl != nil)),
 	)
 }
 
@@ -125,7 +127,11 @@ func (b UpdateTrackFilterBody) Validate() error {
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
 		// TODO(patrik): Test if we need '.When()' on validate filter when
 		// b.Filter is nil
-		validate.Field(&b.Filter, validate.Required.When(b.Filter != nil), validateFilter),
+		validate.Field(
+			&b.Filter, 
+			validate.Required.When(b.Filter != nil), 
+			validateFilter,
+		),
 	)
 }
 

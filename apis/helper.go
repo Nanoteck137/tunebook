@@ -25,7 +25,11 @@ func RequireAdmin(user *database.User) error {
 	return nil
 }
 
-func User(app core.App, c pyrin.Context, checks ...UserCheckFunc) (*database.User, error) {
+func User(
+	app core.App,
+	c pyrin.Context,
+	checks ...UserCheckFunc,
+) (*database.User, error) {
 	user, err := getUser(app, c)
 	if err != nil {
 		return nil, err
@@ -85,7 +89,8 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf(
+				"unexpected signing method: %v", token.Header["alg"])
 		}
 
 		return []byte(app.Config().JwtSecret), nil
@@ -128,44 +133,29 @@ func ConvertURL(c pyrin.Context, path string) string {
 	return fmt.Sprintf("%s://%s%s", scheme, host, path)
 }
 
-func ConvertArtistCoverURL(c pyrin.Context, artistId string) types.Images {
-	base := "/files/artists/images/" + artistId
+func handleUrl(c pyrin.Context, base string) types.Images {
 	return types.Images{
 		Original: ConvertURL(c, base),
 		Small:    ConvertURL(c, base+"?size=128"),
 		Medium:   ConvertURL(c, base+"?size=256"),
 		Large:    ConvertURL(c, base+"?size=512"),
 	}
+}
+
+func ConvertArtistCoverURL(c pyrin.Context, artistId string) types.Images {
+	return handleUrl(c, "/files/artists/images/"+artistId)
 }
 
 func ConvertAlbumCoverURL(c pyrin.Context, albumId string) types.Images {
-	base := "/files/albums/images/" + albumId
-	return types.Images{
-		Original: ConvertURL(c, base),
-		Small:    ConvertURL(c, base+"?size=128"),
-		Medium:   ConvertURL(c, base+"?size=256"),
-		Large:    ConvertURL(c, base+"?size=512"),
-	}
+	return handleUrl(c, "/files/albums/images/"+albumId)
 }
 
 func ConvertPlaylistCoverURL(c pyrin.Context, playlistId string) types.Images {
-	base := "/files/playlists/images/" + playlistId
-	return types.Images{
-		Original: ConvertURL(c, base),
-		Small:    ConvertURL(c, base+"?size=128"),
-		Medium:   ConvertURL(c, base+"?size=256"),
-		Large:    ConvertURL(c, base+"?size=512"),
-	}
+	return handleUrl(c, "/files/playlists/images/"+playlistId)
 }
 
 func ConvertUserPictureURL(c pyrin.Context, userId string) types.Images {
-	base := "/files/users/images/" + userId
-	return types.Images{
-		Original: ConvertURL(c, base),
-		Small:    ConvertURL(c, base+"?size=128"),
-		Medium:   ConvertURL(c, base+"?size=256"),
-		Large:    ConvertURL(c, base+"?size=512"),
-	}
+	return handleUrl(c, "/files/users/images/"+userId)
 }
 
 func getPageParams(q url.Values, defaultPerPage int) types.PageParams {

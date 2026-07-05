@@ -13,13 +13,6 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
-// type GetMediaFromIdsBody struct {
-// 	GetMediaCommonBody
-//
-// 	TrackIds  []string `json:"trackIds"`
-// 	KeepOrder bool     `json:"keepOrder,omitempty"`
-// }
-
 type MediaFormat struct {
 	Name   string `json:"name"`
 	Format string `json:"format"`
@@ -41,12 +34,6 @@ type MediaDeviceSpec struct {
 type GetMediaSettings struct {
 	Formats     []MediaFormat     `json:"formats"`
 	DeviceSpecs []MediaDeviceSpec `json:"deviceSpecs"`
-}
-
-type AddTrackEventBody struct {
-	Position float64 `json:"position"`
-	// TODO(patrik): Validate
-	Source string `json:"source"`
 }
 
 func handleMediaServiceErrors(err error) error {
@@ -115,56 +102,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
-		// pyrin.ApiHandler{
-		// 	Name:         "AddTrackEvent",
-		// 	Method:       http.MethodPost,
-		// 	Path:         "/media/event/track/:trackId",
-		// 	ResponseType: nil,
-		// 	BodyType:     AddTrackEventBody{},
-		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
-		// 		trackId := c.Param("trackId")
-		//
-		// 		body, err := pyrin.Body[AddTrackEventBody](c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		ctx := context.Background()
-		//
-		// 		user, err := User(app, c)
-		// 		if err != nil {
-		// 			// NOTE(patrik): This is expected behavior
-		// 			return nil, nil
-		// 		}
-		//
-		// 		track, err := app.DB().GetTrackById(ctx, trackId)
-		// 		if err != nil {
-		// 			// TODO(patrik): Handle error
-		// 			return nil, err
-		// 		}
-		//
-		// 		percent := math.Min(body.Position/float64(track.Duration), 1.0)
-		// 		percent = math.Round(percent*100) / 100
-		//
-		// 		_, err = app.DB().CreateUserListeningEvent(
-		// 			ctx,
-		// 			database.CreateUserListeningEventParams{
-		// 				UserId:     user.Id,
-		// 				TrackId:    track.Id,
-		// 				ListenedAt: time.Now().UnixMilli(),
-		// 				Percent:    percent,
-		// 				PositionMs: int64(body.Position * 1000),
-		// 				Source:     body.Source,
-		// 			},
-		// 		)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		return nil, nil
-		// 	},
-		// },
-
 		pyrin.ApiHandler{
 			Name:         "GetMediaSettings",
 			Method:       http.MethodGet,
@@ -174,8 +111,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				mediaService := app.MediaService()
 
 				res := GetMediaSettings{
-					Formats:     make([]MediaFormat, 0, len(types.ValidMediaFormats)),
-					DeviceSpecs: make([]MediaDeviceSpec, 0, len(mediaService.DeviceSpecs)),
+					Formats: make(
+						[]MediaFormat, 0, len(types.ValidMediaFormats)),
+					DeviceSpecs: make(
+						[]MediaDeviceSpec, 0, len(mediaService.DeviceSpecs)),
 				}
 
 				mappings := mediaService.QualityMapping
@@ -219,45 +158,5 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				return res, nil
 			},
 		},
-
-		// pyrin.ApiHandler{
-		// 	Name:         "GetMediaFromIds",
-		// 	Method:       http.MethodPost,
-		// 	Path:         "/media/ids",
-		// 	ResponseType: GetMedia{},
-		// 	BodyType:     GetMediaFromIdsBody{},
-		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
-		// 		ctx := context.TODO()
-		//
-		// 		body, err := pyrin.Body[GetMediaFromIdsBody](c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		tracks, err := app.DB().GetTracksIn(ctx, body.TrackIds, "")
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		if body.KeepOrder {
-		// 			trackMap := make(map[string]database.Track)
-		// 			for _, t := range tracks {
-		// 				trackMap[t.Id] = t
-		// 			}
-		//
-		// 			tracks = make([]database.Track, 0, len(body.TrackIds))
-		// 			for _, v := range body.TrackIds {
-		// 				track, exists := trackMap[v]
-		// 				if !exists {
-		// 					continue
-		// 				}
-		//
-		// 				tracks = append(tracks, track)
-		// 			}
-		// 		}
-		//
-		// 		return packMediaResult(c, tracks)
-		// 	},
-		// },
 	)
 }

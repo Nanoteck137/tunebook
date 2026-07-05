@@ -85,7 +85,8 @@ func InstallFilesHandlers(app core.App, g pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				p, err := app.PlaylistService().GetPlaylistImage(ctx,
+				p, err := app.PlaylistService().GetPlaylistImage(
+					ctx,
 					service.GetPlaylistImageParams{
 						PlaylistId:  playlistId,
 						Size:        size,
