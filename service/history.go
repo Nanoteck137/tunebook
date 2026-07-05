@@ -86,6 +86,16 @@ func (s *HistoryService) PushTrackHistory(
 	ctx context.Context,
 	params PushTrackHistoryParams,
 ) (string, error) {
+	track, err := s.db.GetTrackById(ctx, params.TrackId)
+	if err != nil {
+		// TODO(patrik): Handle error
+		// if errors.Is(err, database.ErrItemNotFound) {
+		// 	return "", nil
+		// }
+
+		return "", historyErr.Wrap("push track history: get track", err)
+	}
+
 	if params.PercentPlayed < 10 {
 		return "", nil
 	}
@@ -95,16 +105,58 @@ func (s *HistoryService) PushTrackHistory(
 		status = "completed"
 	}
 
+	now := time.Now()
+
 	id, err := s.db.CreateTrackHistory(ctx, database.CreateTrackHistoryParams{
 		UserId:        params.UserId,
 		TrackId:       params.TrackId,
-		ListenedAt:    time.Now().UnixMilli(),
+		ListenedAt:    now.UnixMilli(),
 		PlaybackType:  params.PlaybackType,
 		Status:        status,
 		PercentPlayed: params.PercentPlayed,
 	})
 	if err != nil {
 		return "", historyErr.Wrap("push track history", err)
+	}
+
+
+	playTimeDelta := int64(float64(track.Duration) * float64(params.PercentPlayed) / 100.0)
+
+	skipDelta := 0
+	if status == "skipped" {
+		skipDelta = 1
+	}
+
+	year := now.Year()
+	month := int(now.Month())
+	quarter := (month-1)/3 + 1
+
+	periods := []struct {
+		periodType  string
+		year        int
+		periodValue int
+	}{
+		{"all", 0, 0},
+		{"year", year, 0},
+		{"quarter", year, quarter},
+		{"month", year, month},
+	}
+
+	for _, p := range periods {
+		err := s.db.UpsertUserTrackStats(ctx, database.UpsertUserTrackStatsParams{
+			UserId:        params.UserId,
+			TrackId:       params.TrackId,
+
+			PeriodType:    p.periodType,
+			Year:          p.year,
+			PeriodValue:   p.periodValue,
+
+			SkipDelta:     skipDelta,
+			PlayTimeDelta: playTimeDelta,
+		})
+		if err != nil {
+			return id, historyErr.Wrap("push track history: upsert stats", err)
+		}
 	}
 
 	return id, nil

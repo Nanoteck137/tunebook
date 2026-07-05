@@ -394,8 +394,6 @@ func (s *QueueService) AddAlbumToQueue(
 		return queueErr.Wrap("get track ids by album", err)
 	}
 
-	// pretty.Println(trackIds)
-
 	if len(trackIds) == 0 {
 		return nil
 	}
