@@ -11,11 +11,11 @@ import (
 	"github.com/nanoteck137/tunebook/database"
 )
 
-var jobQueueErr = NewServiceErrCreator("job_queue")
+var jobErr = NewServiceErrCreator("job")
 
 type JobHandler func(ctx context.Context, data string) error
 
-type JobQueueService struct {
+type JobService struct {
 	logger   *slog.Logger
 	db       *database.Database
 	handlers map[string]JobHandler
@@ -25,15 +25,15 @@ type JobQueueService struct {
 	wg     sync.WaitGroup
 }
 
-func NewJobQueueService(logger *slog.Logger, db *database.Database) *JobQueueService {
-	return &JobQueueService{
+func NewJobService(logger *slog.Logger, db *database.Database) *JobService {
+	return &JobService{
 		logger:   logger,
 		db:       db,
 		handlers: make(map[string]JobHandler),
 	}
 }
 
-func (s *JobQueueService) Start() {
+func (s *JobService) Start() {
 	s.stopCh = make(chan struct{})
 
 	s.wg.Add(1)
@@ -59,13 +59,13 @@ func (s *JobQueueService) Start() {
 	s.logger.Info("job queue worker started")
 }
 
-func (s *JobQueueService) Stop() {
+func (s *JobService) Stop() {
 	close(s.stopCh)
 	s.wg.Wait()
 	s.logger.Info("job queue worker stopped")
 }
 
-func (s *JobQueueService) RegisterJob(name string, handler JobHandler) {
+func (s *JobService) RegisterJob(name string, handler JobHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -77,18 +77,18 @@ func (s *JobQueueService) RegisterJob(name string, handler JobHandler) {
 	s.logger.Info("registered job handler", "name", name)
 }
 
-func (s *JobQueueService) PushJob(ctx context.Context, name string, data any) error {
+func (s *JobService) PushJob(ctx context.Context, name string, data any) error {
 	s.mu.RLock()
 	_, exists := s.handlers[name]
 	s.mu.RUnlock()
 
 	if !exists {
-		return jobQueueErr.Newf("no handler registered for job: %s", name)
+		return jobErr.Newf("no handler registered for job: %s", name)
 	}
 
 	raw, err := json.Marshal(data)
 	if err != nil {
-		return jobQueueErr.Wrap("marshal job data", err)
+		return jobErr.Wrap("marshal job data", err)
 	}
 
 	id, err := s.db.CreateJob(ctx, database.CreateJobParams{
@@ -96,7 +96,7 @@ func (s *JobQueueService) PushJob(ctx context.Context, name string, data any) er
 		Data: string(raw),
 	})
 	if err != nil {
-		return jobQueueErr.Wrap("create job", err)
+		return jobErr.Wrap("create job", err)
 	}
 
 	s.logger.Info("pushed job", "id", id, "name", name)
@@ -104,10 +104,10 @@ func (s *JobQueueService) PushJob(ctx context.Context, name string, data any) er
 	return nil
 }
 
-func (s *JobQueueService) ProcessPendingJobs(ctx context.Context) error {
+func (s *JobService) ProcessPendingJobs(ctx context.Context) error {
 	jobs, err := s.db.GetPendingJobs(ctx, 10)
 	if err != nil {
-		return jobQueueErr.Wrap("get pending jobs", err)
+		return jobErr.Wrap("get pending jobs", err)
 	}
 
 	if len(jobs) > 0 {
@@ -124,10 +124,10 @@ func (s *JobQueueService) ProcessPendingJobs(ctx context.Context) error {
 	return nil
 }
 
-func (s *JobQueueService) processJob(ctx context.Context, job database.Job) error {
+func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 	err := s.db.ClaimJob(ctx, job.Id)
 	if err != nil {
-		return jobQueueErr.Wrap("claim job", err)
+		return jobErr.Wrap("claim job", err)
 	}
 
 	s.logger.Info("running job", "id", job.Id, "name", job.Name, "attempt", job.Attempts+1)
@@ -143,7 +143,7 @@ func (s *JobQueueService) processJob(ctx context.Context, job database.Job) erro
 			Requeue: false,
 			Error:   errMsg,
 		})
-		return jobQueueErr.New(errMsg)
+		return jobErr.New(errMsg)
 	}
 
 	err = handler(ctx, job.Data)
@@ -156,12 +156,12 @@ func (s *JobQueueService) processJob(ctx context.Context, job database.Job) erro
 			Requeue: shouldRequeue,
 			Error:   err.Error(),
 		})
-		return jobQueueErr.Wrap("job handler failed", err)
+		return jobErr.Wrap("job handler failed", err)
 	}
 
 	err = s.db.CompleteJob(ctx, job.Id)
 	if err != nil {
-		return jobQueueErr.Wrap("complete job", err)
+		return jobErr.Wrap("complete job", err)
 	}
 
 	s.logger.Info("job completed", "id", job.Id, "name", job.Name)

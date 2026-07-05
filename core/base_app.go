@@ -36,7 +36,7 @@ type BaseApp struct {
 	playlistService *service.PlaylistService
 	historyService  *service.HistoryService
 	queueService    *service.QueueService
-	jobQueueService *service.JobQueueService
+	jobService *service.JobService
 
 	broker *broker.Broker
 }
@@ -69,8 +69,8 @@ func (app *BaseApp) QueueService() *service.QueueService {
 	return app.queueService
 }
 
-func (app *BaseApp) JobQueueService() *service.JobQueueService {
-	return app.jobQueueService
+func (app *BaseApp) JobService() *service.JobService {
+	return app.jobService
 }
 
 func (app *BaseApp) TaskService() *service.TaskService {
@@ -162,8 +162,8 @@ func (app *BaseApp) Bootstrap() error {
 
 	app.taskService = service.NewTaskService(newServiceLogger("task"))
 
-	app.jobQueueService = service.NewJobQueueService(
-		newServiceLogger("job_queue"),
+	app.jobService = service.NewJobService(
+		newServiceLogger("job"),
 		app.db,
 	)
 
@@ -277,7 +277,7 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	app.jobQueueService.RegisterJob(tasks.GeneratePlaylistImage, func(ctx context.Context, data string) error {
+	app.jobService.RegisterJob(tasks.GeneratePlaylistImage, func(ctx context.Context, data string) error {
 		var params service.GeneratePlaylistImageParams
 		err := json.Unmarshal([]byte(data), &params)
 		if err != nil {
@@ -287,7 +287,7 @@ func (app *BaseApp) Bootstrap() error {
 		return app.PlaylistService().GeneratePlaylistImage(ctx, params)
 	})
 
-	app.jobQueueService.Start()
+	app.jobService.Start()
 
 	// TODO(patrik): This should not be in bootstrap
 	app.taskService.Start()
@@ -299,7 +299,7 @@ func (app *BaseApp) Bootstrap() error {
 }
 
 func (app *BaseApp) Shutdown() error {
-	app.jobQueueService.Stop()
+	app.jobService.Stop()
 	app.taskService.Stop()
 
 	err := app.db.Close()

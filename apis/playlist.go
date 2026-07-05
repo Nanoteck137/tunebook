@@ -377,7 +377,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.JobQueueService().PushJob(
+				err = app.JobService().PushJob(
 					context.Background(),
 					tasks.GeneratePlaylistImage,
 					service.GeneratePlaylistImageParams{
