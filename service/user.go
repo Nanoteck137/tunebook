@@ -52,6 +52,17 @@ type GetUserByIdParams struct {
 	UserId string
 }
 
+type GetAllUsersParams struct {
+}
+
+func (s *UserService) GetAllUsers(ctx context.Context, params GetAllUsersParams) ([]database.User, error) {
+	return s.db.GetAllUsers(ctx)
+}
+
+type UpdateUserStatsParams struct {
+	UserId string
+}
+
 func (s *UserService) GetUserById(
 	ctx context.Context,
 	params GetUserByIdParams,
@@ -569,19 +580,9 @@ type DeleteApiTokenParams struct {
 }
 
 func (s *UserService) RecalculateUserStats(ctx context.Context, userId string) error {
-	numTracksPlayed, err := s.db.GetCompletedPlayCount(ctx, userId)
+	agg, err := s.db.GetUserTrackStatsAgg(ctx, userId)
 	if err != nil {
-		return userErr.Wrap("recalculate stats: get completed play count", err)
-	}
-
-	numTracksSkipped, err := s.db.GetSkippedPlayCount(ctx, userId)
-	if err != nil {
-		return userErr.Wrap("recalculate stats: get skipped play count", err)
-	}
-
-	listeningTimeMs, err := s.db.GetCompletedListeningTime(ctx, userId)
-	if err != nil {
-		return userErr.Wrap("recalculate stats: get listening time", err)
+		return userErr.Wrap("recalculate stats: get track stats agg", err)
 	}
 
 	lastListenedAt, err := s.db.GetLastListenedAt(ctx, userId)
@@ -590,23 +591,23 @@ func (s *UserService) RecalculateUserStats(ctx context.Context, userId string) e
 	}
 
 	numPlaylistsCreated, err := s.db.GetUserPlaylistCount(ctx, userId)
-	if err != nil {
+	if err != nil && !errors.Is(err, database.ErrItemNotFound) {
 		return userErr.Wrap("recalculate stats: get playlist count", err)
 	}
 
 	numFavoriteTracks, err := s.db.GetUserFavoriteCount(ctx, userId)
-	if err != nil {
+	if err != nil && !errors.Is(err, database.ErrItemNotFound){
 		return userErr.Wrap("recalculate stats: get favorite count", err)
 	}
 
 	err = s.db.SetUserStats(ctx, database.SetUserStatsParams{
 		UserId: userId,
 
-		NumTracksPlayed:     numTracksPlayed,
-		NumTracksSkipped:    numTracksSkipped,
+		NumTracksPlayed:     agg.NumTracksPlayed,
+		NumTracksSkipped:    agg.NumTracksSkipped,
 		NumPlaylistsCreated: numPlaylistsCreated,
 		NumFavoriteTracks:   numFavoriteTracks,
-		ListeningTime:       listeningTimeMs,
+		ListeningTime:       agg.PlayTime,
 		LastListenedAt:      lastListenedAt,
 	})
 	if err != nil {

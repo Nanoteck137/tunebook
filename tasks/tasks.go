@@ -9,4 +9,5 @@ const (
 	UserStatsRecalculate = "user-stats-recalculate"
 
 	GeneratePlaylistImage = "generate-playlist-image"
+	UserStatsUpdate       = "user-stats-update"
 )

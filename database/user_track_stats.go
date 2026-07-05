@@ -32,6 +32,28 @@ type UpsertUserTrackStatsParams struct {
 	PlayTimeDelta int64
 }
 
+type UserTrackStatsAgg struct {
+	NumTracksPlayed  int   `db:"num_tracks_played"`
+	NumTracksSkipped int   `db:"num_tracks_skipped"`
+	PlayTime         int64 `db:"play_time"`
+}
+
+func (db DB) GetUserTrackStatsAgg(ctx context.Context, userId string) (UserTrackStatsAgg, error) {
+	tbl := goqu.T("user_track_stats")
+	query := dialect.From(tbl).
+		Select(
+			goqu.COALESCE(goqu.SUM(tbl.Col("play_count")), 0).As("num_tracks_played"),
+			goqu.COALESCE(goqu.SUM(tbl.Col("skip_count")), 0).As("num_tracks_skipped"),
+			goqu.COALESCE(goqu.SUM(tbl.Col("play_time")), 0).As("play_time"),
+		).
+		Where(
+			tbl.Col("user_id").Eq(userId),
+			tbl.Col("period_type").Eq("all"),
+		)
+
+	return Single[UserTrackStatsAgg](db, ctx, query)
+}
+
 func (db DB) UpsertUserTrackStats(
 	ctx context.Context,
 	params UpsertUserTrackStatsParams,
