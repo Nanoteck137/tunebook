@@ -3,8 +3,8 @@ package types
 type MediaFormat string
 
 const (
-	MediaFormatUnknown  MediaFormat = "unknown"
 	MediaFormatEmpty    MediaFormat = ""
+	MediaFormatUnknown  MediaFormat = "unknown"
 	MediaFormatFlac     MediaFormat = "flac"
 	MediaFormatPcmS16LE MediaFormat = "pcm_s16le"
 	MediaFormatOpus     MediaFormat = "opus"

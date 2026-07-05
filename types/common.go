@@ -2,6 +2,8 @@ package types
 
 import "path"
 
+// TODO(patrik): This will be part of the FilesystemService 
+// or whatever that will be called
 type DataDir string
 
 func (d DataDir) String() string {
@@ -88,20 +90,4 @@ func (d ImageCacheDir) Users() string {
 
 func (d ImageCacheDir) User(id string) string {
 	return path.Join(d.Users(), id)
-}
-
-type Error struct {
-	Message string `json:"message"`
-}
-
-func (e *Error) Error() string {
-	return e.Message
-}
-
-type ErrorList []*Error
-
-func (p *ErrorList) Add(message string) {
-	*p = append(*p, &Error{
-		Message: message,
-	})
 }
