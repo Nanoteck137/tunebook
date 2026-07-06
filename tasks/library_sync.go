@@ -12,7 +12,9 @@ type LibrarySyncTask struct {
 	libraryService *service.LibraryService
 }
 
-func NewLibrarySyncTask(libraryService *service.LibraryService) *LibrarySyncTask {
+func NewLibrarySyncTask(
+	libraryService *service.LibraryService,
+) *LibrarySyncTask {
 	return &LibrarySyncTask{
 		libraryService: libraryService,
 	}

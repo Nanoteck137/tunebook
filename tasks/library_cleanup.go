@@ -12,7 +12,9 @@ type LibraryCleanupTask struct {
 	libraryService *service.LibraryService
 }
 
-func NewLibraryCleanupTask(libraryService *service.LibraryService) *LibraryCleanupTask {
+func NewLibraryCleanupTask(
+	libraryService *service.LibraryService,
+) *LibraryCleanupTask {
 	return &LibraryCleanupTask{
 		libraryService: libraryService,
 	}

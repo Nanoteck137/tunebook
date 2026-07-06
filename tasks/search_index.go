@@ -12,7 +12,9 @@ type SearchIndexTask struct {
 	searchService *service.SearchService
 }
 
-func NewSearchIndexTask(searchService *service.SearchService) *SearchIndexTask {
+func NewSearchIndexTask(
+	searchService *service.SearchService,
+) *SearchIndexTask {
 	return &SearchIndexTask{
 		searchService: searchService,
 	}

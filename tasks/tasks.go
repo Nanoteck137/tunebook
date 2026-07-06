@@ -8,6 +8,7 @@ const (
 	SearchIndex          = "search-index"
 	UserStatsRecalculate = "user-stats-recalculate"
 
+	// TODO(patrik): These are jobs not tasks
 	GeneratePlaylistImage = "generate-playlist-image"
 	UserStatsUpdate       = "user-stats-update"
 )
