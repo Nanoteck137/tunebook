@@ -22,7 +22,11 @@ func InvalidSort(err error) error {
 	return fmt.Errorf("%w: %w", ErrInvalidSort, err)
 }
 
-func applyFilter(query *goqu.SelectDataset, resolver *filter.Resolver, filterStr string) (*goqu.SelectDataset, error) {
+func applyFilter(
+	query *goqu.SelectDataset, 
+	resolver *filter.Resolver, 
+	filterStr string,
+) (*goqu.SelectDataset, error) {
 	if filterStr == "" {
 		return query, nil
 	}
@@ -56,7 +60,11 @@ func applyFilterCustom(
 	return query.Where(where, expr), nil
 }
 
-func applySort(query *goqu.SelectDataset, resolver *filter.Resolver, sortStr string) (*goqu.SelectDataset, error) {
+func applySort(
+	query *goqu.SelectDataset, 
+	resolver *filter.Resolver, 
+	sortStr string,
+) (*goqu.SelectDataset, error) {
 	sortExpr, err := filter.ParseSort(sortStr)
 	if err != nil {
 		return nil, InvalidSort(err)
@@ -75,7 +83,10 @@ func applySort(query *goqu.SelectDataset, resolver *filter.Resolver, sortStr str
 	return query.Order(exprs...), nil
 }
 
-func fullParseFilter(resolver *filter.Resolver, filterStr string) (exp.Expression, error) {
+func fullParseFilter(
+	resolver *filter.Resolver, 
+	filterStr string,
+) (exp.Expression, error) {
 	ast, err := parser.ParseExpr(filterStr)
 	if err != nil {
 		return nil, InvalidFilter(err)
@@ -94,7 +105,10 @@ func fullParseFilter(resolver *filter.Resolver, filterStr string) (exp.Expressio
 	return re, nil
 }
 
-func generateTableSelect(table *filter.Table, ids []string) *goqu.SelectDataset {
+func generateTableSelect(
+	table *filter.Table, 
+	ids []string,
+) *goqu.SelectDataset {
 	return goqu.From(table.Name).
 		Select(table.SelectName).
 		Where(goqu.I(table.WhereName).In(ids))

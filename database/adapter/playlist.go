@@ -15,7 +15,9 @@ func (a *PlaylistResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "playlists.name", filter.SortTypeAsc
 }
 
-func (a *PlaylistResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *PlaylistResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -57,15 +59,23 @@ func (a *PlaylistResolverAdapter) ResolveVariableName(name string) (filter.Name,
 	return filter.Name{}, false
 }
 
-func (a *PlaylistResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *PlaylistResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	return "", false
 }
 
-func (a *PlaylistResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
+func (a *PlaylistResolverAdapter) ResolveTable(
+	typ string,
+) (filter.Table, bool) {
 	return filter.Table{}, false
 }
 
-func (a *PlaylistResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *PlaylistResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver,
+	name string,
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	return nil, filter.UnknownFunction(name)
 }
 
@@ -73,11 +83,14 @@ var _ filter.ResolverAdapter = (*PlaylistItemResolverAdapter)(nil)
 
 type PlaylistItemResolverAdapter struct{}
 
-func (a *PlaylistItemResolverAdapter) DefaultSort() (string, filter.SortType) {
+func (a *PlaylistItemResolverAdapter) DefaultSort(
+) (string, filter.SortType) {
 	return "playlist_items.order_num", filter.SortTypeAsc
 }
 
-func (a *PlaylistItemResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *PlaylistItemResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -104,15 +117,23 @@ func (a *PlaylistItemResolverAdapter) ResolveVariableName(name string) (filter.N
 	return filter.Name{}, false
 }
 
-func (a *PlaylistItemResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *PlaylistItemResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	return "", false
 }
 
-func (a *PlaylistItemResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
+func (a *PlaylistItemResolverAdapter) ResolveTable(
+	typ string,
+) (filter.Table, bool) {
 	return filter.Table{}, false
 }
 
-func (a *PlaylistItemResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *PlaylistItemResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver,
+	name string,
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	return nil, filter.UnknownFunction(name)
 }
 
@@ -120,11 +141,14 @@ var _ filter.ResolverAdapter = (*PlaylistTrackResolverAdapter)(nil)
 
 type PlaylistTrackResolverAdapter struct{}
 
-func (a *PlaylistTrackResolverAdapter) DefaultSort() (string, filter.SortType) {
+func (a *PlaylistTrackResolverAdapter) DefaultSort(
+) (string, filter.SortType) {
 	return "playlist_items.position", filter.SortTypeAsc
 }
 
-func (a *PlaylistTrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *PlaylistTrackResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -204,7 +228,9 @@ func (a *PlaylistTrackResolverAdapter) ResolveVariableName(name string) (filter.
 	return filter.Name{}, false
 }
 
-func (a *PlaylistTrackResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *PlaylistTrackResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	switch typ {
 	case "tags":
 		return slug.Make(name), true
@@ -215,7 +241,9 @@ func (a *PlaylistTrackResolverAdapter) ResolveNameToId(typ, name string) (string
 	return "", false
 }
 
-func (a *PlaylistTrackResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
+func (a *PlaylistTrackResolverAdapter) ResolveTable(
+	typ string,
+) (filter.Table, bool) {
 	switch typ {
 	case "tags":
 		return filter.Table{
@@ -234,7 +262,11 @@ func (a *PlaylistTrackResolverAdapter) ResolveTable(typ string) (filter.Table, b
 	return filter.Table{}, false
 }
 
-func (a *PlaylistTrackResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *PlaylistTrackResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver,
+	name string,
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "tracks.id", args)

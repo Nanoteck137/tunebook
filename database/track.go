@@ -87,13 +87,19 @@ func (db DB) GetTrackById(ctx context.Context, id string) (Track, error) {
 	return Single[Track](db, ctx, query)
 }
 
-func (db DB) GetTracksByIds(ctx context.Context, ids []string) ([]Track, error) {
+func (db DB) GetTracksByIds(
+	ctx context.Context, 
+	ids []string,
+) ([]Track, error) {
 	query := TrackQuery().Where(goqu.I("tracks.id").In(ids))
 
 	return Multiple[Track](db, ctx, query)
 }
 
-func (db DB) GetTrackIdsByFilter(ctx context.Context, filterStr string) ([]string, error) {
+func (db DB) GetTrackIdsByFilter(
+	ctx context.Context, 
+	filterStr string,
+) ([]string, error) {
 	query := TrackQuery().Select(goqu.I("tracks.id"))
 
 	a := adapter.TrackResolverAdapter{}
@@ -148,13 +154,17 @@ func (db DB) GetTracks(
 	return items, page, nil
 }
 
-func (db DB) GetTrackIdsByAlbum(ctx context.Context, albumId, filterStr string) ([]string, error) {
+func (db DB) GetTrackIdsByAlbum(
+	ctx context.Context, 
+	albumId, filterStr string,
+) ([]string, error) {
 	var err error
 
 	query := TrackQuery().Select("tracks.id")
 
 	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(query, r, filterStr, goqu.I("tracks.album_id").Eq(albumId))
+	query, err = applyFilterCustom(
+		query, r, filterStr, goqu.I("tracks.album_id").Eq(albumId))
 	if err != nil {
 		return nil, err
 	}
@@ -178,13 +188,17 @@ func (db DB) GetTrackIdsByAlbum(ctx context.Context, albumId, filterStr string) 
 	return Multiple[string](db, ctx, query)
 }
 
-func (db DB) GetTrackIdsByArtist(ctx context.Context, artistId, filterStr string) ([]string, error) {
+func (db DB) GetTrackIdsByArtist(
+	ctx context.Context, 
+	artistId, filterStr string,
+) ([]string, error) {
 	var err error
 
 	query := TrackQuery().Select("tracks.id")
 
 	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(query, r, filterStr, goqu.I("tracks.artist_id").Eq(artistId))
+	query, err = applyFilterCustom(
+		query, r, filterStr, goqu.I("tracks.artist_id").Eq(artistId))
 	if err != nil {
 		return nil, err
 	}
@@ -199,14 +213,22 @@ type GetTrackIdsByPlaylistParams struct {
 	FilterStr  string
 }
 
-func (db DB) GetTrackIdsByPlaylist(ctx context.Context, params GetTrackIdsByPlaylistParams) ([]string, error) {
+func (db DB) GetTrackIdsByPlaylist(
+	ctx context.Context, 
+	params GetTrackIdsByPlaylistParams,
+) ([]string, error) {
 	var err error
 
 	query := TrackQuery().Select("tracks.id").
-		Join(goqu.I("playlist_items"), goqu.On(tracksTbl.Col("id").Eq(goqu.I("playlist_items.track_id"))))
+		Join(
+			goqu.I("playlist_items"), 
+			goqu.On(tracksTbl.Col("id").Eq(goqu.I("playlist_items.track_id"))),
+		)
 
 	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(query, r, params.FilterStr, goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
+	query, err = applyFilterCustom(
+		query, r, params.FilterStr, 
+		goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
 	if err != nil {
 		return nil, err
 	}
@@ -221,14 +243,22 @@ type GetTrackIdsByUserFavoritesParams struct {
 	FilterStr string
 }
 
-func (db DB) GetTrackIdsByUserFavorites(ctx context.Context, params GetTrackIdsByUserFavoritesParams) ([]string, error) {
+func (db DB) GetTrackIdsByUserFavorites(
+	ctx context.Context, 
+	params GetTrackIdsByUserFavoritesParams,
+) ([]string, error) {
 	var err error
 
 	query := TrackQuery().Select("tracks.id").
-		Join(goqu.I("user_favorites"), goqu.On(tracksTbl.Col("id").Eq(goqu.I("user_favorites.track_id"))))
+		Join(
+			goqu.I("user_favorites"), 
+			goqu.On(tracksTbl.Col("id").Eq(goqu.I("user_favorites.track_id"))),
+		)
 
 	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(query, r, params.FilterStr, goqu.I("user_favorites.user_id").Eq(params.UserId))
+	query, err = applyFilterCustom(
+		query, r, params.FilterStr, 
+		goqu.I("user_favorites.user_id").Eq(params.UserId))
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +268,10 @@ func (db DB) GetTrackIdsByUserFavorites(ctx context.Context, params GetTrackIdsB
 	return Multiple[string](db, ctx, query)
 }
 
-func (db DB) GetTracksByAlbum(ctx context.Context, albumId string) ([]Track, error) {
+func (db DB) GetTracksByAlbum(
+	ctx context.Context, 
+	albumId string,
+) ([]Track, error) {
 	query := TrackQuery().
 		Where(
 			goqu.I("tracks.id").In(
@@ -255,7 +288,11 @@ func (db DB) GetTracksByAlbum(ctx context.Context, albumId string) ([]Track, err
 	return Multiple[Track](db, ctx, query)
 }
 
-func (db DB) GetTracksIn(ctx context.Context, in any, sort string) ([]Track, error) {
+func (db DB) GetTracksIn(
+	ctx context.Context, 
+	in any, 
+	sort string,
+) ([]Track, error) {
 	query := TrackQuery().
 		Where(
 			goqu.I("tracks.id").In(in),
@@ -292,7 +329,10 @@ type CreateTrackParams struct {
 	Updated int64
 }
 
-func (db DB) CreateTrack(ctx context.Context, params CreateTrackParams) (string, error) {
+func (db DB) CreateTrack(
+	ctx context.Context, 
+	params CreateTrackParams,
+) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -348,7 +388,11 @@ type TrackChanges struct {
 	Created Change[int64]
 }
 
-func (db DB) UpdateTrack(ctx context.Context, id string, changes TrackChanges) error {
+func (db DB) UpdateTrack(
+	ctx context.Context, 
+	id string, 
+	changes TrackChanges,
+) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "filename", changes.Filename)
@@ -396,7 +440,11 @@ func (db DB) DeleteTrack(ctx context.Context, id string) error {
 	return nil
 }
 
-func (db DB) AddTagToTrack(ctx context.Context, tagSlug, trackId string) error {
+func (db DB) AddTagToTrack(
+	ctx context.Context, 
+	tagSlug, 
+	trackId string,
+) error {
 	query := dialect.Insert(tracksTagsTbl).
 		Rows(goqu.Record{
 			"track_id": trackId,
@@ -411,7 +459,10 @@ func (db DB) AddTagToTrack(ctx context.Context, tagSlug, trackId string) error {
 	return nil
 }
 
-func (db DB) RemoveAllTagsFromTrack(ctx context.Context, trackId string) error {
+func (db DB) RemoveAllTagsFromTrack(
+	ctx context.Context, 
+	trackId string,
+) error {
 	query := dialect.Delete(tracksTagsTbl).
 		Where(goqu.I("track_id").Eq(trackId))
 
@@ -424,7 +475,10 @@ func (db DB) RemoveAllTagsFromTrack(ctx context.Context, trackId string) error {
 }
 
 // TODO(patrik): Generalize
-func (db DB) RemoveAllTrackFeaturingArtists(ctx context.Context, trackId string) error {
+func (db DB) RemoveAllTrackFeaturingArtists(
+	ctx context.Context, 
+	trackId string,
+) error {
 	query := dialect.Delete(tracksFeaturingArtistsTbl).
 		Where(tracksFeaturingArtistsTbl.Col("track_id").Eq(trackId))
 
@@ -437,7 +491,10 @@ func (db DB) RemoveAllTrackFeaturingArtists(ctx context.Context, trackId string)
 }
 
 // TODO(patrik): Generalize
-func (db DB) AddFeaturingArtistToTrack(ctx context.Context, trackId, artistId string) error {
+func (db DB) AddFeaturingArtistToTrack(
+	ctx context.Context, 
+	trackId, artistId string,
+) error {
 	query := dialect.Insert(tracksFeaturingArtistsTbl).
 		Rows(goqu.Record{
 			"track_id":  trackId,
@@ -452,7 +509,10 @@ func (db DB) AddFeaturingArtistToTrack(ctx context.Context, trackId, artistId st
 	return nil
 }
 
-func (db DB) RemoveFeaturingArtistFromTrack(ctx context.Context, trackId, artistId string) error {
+func (db DB) RemoveFeaturingArtistFromTrack(
+	ctx context.Context, 
+	trackId, artistId string,
+) error {
 	query := goqu.Delete(tracksFeaturingArtistsTbl).
 		Where(
 			goqu.And(
@@ -522,7 +582,10 @@ func TrackQuery() *goqu.SelectDataset {
 		).
 		LeftJoin(
 			// TODO(patrik): Fix
-			FeaturingArtistsQuery("tracks_featuring_artists", "track_id").As("featuring_artists"),
+			FeaturingArtistsQuery(
+				"tracks_featuring_artists", 
+				"track_id",
+			).As("featuring_artists"),
 			goqu.On(idCol.Eq(goqu.I("featuring_artists.id"))),
 		)
 

@@ -38,7 +38,10 @@ type UserTrackStatsAgg struct {
 	PlayTime         int64 `db:"play_time"`
 }
 
-func (db DB) GetUserTrackStatsAgg(ctx context.Context, userId string) (UserTrackStatsAgg, error) {
+func (db DB) GetUserTrackStatsAgg(
+	ctx context.Context, 
+	userId string,
+) (UserTrackStatsAgg, error) {
 	tbl := goqu.T("user_track_stats")
 	query := dialect.From(tbl).
 		Select(

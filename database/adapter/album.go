@@ -15,7 +15,9 @@ func (a *AlbumResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "albums.name", filter.SortTypeAsc
 }
 
-func (a *AlbumResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *AlbumResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -58,7 +60,9 @@ func (a *AlbumResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 	return filter.Name{}, false
 }
 
-func (a *AlbumResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *AlbumResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	switch typ {
 	case "tags":
 		return slug.Make(name), true
@@ -88,7 +92,11 @@ func (a *AlbumResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 	return filter.Table{}, false
 }
 
-func (a *AlbumResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *AlbumResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver, 
+	name string, 
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "albums.id", args)

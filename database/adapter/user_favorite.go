@@ -11,11 +11,14 @@ var _ filter.ResolverAdapter = (*UserFavoriteTrackResolverAdapter)(nil)
 
 type UserFavoriteTrackResolverAdapter struct{}
 
-func (a *UserFavoriteTrackResolverAdapter) DefaultSort() (string, filter.SortType) {
+func (a *UserFavoriteTrackResolverAdapter) DefaultSort(
+) (string, filter.SortType) {
 	return "user_favorites.added", filter.SortTypeDesc
 }
 
-func (a *UserFavoriteTrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *UserFavoriteTrackResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -95,7 +98,9 @@ func (a *UserFavoriteTrackResolverAdapter) ResolveVariableName(name string) (fil
 	return filter.Name{}, false
 }
 
-func (a *UserFavoriteTrackResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *UserFavoriteTrackResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	switch typ {
 	case "tags":
 		return slug.Make(name), true
@@ -106,7 +111,9 @@ func (a *UserFavoriteTrackResolverAdapter) ResolveNameToId(typ, name string) (st
 	return "", false
 }
 
-func (a *UserFavoriteTrackResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
+func (a *UserFavoriteTrackResolverAdapter) ResolveTable(
+	typ string,
+) (filter.Table, bool) {
 	switch typ {
 	case "tags":
 		return filter.Table{
@@ -125,7 +132,11 @@ func (a *UserFavoriteTrackResolverAdapter) ResolveTable(typ string) (filter.Tabl
 	return filter.Table{}, false
 }
 
-func (a *UserFavoriteTrackResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *UserFavoriteTrackResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver, 
+	name string, 
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "tracks.id", args)

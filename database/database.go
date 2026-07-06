@@ -62,7 +62,10 @@ type DBExecutor struct {
 	handle *sqlx.DB
 }
 
-func (db *DBExecutor) Exec(ctx context.Context, query Query) (sql.Result, error) {
+func (db *DBExecutor) Exec(
+	ctx context.Context, 
+	query Query,
+) (sql.Result, error) {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return nil, handleErr(err)
@@ -76,7 +79,11 @@ func (db *DBExecutor) Exec(ctx context.Context, query Query) (sql.Result, error)
 	return res, nil
 }
 
-func (db *DBExecutor) Multiple(ctx context.Context, query Query, dest any) error {
+func (db *DBExecutor) Multiple(
+	ctx context.Context, 
+	query Query, 
+	dest any,
+) error {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return handleErr(err)
@@ -90,7 +97,9 @@ func (db *DBExecutor) Multiple(ctx context.Context, query Query, dest any) error
 	return nil
 }
 
-func (db *DBExecutor) Query(ctx context.Context, query Query) (*sql.Rows, error) {
+func (db *DBExecutor) Query(
+	ctx context.Context, 
+	query Query) (*sql.Rows, error) {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return nil, handleErr(err)
@@ -104,7 +113,10 @@ func (db *DBExecutor) Query(ctx context.Context, query Query) (*sql.Rows, error)
 	return res, nil
 }
 
-func (db *DBExecutor) QueryRow(ctx context.Context, query Query) (*sql.Row, error) {
+func (db *DBExecutor) QueryRow(
+	ctx context.Context, 
+	query Query,
+) (*sql.Row, error) {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return nil, handleErr(err)
@@ -114,7 +126,11 @@ func (db *DBExecutor) QueryRow(ctx context.Context, query Query) (*sql.Row, erro
 	return res, nil
 }
 
-func (db *DBExecutor) Single(ctx context.Context, query Query, dest any) error {
+func (db *DBExecutor) Single(
+	ctx context.Context, 
+	query Query, 
+	dest any,
+) error {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return handleErr(err)
@@ -196,7 +212,10 @@ type TxExecutor struct {
 	*sqlx.Tx
 }
 
-func (tx *TxExecutor) Exec(ctx context.Context, query Query) (sql.Result, error) {
+func (tx *TxExecutor) Exec(
+	ctx context.Context, 
+	query Query,
+) (sql.Result, error) {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return nil, handleErr(err)
@@ -210,7 +229,11 @@ func (tx *TxExecutor) Exec(ctx context.Context, query Query) (sql.Result, error)
 	return res, nil
 }
 
-func (tx *TxExecutor) Multiple(ctx context.Context, query Query, dest any) error {
+func (tx *TxExecutor) Multiple(
+	ctx context.Context, 
+	query Query, 
+	dest any,
+) error {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return handleErr(err)
@@ -224,7 +247,10 @@ func (tx *TxExecutor) Multiple(ctx context.Context, query Query, dest any) error
 	return nil
 }
 
-func (tx *TxExecutor) Query(ctx context.Context, query Query) (*sql.Rows, error) {
+func (tx *TxExecutor) Query(
+	ctx context.Context, 
+	query Query,
+) (*sql.Rows, error) {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return nil, handleErr(err)
@@ -238,7 +264,10 @@ func (tx *TxExecutor) Query(ctx context.Context, query Query) (*sql.Rows, error)
 	return res, nil
 }
 
-func (tx *TxExecutor) QueryRow(ctx context.Context, query Query) (*sql.Row, error) {
+func (tx *TxExecutor) QueryRow(
+	ctx context.Context, 
+	query Query,
+) (*sql.Row, error) {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return nil, handleErr(err)
@@ -248,7 +277,11 @@ func (tx *TxExecutor) QueryRow(ctx context.Context, query Query) (*sql.Row, erro
 	return res, nil
 }
 
-func (tx *TxExecutor) Single(ctx context.Context, query Query, dest any) error {
+func (tx *TxExecutor) Single(
+	ctx context.Context, 
+	query Query, 
+	dest any,
+) error {
 	sql, params, err := query.ToSQL()
 	if err != nil {
 		return handleErr(err)

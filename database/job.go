@@ -59,7 +59,10 @@ type CreateJobParams struct {
 	MaxAttempts int
 }
 
-func (db DB) CreateJob(ctx context.Context, params CreateJobParams) (string, error) {
+func (db DB) CreateJob(
+	ctx context.Context, 
+	params CreateJobParams,
+) (string, error) {
 	t := time.Now().UnixMilli()
 
 	if params.Id == "" {
@@ -130,7 +133,11 @@ type FailJobParams struct {
 	Error   string
 }
 
-func (db DB) FailJob(ctx context.Context, jobId string, params FailJobParams) error {
+func (db DB) FailJob(
+	ctx context.Context, 
+	jobId string, 
+	params FailJobParams,
+) error {
 	record := goqu.Record{
 		"error":   params.Error,
 		"updated": time.Now().UnixMilli(),

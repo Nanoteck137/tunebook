@@ -15,7 +15,9 @@ func (a *ArtistResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "artists.name", filter.SortTypeAsc
 }
 
-func (a *ArtistResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *ArtistResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -42,7 +44,9 @@ func (a *ArtistResolverAdapter) ResolveVariableName(name string) (filter.Name, b
 	return filter.Name{}, false
 }
 
-func (a *ArtistResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *ArtistResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	switch typ {
 	case "tags":
 		return slug.Make(name), true
@@ -64,7 +68,11 @@ func (a *ArtistResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 	return filter.Table{}, false
 }
 
-func (a *ArtistResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *ArtistResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver, 
+	name string, 
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "artists.id", args)

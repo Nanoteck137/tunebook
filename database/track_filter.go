@@ -42,14 +42,20 @@ func TrackFilterQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db DB) GetTrackFilterById(ctx context.Context, id string) (TrackFilter, error) {
+func (db DB) GetTrackFilterById(
+	ctx context.Context, 
+	id string,
+) (TrackFilter, error) {
 	query := TrackFilterQuery().
 		Where(goqu.I("track_filters.id").Eq(id))
 
 	return Single[TrackFilter](db, ctx, query)
 }
 
-func (db DB) GetTrackFiltersByUserId(ctx context.Context, userId string) ([]TrackFilter, error) {
+func (db DB) GetTrackFiltersByUserId(
+	ctx context.Context, 
+	userId string,
+) ([]TrackFilter, error) {
 	query := TrackFilterQuery().
 		Where(goqu.I("track_filters.user_id").Eq(userId))
 
@@ -67,7 +73,10 @@ type CreateTrackFilterParams struct {
 	Updated int64
 }
 
-func (db DB) CreateTrackFilter(ctx context.Context, params CreateTrackFilterParams) (string, error) {
+func (db DB) CreateTrackFilter(
+	ctx context.Context, 
+	params CreateTrackFilterParams,
+) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -107,7 +116,11 @@ type TrackFilterChanges struct {
 	Created Change[int64]
 }
 
-func (db DB) UpdateTrackFilter(ctx context.Context, id string, changes TrackFilterChanges) error {
+func (db DB) UpdateTrackFilter(
+	ctx context.Context, 
+	id string, 
+	changes TrackFilterChanges,
+) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "user_id", changes.UserId)

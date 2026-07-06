@@ -51,7 +51,10 @@ func (db DB) GetAllPlaylistItems(ctx context.Context) ([]PlaylistItem, error) {
 	return Multiple[PlaylistItem](db, ctx, query)
 }
 
-func (db DB) GetPlaylistItems(ctx context.Context, playlistId string) ([]PlaylistItem, error) {
+func (db DB) GetPlaylistItems(
+	ctx context.Context, 
+	playlistId string,
+) ([]PlaylistItem, error) {
 	query := PlaylistItemQuery().
 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
 		Order(goqu.I("playlist_items.position").Asc())
@@ -80,7 +83,10 @@ func (db DB) GetPlaylistTrackImages(
 	return Multiple[sql.NullString](db, ctx, query)
 }
 
-func (db DB) GetNextPlaylistItemIndex(ctx context.Context, playlistId string) (int, error) {
+func (db DB) GetNextPlaylistItemIndex(
+	ctx context.Context, 
+	playlistId string,
+) (int, error) {
 	query := dialect.From("playlist_items").
 		Select("playlist_items.position").
 		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
@@ -176,7 +182,10 @@ type CreatePlaylistItemParams struct {
 	Updated int64
 }
 
-func (db DB) CreatePlaylistItem(ctx context.Context, params CreatePlaylistItemParams) error {
+func (db DB) CreatePlaylistItem(
+	ctx context.Context, 
+	params CreatePlaylistItemParams,
+) error {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -208,7 +217,11 @@ type PlaylistItemChanges struct {
 	Created Change[int64]
 }
 
-func (db DB) UpdatePlaylistItem(ctx context.Context, playlistId, trackId string, changes PlaylistItemChanges) error {
+func (db DB) UpdatePlaylistItem(
+	ctx context.Context, 
+	playlistId, trackId string, 
+	changes PlaylistItemChanges,
+) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "position", changes.Position)
@@ -236,7 +249,10 @@ func (db DB) UpdatePlaylistItem(ctx context.Context, playlistId, trackId string,
 	return nil
 }
 
-func (db DB) DeletePlaylistItem(ctx context.Context, playlistId, trackId string) error {
+func (db DB) DeletePlaylistItem(
+	ctx context.Context, 
+	playlistId, trackId string,
+) error {
 	query := goqu.Delete("playlist_items").
 		Where(goqu.And(
 			goqu.I("playlist_items.playlist_id").Eq(playlistId),
@@ -251,7 +267,10 @@ func (db DB) DeletePlaylistItem(ctx context.Context, playlistId, trackId string)
 	return nil
 }
 
-func (db DB) GetPlaylistItemByTrackId(ctx context.Context, playlistId, trackId string) (PlaylistItem, error) {
+func (db DB) GetPlaylistItemByTrackId(
+	ctx context.Context, 
+	playlistId, trackId string,
+) (PlaylistItem, error) {
 	query := PlaylistItemQuery().
 		Where(
 			goqu.I("playlist_items.playlist_id").Eq(playlistId),
@@ -261,7 +280,11 @@ func (db DB) GetPlaylistItemByTrackId(ctx context.Context, playlistId, trackId s
 	return Single[PlaylistItem](db, ctx, query)
 }
 
-func (db DB) ReorderPlaylistItemsAfterDelete(ctx context.Context, playlistId string, deletedPosition int) error {
+func (db DB) ReorderPlaylistItemsAfterDelete(
+	ctx context.Context, 
+	playlistId string, 
+	deletedPosition int,
+) error {
 	query := goqu.Update("playlist_items").
 		Set(goqu.Record{
 			"position": goqu.L("position - 1"),

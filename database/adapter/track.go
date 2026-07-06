@@ -15,7 +15,9 @@ func (a *TrackResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "tracks.name", filter.SortTypeAsc
 }
 
-func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *TrackResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -80,7 +82,9 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 	return filter.Name{}, false
 }
 
-func (a *TrackResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *TrackResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	switch typ {
 	case "tags":
 		return slug.Make(name), true
@@ -110,7 +114,11 @@ func (a *TrackResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 	return filter.Table{}, false
 }
 
-func (a *TrackResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *TrackResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver, 
+	name string, 
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "tracks.id", args)

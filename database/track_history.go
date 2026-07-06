@@ -167,9 +167,12 @@ func (db DB) CreateTrackHistory(
 	return params.Id, nil
 }
 
-func (db DB) DeleteTrackHistory(ctx context.Context, track_historyId string) error {
+func (db DB) DeleteTrackHistory(
+	ctx context.Context, 
+	trackHistoryId string,
+) error {
 	query := dialect.Delete("track_history").
-		Where(goqu.I("track_history.id").Eq(track_historyId))
+		Where(goqu.I("track_history.id").Eq(trackHistoryId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {

@@ -95,7 +95,8 @@ func applyFilterParamsCustom(
 ) (*goqu.SelectDataset, error) {
 	resolver := filter.New(adapter)
 
-	query, err := applyFilterCustom(query, resolver, params.Filter, customWhere)
+	query, err := applyFilterCustom(
+		query, resolver, params.Filter, customWhere)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +309,10 @@ func (db DB) DeleteArtist(ctx context.Context, artistId string) error {
 
 // TODO(patrik): Generalize
 // TODO(patrik): Rename to AddArtistTag, same with track
-func (db DB) AddTagToArtist(ctx context.Context, tagSlug, artistId string) error {
+func (db DB) AddTagToArtist(
+	ctx context.Context, 
+	tagSlug, artistId string,
+) error {
 	query := dialect.Insert("artists_tags").
 		Rows(goqu.Record{
 			"artist_id": artistId,
@@ -325,7 +329,10 @@ func (db DB) AddTagToArtist(ctx context.Context, tagSlug, artistId string) error
 
 // TODO(patrik): Generalize
 // TODO(patrik): Rename to RemoveAllArtistTags, same with track
-func (db DB) RemoveAllTagsFromArtist(ctx context.Context, artistId string) error {
+func (db DB) RemoveAllTagsFromArtist(
+	ctx context.Context, 
+	artistId string,
+) error {
 	query := dialect.Delete("artists_tags").
 		Where(goqu.I("artist_id").Eq(artistId))
 

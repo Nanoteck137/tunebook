@@ -15,7 +15,9 @@ func (a *TrackHistoryResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "track_history.listened_at", filter.SortTypeDesc
 }
 
-func (a *TrackHistoryResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
+func (a *TrackHistoryResolverAdapter) ResolveVariableName(
+	name string,
+) (filter.Name, bool) {
 	switch name {
 	case "id":
 		return filter.Name{
@@ -110,7 +112,9 @@ func (a *TrackHistoryResolverAdapter) ResolveVariableName(name string) (filter.N
 	return filter.Name{}, false
 }
 
-func (a *TrackHistoryResolverAdapter) ResolveNameToId(typ, name string) (string, bool) {
+func (a *TrackHistoryResolverAdapter) ResolveNameToId(
+	typ, name string,
+) (string, bool) {
 	switch typ {
 	case "tags":
 		return slug.Make(name), true
@@ -121,7 +125,9 @@ func (a *TrackHistoryResolverAdapter) ResolveNameToId(typ, name string) (string,
 	return "", false
 }
 
-func (a *TrackHistoryResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
+func (a *TrackHistoryResolverAdapter) ResolveTable(
+	typ string,
+) (filter.Table, bool) {
 	switch typ {
 	case "tags":
 		return filter.Table{
@@ -140,7 +146,11 @@ func (a *TrackHistoryResolverAdapter) ResolveTable(typ string) (filter.Table, bo
 	return filter.Table{}, false
 }
 
-func (a *TrackHistoryResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
+func (a *TrackHistoryResolverAdapter) ResolveFunctionCall(
+	resolver *filter.Resolver, 
+	name string, 
+	args []ast.Expr,
+) (filter.FilterExpr, error) {
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "tracks.id", args)

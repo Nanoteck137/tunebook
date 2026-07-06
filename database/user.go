@@ -99,21 +99,30 @@ func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
 	return Single[User](db, ctx, query)
 }
 
-func (db DB) GetUserByUsername(ctx context.Context, username string) (User, error) {
+func (db DB) GetUserByUsername(
+	ctx context.Context, 
+	username string,
+) (User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.username").Eq(username))
 
 	return Single[User](db, ctx, query)
 }
 
-func (db DB) GetUserByEmail(ctx context.Context, email string) (User, error) {
+func (db DB) GetUserByEmail(
+	ctx context.Context, 
+	email string,
+) (User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.email").Eq(email))
 
 	return Single[User](db, ctx, query)
 }
 
-func (db DB) GetUserSettingsById(ctx context.Context, id string) (UserSettings, error) {
+func (db DB) GetUserSettingsById(
+	ctx context.Context, 
+	id string,
+) (UserSettings, error) {
 	query := UserSettingsQuery().
 		Where(goqu.I("users_settings.id").Eq(id))
 
@@ -133,7 +142,10 @@ type CreateUserParams struct {
 	Updated int64
 }
 
-func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (string, error) {
+func (db DB) CreateUser(
+	ctx context.Context, 
+	params CreateUserParams,
+) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -176,7 +188,11 @@ type UserChanges struct {
 	Created Change[int64]
 }
 
-func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) error {
+func (db DB) UpdateUser(
+	ctx context.Context, 
+	id string, 
+	changes UserChanges,
+) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "display_name", changes.DisplayName)
@@ -204,7 +220,10 @@ func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) err
 	return nil
 }
 
-func (db DB) UpdateUserSettings(ctx context.Context, settings UserSettings) error {
+func (db DB) UpdateUserSettings(
+	ctx context.Context, 
+	settings UserSettings,
+) error {
 	query := dialect.Insert("users_settings").
 		Rows(goqu.Record{
 			"id":             settings.Id,

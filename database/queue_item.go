@@ -66,7 +66,10 @@ type CreateQueueItemParams struct {
 	Position int
 }
 
-func (db DB) CreateQueueItems(ctx context.Context, params CreateQueueItemsParams) error {
+func (db DB) CreateQueueItems(
+	ctx context.Context,
+	params CreateQueueItemsParams,
+) error {
 	t := time.Now().UnixMilli()
 
 	rows := make([]goqu.Record, len(params.Items))
@@ -91,7 +94,11 @@ func (db DB) CreateQueueItems(ctx context.Context, params CreateQueueItemsParams
 	return err
 }
 
-func (db DB) GetNextQueueItemPosition(ctx context.Context, queueId string) (int, error) {
+// TODO(patrik): BUG: These need to also use user_id
+func (db DB) GetNextQueueItemPosition(
+	ctx context.Context,
+	queueId string,
+) (int, error) {
 	query := dialect.From("queue_items").
 		Select("queue_items.position").
 		Where(goqu.I("queue_items.queue_id").Eq(queueId)).
@@ -116,6 +123,7 @@ type GetQueueItemsParams struct {
 	QueueId string
 }
 
+// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetQueueItems(
 	ctx context.Context,
 	params GetQueueItemsParams,
@@ -139,7 +147,11 @@ func (db DB) GetQueueItems(
 	return items, page, nil
 }
 
-func (db DB) GetQueueItemIds(ctx context.Context, queueId string) ([]string, error) {
+// TODO(patrik): BUG: These need to also use user_id
+func (db DB) GetQueueItemIds(
+	ctx context.Context, 
+	queueId string,
+) ([]string, error) {
 	query := dialect.From("queue_items").
 		Select("queue_items.track_id").
 		Where(goqu.I("queue_items.queue_id").Eq(queueId)).
@@ -148,16 +160,29 @@ func (db DB) GetQueueItemIds(ctx context.Context, queueId string) ([]string, err
 	return Multiple[string](db, ctx, query)
 }
 
-func (db DB) GetQueueItemEntries(ctx context.Context, queueId string) ([]QueueItemEntry, error) {
+// TODO(patrik): BUG: These need to also use user_id
+func (db DB) GetQueueItemEntries(
+	ctx context.Context, 
+	queueId string,
+) ([]QueueItemEntry, error) {
 	query := dialect.From("queue_items").
-		Select("queue_items.id", "queue_items.track_id", "queue_items.position").
+		Select(
+			"queue_items.id", 
+			"queue_items.track_id", 
+			"queue_items.position",
+		).
 		Where(goqu.I("queue_items.queue_id").Eq(queueId)).
 		Order(goqu.I("queue_items.position").Asc())
 
 	return Multiple[QueueItemEntry](db, ctx, query)
 }
 
-func (db DB) GetQueueItemAtPosition(ctx context.Context, queueId string, position int) (QueueItemTrack, error) {
+// TODO(patrik): BUG: These need to also use user_id
+func (db DB) GetQueueItemAtPosition(
+	ctx context.Context, 
+	queueId string, 
+	position int,
+) (QueueItemTrack, error) {
 	query := QueueItemTrackQuery().
 		Where(
 			goqu.I("queue_items.queue_id").Eq(queueId),
@@ -167,13 +192,18 @@ func (db DB) GetQueueItemAtPosition(ctx context.Context, queueId string, positio
 	return Single[QueueItemTrack](db, ctx, query)
 }
 
-func (db DB) GetQueueItemById(ctx context.Context, itemId string) (QueueItem, error) {
+// TODO(patrik): BUG: These need to also use user_id
+func (db DB) GetQueueItemById(
+	ctx context.Context, 
+	itemId string,
+) (QueueItem, error) {
 	query := QueueItemQuery().
 		Where(goqu.I("queue_items.id").Eq(itemId))
 
 	return Single[QueueItem](db, ctx, query)
 }
 
+// TODO(patrik): BUG: These need to also use user_id
 func (db DB) DeleteQueueItem(ctx context.Context, itemId string) error {
 	query := goqu.Delete("queue_items").
 		Where(goqu.I("queue_items.id").Eq(itemId))
@@ -182,6 +212,7 @@ func (db DB) DeleteQueueItem(ctx context.Context, itemId string) error {
 	return err
 }
 
+// TODO(patrik): BUG: These need to also use user_id
 func (db DB) ClearQueueItems(ctx context.Context, queueId string) error {
 	query := goqu.Delete("queue_items").
 		Where(goqu.I("queue_items.queue_id").Eq(queueId))
@@ -190,7 +221,11 @@ func (db DB) ClearQueueItems(ctx context.Context, queueId string) error {
 	return err
 }
 
-func (db DB) GetQueueItemCount(ctx context.Context, queueId string) (int, error) {
+// TODO(patrik): BUG: These need to also use user_id
+func (db DB) GetQueueItemCount(
+	ctx context.Context, 
+	queueId string,
+) (int, error) {
 	query := dialect.From("queue_items").
 		Select(goqu.COUNT("queue_items.id")).
 		Where(goqu.I("queue_items.queue_id").Eq(queueId))

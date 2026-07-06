@@ -38,7 +38,10 @@ func UserFavoriteQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db DB) GetUserFavoritesIds(ctx context.Context, userId string) ([]string, error) {
+func (db DB) GetUserFavoritesIds(
+	ctx context.Context, 
+	userId string,
+) ([]string, error) {
 	query := UserFavoriteQuery().
 		Select("user_favorites.track_id").
 		Where(goqu.I("user_favorites.user_id").Eq(userId))
@@ -105,7 +108,10 @@ type CreateUserFavoriteParams struct {
 	Added int64
 }
 
-func (db DB) CreateUserFavorite(ctx context.Context, params CreateUserFavoriteParams) error {
+func (db DB) CreateUserFavorite(
+	ctx context.Context, 
+	params CreateUserFavoriteParams,
+) error {
 	if params.Added == 0 {
 		params.Added = time.Now().UnixMilli()
 	}
@@ -126,7 +132,10 @@ func (db DB) CreateUserFavorite(ctx context.Context, params CreateUserFavoritePa
 	return nil
 }
 
-func (db DB) DeleteUserFavorite(ctx context.Context, userId, trackId string) error {
+func (db DB) DeleteUserFavorite(
+	ctx context.Context, 
+	userId, trackId string,
+) error {
 	query := goqu.Delete("user_favorites").
 		Where(
 			goqu.I("user_favorites.user_id").Eq(userId),

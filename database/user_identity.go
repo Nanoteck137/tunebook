@@ -32,13 +32,10 @@ func UserIdentityQuery() *goqu.SelectDataset {
 	return query
 }
 
-// func (db DB) GetAllUserIdentitys(ctx context.Context) ([]UserIdentity, error) {
-// 	query := UserIdentityQuery()
-//
-// 	return ember.Multiple[UserIdentity](db.db, ctx, query)
-// }
-
-func (db DB) GetUserIdentity(ctx context.Context, provider, providerId string) (UserIdentity, error) {
+func (db DB) GetUserIdentity(
+	ctx context.Context, 
+	provider, providerId string,
+) (UserIdentity, error) {
 	query := UserIdentityQuery().
 		Where(
 			goqu.I("user_identities.provider").Eq(provider),
@@ -58,7 +55,10 @@ type CreateUserIdentityParams struct {
 	Updated int64
 }
 
-func (db DB) CreateUserIdentity(ctx context.Context, params CreateUserIdentityParams) error {
+func (db DB) CreateUserIdentity(
+	ctx context.Context, 
+	params CreateUserIdentityParams,
+) error {
 	t := time.Now().UnixMilli()
 	created := params.Created
 	updated := params.Updated
