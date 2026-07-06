@@ -1,9 +1,11 @@
 package apis
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -31,8 +33,33 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 	InstallSearchHandlers(app, g)
 }
 
-func RegisterStaticHandlers(app core.App, g pyrin.Group) {
+// TODO(patrik): Move this
+type hookedResponseWriter struct {
+	http.ResponseWriter
+	got404 bool
+}
 
+func (r *hookedResponseWriter) Unwrap() http.ResponseWriter {
+	return r.ResponseWriter
+}
+
+func (hrw *hookedResponseWriter) WriteHeader(status int) {
+	if status == http.StatusNotFound {
+		hrw.got404 = true
+	} else {
+		hrw.ResponseWriter.WriteHeader(status)
+	}
+}
+
+func (hrw *hookedResponseWriter) Write(p []byte) (int, error) {
+	if hrw.got404 {
+		return len(p), nil
+	}
+
+	return hrw.ResponseWriter.Write(p)
+}
+
+func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 	g.Register(
 		pyrin.NormalHandler{
 			Method: http.MethodGet,
@@ -49,26 +76,58 @@ func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 		},
 	)
 
-	// TODO(patrik): I don't like this
-	if app != nil {
-		webDir := app.Config().WebDir
-		if webDir != "" {
-			g.Register(
-				// TODO(patrik): Fix this
-				pyrin.SpaHandler(os.DirFS(webDir), "index.html"),
-			)
-		}
-	}
+	g.Register(
+		pyrin.NormalHandler{
+			Method: http.MethodGet,
+			Path:   "/*",
+			HandlerFunc: func(c pyrin.Context) error {
+				webDir := app.Config().WebDir
+				if webDir == "" {
+					c.Response().WriteHeader(http.StatusNotFound)
+					fmt.Fprint(c.Response(), "404 not found")
+
+					return nil
+				}
+
+				indexFilename := "index.html"
+				root := os.DirFS(webDir)
+
+				fs := http.FileServer(http.FS(root))
+
+				hookedWriter := &hookedResponseWriter{
+					ResponseWriter: c.Response(),
+				}
+				fs.ServeHTTP(hookedWriter, c.Request())
+
+				if hookedWriter.got404 {
+					accept := c.Request().Header.Get("Accept")
+					if !strings.Contains(accept, "text/html") {
+						c.Response().WriteHeader(http.StatusNotFound)
+						fmt.Fprint(c.Response(), "404 not found")
+					} else {
+						c.Response().Header().Set(
+							"Content-Type",
+							"text/html; charset=utf-8",
+						)
+						pyrin.ServeFile(c, root, indexFilename)
+					}
+				}
+
+				return nil
+			},
+		},
+	)
 }
 
 func RegisterHandlers(app core.App, router pyrin.Router) {
-	RegisterStaticHandlers(app, router.Group("/"))
-
 	RegisterApiHandlers(app, router.Group("/api/v1"))
 	// TODO(patrik): Should the files be under the /api/v1 group?
 	InstallFilesHandlers(app, router.Group("/files"))
+
+	RegisterStaticHandlers(app, router.Group("/"))
 }
 
+// TODO(patrik): Move this
 type statusRecorder struct {
 	http.ResponseWriter
 	status int
