@@ -36,7 +36,7 @@ type BaseApp struct {
 	playlistService *service.PlaylistService
 	historyService  *service.HistoryService
 	queueService    *service.QueueService
-	jobService *service.JobService
+	jobService      *service.JobService
 
 	broker *broker.Broker
 }
@@ -277,26 +277,33 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	app.jobService.RegisterJob(tasks.GeneratePlaylistImage, func(ctx context.Context, data string) error {
-		var params service.GeneratePlaylistImageParams
-		err := json.Unmarshal([]byte(data), &params)
-		if err != nil {
-			return err
-		}
+	app.jobService.RegisterJob(
+		tasks.GeneratePlaylistImage,
+		func(ctx context.Context, data string) error {
+			var params service.GeneratePlaylistImageParams
+			err := json.Unmarshal([]byte(data), &params)
+			if err != nil {
+				return err
+			}
 
-		return app.PlaylistService().GeneratePlaylistImage(ctx, params)
-	})
+			return app.PlaylistService().GeneratePlaylistImage(ctx, params)
+		},
+	)
 
-	app.jobService.RegisterJob(tasks.UserStatsUpdate, func(ctx context.Context, data string) error {
-		var params service.UpdateUserStatsParams
-		err := json.Unmarshal([]byte(data), &params)
-		if err != nil {
-			return err
-		}
+	app.jobService.RegisterJob(
+		tasks.UserStatsUpdate,
+		func(ctx context.Context, data string) error {
+			var params service.UpdateUserStatsParams
+			err := json.Unmarshal([]byte(data), &params)
+			if err != nil {
+				return err
+			}
 
-		return app.UserService().RecalculateUserStats(ctx, params.UserId)
-	})
+			return app.UserService().RecalculateUserStats(ctx, params.UserId)
+		},
+	)
 
+	// TODO(patrik): This should not be in bootstrap
 	app.jobService.Start()
 
 	// TODO(patrik): This should not be in bootstrap
