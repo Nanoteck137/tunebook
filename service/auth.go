@@ -263,7 +263,8 @@ type QuickConnectRequestResult struct {
 	Expires   time.Time
 }
 
-func (a *AuthService) CreateQuickConnectRequest() (QuickConnectRequestResult, error) {
+func (a *AuthService) CreateQuickConnectRequest(
+) (QuickConnectRequestResult, error) {
 	code, err := generateCode()
 	if err != nil {
 		return QuickConnectRequestResult{}, authErr.Newf(

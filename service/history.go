@@ -119,8 +119,9 @@ func (s *HistoryService) PushTrackHistory(
 		return "", historyErr.Wrap("push track history", err)
 	}
 
-
-	playTimeDelta := int64(float64(track.Duration) * float64(params.PercentPlayed) / 100.0)
+	playTimeDelta := int64(
+		float64(track.Duration) * float64(params.PercentPlayed) / 100.0,
+	)
 
 	skipDelta := 0
 	if status == "skipped" {
@@ -143,17 +144,20 @@ func (s *HistoryService) PushTrackHistory(
 	}
 
 	for _, p := range periods {
-		err := s.db.UpsertUserTrackStats(ctx, database.UpsertUserTrackStatsParams{
-			UserId:        params.UserId,
-			TrackId:       params.TrackId,
+		err := s.db.UpsertUserTrackStats(
+			ctx,
+			database.UpsertUserTrackStatsParams{
+				UserId:  params.UserId,
+				TrackId: params.TrackId,
 
-			PeriodType:    p.periodType,
-			Year:          p.year,
-			PeriodValue:   p.periodValue,
+				PeriodType:  p.periodType,
+				Year:        p.year,
+				PeriodValue: p.periodValue,
 
-			SkipDelta:     skipDelta,
-			PlayTimeDelta: playTimeDelta,
-		})
+				SkipDelta:     skipDelta,
+				PlayTimeDelta: playTimeDelta,
+			},
+		)
 		if err != nil {
 			return id, historyErr.Wrap("push track history: upsert stats", err)
 		}
@@ -172,7 +176,8 @@ func (s *HistoryService) GetTrackHistoryById(
 			return database.TrackHistory{}, ErrHistoryServiceHistoryNotFound
 		}
 
-		return database.TrackHistory{}, historyErr.Wrap("get track history by id", err)
+		return database.TrackHistory{}, historyErr.Wrap(
+			"get track history by id", err)
 	}
 
 	if history.UserId != params.UserId {

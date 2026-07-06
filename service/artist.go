@@ -124,7 +124,9 @@ func (s *ArtistService) GetArtistImage(
 	ctx context.Context,
 	params GetArtistImageParams,
 ) (string, error) {
-	artist, err := s.GetArtistById(ctx, GetArtistByIdParams{ArtistId: params.ArtistId})
+	artist, err := s.GetArtistById(ctx, GetArtistByIdParams{
+		ArtistId: params.ArtistId,
+	})
 	if err != nil {
 		return "", err
 	}

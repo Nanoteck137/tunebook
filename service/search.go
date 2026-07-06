@@ -125,7 +125,8 @@ func (s *SearchService) waitForTask(ctx context.Context, taskId int64) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	_, err := s.client.WaitForTaskWithContext(ctx, taskId, 100*time.Millisecond)
+	_, err := s.client.WaitForTaskWithContext(
+		ctx, taskId, 100*time.Millisecond)
 	if err != nil {
 		return fmt.Errorf("wait for task: %w", err)
 	}
@@ -201,7 +202,10 @@ func (s *SearchService) indexArtists(ctx context.Context) error {
 	err = indexInBatches[SearchArtist, database.Artist](
 		ctx,
 		index,
-		func(ctx context.Context, page types.PageParams) ([]database.Artist, types.Page, error) {
+		func(
+			ctx context.Context,
+			page types.PageParams,
+		) ([]database.Artist, types.Page, error) {
 			return s.db.GetArtists(ctx, database.GetArtistsParams{
 				Page: page,
 			})
@@ -228,7 +232,8 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 		settings: &meilisearch.Settings{
 			SearchableAttributes: []string{"name", "artists", "tags"},
 			SortableAttributes:   []string{"name", "year"},
-			FilterableAttributes: []string{"id", "name", "year", "artists", "tags"},
+			FilterableAttributes: []string{
+				"id", "name", "year", "artists", "tags"},
 		},
 		delete: true,
 	})
@@ -241,7 +246,10 @@ func (s *SearchService) indexAlbums(ctx context.Context) error {
 	err = indexInBatches[SearchAlbum, database.Album](
 		ctx,
 		index,
-		func(ctx context.Context, page types.PageParams) ([]database.Album, types.Page, error) {
+		func(
+			ctx context.Context,
+			page types.PageParams,
+		) ([]database.Album, types.Page, error) {
 			return s.db.GetAlbums(ctx, database.GetAlbumsParams{
 				Page: page,
 			})
@@ -275,7 +283,16 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 		index: "tracks",
 		settings: &meilisearch.Settings{
 			SearchableAttributes: []string{"name", "artists", "album", "tags"},
-			FilterableAttributes: []string{"id", "name", "duration", "number", "year", "artists", "album", "tags"},
+			FilterableAttributes: []string{
+				"id",
+				"name",
+				"duration",
+				"number",
+				"year",
+				"artists",
+				"album",
+				"tags",
+			},
 		},
 		delete: true,
 	})
@@ -288,7 +305,10 @@ func (s *SearchService) indexTracks(ctx context.Context) error {
 	err = indexInBatches[SearchTrack, database.Track](
 		ctx,
 		index,
-		func(ctx context.Context, page types.PageParams) ([]database.Track, types.Page, error) {
+		func(
+			ctx context.Context,
+			page types.PageParams,
+		) ([]database.Track, types.Page, error) {
 			return s.db.GetTracks(ctx, database.GetTracksParams{
 				Page: page,
 			})
@@ -323,7 +343,8 @@ func (s *SearchService) indexPlaylists(ctx context.Context) error {
 		index: playlistIndex,
 		settings: &meilisearch.Settings{
 			SearchableAttributes: []string{"name", "ownerName"},
-			FilterableAttributes: []string{"id", "name", "ownerId", "ownerDisplayName"},
+			FilterableAttributes: []string{
+				"id", "name", "ownerId", "ownerDisplayName"},
 		},
 		delete: true,
 	})
@@ -336,7 +357,10 @@ func (s *SearchService) indexPlaylists(ctx context.Context) error {
 	err = indexInBatches[SearchPlaylist, database.Playlist](
 		ctx,
 		index,
-		func(ctx context.Context, page types.PageParams) ([]database.Playlist, types.Page, error) {
+		func(
+			ctx context.Context,
+			page types.PageParams,
+		) ([]database.Playlist, types.Page, error) {
 			return s.db.GetPlaylists(ctx, database.GetPlaylistsParams{
 				Page: page,
 			})
@@ -634,11 +658,15 @@ func search[TDoc hasID, TResult any](
 	return final, page, nil
 }
 
+type fetchFunc[TItem any] func(
+	ctx context.Context, page types.PageParams) ([]TItem, types.Page, error)
+type mapFunc[TDoc any, TItem any] func(item TItem) TDoc
+
 func indexInBatches[TDoc any, TItem any](
 	ctx context.Context,
 	index meilisearch.IndexManager,
-	fetch func(ctx context.Context, page types.PageParams) ([]TItem, types.Page, error),
-	mapItem func(item TItem) TDoc,
+	fetch fetchFunc[TItem],
+	mapItem mapFunc[TDoc, TItem],
 ) error {
 	items, page, err := fetch(ctx, types.PageParams{
 		PerPage: batchSize,

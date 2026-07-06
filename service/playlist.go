@@ -63,13 +63,17 @@ func (s *PlaylistService) GetPlaylists(
 		Filter: params.Filter,
 	})
 	if err != nil {
-		return nil, types.Page{}, playlistErr.Wrap("get playlists: db get", err)
+		return nil, types.Page{}, playlistErr.Wrap(
+			"get playlists: db get", err)
 	}
 
 	return playlists, page, nil
 }
 
-func (s *PlaylistService) checkOwnership(playlist database.Playlist, userId string) error {
+func (s *PlaylistService) checkOwnership(
+	playlist database.Playlist, 
+	userId string,
+) error {
 	if playlist.OwnerId != userId {
 		return ErrPlaylistServiceNotAuthorized
 	}
@@ -107,7 +111,9 @@ func (s *PlaylistService) GetPlaylistImage(
 	ctx context.Context,
 	params GetPlaylistImageParams,
 ) (string, error) {
-	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{PlaylistId: params.PlaylistId})
+	playlist, err := s.GetPlaylistById(ctx, GetPlaylistByIdParams{
+		PlaylistId: params.PlaylistId,
+	})
 	if err != nil {
 		return "", err
 	}
@@ -408,7 +414,8 @@ func (s *PlaylistService) GetPlaylistItems(
 				return nil, types.Page{}, ErrPlaylistServiceFilterNotFound
 			}
 
-			return nil, types.Page{}, playlistErr.Wrap("get items: db get filter", err)
+			return nil, types.Page{}, playlistErr.Wrap(
+				"get items: db get filter", err)
 		}
 
 		params.Filter.Filter = filter.Filter
@@ -539,7 +546,8 @@ func (s *PlaylistService) RemovePlaylistItem(
 		return err
 	}
 
-	item, err := s.db.GetPlaylistItemByTrackId(ctx, playlist.Id, params.TrackId)
+	item, err := s.db.GetPlaylistItemByTrackId(
+		ctx, playlist.Id, params.TrackId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
 			return ErrPlaylistServiceItemNotFound

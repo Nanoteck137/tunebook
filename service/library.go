@@ -184,6 +184,7 @@ func setArtistTags(
 	return nil
 }
 
+// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) syncSingleArtist(
 	ctx context.Context,
 	entry *library.ArtistEntry,
@@ -351,6 +352,7 @@ func setAlbumTags(
 	return nil
 }
 
+// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) syncSingleAlbum(
 	ctx context.Context,
 	entry *library.AlbumEntry,
@@ -552,6 +554,7 @@ func setTrackTags(
 	return nil
 }
 
+// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) syncSingleTrack(
 	ctx context.Context,
 	entry *library.TrackEntry,
@@ -560,7 +563,8 @@ func (s *LibraryService) syncSingleTrack(
 
 	stat, err := os.Stat(trackFile)
 	if err != nil {
-		return fmt.Errorf("stat track file %q (%s): %w", entry.Name, trackFile, err)
+		return fmt.Errorf(
+			"stat track file %q (%s): %w", entry.Name, trackFile, err)
 	}
 
 	modifiedTime := stat.ModTime().UnixMilli()
@@ -605,7 +609,8 @@ func (s *LibraryService) syncSingleTrack(
 			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 			if err != nil {
 				return fmt.Errorf(
-					"probe updated track %q (%s): %w", entry.Name, trackFile, err)
+					"probe updated track %q (%s): %w", 
+					entry.Name, trackFile, err)
 			}
 
 			dur := int64(probeResult.Duration.Seconds())
@@ -752,6 +757,7 @@ func (s *LibraryService) syncTracks(
 	return nil
 }
 
+// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) Sync(ctx context.Context) error {
 	p := s.config.LibraryDir
 

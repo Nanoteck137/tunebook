@@ -29,7 +29,8 @@ import (
 var imageErr = NewServiceErrCreator("image")
 
 var (
-	ErrImageServiceUnsupportedImageFormat = imageErr.New("unsupported image format")
+	ErrImageServiceUnsupportedImageFormat = 
+		imageErr.New("unsupported image format")
 )
 
 const (
@@ -140,7 +141,9 @@ type ProcessImageParams struct {
 	ImageFormat types.ImageFormat
 }
 
-func (s *ImageService) ProcessImage(params ProcessImageParams) (string, error) {
+func (s *ImageService) ProcessImage(
+	params ProcessImageParams,
+) (string, error) {
 	ext, ok := params.ImageFormat.ToExt()
 	if !ok {
 		return "", ErrImageServiceUnsupportedImageFormat
@@ -165,7 +168,8 @@ func (s *ImageService) ProcessImage(params ProcessImageParams) (string, error) {
 		p, err := s.ConvertSquareImage(
 			input, params.OutputDir, "original_square"+ext)
 		if err != nil {
-			return "", imageErr.Wrap("process image: convert square original", err)
+			return "", imageErr.Wrap(
+				"process image: convert square original", err)
 		}
 
 		return p, nil

@@ -22,7 +22,10 @@ type QueueService struct {
 	db     *database.Database
 }
 
-func NewQueueService(logger *slog.Logger, db *database.Database) *QueueService {
+func NewQueueService(
+	logger *slog.Logger,
+	db *database.Database,
+) *QueueService {
 	return &QueueService{
 		logger: logger,
 		db:     db,
@@ -109,7 +112,8 @@ func (s *QueueService) GetQueueItemAtIndex(
 
 	item, err := s.db.GetQueueItemAtPosition(ctx, queue.Id, params.Index)
 	if err != nil {
-		return database.QueueItemTrack{}, queueErr.Wrap("get queue item at index", err)
+		return database.QueueItemTrack{}, queueErr.Wrap(
+			"get queue item at index", err)
 	}
 
 	return item, nil
@@ -276,14 +280,14 @@ func (s *QueueService) AddItems(
 }
 
 type AddToQueueParams struct {
-	QueueId      string
-	UserId       string
-	Source       string   // "album", "playlist", "artist", "tracks"
-	SourceId     string
-	TrackIds     []string
-	Position     string // "replace", "next", "end"
-	Shuffle      bool
-	CurrentIndex int
+	QueueId             string
+	UserId              string
+	Source              string // "album", "playlist", "artist", "tracks"
+	SourceId            string
+	TrackIds            []string
+	Position            string // "replace", "next", "end"
+	Shuffle             bool
+	CurrentIndex        int
 	QueueIndexToTrackId string
 }
 
@@ -309,9 +313,12 @@ func (s *QueueService) AddToQueue(
 	case "album":
 		trackIds, err = s.db.GetTrackIdsByAlbum(ctx, params.SourceId, "")
 	case "playlist":
-		trackIds, err = s.db.GetPlaylistItemIds(ctx, database.GetPlaylistItemIdsParams{
-			PlaylistId: params.SourceId,
-		})
+		trackIds, err = s.db.GetPlaylistItemIds(
+			ctx,
+			database.GetPlaylistItemIdsParams{
+				PlaylistId: params.SourceId,
+			},
+		)
 	case "artist":
 		trackIds, err = s.db.GetTrackIdsByArtist(ctx, params.SourceId, "")
 	case "tracks":
@@ -387,7 +394,7 @@ func (s *QueueService) AddAlbumToQueue(
 		}
 
 		filterStr = filter.Filter
-	} 
+	}
 
 	trackIds, err := s.db.GetTrackIdsByAlbum(ctx, params.AlbumId, filterStr)
 	if err != nil {
@@ -531,10 +538,13 @@ func (s *QueueService) AddPlaylistToQueue(
 		filterStr = filter.Filter
 	}
 
-	trackIds, err := s.db.GetTrackIdsByPlaylist(ctx, database.GetTrackIdsByPlaylistParams{
-		PlaylistId: params.PlaylistId,
-		FilterStr:  filterStr,
-	})
+	trackIds, err := s.db.GetTrackIdsByPlaylist(
+		ctx,
+		database.GetTrackIdsByPlaylistParams{
+			PlaylistId: params.PlaylistId,
+			FilterStr:  filterStr,
+		},
+	)
 	if err != nil {
 		return queueErr.Wrap("get track ids by playlist", err)
 	}
@@ -604,10 +614,13 @@ func (s *QueueService) AddFavoritesToQueue(
 		filterStr = filter.Filter
 	}
 
-	trackIds, err := s.db.GetTrackIdsByUserFavorites(ctx, database.GetTrackIdsByUserFavoritesParams{
-		UserId:    params.FavoriteUserId,
-		FilterStr: filterStr,
-	})
+	trackIds, err := s.db.GetTrackIdsByUserFavorites(
+		ctx,
+		database.GetTrackIdsByUserFavoritesParams{
+			UserId:    params.FavoriteUserId,
+			FilterStr: filterStr,
+		},
+	)
 	if err != nil {
 		return queueErr.Wrap("get track ids by favorites", err)
 	}
@@ -803,7 +816,12 @@ func (s *QueueService) SetPosition(
 	return nil
 }
 
-func (s *QueueService) ClearQueue(ctx context.Context, queueId string, userId string) error {
+// TODO(patrik): Refactor: Use ClearQueueParams
+func (s *QueueService) ClearQueue(
+	ctx context.Context, 
+	queueId string, 
+	userId string,
+) error {
 	queue, err := s.getOrCreateQueue(ctx, queueId, userId)
 	if err != nil {
 		return err

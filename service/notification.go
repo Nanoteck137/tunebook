@@ -56,7 +56,10 @@ type NotificationService struct {
 	Topic   string
 }
 
-func NewNotificationService(logger *slog.Logger, config *config.Config) *NotificationService {
+func NewNotificationService(
+	logger *slog.Logger, 
+	config *config.Config,
+) *NotificationService {
 	return &NotificationService{
 		logger:  logger,
 		BaseUrl: config.NtfyBaseUrl,
@@ -78,7 +81,9 @@ type notificationMessageBody struct {
 	Markdown bool `json:"markdown"`
 }
 
-func (s *NotificationService) sendNotification(body notificationMessageBody) error {
+func (s *NotificationService) sendNotification(
+	body notificationMessageBody,
+) error {
 	d, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("failed to marshal body: %w", err)

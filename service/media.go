@@ -185,6 +185,7 @@ type MediaStreamOptions struct {
 	Format types.MediaFormat
 }
 
+// TODO(patrik): Refactor/Cleanup
 func (s *MediaService) ProcessTrackStream(
 	trackId string,
 	opts MediaStreamOptions,

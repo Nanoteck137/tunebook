@@ -70,14 +70,19 @@ func (s *JobService) RegisterJob(name string, handler JobHandler) {
 	defer s.mu.Unlock()
 
 	if _, exists := s.handlers[name]; exists {
-		s.logger.Warn("job handler already registered, overwriting", "name", name)
+		s.logger.Warn(
+			"job handler already registered, overwriting", "name", name)
 	}
 
 	s.handlers[name] = handler
 	s.logger.Info("registered job handler", "name", name)
 }
 
-func (s *JobService) PushJob(ctx context.Context, name string, data any) error {
+func (s *JobService) PushJob(
+	ctx context.Context, 
+	name string, 
+	data any,
+) error {
 	s.mu.RLock()
 	_, exists := s.handlers[name]
 	s.mu.RUnlock()
@@ -117,7 +122,12 @@ func (s *JobService) ProcessPendingJobs(ctx context.Context) error {
 	for _, job := range jobs {
 		err := s.processJob(ctx, job)
 		if err != nil {
-			s.logger.Error("failed to process job", "id", job.Id, "name", job.Name, "err", err)
+			s.logger.Error(
+				"failed to process job", 
+				"id", job.Id, 
+				"name", job.Name, 
+				"err", err,
+			)
 		}
 	}
 
@@ -130,13 +140,19 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 		return jobErr.Wrap("claim job", err)
 	}
 
-	s.logger.Info("running job", "id", job.Id, "name", job.Name, "attempt", job.Attempts+1)
+	s.logger.Info(
+		"running job", 
+		"id", job.Id, 
+		"name", job.Name, 
+		"attempt", job.Attempts+1,
+	)
 
 	s.mu.RLock()
 	handler, exists := s.handlers[job.Name]
 	s.mu.RUnlock()
 
 	if !exists {
+		// TODO(patrik): This should be a internal error
 		errMsg := fmt.Sprintf("no handler registered for job: %s", job.Name)
 		s.logger.Error("no handler for job", "id", job.Id, "name", job.Name)
 		s.db.FailJob(ctx, job.Id, database.FailJobParams{
@@ -150,7 +166,15 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 	if err != nil {
 		shouldRequeue := job.Attempts+1 < job.MaxAttempts
 
-		s.logger.Error("job failed", "id", job.Id, "name", job.Name, "attempt", job.Attempts+1, "maxAttempts", job.MaxAttempts, "requeue", shouldRequeue, "err", err)
+		s.logger.Error(
+			"job failed", 
+			"id", job.Id, 
+			"name", job.Name, 
+			"attempt", job.Attempts+1, 
+			"maxAttempts", job.MaxAttempts, 
+			"requeue", shouldRequeue, 
+			"err", err,
+		)
 
 		s.db.FailJob(ctx, job.Id, database.FailJobParams{
 			Requeue: shouldRequeue,

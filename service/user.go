@@ -182,11 +182,13 @@ func (s *UserService) GetFavoriteTracks(
 		},
 	)
 	if err != nil {
-		return nil, types.Page{}, userErr.Wrap("get favorite tracks: db get", err)
+		return nil, types.Page{}, userErr.Wrap(
+			"get favorite tracks: db get", err)
 	}
 
 	for i := range tracks {
-		tracks[i].Track.Order = utils.Pointer((i + 1) + (page.Page * page.PerPage))
+		tracks[i].Track.Order = 
+			utils.Pointer((i + 1) + (page.Page * page.PerPage))
 	}
 
 	return tracks, page, nil
@@ -579,7 +581,10 @@ type DeleteApiTokenParams struct {
 	UserId  string
 }
 
-func (s *UserService) RecalculateUserStats(ctx context.Context, userId string) error {
+func (s *UserService) RecalculateUserStats(
+	ctx context.Context, 
+	userId string,
+) error {
 	agg, err := s.db.GetUserTrackStatsAgg(ctx, userId)
 	if err != nil {
 		return userErr.Wrap("recalculate stats: get track stats agg", err)
