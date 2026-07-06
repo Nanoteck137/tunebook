@@ -57,6 +57,7 @@ func (s *QueueService) GetQueue(
 	items, page, err := s.db.GetQueueItems(ctx, database.GetQueueItemsParams{
 		Page:    params.Page,
 		QueueId: queue.Id,
+		UserId:  queue.UserId,
 	})
 	if err != nil {
 		return GetQueueResult{}, queueErr.Wrap("get queue", err)
@@ -84,7 +85,7 @@ func (s *QueueService) GetQueueIds(
 		return QueueIdsResult{}, err
 	}
 
-	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id)
+	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id, queue.UserId)
 	if err != nil {
 		return QueueIdsResult{}, queueErr.Wrap("get queue ids", err)
 	}
@@ -110,7 +111,7 @@ func (s *QueueService) GetQueueItemAtIndex(
 		return database.QueueItemTrack{}, err
 	}
 
-	item, err := s.db.GetQueueItemAtPosition(ctx, queue.Id, params.Index)
+	item, err := s.db.GetQueueItemAtPosition(ctx, queue.Id, queue.UserId, params.Index)
 	if err != nil {
 		return database.QueueItemTrack{}, queueErr.Wrap(
 			"get queue item at index", err)
@@ -183,7 +184,7 @@ func (s *QueueService) ReplaceQueue(
 	}
 	defer tx.Rollback()
 
-	err = tx.ClearQueueItems(ctx, queue.Id)
+	err = tx.ClearQueueItems(ctx, queue.Id, queue.UserId)
 	if err != nil {
 		return queueErr.Wrap("replace queue: clear items", err)
 	}
@@ -244,7 +245,7 @@ func (s *QueueService) AddItems(
 		return err
 	}
 
-	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id)
+	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id, queue.UserId)
 	if err != nil {
 		return err
 	}
@@ -747,7 +748,7 @@ func (s *QueueService) RemoveItem(
 		return err
 	}
 
-	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id)
+	entries, err := s.db.GetQueueItemEntries(ctx, queue.Id, queue.UserId)
 	if err != nil {
 		return err
 	}
@@ -833,7 +834,7 @@ func (s *QueueService) ClearQueue(
 	}
 	defer tx.Rollback()
 
-	err = tx.ClearQueueItems(ctx, queue.Id)
+	err = tx.ClearQueueItems(ctx, queue.Id, queue.UserId)
 	if err != nil {
 		return queueErr.Wrap("clear queue: clear items", err)
 	}

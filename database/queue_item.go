@@ -94,14 +94,17 @@ func (db DB) CreateQueueItems(
 	return err
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetNextQueueItemPosition(
 	ctx context.Context,
 	queueId string,
+	userId string,
 ) (int, error) {
 	query := dialect.From("queue_items").
 		Select("queue_items.position").
-		Where(goqu.I("queue_items.queue_id").Eq(queueId)).
+		Where(
+			goqu.I("queue_items.queue_id").Eq(queueId),
+			goqu.I("queue_items.user_id").Eq(userId),
+		).
 		Order(goqu.I("queue_items.position").Desc()).
 		Limit(1)
 
@@ -121,15 +124,18 @@ type GetQueueItemsParams struct {
 	Page types.PageParams
 
 	QueueId string
+	UserId  string
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetQueueItems(
 	ctx context.Context,
 	params GetQueueItemsParams,
 ) ([]QueueItemTrack, types.Page, error) {
 	query := QueueItemTrackQuery().
-		Where(goqu.I("queue_items.queue_id").Eq(params.QueueId)).
+		Where(
+			goqu.I("queue_items.queue_id").Eq(params.QueueId),
+			goqu.I("queue_items.user_id").Eq(params.UserId),
+		).
 		Order(goqu.I("queue_items.position").Asc())
 
 	page, err := buildPage(ctx, db, params.Page, query, "queue_items.id")
@@ -147,54 +153,60 @@ func (db DB) GetQueueItems(
 	return items, page, nil
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetQueueItemIds(
-	ctx context.Context, 
+	ctx context.Context,
 	queueId string,
+	userId string,
 ) ([]string, error) {
 	query := dialect.From("queue_items").
 		Select("queue_items.track_id").
-		Where(goqu.I("queue_items.queue_id").Eq(queueId)).
+		Where(
+			goqu.I("queue_items.queue_id").Eq(queueId),
+			goqu.I("queue_items.user_id").Eq(userId),
+		).
 		Order(goqu.I("queue_items.position").Asc())
 
 	return Multiple[string](db, ctx, query)
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetQueueItemEntries(
-	ctx context.Context, 
+	ctx context.Context,
 	queueId string,
+	userId string,
 ) ([]QueueItemEntry, error) {
 	query := dialect.From("queue_items").
 		Select(
-			"queue_items.id", 
-			"queue_items.track_id", 
+			"queue_items.id",
+			"queue_items.track_id",
 			"queue_items.position",
 		).
-		Where(goqu.I("queue_items.queue_id").Eq(queueId)).
+		Where(
+			goqu.I("queue_items.queue_id").Eq(queueId),
+			goqu.I("queue_items.user_id").Eq(userId),
+		).
 		Order(goqu.I("queue_items.position").Asc())
 
 	return Multiple[QueueItemEntry](db, ctx, query)
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetQueueItemAtPosition(
-	ctx context.Context, 
-	queueId string, 
+	ctx context.Context,
+	queueId string,
+	userId string,
 	position int,
 ) (QueueItemTrack, error) {
 	query := QueueItemTrackQuery().
 		Where(
 			goqu.I("queue_items.queue_id").Eq(queueId),
+			goqu.I("queue_items.user_id").Eq(userId),
 			goqu.I("queue_items.position").Eq(position),
 		)
 
 	return Single[QueueItemTrack](db, ctx, query)
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetQueueItemById(
-	ctx context.Context, 
+	ctx context.Context,
 	itemId string,
 ) (QueueItem, error) {
 	query := QueueItemQuery().
@@ -203,7 +215,6 @@ func (db DB) GetQueueItemById(
 	return Single[QueueItem](db, ctx, query)
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) DeleteQueueItem(ctx context.Context, itemId string) error {
 	query := goqu.Delete("queue_items").
 		Where(goqu.I("queue_items.id").Eq(itemId))
@@ -212,23 +223,28 @@ func (db DB) DeleteQueueItem(ctx context.Context, itemId string) error {
 	return err
 }
 
-// TODO(patrik): BUG: These need to also use user_id
-func (db DB) ClearQueueItems(ctx context.Context, queueId string) error {
+func (db DB) ClearQueueItems(ctx context.Context, queueId string, userId string) error {
 	query := goqu.Delete("queue_items").
-		Where(goqu.I("queue_items.queue_id").Eq(queueId))
+		Where(
+			goqu.I("queue_items.queue_id").Eq(queueId),
+			goqu.I("queue_items.user_id").Eq(userId),
+		)
 
 	_, err := db.Exec(ctx, query)
 	return err
 }
 
-// TODO(patrik): BUG: These need to also use user_id
 func (db DB) GetQueueItemCount(
-	ctx context.Context, 
+	ctx context.Context,
 	queueId string,
+	userId string,
 ) (int, error) {
 	query := dialect.From("queue_items").
 		Select(goqu.COUNT("queue_items.id")).
-		Where(goqu.I("queue_items.queue_id").Eq(queueId))
+		Where(
+			goqu.I("queue_items.queue_id").Eq(queueId),
+			goqu.I("queue_items.user_id").Eq(userId),
+		)
 
 	return Single[int](db, ctx, query)
 }
