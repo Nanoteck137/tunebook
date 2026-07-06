@@ -12,6 +12,9 @@ import (
 //go:embed templates
 var embedFS embed.FS
 
+//go:embed static
+var StaticFS embed.FS
+
 type Data struct {
 	Icon    string
 	AppName string

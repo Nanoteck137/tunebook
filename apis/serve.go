@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/render"
 )
 
 func RegisterApiHandlers(app core.App, g pyrin.Group) {
@@ -65,9 +66,8 @@ func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 			Method: http.MethodGet,
 			Path:   "/static/*",
 			HandlerFunc: func(c pyrin.Context) error {
-				// TODO(patrik): Fix this
-				f := os.DirFS("./render/static")
-				fs := http.StripPrefix("/static", http.FileServerFS(f))
+				fs := http.StripPrefix(
+					"/static", http.FileServerFS(render.StaticFS))
 
 				fs.ServeHTTP(c.Response(), c.Request())
 
