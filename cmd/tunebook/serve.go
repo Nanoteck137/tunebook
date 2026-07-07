@@ -32,6 +32,8 @@ var serveCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		app.Start()
+
 		e, err := apis.Server(app)
 		if err != nil {
 			slog.Error("failed to create server", "err", err)

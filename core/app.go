@@ -36,5 +36,6 @@ type App interface {
 	Broker() *broker.Broker
 
 	Bootstrap() error
+	Start()
 	Shutdown() error
 }

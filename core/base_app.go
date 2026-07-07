@@ -303,16 +303,13 @@ func (app *BaseApp) Bootstrap() error {
 		},
 	)
 
-	// TODO(patrik): This should not be in bootstrap
-	app.jobService.Start()
-
-	// TODO(patrik): This should not be in bootstrap
-	app.taskService.Start()
-
-	// TODO(patrik): This should not be in bootstrap
-	go app.broker.Listen()
-
 	return nil
+}
+
+func (app *BaseApp) Start() {
+	app.jobService.Start()
+	app.taskService.Start()
+	app.broker.Start()
 }
 
 func (app *BaseApp) Shutdown() error {
