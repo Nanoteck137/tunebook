@@ -91,8 +91,8 @@
           await musicManager.addAlbumTracks({
             albumId: data.album.id,
             clear: true,
+            shuffle: true,
           });
-          // TODO: shuffle after adding
         }}
       >
         <Shuffle size={14} />
