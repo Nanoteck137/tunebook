@@ -14,11 +14,7 @@
   import { cn } from "$lib/utils";
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import {
-    sortTypes,
-    defaultSort,
-    type SortType,
-  } from "./types";
+  import { sortTypes, defaultSort, type SortType } from "./types";
 
   let { data } = $props();
 
@@ -149,7 +145,9 @@
     <div class="flex items-baseline gap-2">
       <h1 class="text-xl font-bold">Artists</h1>
       {#if data.page}
-        <span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
+        <span class="text-sm text-muted-foreground"
+          >{data.page.totalItems}</span
+        >
       {/if}
     </div>
 
@@ -245,7 +243,10 @@
             class="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs text-primary"
           >
             +{tag}
-            <button onclick={() => removeIncludeTag(tag)} class="hover:text-destructive">
+            <button
+              onclick={() => removeIncludeTag(tag)}
+              class="hover:text-destructive"
+            >
               <X size={12} />
             </button>
           </span>
@@ -255,7 +256,10 @@
             class="flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs text-destructive"
           >
             -{tag}
-            <button onclick={() => removeExcludeTag(tag)} class="hover:text-destructive">
+            <button
+              onclick={() => removeExcludeTag(tag)}
+              class="hover:text-destructive"
+            >
               <X size={12} />
             </button>
           </span>

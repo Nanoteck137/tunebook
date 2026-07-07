@@ -21,15 +21,6 @@
 
   const { data } = $props();
   const musicManager = getMusicManager();
-
-  // TODO: Replace with real data from API once backend supports it
-  let showFullBio = $state(false);
-  let mockBio = $state(
-    "No biography available. This section will display artist information when the backend provides it.",
-  );
-  let mockRelatedArtists = $state<
-    { id: string; name: string; coverArt: string }[]
-  >([]);
 </script>
 
 <div class="py-2">
@@ -201,49 +192,4 @@
       {/each}
     </div>
   </div>
-
-  <div class="rounded-lg border bg-card">
-    <div class="border-b px-4 py-3">
-      <p class="font-semibold">About</p>
-    </div>
-    <div class="p-4">
-      <p class="text-sm text-muted-foreground">
-        {#if mockBio.length > 200 && !showFullBio}
-          {mockBio.slice(0, 200)}&hellip;
-        {:else}
-          {mockBio}
-        {/if}
-      </p>
-      {#if mockBio.length > 200}
-        <Button
-          variant="link"
-          class="h-auto p-0 text-xs"
-          onclick={() => (showFullBio = !showFullBio)}
-        >
-          {showFullBio ? "Show less" : "Read more"}
-        </Button>
-      {/if}
-    </div>
-  </div>
-
-  {#if mockRelatedArtists.length > 0}
-    <div class="rounded-lg border bg-card">
-      <div class="border-b px-4 py-3">
-        <p class="font-semibold">Related Artists</p>
-      </div>
-      <div class="flex gap-3 overflow-x-auto p-4 pb-2">
-        {#each mockRelatedArtists as related (related.id)}
-          <a
-            href="/artists/{related.id}"
-            class="flex w-32 shrink-0 flex-col items-center gap-1"
-          >
-            <Image class="w-32" src={related.coverArt} alt={related.name} />
-            <p class="line-clamp-2 text-center text-xs font-medium">
-              {related.name}
-            </p>
-          </a>
-        {/each}
-      </div>
-    </div>
-  {/if}
 </div>
