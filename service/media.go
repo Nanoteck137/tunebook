@@ -185,7 +185,6 @@ type MediaStreamOptions struct {
 	Format types.MediaFormat
 }
 
-// TODO(patrik): Refactor/Cleanup
 func (s *MediaService) ProcessTrackStream(
 	trackId string,
 	opts MediaStreamOptions,
@@ -235,60 +234,26 @@ func (s *MediaService) ProcessTrackStream(
 			"track has invalid media format: %s", track.MediaFormat)
 	}
 
-	format := types.MediaFormatUnknown
-
-	switch opts.Policy {
-	case PolicyOriginal:
+	if opts.Policy == PolicyOriginal {
 		log.Info("track stream request using the original file")
 		return track.Filename, nil
-	case PolicyTranscode:
-		if opts.Format == types.MediaFormatEmpty || !opts.Format.IsValid() {
-			return "", ErrMediaServiceInvalidFormat
-		}
-
-		format = opts.Format
-	case PolicyLossy:
-		if opts.Device != DeviceEmpty {
-			device, ok := s.DeviceSpecs[opts.Device]
-			if !ok {
-				return "", mediaErr.Newf("unknown device: %s", opts.Device)
-			}
-
-			if slices.Contains(device.AllowedFormats, track.MediaFormat) {
-				format = track.MediaFormat
-			}
-		} else if track.MediaFormat.IsLossy() {
-			format = track.MediaFormat
-		} else if opts.Format != "" && opts.Format.IsValid() {
-			format = opts.Format
-		} else {
-			format = types.MediaFormatOpus
-		}
-	default:
-		return "", ErrMediaServiceInvalidPolicy
 	}
 
-	// NOTE(patrik): At this point we should have a valid format
-	if !format.IsValid() {
-		log.Error("no valid format is selected",
-			slog.String("format", string(format)),
-		)
-
-		return "", mediaErr.Newf("selected format is not valid: %s", format)
+	format, err := s.resolveStreamFormat(track, opts, log)
+	if err != nil {
+		return "", err
 	}
 
-	// TODO(patrik): Maybe here we should still "transcode" the media but
-	// just remove the metadata
 	if format == track.MediaFormat {
 		log.Info("track stream request selected format is matching the original track format")
 		return track.Filename, nil
 	}
 
+	// TODO(patrik): FilesystemService should handle this
 	cacheDir := s.dataDir.CacheTranscoding()
 	cacheTracksDir := path.Join(cacheDir, "tracks")
 	trackCache := path.Join(cacheTracksDir, track.Id)
 
-	// Make sure that the cache directory is setup
 	err = utils.CreateDirectories([]string{
 		cacheDir,
 		cacheTracksDir,
@@ -303,7 +268,6 @@ func (s *MediaService) ProcessTrackStream(
 		return "", err
 	}
 
-	// At this point we should have a valid bitrate
 	if format.IsLossy() && bitrate <= 0 {
 		log.Error("bitrate not set for lossy format (something might be wrong with getBitrateFromQuality())",
 			slog.String("format", string(format)),
@@ -312,7 +276,6 @@ func (s *MediaService) ProcessTrackStream(
 		return "", ErrMediaServiceBitrateNotSet
 	}
 
-	// filename: format-bitrate.ext
 	ext, ok := format.ToExt()
 	if !ok {
 		log.Error("format has no extention",
@@ -322,117 +285,22 @@ func (s *MediaService) ProcessTrackStream(
 		return "", mediaErr.Newf("format has no extension: %s", format)
 	}
 
-	filename := ""
-	if !format.IsLossless() {
-		filename = fmt.Sprintf("transcode-%s-%dk", format, bitrate) + ext
-	} else {
-		filename = fmt.Sprintf("transcode-%s-lossless", format) + ext
+	filename := fmt.Sprintf("transcode-%s-%dk%s", format, bitrate, ext)
+	if format.IsLossless() {
+		filename = fmt.Sprintf("transcode-%s-lossless%s", format, ext)
 	}
 
 	out := path.Join(trackCache, filename)
-	tmpOut := path.Join(trackCache, "temp-"+filename)
-
-	transcode := func() error {
-		defer func() {
-			if _, err := os.Stat(tmpOut); err == nil {
-				os.Remove(tmpOut)
-			}
-		}()
-
-		log.Info("track stream request starting transcoding process",
-			slog.String("input", track.Filename),
-			slog.String("output", out),
-			slog.String("format", string(format)),
-			slog.Int("bitrate", bitrate),
-		)
-
-		timer := utils.SimpleTimer{}
-		timer.Start()
-
-		args := []string{
-			"-i", track.Filename,
-			"-map", "0:a:0",
-			"-vn",
-			"-map_metadata", "-1",
-		}
-
-		if s.audioNormalization {
-			args = append(args, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11")
-		}
-
-		switch format {
-		case types.MediaFormatFlac:
-			args = append(args, "-codec:a", "flac", "-compression_level", "5")
-		case types.MediaFormatPcmS16LE:
-			args = append(args, "-codec:a", "pcm_s16le")
-		case types.MediaFormatOpus:
-			args = append(
-				args,
-				"-codec:a", "libopus",
-				"-b:a", fmt.Sprintf("%dk", bitrate),
-				"-vbr", "on",
-				"-compression_level", "10",
-			)
-		case types.MediaFormatVorbis:
-			args = append(
-				args,
-				"-codec:a", "libvorbis",
-				"-b:a", fmt.Sprintf("%dk", bitrate),
-			)
-		case types.MediaFormatMp3:
-			args = append(
-				args,
-				"-codec:a", "libmp3lame",
-				"-b:a", fmt.Sprintf("%dk", bitrate),
-				"-q:a", "0",
-			)
-		case types.MediaFormatAac:
-			args = append(
-				args,
-				"-codec:a", "aac",
-				"-b:a", fmt.Sprintf("%dk", bitrate),
-				"-aac_coder", "twoloop",
-				"-movflags", "+faststart",
-			)
-		default:
-			return mediaErr.Newf("unsupported media format: %s", format)
-		}
-
-		args = append(args, tmpOut)
-
-		var stderr bytes.Buffer
-		cmd := exec.Command("ffmpeg", args...)
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			log.Error("ffmpeg failed",
-				slog.String("stderr", stderr.String()),
-				slog.Any("err", err),
-			)
-			return err
-		}
-
-		err = os.Rename(tmpOut, out)
-		if err != nil {
-			return err
-		}
-
-		duration := timer.Stop()
-		log.Info("track stream request transcoding done",
-			slog.String("input", track.Filename),
-			slog.String("output", out),
-			slog.String("format", string(format)),
-			slog.Int("bitrate", bitrate),
-			slog.Duration("duration", duration),
-		)
-
-		return nil
-	}
 
 	_, err = os.Stat(out)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := transcode()
+			err := s.transcodeTrack(log, transcodeTrackParams{
+				track:   track,
+				format:  format,
+				bitrate: bitrate,
+				out:     out,
+			})
 			if err != nil {
 				return "", err
 			}
@@ -444,6 +312,150 @@ func (s *MediaService) ProcessTrackStream(
 	}
 
 	return out, nil
+}
+
+func (s *MediaService) resolveStreamFormat(track database.Track, opts MediaStreamOptions, log *slog.Logger) (types.MediaFormat, error) {
+	switch opts.Policy {
+	case PolicyTranscode:
+		if opts.Format == types.MediaFormatEmpty || !opts.Format.IsValid() {
+			return "", ErrMediaServiceInvalidFormat
+		}
+
+		return opts.Format, nil
+	case PolicyLossy:
+		format := types.MediaFormatOpus
+
+		if opts.Device != DeviceEmpty {
+			device, ok := s.DeviceSpecs[opts.Device]
+			if !ok {
+				return "", mediaErr.Newf("unknown device: %s", opts.Device)
+			}
+
+			if slices.Contains(device.AllowedFormats, track.MediaFormat) {
+				format = track.MediaFormat
+			}
+		} else if track.MediaFormat.IsLossy() {
+			format = track.MediaFormat
+		} else if opts.Format != "" && opts.Format.IsValid() {
+			format = opts.Format
+		}
+
+		if !format.IsValid() {
+			log.Error("no valid format is selected",
+				slog.String("format", string(format)),
+			)
+
+			return "", mediaErr.Newf("selected format is not valid: %s", format)
+		}
+
+		return format, nil
+	default:
+		return "", ErrMediaServiceInvalidPolicy
+	}
+}
+
+type transcodeTrackParams struct {
+	track   database.Track
+	format  types.MediaFormat
+	bitrate int
+	out     string
+}
+
+func (s *MediaService) transcodeTrack(
+	logger *slog.Logger,
+	params transcodeTrackParams,
+) error {
+	tmpOut := path.Join(path.Dir(params.out), "temp-"+path.Base(params.out))
+	defer os.RemoveAll(tmpOut)
+
+	logger.Info("track stream request starting transcoding process",
+		slog.String("input", params.track.Filename),
+		slog.String("output", params.out),
+		slog.String("format", string(params.format)),
+		slog.Int("bitrate", params.bitrate),
+	)
+
+	timer := utils.SimpleTimer{}
+	timer.Start()
+
+	args := []string{
+		"-i", params.track.Filename,
+		"-map", "0:a:0",
+		"-vn",
+		"-map_metadata", "-1",
+	}
+
+	if s.audioNormalization {
+		args = append(args, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11")
+	}
+
+	switch params.format {
+	case types.MediaFormatFlac:
+		args = append(args, "-codec:a", "flac", "-compression_level", "5")
+	case types.MediaFormatPcmS16LE:
+		args = append(args, "-codec:a", "pcm_s16le")
+	case types.MediaFormatOpus:
+		args = append(
+			args,
+			"-codec:a", "libopus",
+			"-b:a", fmt.Sprintf("%dk", params.bitrate),
+			"-vbr", "on",
+			"-compression_level", "10",
+		)
+	case types.MediaFormatVorbis:
+		args = append(
+			args,
+			"-codec:a", "libvorbis",
+			"-b:a", fmt.Sprintf("%dk", params.bitrate),
+		)
+	case types.MediaFormatMp3:
+		args = append(
+			args,
+			"-codec:a", "libmp3lame",
+			"-b:a", fmt.Sprintf("%dk", params.bitrate),
+			"-q:a", "0",
+		)
+	case types.MediaFormatAac:
+		args = append(
+			args,
+			"-codec:a", "aac",
+			"-b:a", fmt.Sprintf("%dk", params.bitrate),
+			"-aac_coder", "twoloop",
+			"-movflags", "+faststart",
+		)
+	default:
+		return mediaErr.Newf("unsupported media format: %s", params.format)
+	}
+
+	args = append(args, tmpOut)
+
+	var stderr bytes.Buffer
+	cmd := exec.Command("ffmpeg", args...)
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		logger.Error("ffmpeg failed",
+			slog.String("stderr", stderr.String()),
+			slog.Any("err", err),
+		)
+		return err
+	}
+
+	err = os.Rename(tmpOut, params.out)
+	if err != nil {
+		return err
+	}
+
+	duration := timer.Stop()
+	logger.Info("track stream request transcoding done",
+		slog.String("input", params.track.Filename),
+		slog.String("output", params.out),
+		slog.String("format", string(params.format)),
+		slog.Int("bitrate", params.bitrate),
+		slog.Duration("duration", duration),
+	)
+
+	return nil
 }
 
 func (s *MediaService) ProbeMedia(
