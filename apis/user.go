@@ -83,10 +83,6 @@ func (b UpdateMeBody) Validate() error {
 	)
 }
 
-type GetQuickPlaylistIds struct {
-	Ids []string `json:"ids"`
-}
-
 type SetQuickPlaylistBody struct {
 	PlaylistId string `json:"playlistId"`
 }
@@ -395,44 +391,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetQuickPlaylistIds",
-			Method:       http.MethodGet,
-			Path:         "/me/quickplaylist",
-			ResponseType: GetQuickPlaylistIds{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// user, err := User(app, c)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// ctx := context.TODO()
-				//
-				// if user.QuickPlaylist.Valid {
-				// 	items, err := app.DB().GetPlaylistItems(ctx, user.QuickPlaylist.String)
-				// 	if err != nil {
-				// 		return nil, err
-				// 	}
-				//
-				// 	res := GetUserQuickPlaylistItemIds{
-				// 		TrackIds: make([]string, len(items)),
-				// 	}
-				//
-				// 	for i, item := range items {
-				// 		res.TrackIds[i] = item.TrackId
-				// 	}
-				//
-				// 	return res, nil
-				// }
-				//
-				// // TODO(patrik): Better error
-				// return nil, errors.New("No Quick Playlist set")
-				return GetQuickPlaylistIds{
-					Ids: []string{},
-				}, nil
 			},
 		},
 

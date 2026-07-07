@@ -187,10 +187,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/queues/${queueId}/items/${position}`, "GET", api.GetQueueItem, z.any(), undefined, options)
   }
   
-  getQuickPlaylistIds(options?: ExtraOptions) {
-    return this.request("/api/v1/me/quickplaylist", "GET", api.GetQuickPlaylistIds, z.any(), undefined, options)
-  }
-  
   getSystemInfo(options?: ExtraOptions) {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
@@ -496,10 +492,6 @@ export class ClientUrls {
   
   getQueueItemAtIndex(queueId: string, position: string) {
     return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/items/${position}`)
-  }
-  
-  getQuickPlaylistIds() {
-    return createUrl(this.baseUrl, "/api/v1/me/quickplaylist")
   }
   
   getSystemInfo() {

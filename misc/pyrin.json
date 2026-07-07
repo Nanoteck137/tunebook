@@ -862,16 +862,6 @@
       ]
     },
     {
-      "name": "GetQuickPlaylistIds",
-      "fields": [
-        {
-          "name": "ids",
-          "type": "[]string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "GetSystemInfo",
       "fields": [
         {
@@ -1904,13 +1894,6 @@
       "method": "GET",
       "path": "/api/v1/queues/:queueId/items/:position",
       "response": "GetQueueItem"
-    },
-    {
-      "type": "api",
-      "name": "GetQuickPlaylistIds",
-      "method": "GET",
-      "path": "/api/v1/me/quickplaylist",
-      "response": "GetQuickPlaylistIds"
     },
     {
       "type": "api",

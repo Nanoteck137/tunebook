@@ -649,13 +649,6 @@ export const GetQueueItem = z.object({
 });
 export type GetQueueItem = z.infer<typeof GetQueueItem>;
 
-// Name: GetQuickPlaylistIds
-export const GetQuickPlaylistIds = z.object({
-  // Name: GetQuickPlaylistIds.ids
-  "ids": z.array(z.string()),
-});
-export type GetQuickPlaylistIds = z.infer<typeof GetQuickPlaylistIds>;
-
 // Name: GetSystemInfo
 export const GetSystemInfo = z.object({
   // Name: GetSystemInfo.version
