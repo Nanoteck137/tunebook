@@ -109,7 +109,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   favoriteTrack(trackId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/me/favorites/tracks/${trackId}`, "POST", z.undefined(), z.any(), undefined, options)
+    return this.request(`/api/v1/favorites/tracks/${trackId}`, "POST", z.undefined(), z.any(), undefined, options)
   }
   
   generatePlaylistImage(playlistId: string, options?: ExtraOptions) {
@@ -147,7 +147,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   getFavoriteTrackIds(options?: ExtraOptions) {
-    return this.request("/api/v1/me/favorites/tracks/ids", "GET", api.GetFavoriteTrackIds, z.any(), undefined, options)
+    return this.request("/api/v1/favorites/tracks/ids", "GET", api.GetFavoriteTrackIds, z.any(), undefined, options)
   }
   
   getMe(options?: ExtraOptions) {
@@ -224,8 +224,12 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/${userId}/stats`, "GET", api.GetUserStats, z.any(), undefined, options)
   }
   
-  getUserTrackFavorites(userId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/favorites/tracks`, "GET", api.GetUserFavorites, z.any(), undefined, options)
+  getUserTrackFavorites(options?: ExtraOptions) {
+    return this.request("/api/v1/favorites/tracks", "GET", api.GetUserFavorites, z.any(), undefined, options)
+  }
+  
+  getUserTrackFavoritesById(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/favorites/users/${userId}/tracks`, "GET", api.GetUserFavorites, z.any(), undefined, options)
   }
   
   pushTrackHistory(body: api.PushTrackHistoryBody, options?: ExtraOptions) {
@@ -283,7 +287,7 @@ export class ApiClient extends BaseApiClient {
   
   
   unfavoriteTrack(trackId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/me/favorites/tracks/${trackId}`, "DELETE", z.undefined(), z.any(), undefined, options)
+    return this.request(`/api/v1/favorites/tracks/${trackId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   updateMe(body: api.UpdateMeBody, options?: ExtraOptions) {
@@ -411,7 +415,7 @@ export class ClientUrls {
   }
   
   favoriteTrack(trackId: string) {
-    return createUrl(this.baseUrl, `/api/v1/me/favorites/tracks/${trackId}`)
+    return createUrl(this.baseUrl, `/api/v1/favorites/tracks/${trackId}`)
   }
   
   generatePlaylistImage(playlistId: string) {
@@ -455,7 +459,7 @@ export class ClientUrls {
   }
   
   getFavoriteTrackIds() {
-    return createUrl(this.baseUrl, "/api/v1/me/favorites/tracks/ids")
+    return createUrl(this.baseUrl, "/api/v1/favorites/tracks/ids")
   }
   
   getMe() {
@@ -538,8 +542,12 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/stats`)
   }
   
-  getUserTrackFavorites(userId: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/favorites/tracks`)
+  getUserTrackFavorites() {
+    return createUrl(this.baseUrl, "/api/v1/favorites/tracks")
+  }
+  
+  getUserTrackFavoritesById(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/favorites/users/${userId}/tracks`)
   }
   
   pushTrackHistory() {
@@ -603,7 +611,7 @@ export class ClientUrls {
   }
   
   unfavoriteTrack(trackId: string) {
-    return createUrl(this.baseUrl, `/api/v1/me/favorites/tracks/${trackId}`)
+    return createUrl(this.baseUrl, `/api/v1/favorites/tracks/${trackId}`)
   }
   
   updateMe() {

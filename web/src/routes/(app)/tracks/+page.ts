@@ -7,7 +7,7 @@ export const load: PageLoad = async ({ parent, url }) => {
 
   let filters: TrackFilter[] | null = null;
   if (data.user) {
-    const res = await data.apiClient.getUserTrackFilters(data.user.id);
+    const res = await data.apiClient.getTrackFilters();
     if (!res.success) {
       throw error(res.error.code, { message: res.error.message });
     }

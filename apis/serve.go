@@ -28,6 +28,7 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 	InstallSearchHandlers(app, g)
 
 	InstallFilterHandlers(app, g)
+	InstallFavoriteHandlers(app, g)
 }
 
 func RegisterHandlers(app core.App, router pyrin.Router) {

@@ -1770,7 +1770,7 @@
       "type": "api",
       "name": "FavoriteTrack",
       "method": "POST",
-      "path": "/api/v1/me/favorites/tracks/:trackId"
+      "path": "/api/v1/favorites/tracks/:trackId"
     },
     {
       "type": "api",
@@ -1843,7 +1843,7 @@
       "type": "api",
       "name": "GetFavoriteTrackIds",
       "method": "GET",
-      "path": "/api/v1/me/favorites/tracks/ids",
+      "path": "/api/v1/favorites/tracks/ids",
       "response": "GetFavoriteTrackIds"
     },
     {
@@ -1988,7 +1988,14 @@
       "type": "api",
       "name": "GetUserTrackFavorites",
       "method": "GET",
-      "path": "/api/v1/users/:userId/favorites/tracks",
+      "path": "/api/v1/favorites/tracks",
+      "response": "GetUserFavorites"
+    },
+    {
+      "type": "api",
+      "name": "GetUserTrackFavoritesById",
+      "method": "GET",
+      "path": "/api/v1/favorites/users/:userId/tracks",
       "response": "GetUserFavorites"
     },
     {
@@ -2097,7 +2104,7 @@
       "type": "api",
       "name": "UnfavoriteTrack",
       "method": "DELETE",
-      "path": "/api/v1/me/favorites/tracks/:trackId"
+      "path": "/api/v1/favorites/tracks/:trackId"
     },
     {
       "type": "api",

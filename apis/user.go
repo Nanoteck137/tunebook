@@ -40,11 +40,6 @@ type GetUser struct {
 	User UserData `json:"user"`
 }
 
-type GetUserFavorites struct {
-	Page  types.Page `json:"page"`
-	Items []Track    `json:"items"`
-}
-
 type UpdateMeBody struct {
 	DisplayName *string `json:"displayName,omitempty"`
 	PictureUrl  *string `json:"pictureUrl,omitempty"`
@@ -66,10 +61,6 @@ func (b UpdateMeBody) Validate() error {
 
 type SetQuickPlaylistBody struct {
 	PlaylistId string `json:"playlistId"`
-}
-
-type GetFavoriteTrackIds struct {
-	Ids []string `json:"ids"`
 }
 
 type GetUserStats struct {
@@ -191,41 +182,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
-		pyrin.ApiHandler{
-			Name:         "GetUserTrackFavorites",
-			Method:       http.MethodGet,
-			Path:         "/users/:userId/favorites/tracks",
-			ResponseType: GetUserFavorites{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				q := c.Request().URL.Query()
-
-				ctx := c.Request().Context()
-
-				items, page, err := app.UserService().GetFavoriteTracks(
-					ctx,
-					service.GetFavoriteTracksParams{
-						UserId:   c.Param("userId"),
-						Page:     getPageParams(q, 100),
-						Filter:   getFilterParams(q),
-						FilterId: q.Get("filterId"),
-					},
-				)
-				if err != nil {
-					return nil, handleUserServiceErrors(err)
-				}
-
-				res := GetUserFavorites{
-					Page:  page,
-					Items: make([]Track, len(items)),
-				}
-
-				for i, item := range items {
-					res.Items[i] = ConvertDBTrack(c, item.Track)
-				}
-
-				return res, nil
-			},
-		},
 	)
 
 	group.Register(
@@ -331,91 +287,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				return nil, nil
 			},
 		},
-
-		pyrin.ApiHandler{
-			Name:         "GetFavoriteTrackIds",
-			Method:       http.MethodGet,
-			Path:         "/me/favorites/tracks/ids",
-			ResponseType: GetFavoriteTrackIds{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := c.Request().Context()
-
-				items, err := app.UserService().GetFavoriteTrackIds(
-					ctx,
-					service.GetFavoriteTrackIdsParams{
-						UserId: user.Id,
-					},
-				)
-				if err != nil {
-					return nil, err
-				}
-
-				return GetFavoriteTrackIds{
-					Ids: items,
-				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:   "FavoriteTrack",
-			Method: http.MethodPost,
-			Path:   "/me/favorites/tracks/:trackId",
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := c.Request().Context()
-
-				err = app.UserService().FavoriteTrack(
-					ctx,
-					service.FavoriteTrackParams{
-						UserId:  user.Id,
-						TrackId: c.Param("trackId"),
-					},
-				)
-				if err != nil {
-					return nil, handleUserServiceErrors(err)
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:   "UnfavoriteTrack",
-			Method: http.MethodDelete,
-			Path:   "/me/favorites/tracks/:trackId",
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := c.Request().Context()
-
-				err = app.UserService().UnfavoriteTrack(
-					ctx,
-					service.UnfavoriteTrackParams{
-						UserId:  user.Id,
-						TrackId: c.Param("trackId"),
-					},
-				)
-				if err != nil {
-					return nil, handleUserServiceErrors(err)
-				}
-
-				return nil, nil
-			},
-		},
-
-
 
 		pyrin.ApiHandler{
 			Name:         "GetApiTokens",

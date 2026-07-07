@@ -7,7 +7,7 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 
   const query = getPagedQueryOptions(url.searchParams);
 
-  const favorites = await data.apiClient.getUserTrackFavorites(params.id, {
+  const favorites = await data.apiClient.getUserTrackFavoritesById(params.id, {
     query,
   });
   if (!favorites.success) {
