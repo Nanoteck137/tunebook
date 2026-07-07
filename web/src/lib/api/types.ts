@@ -656,6 +656,20 @@ export const GetSystemInfo = z.object({
 });
 export type GetSystemInfo = z.infer<typeof GetSystemInfo>;
 
+// Name: Tag
+export const Tag = z.object({
+  // Name: Tag.slug
+  "slug": z.string(),
+});
+export type Tag = z.infer<typeof Tag>;
+
+// Name: GetTags
+export const GetTags = z.object({
+  // Name: GetTags.tags
+  "tags": z.array(Tag),
+});
+export type GetTags = z.infer<typeof GetTags>;
+
 // Name: GetTrackById
 export const GetTrackById = z.object({
   // Name: GetTrackById.track

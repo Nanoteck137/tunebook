@@ -89,7 +89,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   createTrackFilter(body: api.CreateTrackFilterBody, options?: ExtraOptions) {
-    return this.request("/api/v1/me/filters/tracks", "POST", api.CreateTrackFilter, z.any(), body, options)
+    return this.request("/api/v1/filters/tracks", "POST", api.CreateTrackFilter, z.any(), body, options)
   }
   
   deleteApiToken(tokenId: string, options?: ExtraOptions) {
@@ -101,7 +101,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   deleteTrackFilter(filterId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/me/filters/tracks/${filterId}`, "DELETE", z.undefined(), z.any(), undefined, options)
+    return this.request(`/api/v1/filters/tracks/${filterId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   editPlaylist(playlistId: string, body: api.EditPlaylistBody, options?: ExtraOptions) {
@@ -191,8 +191,16 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
   
+  getTags(options?: ExtraOptions) {
+    return this.request("/api/v1/tags", "GET", api.GetTags, z.any(), undefined, options)
+  }
+  
   getTrackById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/tracks/${id}`, "GET", api.GetTrackById, z.any(), undefined, options)
+  }
+  
+  getTrackFilters(options?: ExtraOptions) {
+    return this.request("/api/v1/filters/tracks", "GET", api.GetTrackFilters, z.any(), undefined, options)
   }
   
   getTrackHistory(options?: ExtraOptions) {
@@ -218,10 +226,6 @@ export class ApiClient extends BaseApiClient {
   
   getUserTrackFavorites(userId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/users/${userId}/favorites/tracks`, "GET", api.GetUserFavorites, z.any(), undefined, options)
-  }
-  
-  getUserTrackFilters(userId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/filters/tracks`, "GET", api.GetTrackFilters, z.any(), undefined, options)
   }
   
   pushTrackHistory(body: api.PushTrackHistoryBody, options?: ExtraOptions) {
@@ -287,7 +291,7 @@ export class ApiClient extends BaseApiClient {
   }
   
   updateTrackFilter(filterId: string, body: api.UpdateTrackFilterBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/me/filters/tracks/${filterId}`, "PATCH", z.undefined(), z.any(), body, options)
+    return this.request(`/api/v1/filters/tracks/${filterId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   uploadPlaylistImage(playlistId: string, body: FormData, options?: ExtraOptions) {
@@ -387,7 +391,7 @@ export class ClientUrls {
   }
   
   createTrackFilter() {
-    return createUrl(this.baseUrl, "/api/v1/me/filters/tracks")
+    return createUrl(this.baseUrl, "/api/v1/filters/tracks")
   }
   
   deleteApiToken(tokenId: string) {
@@ -399,7 +403,7 @@ export class ClientUrls {
   }
   
   deleteTrackFilter(filterId: string) {
-    return createUrl(this.baseUrl, `/api/v1/me/filters/tracks/${filterId}`)
+    return createUrl(this.baseUrl, `/api/v1/filters/tracks/${filterId}`)
   }
   
   editPlaylist(playlistId: string) {
@@ -498,8 +502,16 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/system/info")
   }
   
+  getTags() {
+    return createUrl(this.baseUrl, "/api/v1/tags")
+  }
+  
   getTrackById(id: string) {
     return createUrl(this.baseUrl, `/api/v1/tracks/${id}`)
+  }
+  
+  getTrackFilters() {
+    return createUrl(this.baseUrl, "/api/v1/filters/tracks")
   }
   
   getTrackHistory() {
@@ -528,10 +540,6 @@ export class ClientUrls {
   
   getUserTrackFavorites(userId: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/favorites/tracks`)
-  }
-  
-  getUserTrackFilters(userId: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/filters/tracks`)
   }
   
   pushTrackHistory() {
@@ -603,7 +611,7 @@ export class ClientUrls {
   }
   
   updateTrackFilter(filterId: string) {
-    return createUrl(this.baseUrl, `/api/v1/me/filters/tracks/${filterId}`)
+    return createUrl(this.baseUrl, `/api/v1/filters/tracks/${filterId}`)
   }
   
   uploadPlaylistImage(playlistId: string) {

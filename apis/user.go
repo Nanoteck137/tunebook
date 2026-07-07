@@ -39,25 +39,6 @@ type GetUser struct {
 	User UserData `json:"user"`
 }
 
-type TrackFilter struct {
-	FilterId string `json:"filterId"`
-	UserId   string `json:"userId"`
-
-	Name   string `json:"name"`
-	Filter string `json:"filter"`
-
-	Created string `json:"created"`
-	Updated string `json:"updated"`
-}
-
-type GetTrackFilters struct {
-	Filters []TrackFilter `json:"filters"`
-}
-
-type CreateTrackFilter struct {
-	FilterId string `json:"filterId"`
-}
-
 type GetUserFavorites struct {
 	Page  types.Page `json:"page"`
 	Items []Track    `json:"items"`
@@ -88,46 +69,6 @@ type SetQuickPlaylistBody struct {
 
 type GetFavoriteTrackIds struct {
 	Ids []string `json:"ids"`
-}
-
-type CreateTrackFilterBody struct {
-	Name   string `json:"name"`
-	Filter string `json:"filter"`
-}
-
-func (b *CreateTrackFilterBody) Transform() {
-	b.Name = anvil.String(b.Name)
-	b.Filter = anvil.String(b.Filter)
-}
-
-func (b CreateTrackFilterBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Name, validate.Required),
-		validate.Field(&b.Filter, validate.Required, validateFilter),
-	)
-}
-
-type UpdateTrackFilterBody struct {
-	Name   *string `json:"name,omitempty"`
-	Filter *string `json:"filter,omitempty"`
-}
-
-func (b *UpdateTrackFilterBody) Transform() {
-	b.Name = anvil.StringPtr(b.Name)
-	b.Filter = anvil.StringPtr(b.Filter)
-}
-
-func (b UpdateTrackFilterBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
-		// TODO(patrik): Test if we need '.When()' on validate filter when
-		// b.Filter is nil
-		validate.Field(
-			&b.Filter,
-			validate.Required.When(b.Filter != nil),
-			validateFilter,
-		),
-	)
 }
 
 type GetUserStats struct {
@@ -276,45 +217,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				for i, item := range items {
 					res.Items[i] = ConvertDBTrack(c, item.Track)
-				}
-
-				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetUserTrackFilters",
-			Method:       http.MethodGet,
-			Path:         "/users/:userId/filters/tracks",
-			ResponseType: GetTrackFilters{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				userId := c.Param("userId")
-
-				ctx := c.Request().Context()
-
-				filters, err := app.UserService().GetTrackFilters(
-					ctx,
-					service.GetTrackFiltersParams{
-						UserId: userId,
-					},
-				)
-				if err != nil {
-					return nil, handleUserServiceErrors(err)
-				}
-
-				res := GetTrackFilters{
-					Filters: make([]TrackFilter, len(filters)),
-				}
-
-				for i, filter := range filters {
-					res.Filters[i] = TrackFilter{
-						FilterId: filter.Id,
-						UserId:   filter.UserId,
-						Name:     filter.Name,
-						Filter:   filter.Filter,
-						Created:  formatTime(filter.Created),
-						Updated:  formatTime(filter.Updated),
-					}
 				}
 
 				return res, nil
@@ -509,104 +411,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
-		pyrin.ApiHandler{
-			Name:         "CreateTrackFilter",
-			Method:       http.MethodPost,
-			Path:         "/me/filters/tracks",
-			ResponseType: CreateTrackFilter{},
-			BodyType:     CreateTrackFilterBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[CreateTrackFilterBody](c)
-				if err != nil {
-					return nil, err
-				}
 
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := c.Request().Context()
-
-				filterId, err := app.UserService().CreateTrackFilter(
-					ctx,
-					service.CreateTrackFilterParams{
-						UserId: user.Id,
-						Name:   body.Name,
-						Filter: body.Filter,
-					},
-				)
-				if err != nil {
-					return nil, handleUserServiceErrors(err)
-				}
-
-				return CreateTrackFilter{
-					FilterId: filterId,
-				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:     "UpdateTrackFilter",
-			Method:   http.MethodPatch,
-			Path:     "/me/filters/tracks/:filterId",
-			BodyType: UpdateTrackFilterBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[UpdateTrackFilterBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := c.Request().Context()
-
-				err = app.UserService().UpdateTrackFilter(
-					ctx,
-					service.UpdateTrackFilterParams{
-						FilterId: c.Param("filterId"),
-						UserId:   user.Id,
-						Name:     body.Name,
-						Filter:   body.Filter,
-					},
-				)
-				if err != nil {
-					return nil, handleUserServiceErrors(err)
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:   "DeleteTrackFilter",
-			Method: http.MethodDelete,
-			Path:   "/me/filters/tracks/:filterId",
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := c.Request().Context()
-
-				err = app.UserService().DeleteTrackFilter(
-					ctx,
-					service.DeleteTrackFilterParams{
-						FilterId: c.Param("filterId"),
-						UserId:   user.Id,
-					},
-				)
-				if err != nil {
-					return nil, handleUserServiceErrors(err)
-				}
-
-				return nil, nil
-			},
-		},
 
 		pyrin.ApiHandler{
 			Name:         "GetApiTokens",

@@ -872,6 +872,16 @@
       ]
     },
     {
+      "name": "GetTags",
+      "fields": [
+        {
+          "name": "tags",
+          "type": "[]Tag",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetTrackById",
       "fields": [
         {
@@ -1352,6 +1362,16 @@
       ]
     },
     {
+      "name": "Tag",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Track",
       "fields": [
         {
@@ -1717,7 +1737,7 @@
       "type": "api",
       "name": "CreateTrackFilter",
       "method": "POST",
-      "path": "/api/v1/me/filters/tracks",
+      "path": "/api/v1/filters/tracks",
       "response": "CreateTrackFilter",
       "body": "CreateTrackFilterBody"
     },
@@ -1737,7 +1757,7 @@
       "type": "api",
       "name": "DeleteTrackFilter",
       "method": "DELETE",
-      "path": "/api/v1/me/filters/tracks/:filterId"
+      "path": "/api/v1/filters/tracks/:filterId"
     },
     {
       "type": "api",
@@ -1904,10 +1924,24 @@
     },
     {
       "type": "api",
+      "name": "GetTags",
+      "method": "GET",
+      "path": "/api/v1/tags",
+      "response": "GetTags"
+    },
+    {
+      "type": "api",
       "name": "GetTrackById",
       "method": "GET",
       "path": "/api/v1/tracks/:id",
       "response": "GetTrackById"
+    },
+    {
+      "type": "api",
+      "name": "GetTrackFilters",
+      "method": "GET",
+      "path": "/api/v1/filters/tracks",
+      "response": "GetTrackFilters"
     },
     {
       "type": "api",
@@ -1956,13 +1990,6 @@
       "method": "GET",
       "path": "/api/v1/users/:userId/favorites/tracks",
       "response": "GetUserFavorites"
-    },
-    {
-      "type": "api",
-      "name": "GetUserTrackFilters",
-      "method": "GET",
-      "path": "/api/v1/users/:userId/filters/tracks",
-      "response": "GetTrackFilters"
     },
     {
       "type": "api",
@@ -2083,7 +2110,7 @@
       "type": "api",
       "name": "UpdateTrackFilter",
       "method": "PATCH",
-      "path": "/api/v1/me/filters/tracks/:filterId",
+      "path": "/api/v1/filters/tracks/:filterId",
       "body": "UpdateTrackFilterBody"
     },
     {
