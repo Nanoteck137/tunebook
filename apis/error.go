@@ -32,6 +32,11 @@ const (
 	ErrTypeChallengeMismatch pyrin.ErrorType = "CHALLENGE_MISMATCH"
 	ErrTypeProviderNotFound  pyrin.ErrorType = "PROVIDER_NOT_FOUND"
 	ErrTypeRequestNotFound   pyrin.ErrorType = "REQUEST_NOT_FOUND"
+
+	ErrTypeMediaInvalidFormat  pyrin.ErrorType = "MEDIA_INVALID_FORMAT"
+	ErrTypeMediaInvalidQuality pyrin.ErrorType = "MEDIA_INVALID_QUALITY"
+	ErrTypeMediaInvalidPolicy  pyrin.ErrorType = "MEDIA_INVALID_POLICY"
+	ErrTypeMediaBitrateNotSet  pyrin.ErrorType = "MEDIA_BITRATE_NOT_SET"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -191,5 +196,37 @@ func RequestNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeRequestNotFound,
 		Message: "Request not found",
+	}
+}
+
+func MediaInvalidFormat() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeMediaInvalidFormat,
+		Message: "Invalid media format",
+	}
+}
+
+func MediaInvalidQuality() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeMediaInvalidQuality,
+		Message: "Invalid media quality",
+	}
+}
+
+func MediaInvalidPolicy() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeMediaInvalidPolicy,
+		Message: "Invalid media policy",
+	}
+}
+
+func MediaBitrateNotSet() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeMediaBitrateNotSet,
+		Message: "Bitrate not set",
 	}
 }

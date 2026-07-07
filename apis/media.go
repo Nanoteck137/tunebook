@@ -41,33 +41,13 @@ func handleMediaServiceErrors(err error) error {
 	case errors.Is(err, service.ErrMediaServiceTrackNotFound):
 		return TrackNotFound()
 	case errors.Is(err, service.ErrMediaServiceInvalidFormat):
-		// TODO(patrik): Better error
-		return &pyrin.Error{
-			Code:    400,
-			Type:    "MEDIA_INVALID_FORMAT",
-			Message: "Invalid media format",
-		}
+		return MediaInvalidFormat()
 	case errors.Is(err, service.ErrMediaServiceInvalidQuality):
-		// TODO(patrik): Better error
-		return &pyrin.Error{
-			Code:    400,
-			Type:    "MEDIA_INVALID_QUALITY",
-			Message: "Invalid media quality",
-		}
+		return MediaInvalidQuality()
 	case errors.Is(err, service.ErrMediaServiceInvalidPolicy):
-		// TODO(patrik): Better error
-		return &pyrin.Error{
-			Code:    400,
-			Type:    "MEDIA_INVALID_POLICY",
-			Message: "Invalid media policy",
-		}
+		return MediaInvalidPolicy()
 	case errors.Is(err, service.ErrMediaServiceBitrateNotSet):
-		// TODO(patrik): Better error
-		return &pyrin.Error{
-			Code:    400,
-			Type:    "MEDIA_BITRATE_NOT_SET",
-			Message: "Bitrate not set",
-		}
+		return MediaBitrateNotSet()
 	}
 
 	return err
