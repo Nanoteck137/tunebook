@@ -61,7 +61,6 @@ func UserQuery() *goqu.SelectDataset {
 	return query
 }
 
-// TODO(patrik): This needs fixing
 func UserSettingsQuery() *goqu.SelectDataset {
 	query := dialect.From("users_settings").
 		Select(
