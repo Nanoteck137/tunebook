@@ -58,7 +58,6 @@ func parseAuthHeader(authHeader string) string {
 	return splits[1]
 }
 
-// TODO(patrik): Cleanup
 func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	ctx := c.Request().Context()
 
@@ -84,40 +83,47 @@ func getUser(app core.App, c pyrin.Context) (*database.User, error) {
 	authHeader := c.Request().Header.Get("Authorization")
 	tokenString := parseAuthHeader(authHeader)
 	if tokenString == "" {
-		return nil, InvalidAuth("invalid authorization header")
+		return nil, InvalidAuth("missing or malformed authorization header")
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf(
-				"unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
 		return []byte(app.Config().JwtSecret), nil
 	})
-
 	if err != nil {
-		// TODO(patrik): Handle error better
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, InvalidAuth("token expired")
+		}
+
 		return nil, InvalidAuth("invalid authorization token")
 	}
 
 	jwtValidator := jwt.NewValidator(jwt.WithIssuedAt())
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		if err := jwtValidator.Validate(token.Claims); err != nil {
-			return nil, InvalidAuth("invalid authorization token")
-		}
-
-		userId := claims["userId"].(string)
-		user, err := app.DB().GetUserById(ctx, userId)
-		if err != nil {
-			return nil, InvalidAuth("invalid authorization token")
-		}
-
-		return &user, nil
+	err = jwtValidator.Validate(token.Claims)
+	if err != nil {
+		return nil, InvalidAuth("invalid authorization token")
 	}
 
-	return nil, InvalidAuth("invalid authorization token")
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, InvalidAuth("invalid authorization token")
+	}
+
+	userId, ok := claims["userId"].(string)
+	if !ok {
+		return nil, InvalidAuth("invalid authorization token")
+	}
+
+	user, err := app.DB().GetUserById(ctx, userId)
+	if err != nil {
+		return nil, InvalidAuth("invalid authorization token")
+	}
+
+	return &user, nil
 }
 
 func ConvertURL(c pyrin.Context, path string) string {
