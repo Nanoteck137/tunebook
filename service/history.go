@@ -88,10 +88,9 @@ func (s *HistoryService) PushTrackHistory(
 ) (string, error) {
 	track, err := s.db.GetTrackById(ctx, params.TrackId)
 	if err != nil {
-		// TODO(patrik): Handle error
-		// if errors.Is(err, database.ErrItemNotFound) {
-		// 	return "", nil
-		// }
+		if errors.Is(err, database.ErrItemNotFound) {
+			return "", nil
+		}
 
 		return "", historyErr.Wrap("push track history: get track", err)
 	}
