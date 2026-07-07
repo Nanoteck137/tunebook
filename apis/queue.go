@@ -126,6 +126,8 @@ func handleQueueServiceErrors(err error) error {
 		return QueueNotFound()
 	case errors.Is(err, service.ErrQueueServiceItemNotFound):
 		return QueueItemNotFound()
+	case errors.Is(err, service.ErrQueueServiceFilterNotFound):
+		return FilterNotFound()
 	}
 
 	return err

@@ -15,6 +15,7 @@ var queueErr = NewServiceErrCreator("queue")
 var (
 	ErrQueueServiceQueueNotFound = queueErr.New("queue not found")
 	ErrQueueServiceItemNotFound  = queueErr.New("item not found")
+	ErrQueueServiceFilterNotFound = queueErr.New("filter not found")
 )
 
 type QueueService struct {
@@ -327,6 +328,10 @@ func (s *QueueService) AddToQueue(
 	case "filter":
 		filter, err := s.db.GetTrackFilterById(ctx, params.SourceId)
 		if err != nil {
+			if errors.Is(err, database.ErrItemNotFound) {
+				return ErrQueueServiceFilterNotFound
+			}
+
 			return queueErr.Wrap("get track filter", err)
 		}
 
@@ -390,7 +395,10 @@ func (s *QueueService) AddAlbumToQueue(
 	if params.FilterId != "" {
 		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err != nil {
-			// TODO(patrik): Handle not found error
+			if errors.Is(err, database.ErrItemNotFound) {
+				return ErrQueueServiceFilterNotFound
+			}
+
 			return queueErr.Wrap("get track filter", err)
 		}
 
@@ -461,7 +469,10 @@ func (s *QueueService) AddArtistToQueue(
 	if params.FilterId != "" {
 		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err != nil {
-			// TODO(patrik): Handle not found error
+			if errors.Is(err, database.ErrItemNotFound) {
+				return ErrQueueServiceFilterNotFound
+			}
+
 			return queueErr.Wrap("get track filter", err)
 		}
 
@@ -532,7 +543,10 @@ func (s *QueueService) AddPlaylistToQueue(
 	if params.FilterId != "" {
 		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err != nil {
-			// TODO(patrik): Handle not found error
+			if errors.Is(err, database.ErrItemNotFound) {
+				return ErrQueueServiceFilterNotFound
+			}
+
 			return queueErr.Wrap("get track filter", err)
 		}
 
@@ -609,6 +623,10 @@ func (s *QueueService) AddFavoritesToQueue(
 	if params.FilterId != "" {
 		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err != nil {
+			if errors.Is(err, database.ErrItemNotFound) {
+				return ErrQueueServiceFilterNotFound
+			}
+
 			return queueErr.Wrap("get track filter", err)
 		}
 
@@ -685,6 +703,10 @@ func (s *QueueService) AddTracksToQueue(
 	if params.FilterId != "" {
 		filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err != nil {
+			if errors.Is(err, database.ErrItemNotFound) {
+				return ErrQueueServiceFilterNotFound
+			}
+
 			return queueErr.Wrap("get track filter", err)
 		}
 
