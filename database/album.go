@@ -286,11 +286,7 @@ func (db DB) DeleteAlbum(ctx context.Context, albumId string) error {
 }
 
 // TODO(patrik): Generalize
-// TODO(patrik): Rename to AddAlbumTag, same with track
-func (db DB) AddTagToAlbum(
-	ctx context.Context, 
-	tagSlug, albumId string,
-) error {
+func (db DB) AddAlbumTag(ctx context.Context, tagSlug, albumId string) error {
 	query := dialect.Insert("albums_tags").
 		Rows(goqu.Record{
 			"album_id": albumId,
@@ -306,11 +302,7 @@ func (db DB) AddTagToAlbum(
 }
 
 // TODO(patrik): Generalize
-// TODO(patrik): Rename to RemoveAllAlbumTags, same with track
-func (db DB) RemoveAllTagsFromAlbum(
-	ctx context.Context, 
-	albumId string,
-) error {
+func (db DB) RemoveAllAlbumTags(ctx context.Context, albumId string) error {
 	query := dialect.Delete("albums_tags").
 		Where(goqu.I("album_id").Eq(albumId))
 
@@ -350,26 +342,6 @@ func (db DB) AddFeaturingArtistToAlbum(
 			"album_id":  albumId,
 			"artist_id": artistId,
 		})
-
-	_, err := db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db DB) RemoveFeaturingArtistFromAlbum(
-	ctx context.Context, 
-	albumId, artistId string,
-) error {
-	query := goqu.Delete("albums_featuring_artists").
-		Where(
-			goqu.And(
-				goqu.I("albums_featuring_artists.album_id").Eq(albumId),
-				goqu.I("albums_featuring_artists.artist_id").Eq(artistId),
-			),
-		)
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {

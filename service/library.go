@@ -162,7 +162,7 @@ func setArtistTags(
 	artistId string,
 	tags []string,
 ) error {
-	err := db.RemoveAllTagsFromArtist(ctx, artistId)
+	err := db.RemoveAllArtistTags(ctx, artistId)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func setArtistTags(
 			return err
 		}
 
-		err = db.AddTagToArtist(ctx, slug, artistId)
+		err = db.AddArtistTag(ctx, slug, artistId)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
@@ -330,7 +330,7 @@ func setAlbumTags(
 	albumId string,
 	tags []string,
 ) error {
-	err := db.RemoveAllTagsFromAlbum(ctx, albumId)
+	err := db.RemoveAllAlbumTags(ctx, albumId)
 	if err != nil {
 		return err
 	}
@@ -343,7 +343,7 @@ func setAlbumTags(
 			return err
 		}
 
-		err = db.AddTagToAlbum(ctx, slug, albumId)
+		err = db.AddAlbumTag(ctx, slug, albumId)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
@@ -532,7 +532,7 @@ func setTrackTags(
 	trackId string,
 	tags []string,
 ) error {
-	err := db.RemoveAllTagsFromTrack(ctx, trackId)
+	err := db.RemoveAllTrackTags(ctx, trackId)
 	if err != nil {
 		return err
 	}
@@ -545,7 +545,7 @@ func setTrackTags(
 			return err
 		}
 
-		err = db.AddTagToTrack(ctx, slug, trackId)
+		err = db.AddTrackTag(ctx, slug, trackId)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}

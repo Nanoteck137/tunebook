@@ -440,11 +440,8 @@ func (db DB) DeleteTrack(ctx context.Context, id string) error {
 	return nil
 }
 
-func (db DB) AddTagToTrack(
-	ctx context.Context, 
-	tagSlug, 
-	trackId string,
-) error {
+// TODO(patrik): Generalize
+func (db DB) AddTrackTag(ctx context.Context, tagSlug, trackId string) error {
 	query := dialect.Insert(tracksTagsTbl).
 		Rows(goqu.Record{
 			"track_id": trackId,
@@ -459,10 +456,8 @@ func (db DB) AddTagToTrack(
 	return nil
 }
 
-func (db DB) RemoveAllTagsFromTrack(
-	ctx context.Context, 
-	trackId string,
-) error {
+// TODO(patrik): Generalize
+func (db DB) RemoveAllTrackTags(ctx context.Context, trackId string) error {
 	query := dialect.Delete(tracksTagsTbl).
 		Where(goqu.I("track_id").Eq(trackId))
 
@@ -500,26 +495,6 @@ func (db DB) AddFeaturingArtistToTrack(
 			"track_id":  trackId,
 			"artist_id": artistId,
 		})
-
-	_, err := db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db DB) RemoveFeaturingArtistFromTrack(
-	ctx context.Context, 
-	trackId, artistId string,
-) error {
-	query := goqu.Delete(tracksFeaturingArtistsTbl).
-		Where(
-			goqu.And(
-				tracksFeaturingArtistsTbl.Col("track_id").Eq(trackId),
-				tracksFeaturingArtistsTbl.Col("artist_id").Eq(artistId),
-			),
-		)
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
