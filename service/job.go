@@ -152,7 +152,6 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 	s.mu.RUnlock()
 
 	if !exists {
-		// TODO(patrik): This should be a internal error
 		errMsg := fmt.Sprintf("no handler registered for job: %s", job.Name)
 		s.logger.Error("no handler for job", "id", job.Id, "name", job.Name)
 		s.db.FailJob(ctx, job.Id, database.FailJobParams{
