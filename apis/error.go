@@ -33,10 +33,14 @@ const (
 	ErrTypeProviderNotFound  pyrin.ErrorType = "PROVIDER_NOT_FOUND"
 	ErrTypeRequestNotFound   pyrin.ErrorType = "REQUEST_NOT_FOUND"
 
-	ErrTypeMediaInvalidFormat  pyrin.ErrorType = "MEDIA_INVALID_FORMAT"
-	ErrTypeMediaInvalidQuality pyrin.ErrorType = "MEDIA_INVALID_QUALITY"
-	ErrTypeMediaInvalidPolicy  pyrin.ErrorType = "MEDIA_INVALID_POLICY"
-	ErrTypeMediaBitrateNotSet  pyrin.ErrorType = "MEDIA_BITRATE_NOT_SET"
+	ErrTypeMediaInvalidFormat         pyrin.ErrorType = "MEDIA_INVALID_FORMAT"
+	ErrTypeMediaInvalidQuality        pyrin.ErrorType = "MEDIA_INVALID_QUALITY"
+	ErrTypeMediaInvalidPolicy         pyrin.ErrorType = "MEDIA_INVALID_POLICY"
+	ErrTypeMediaBitrateNotSet         pyrin.ErrorType = "MEDIA_BITRATE_NOT_SET"
+
+	ErrTypePlaylistItemNotFound       pyrin.ErrorType = "PLAYLIST_ITEM_NOT_FOUND"
+	ErrTypePlaylistAnchorTrackNotFound pyrin.ErrorType = "PLAYLIST_ANCHOR_TRACK_NOT_FOUND"
+	ErrTypeNotAuthorized              pyrin.ErrorType = "NOT_AUTHORIZED"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -228,5 +232,29 @@ func MediaBitrateNotSet() *pyrin.Error {
 		Code:    http.StatusBadRequest,
 		Type:    ErrTypeMediaBitrateNotSet,
 		Message: "Bitrate not set",
+	}
+}
+
+func PlaylistItemNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypePlaylistItemNotFound,
+		Message: "Playlist item not found",
+	}
+}
+
+func PlaylistAnchorTrackNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypePlaylistAnchorTrackNotFound,
+		Message: "Anchor track not found",
+	}
+}
+
+func NotAuthorized() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusForbidden,
+		Type:    ErrTypeNotAuthorized,
+		Message: "Not authorized",
 	}
 }

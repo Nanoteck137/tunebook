@@ -135,7 +135,6 @@ type GetPlaylistItemIds struct {
 	Ids []string `json:"ids"`
 }
 
-// TODO(patrik): Handle filter errors
 func handlePlaylistServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrPlaylistServicePlaylistNotFound):
@@ -145,20 +144,14 @@ func handlePlaylistServiceErrors(err error) error {
 	case errors.Is(err, service.ErrPlaylistServiceTrackAlreadyAdded):
 		return PlaylistAlreadyHasTrack()
 	case errors.Is(err, service.ErrPlaylistServiceItemNotFound):
-		// TODO(patrik): Replace with its own error
-		return TrackNotFound()
+		return PlaylistItemNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceFilterNotFound):
 		return FilterNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceAnchorTrackNotFound):
-		// TODO(patrik): Replace with its own error
-		return TrackNotFound()
+		return PlaylistAnchorTrackNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceNotAuthorized):
-		// TODO(patrik): Replace with its own error
-		return PlaylistNotFound()
-
-	// TODO(patrik): How should other services be handled
+		return NotAuthorized()
 	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
-		// TODO(patrik): Replace with its own error
 		return UnsupportedImageType()
 	}
 
