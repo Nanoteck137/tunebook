@@ -121,7 +121,6 @@ func RegisterStaticHandlers(app core.App, g pyrin.Group) {
 
 func RegisterHandlers(app core.App, router pyrin.Router) {
 	RegisterApiHandlers(app, router.Group("/api/v1"))
-	// TODO(patrik): Should the files be under the /api/v1 group?
 	InstallFilesHandlers(app, router.Group("/files"))
 
 	RegisterStaticHandlers(app, router.Group("/"))
