@@ -22,9 +22,11 @@ func VersionTemplate(appName string) string {
 }
 
 func DefaultLogger() *slog.Logger {
-	// TODO(patrik): Don't use github.com/golang-cz/devslog for prod
-	logger := slog.New(devslog.NewHandler(os.Stdout, nil))
-	return logger
+	if Version == "no-version" || Commit == "no-commit" || os.Getenv("TUNEBOOK_DEV") != "" {
+		return slog.New(devslog.NewHandler(os.Stdout, nil))
+	}
+
+	return slog.New(slog.NewJSONHandler(os.Stdout, nil))
 }
 
 func init() {
