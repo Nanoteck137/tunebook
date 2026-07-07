@@ -83,14 +83,14 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				filters, err := app.UserService().GetTrackFilters(
+				filters, err := app.TrackService().GetTrackFilters(
 					ctx,
 					service.GetTrackFiltersParams{
 						UserId: user.Id,
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				res := GetTrackFilters{
@@ -131,7 +131,7 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				filterId, err := app.UserService().CreateTrackFilter(
+				filterId, err := app.TrackService().CreateTrackFilter(
 					ctx,
 					service.CreateTrackFilterParams{
 						UserId: user.Id,
@@ -140,7 +140,7 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				return CreateTrackFilter{
@@ -167,7 +167,7 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				err = app.UserService().UpdateTrackFilter(
+				err = app.TrackService().UpdateTrackFilter(
 					ctx,
 					service.UpdateTrackFilterParams{
 						FilterId: c.Param("filterId"),
@@ -177,7 +177,7 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				return nil, nil
@@ -196,7 +196,7 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				err = app.UserService().DeleteTrackFilter(
+				err = app.TrackService().DeleteTrackFilter(
 					ctx,
 					service.DeleteTrackFilterParams{
 						FilterId: c.Param("filterId"),
@@ -204,7 +204,7 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				return nil, nil

@@ -19,7 +19,6 @@ var userErr = NewServiceErrCreator("user")
 var (
 	ErrUserServiceUserNotFound        = userErr.New("user not found")
 	ErrUserServicePlaylistNotFound    = userErr.New("playlist not found")
-	ErrUserServiceTrackFilterNotFound = userErr.New("track filter not found")
 	ErrUserServiceApiTokenNotFound    = userErr.New("api token not found")
 	ErrUserServiceUnauthorized        = userErr.New("unauthorized")
 )
@@ -152,22 +151,6 @@ func (s *UserService) GetUserStats(
 	}
 
 	return stats, nil
-}
-
-type GetTrackFiltersParams struct {
-	UserId string
-}
-
-func (s *UserService) GetTrackFilters(
-	ctx context.Context,
-	params GetTrackFiltersParams,
-) ([]database.TrackFilter, error) {
-	filters, err := s.db.GetTrackFiltersByUserId(ctx, params.UserId)
-	if err != nil {
-		return nil, userErr.Wrap("get track filters: db get", err)
-	}
-
-	return filters, nil
 }
 
 type UpdateMeParams struct {
@@ -311,115 +294,6 @@ func (s *UserService) SetQuickPlaylist(
 	})
 	if err != nil {
 		return userErr.Wrap("set quick playlist: db update settings", err)
-	}
-
-	return nil
-}
-
-type CreateTrackFilterParams struct {
-	UserId string
-
-	Name   string
-	Filter string
-}
-
-func (s *UserService) CreateTrackFilter(
-	ctx context.Context,
-	params CreateTrackFilterParams,
-) (string, error) {
-	// TODO(patrik): Test filter
-
-	filterId, err := s.db.CreateTrackFilter(
-		ctx,
-		database.CreateTrackFilterParams{
-			UserId: params.UserId,
-			Name:   params.Name,
-			Filter: params.Filter,
-		},
-	)
-	if err != nil {
-		return "", userErr.Wrap("create track filter: db create", err)
-	}
-
-	return filterId, nil
-}
-
-type UpdateTrackFilterParams struct {
-	FilterId string
-	UserId   string
-
-	Name   *string
-	Filter *string
-}
-
-func (s *UserService) UpdateTrackFilter(
-	ctx context.Context,
-	params UpdateTrackFilterParams,
-) error {
-	filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return ErrUserServiceTrackFilterNotFound
-		}
-
-		return userErr.Wrap("update track filter: db get track filter", err)
-	}
-
-	if filter.UserId != params.UserId {
-		return ErrUserServiceUnauthorized
-	}
-
-	changes := database.TrackFilterChanges{}
-
-	if params.Name != nil {
-		changes.Name = database.Change[string]{
-			Value:   *params.Name,
-			Changed: *params.Name != filter.Name,
-		}
-	}
-
-	if params.Filter != nil {
-		// TODO(patrik): Test filter
-
-		changes.Filter = database.Change[string]{
-			Value:   *params.Filter,
-			Changed: *params.Filter != filter.Filter,
-		}
-	}
-
-	err = s.db.UpdateTrackFilter(ctx, filter.Id, changes)
-	if err != nil {
-		return userErr.Wrap("update track filter: db update", err)
-	}
-
-	return nil
-}
-
-type DeleteTrackFilterParams struct {
-	FilterId string
-	UserId   string
-}
-
-func (s *UserService) DeleteTrackFilter(
-	ctx context.Context,
-	params DeleteTrackFilterParams,
-) error {
-	filter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return ErrUserServiceTrackFilterNotFound
-		}
-
-		return userErr.Wrap("delete track filter: db get track filter", err)
-	}
-
-	if filter.UserId != params.UserId {
-		return ErrUserServiceUnauthorized
-	}
-
-	err = s.db.DeleteTrackFilter(ctx, filter.Id)
-	if err != nil {
-		return userErr.Wrap("delete track filter: db delete", err)
 	}
 
 	return nil
