@@ -817,13 +817,16 @@ func (s *QueueService) SetPosition(
 	return nil
 }
 
-// TODO(patrik): Refactor: Use ClearQueueParams
+type ClearQueueParams struct {
+	QueueId string
+	UserId string
+}
+
 func (s *QueueService) ClearQueue(
 	ctx context.Context, 
-	queueId string, 
-	userId string,
+	params ClearQueueParams,
 ) error {
-	queue, err := s.getOrCreateQueue(ctx, queueId, userId)
+	queue, err := s.getOrCreateQueue(ctx, params.QueueId, params.UserId)
 	if err != nil {
 		return err
 	}

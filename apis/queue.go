@@ -19,7 +19,7 @@ type QueueItem struct {
 }
 
 func ConvertDBQueueItem(
-	c pyrin.Context, 
+	c pyrin.Context,
 	item database.QueueItemTrack,
 ) QueueItem {
 	return QueueItem{
@@ -77,35 +77,35 @@ type AddToQueueBody struct {
 }
 
 type AddAlbumToQueueBody struct {
-	FilterId            string   `json:"filterId,omitempty"`
-	Position            string   `json:"position"`
-	Shuffle             bool     `json:"shuffle,omitempty"`
-	CurrentIndex        *int     `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+	FilterId            string  `json:"filterId,omitempty"`
+	Position            string  `json:"position"`
+	Shuffle             bool    `json:"shuffle,omitempty"`
+	CurrentIndex        *int    `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
 }
 
 type AddArtistToQueueBody struct {
-	FilterId            string   `json:"filterId,omitempty"`
-	Position            string   `json:"position"`
-	Shuffle             bool     `json:"shuffle,omitempty"`
-	CurrentIndex        *int     `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+	FilterId            string  `json:"filterId,omitempty"`
+	Position            string  `json:"position"`
+	Shuffle             bool    `json:"shuffle,omitempty"`
+	CurrentIndex        *int    `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
 }
 
 type AddPlaylistToQueueBody struct {
-	FilterId            string   `json:"filterId,omitempty"`
-	Position            string   `json:"position"`
-	Shuffle             bool     `json:"shuffle,omitempty"`
-	CurrentIndex        *int     `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+	FilterId            string  `json:"filterId,omitempty"`
+	Position            string  `json:"position"`
+	Shuffle             bool    `json:"shuffle,omitempty"`
+	CurrentIndex        *int    `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
 }
 
 type AddFavoritesToQueueBody struct {
-	FilterId            string   `json:"filterId,omitempty"`
-	Position            string   `json:"position"`
-	Shuffle             bool     `json:"shuffle,omitempty"`
-	CurrentIndex        *int     `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+	FilterId            string  `json:"filterId,omitempty"`
+	Position            string  `json:"position"`
+	Shuffle             bool    `json:"shuffle,omitempty"`
+	CurrentIndex        *int    `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
 }
 
 type AddTracksToQueueBody struct {
@@ -687,7 +687,12 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.QueueService().ClearQueue(
-					ctx, c.Param("queueId"), user.Id)
+					ctx,
+					service.ClearQueueParams{
+						QueueId: c.Param("queueId"),
+						UserId:  user.Id,
+					},
+				)
 				if err != nil {
 					return nil, handleQueueServiceErrors(err)
 				}
