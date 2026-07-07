@@ -229,7 +229,7 @@ func (s *PlaylistService) EditPlaylist(
 		return playlistErr.Wrap("edit: db update", err)
 	}
 
-	// TODO(patrik): Make this better
+	// TODO(patrik): Let FilesystemService handle this
 	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("edit: remove cache", err)
@@ -269,7 +269,7 @@ func (s *PlaylistService) DeletePlaylist(
 		return playlistErr.Wrap("delete: remove dir", err)
 	}
 
-	// TODO(patrik): Make this better
+	// TODO(patrik): Let FilesystemService handle this
 	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("delete: remove cache", err)
@@ -325,7 +325,7 @@ func (s *PlaylistService) UploadPlaylistImage(
 		return playlistErr.Wrap("upload image: db update", err)
 	}
 
-	// TODO(patrik): Make this better
+	// TODO(patrik): Let FilesystemService handle this
 	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("upload image: remove cache", err)
@@ -378,7 +378,7 @@ func (s *PlaylistService) GeneratePlaylistImage(
 		return playlistErr.Wrap("gen image: db update", err)
 	}
 
-	// TODO(patrik): Make this better
+	// TODO(patrik): Let FilesystemService handle this
 	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
 	if err != nil {
 		return playlistErr.Wrap("gen image: remove cache", err)
