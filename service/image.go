@@ -518,7 +518,10 @@ func (s *ImageService) downloadToTempFile(
 	}
 	defer resp.Body.Close()
 
-	// TODO(patrik): Check for success
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", fmt.Errorf(
+			"download image: unexpected status %d", resp.StatusCode)
+	}
 
 	tmpPath, err := s.copyReaderToTempFile(resp.Body)
 	if err != nil {
