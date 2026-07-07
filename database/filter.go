@@ -166,7 +166,6 @@ func generateFilter(e filter.FilterExpr) (exp.Expression, error) {
 		s := generateTableSelect(&e.Table, e.Ids)
 
 		if e.Not {
-			// TODO(patrik): Move tracks.id
 			return goqu.L("? NOT IN ?", goqu.I(e.IdSelector), s), nil
 		} else {
 			return goqu.L("? IN ?", goqu.I(e.IdSelector), s), nil
