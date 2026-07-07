@@ -246,6 +246,7 @@ func (app *BaseApp) Bootstrap() error {
 		app.db,
 	)
 
+	// TODO(patrik): This need to be changed
 	app.broker = broker.NewBroker(func() []broker.Event {
 		return []broker.Event{
 			app.libraryService.GetSyncStateEvent(),
@@ -253,10 +254,12 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	})
 
+	// TODO(patrik): This need to be changed
 	app.libraryService.SetUpdateFunc(func() {
 		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
 	})
 
+	// TODO(patrik): This need to be changed
 	app.taskService.SetUpdateFunc(func() {
 		app.broker.EmitEvent(app.taskService.GetSyncStateEvent())
 	})
