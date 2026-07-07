@@ -352,82 +352,118 @@ func setAlbumTags(
 	return nil
 }
 
-// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) syncSingleAlbum(
+	ctx context.Context,
+	entry *library.AlbumEntry,
+) error {
+	dbAlbum, err := s.db.GetAlbumById(ctx, entry.Id)
+	if err != nil {
+		if !errors.Is(err, database.ErrItemNotFound) {
+			return fmt.Errorf("get album: %w", err)
+		}
+
+		return s.createAlbum(ctx, entry)
+	}
+
+	return s.updateAlbum(ctx, entry, dbAlbum)
+}
+
+func (s *LibraryService) createAlbum(
 	ctx context.Context,
 	entry *library.AlbumEntry,
 ) error {
 	coverArt := entry.GetCoverArt()
 
-	dbAlbum, err := s.db.GetAlbumById(ctx, entry.Id)
+	_, err := s.db.CreateAlbum(ctx, database.CreateAlbumParams{
+		Id:       entry.Id,
+		Name:     entry.Name,
+		ArtistId: entry.ArtistId,
+		CoverArt: sql.NullString{
+			String: coverArt,
+			Valid:  coverArt != "",
+		},
+		Year: sql.NullInt64{
+			Int64: entry.Year,
+			Valid: entry.Year != 0,
+		},
+		AlbumType: entry.AlbumType,
+	})
 	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			_, err = s.db.CreateAlbum(ctx, database.CreateAlbumParams{
-				Id:       entry.Id,
-				Name:     entry.Name,
-				ArtistId: entry.ArtistId,
-				CoverArt: sql.NullString{
-					String: coverArt,
-					Valid:  coverArt != "",
-				},
-				Year: sql.NullInt64{
-					Int64: entry.Year,
-					Valid: entry.Year != 0,
-				},
-				AlbumType: entry.AlbumType,
-			})
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		changes := database.AlbumChanges{}
-
-		changes.Name = database.Change[string]{
-			Value:   entry.Name,
-			Changed: entry.Name != dbAlbum.Name,
-		}
-
-		changes.ArtistId = database.Change[string]{
-			Value:   entry.ArtistId,
-			Changed: entry.ArtistId != dbAlbum.ArtistId,
-		}
-
-		changes.CoverArt = database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: coverArt,
-				Valid:  coverArt != "",
-			},
-			Changed: coverArt != dbAlbum.CoverArt.String,
-		}
-
-		changes.Year = database.Change[sql.NullInt64]{
-			Value: sql.NullInt64{
-				Int64: entry.Year,
-				Valid: entry.Year != 0,
-			},
-			Changed: entry.Year != dbAlbum.Year.Int64,
-		}
-
-		changes.AlbumType = database.Change[library.AlbumType]{
-			Value:   entry.AlbumType,
-			Changed: entry.AlbumType != dbAlbum.AlbumType,
-		}
-
-		err = s.db.UpdateAlbum(ctx, dbAlbum.Id, changes)
-		if err != nil {
-			return fmt.Errorf("update album: %w", err)
-		}
+		return fmt.Errorf("create album: %w", err)
 	}
 
-	err = setAlbumFeaturingArtists(
+	return s.setAlbumRelations(ctx, entry)
+}
+
+func (s *LibraryService) updateAlbum(
+	ctx context.Context,
+	entry *library.AlbumEntry,
+	dbAlbum database.Album,
+) error {
+	changes := buildAlbumChanges(entry, dbAlbum)
+
+	err := s.db.UpdateAlbum(ctx, dbAlbum.Id, changes)
+	if err != nil {
+		return fmt.Errorf("update album: %w", err)
+	}
+
+	return s.setAlbumRelations(ctx, entry)
+}
+
+func buildAlbumChanges(
+	entry *library.AlbumEntry,
+	dbAlbum database.Album,
+) database.AlbumChanges {
+	coverArt := entry.GetCoverArt()
+
+	changes := database.AlbumChanges{}
+
+	changes.Name = database.Change[string]{
+		Value:   entry.Name,
+		Changed: entry.Name != dbAlbum.Name,
+	}
+
+	changes.ArtistId = database.Change[string]{
+		Value:   entry.ArtistId,
+		Changed: entry.ArtistId != dbAlbum.ArtistId,
+	}
+
+	changes.CoverArt = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: coverArt,
+			Valid:  coverArt != "",
+		},
+		Changed: coverArt != dbAlbum.CoverArt.String,
+	}
+
+	changes.Year = database.Change[sql.NullInt64]{
+		Value: sql.NullInt64{
+			Int64: entry.Year,
+			Valid: entry.Year != 0,
+		},
+		Changed: entry.Year != dbAlbum.Year.Int64,
+	}
+
+	changes.AlbumType = database.Change[library.AlbumType]{
+		Value:   entry.AlbumType,
+		Changed: entry.AlbumType != dbAlbum.AlbumType,
+	}
+
+	return changes
+}
+
+func (s *LibraryService) setAlbumRelations(
+	ctx context.Context,
+	entry *library.AlbumEntry,
+) error {
+	err := setAlbumFeaturingArtists(
 		ctx,
 		s.db.DB,
 		entry.Id,
 		entry.FeaturingArtistIds,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("set album featuring artists: %w", err)
 	}
 
 	err = setAlbumTags(
@@ -437,7 +473,7 @@ func (s *LibraryService) syncSingleAlbum(
 		entry.Tags,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("set album tags: %w", err)
 	}
 
 	return nil
