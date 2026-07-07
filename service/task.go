@@ -123,7 +123,9 @@ func (s *TaskService) AddTask(task Task) error {
 
 	info := task.Info()
 
-	// TODO(patrik): Maybe add some validation for TaskInfo
+	if info.Name == "" {
+		return taskErr.New("task name must not be empty")
+	}
 
 	_, exists := s.tasks[info.Name]
 	if exists {
