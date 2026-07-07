@@ -871,10 +871,7 @@ func (s *LibraryService) syncTracks(
 	return nil
 }
 
-// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) Sync(ctx context.Context) error {
-	p := s.config.LibraryDir
-
 	s.logger.Info("starting library sync...")
 
 	s.norificationService.SendSimple(SendSimpleParams{
@@ -884,30 +881,69 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 		Priority: 0,
 	})
 
-	defer func() {
-		s.update()
+	defer s.finishSync()
 
-		s.logger.Info("stopped library sync")
+	s.initSyncState()
+	s.update()
 
-		message := fmt.Sprintf(
-			"%d Error(s)\nTotal sync time %s",
-			len(s.errors),
-			utils.PrettyDuration(s.totalSyncDuration),
-		)
+	p := s.config.LibraryDir
 
-		tags := []string{"library", "syncing"}
+	artistTimer := utils.SimpleTimer{}
+	artistTimer.Start()
 
-		if len(s.errors) > 0 {
-			tags = append(tags, "warning")
-		}
+	err := s.syncArtists(ctx, p)
+	artistTimer.Stop()
+	if err != nil {
+		return libraryErr.Wrap("sync artists", err)
+	}
 
-		s.norificationService.SendSimple(SendSimpleParams{
-			Title:   "Stopped library sync",
-			Message: message,
-			Tags:    tags,
-		})
-	}()
+	albumTimer := utils.SimpleTimer{}
+	albumTimer.Start()
 
+	err = s.syncAlbums(ctx, p)
+	albumTimer.Stop()
+	if err != nil {
+		return libraryErr.Wrap("sync albums", err)
+	}
+
+	trackTimer := utils.SimpleTimer{}
+	trackTimer.Start()
+
+	err = s.syncTracks(ctx, p)
+	trackTimer.Stop()
+	if err != nil {
+		return libraryErr.Wrap("sync tracks", err)
+	}
+
+	existingArtistIds, err := s.db.GetAllArtistIds(ctx)
+	if err != nil {
+		return libraryErr.Wrap("get all artist ids", err)
+	}
+
+	existingAlbumIds, err := s.db.GetAllAlbumIds(ctx)
+	if err != nil {
+		return libraryErr.Wrap("get all album ids", err)
+	}
+
+	existingTrackIds, err := s.db.GetAllTrackIds(ctx)
+	if err != nil {
+		return libraryErr.Wrap("get all track ids", err)
+	}
+
+	s.findMissingArtists(ctx, existingArtistIds)
+	s.findMissingAlbums(ctx, existingAlbumIds)
+	s.findMissingTracks(ctx, existingTrackIds)
+
+	s.artistsSyncDuration = artistTimer.Duration()
+	s.albumsSyncDuration = albumTimer.Duration()
+	s.tracksSyncDuration = trackTimer.Duration()
+	s.totalSyncDuration =
+		s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
+
+	return s.clearCache()
+}
+
+func (s *LibraryService) initSyncState() {
 	s.errors = []error{}
 	s.numArtists = 0
 	s.numAlbums = 0
@@ -925,137 +961,130 @@ func (s *LibraryService) Sync(ctx context.Context) error {
 	s.syncedArtistIds = make(map[string]struct{})
 	s.syncedAlbumIds = make(map[string]struct{})
 	s.syncedTrackIds = make(map[string]struct{})
+}
 
+func (s *LibraryService) finishSync() {
 	s.update()
 
-	artistTimer := utils.SimpleTimer{}
-	artistTimer.Start()
+	s.logger.Info("stopped library sync")
 
-	err := s.syncArtists(ctx, p)
-	if err != nil {
-		return libraryErr.Wrap("sync artists", err)
+	message := fmt.Sprintf(
+		"%d Error(s)\nTotal sync time %s",
+		len(s.errors),
+		utils.PrettyDuration(s.totalSyncDuration),
+	)
+
+	tags := []string{"library", "syncing"}
+
+	if len(s.errors) > 0 {
+		tags = append(tags, "warning")
 	}
 
-	artistTimer.Stop()
+	s.norificationService.SendSimple(SendSimpleParams{
+		Title:   "Stopped library sync",
+		Message: message,
+		Tags:    tags,
+	})
+}
 
-	albumTimer := utils.SimpleTimer{}
-	albumTimer.Start()
-
-	err = s.syncAlbums(ctx, p)
-	if err != nil {
-		return libraryErr.Wrap("sync albums", err)
-	}
-
-	albumTimer.Stop()
-
-	trackTimer := utils.SimpleTimer{}
-	trackTimer.Start()
-
-	err = s.syncTracks(ctx, p)
-	if err != nil {
-		return libraryErr.Wrap("sync tracks", err)
-	}
-
-	trackTimer.Stop()
-
-	existingArtistIds, err := s.db.GetAllArtistIds(ctx)
-	if err != nil {
-		return libraryErr.Wrap("get all artist ids", err)
-	}
-
-	existingAlbumIds, err := s.db.GetAllAlbumIds(ctx)
-	if err != nil {
-		return libraryErr.Wrap("get all album ids", err)
-	}
-
-	existingTrackIds, err := s.db.GetAllTrackIds(ctx)
-	if err != nil {
-		return libraryErr.Wrap("get all track ids", err)
-	}
-
-	for _, id := range existingArtistIds {
-		_, exists := s.syncedArtistIds[id]
-		if !exists {
-			artist, err := s.db.GetArtistById(ctx, id)
-			if err == nil {
-				s.logger.Warn("missing artist",
-					"id", id,
-					"name", artist.Name,
-				)
-
-				s.missingArtists = append(s.missingArtists, MissingItem{
-					Id:   id,
-					Name: artist.Name,
-				})
-			}
+func (s *LibraryService) findMissingArtists(
+	ctx context.Context,
+	existingIds []string,
+) {
+	for _, id := range existingIds {
+		if _, exists := s.syncedArtistIds[id]; exists {
+			continue
 		}
-	}
 
-	for _, id := range existingAlbumIds {
-		_, exists := s.syncedAlbumIds[id]
-		if !exists {
-			album, err := s.db.GetAlbumById(ctx, id)
-			if err == nil {
-				s.logger.Warn("missing album",
-					"id", id,
-					"name", album.Name,
-					"artist", album.ArtistName,
-				)
-
-				displayName := fmt.Sprintf(
-					"%s (%s)", album.Name, album.ArtistName)
-
-				s.missingAlbums = append(s.missingAlbums, MissingItem{
-					Id:   id,
-					Name: displayName,
-				})
-			}
+		artist, err := s.db.GetArtistById(ctx, id)
+		if err != nil {
+			continue
 		}
+
+		s.logger.Warn("missing artist",
+			"id", id,
+			"name", artist.Name,
+		)
+
+		s.missingArtists = append(s.missingArtists, MissingItem{
+			Id:   id,
+			Name: artist.Name,
+		})
 	}
+}
 
-	for _, id := range existingTrackIds {
-		_, exists := s.syncedTrackIds[id]
-		if !exists {
-			track, err := s.db.GetTrackById(ctx, id)
-			if err == nil {
-				s.logger.Warn("missing track",
-					"id", id,
-					"name", track.Name,
-					"album", track.AlbumName,
-					"artist", track.ArtistName,
-				)
-
-				displayName := fmt.Sprintf(
-					"%s (%s) (%s)",
-					track.Name, track.AlbumName, track.ArtistName)
-
-				s.missingTracks = append(s.missingTracks, MissingItem{
-					Id:   id,
-					Name: displayName,
-				})
-			}
+func (s *LibraryService) findMissingAlbums(
+	ctx context.Context,
+	existingIds []string,
+) {
+	for _, id := range existingIds {
+		if _, exists := s.syncedAlbumIds[id]; exists {
+			continue
 		}
+
+		album, err := s.db.GetAlbumById(ctx, id)
+		if err != nil {
+			continue
+		}
+
+		s.logger.Warn("missing album",
+			"id", id,
+			"name", album.Name,
+			"artist", album.ArtistName,
+		)
+
+		displayName := fmt.Sprintf(
+			"%s (%s)", album.Name, album.ArtistName)
+
+		s.missingAlbums = append(s.missingAlbums, MissingItem{
+			Id:   id,
+			Name: displayName,
+		})
 	}
+}
 
-	s.artistsSyncDuration = artistTimer.Duration()
-	s.albumsSyncDuration = albumTimer.Duration()
-	s.tracksSyncDuration = trackTimer.Duration()
-	s.totalSyncDuration =
-		s.artistsSyncDuration + s.albumsSyncDuration + s.tracksSyncDuration
+func (s *LibraryService) findMissingTracks(
+	ctx context.Context,
+	existingIds []string,
+) {
+	for _, id := range existingIds {
+		if _, exists := s.syncedTrackIds[id]; exists {
+			continue
+		}
 
-	// TODO(patrik): Move this an CacheService/DataDirService/PathService
-	// to unify cache handling
+		track, err := s.db.GetTrackById(ctx, id)
+		if err != nil {
+			continue
+		}
+
+		s.logger.Warn("missing track",
+			"id", id,
+			"name", track.Name,
+			"album", track.AlbumName,
+			"artist", track.ArtistName,
+		)
+
+		displayName := fmt.Sprintf(
+			"%s (%s) (%s)",
+			track.Name, track.AlbumName, track.ArtistName)
+
+		s.missingTracks = append(s.missingTracks, MissingItem{
+			Id:   id,
+			Name: displayName,
+		})
+	}
+}
+
+func (s *LibraryService) clearCache() error {
 	dir := s.dataDir.Cache()
 	s.logger.Info("clearing the cache", "path", dir)
 
-	err = os.RemoveAll(dir)
+	err := os.RemoveAll(dir)
 	if err != nil {
 		return libraryErr.Wrap("clear cache", err)
 	}
 
-	err = utils.CreateDirectories([]string{
-		dir,
-	})
+	err = utils.CreateDirectories([]string{dir})
 	if err != nil {
 		return libraryErr.Wrap("create cache dir", err)
 	}
