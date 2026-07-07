@@ -14,6 +14,7 @@ var trackErr = NewServiceErrCreator("track")
 
 var (
 	ErrTrackServiceTrackNotFound = trackErr.New("track not found")
+	ErrTrackServiceFilterNotFound = trackErr.New("filter not found")
 )
 
 type TrackService struct {
@@ -63,11 +64,16 @@ func (s *TrackService) GetTracks(
 	params GetTracksParams,
 ) ([]database.Track, types.Page, error) {
 	if params.FilterId != "" {
-		// TODO(patrik): Maybe log the error, or check for NotFound
 		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
-		if err == nil {
-			params.Filter.Filter = dbFilter.Filter
+		if err != nil {
+			if errors.Is(err, database.ErrItemNotFound) {
+				return nil, types.Page{}, ErrTrackServiceFilterNotFound
+			}
+
+			return nil, types.Page{}, trackErr.Wrap("get filter", err)
 		}
+
+		params.Filter.Filter = dbFilter.Filter
 	}
 
 	tracks, page, err := s.db.GetTracks(ctx, database.GetTracksParams{

@@ -80,6 +80,8 @@ func handleTrackServiceErrors(err error) error {
 	switch {
 	case errors.Is(err, service.ErrTrackServiceTrackNotFound):
 		return TrackNotFound()
+	case errors.Is(err, service.ErrTrackServiceFilterNotFound):
+		return FilterNotFound()
 	}
 
 	var invalidFilter *service.InvalidFilterError
