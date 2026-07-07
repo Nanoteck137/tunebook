@@ -491,8 +491,6 @@ func (s *PlaylistService) AddItemToPlaylist(
 		return err
 	}
 
-	// TODO(patrik): Replace with a simpler track query, we only need to
-	// know if the track exists and not all the data it has
 	track, err := s.db.GetTrackById(ctx, params.TrackId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
