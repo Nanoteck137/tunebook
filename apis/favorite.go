@@ -29,7 +29,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 				q := c.Request().URL.Query()
 				ctx := c.Request().Context()
 
-				items, page, err := app.UserService().GetFavoriteTracks(
+				items, page, err := app.TrackService().GetFavoriteTracks(
 					ctx,
 					service.GetFavoriteTracksParams{
 						UserId:   c.Param("userId"),
@@ -39,7 +39,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				res := GetUserFavorites{
@@ -69,7 +69,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 				q := c.Request().URL.Query()
 				ctx := c.Request().Context()
 
-				items, page, err := app.UserService().GetFavoriteTracks(
+				items, page, err := app.TrackService().GetFavoriteTracks(
 					ctx,
 					service.GetFavoriteTracksParams{
 						UserId:   user.Id,
@@ -79,7 +79,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				res := GetUserFavorites{
@@ -108,7 +108,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				items, err := app.UserService().GetFavoriteTrackIds(
+				items, err := app.TrackService().GetFavoriteTrackIds(
 					ctx,
 					service.GetFavoriteTrackIdsParams{
 						UserId: user.Id,
@@ -136,7 +136,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				err = app.UserService().FavoriteTrack(
+				err = app.TrackService().FavoriteTrack(
 					ctx,
 					service.FavoriteTrackParams{
 						UserId:  user.Id,
@@ -144,7 +144,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				return nil, nil
@@ -163,7 +163,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				err = app.UserService().UnfavoriteTrack(
+				err = app.TrackService().UnfavoriteTrack(
 					ctx,
 					service.UnfavoriteTrackParams{
 						UserId:  user.Id,
@@ -171,7 +171,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 					},
 				)
 				if err != nil {
-					return nil, handleUserServiceErrors(err)
+					return nil, handleTrackServiceErrors(err)
 				}
 
 				return nil, nil

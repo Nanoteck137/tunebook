@@ -110,8 +110,6 @@ func handleUserServiceErrors(err error) error {
 		return UserNotFound()
 	case errors.Is(err, service.ErrUserServicePlaylistNotFound):
 		return PlaylistNotFound()
-	case errors.Is(err, service.ErrUserServiceTrackNotFound):
-		return TrackNotFound()
 	case errors.Is(err, service.ErrUserServiceTrackFilterNotFound):
 		return FilterNotFound()
 	case errors.Is(err, service.ErrUserServiceApiTokenNotFound):

@@ -19,7 +19,6 @@ var userErr = NewServiceErrCreator("user")
 var (
 	ErrUserServiceUserNotFound        = userErr.New("user not found")
 	ErrUserServicePlaylistNotFound    = userErr.New("playlist not found")
-	ErrUserServiceTrackNotFound       = userErr.New("track not found")
 	ErrUserServiceTrackFilterNotFound = userErr.New("track filter not found")
 	ErrUserServiceApiTokenNotFound    = userErr.New("api token not found")
 	ErrUserServiceUnauthorized        = userErr.New("unauthorized")
@@ -153,45 +152,6 @@ func (s *UserService) GetUserStats(
 	}
 
 	return stats, nil
-}
-
-type GetFavoriteTracksParams struct {
-	UserId   string
-	Page     types.PageParams
-	Filter   types.FilterParams
-	FilterId string
-}
-
-func (s *UserService) GetFavoriteTracks(
-	ctx context.Context,
-	params GetFavoriteTracksParams,
-) ([]database.UserFavoriteTrack, types.Page, error) {
-	if params.FilterId != "" {
-		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
-		if err == nil {
-			params.Filter.Filter = dbFilter.Filter
-		}
-	}
-
-	tracks, page, err := s.db.GetUserFavoriteTracks(
-		ctx,
-		database.GetUserFavoriteTracksParams{
-			UserId: params.UserId,
-			Page:   params.Page,
-			Filter: params.Filter,
-		},
-	)
-	if err != nil {
-		return nil, types.Page{}, userErr.Wrap(
-			"get favorite tracks: db get", err)
-	}
-
-	for i := range tracks {
-		tracks[i].Track.Order = 
-			utils.Pointer((i + 1) + (page.Page * page.PerPage))
-	}
-
-	return tracks, page, nil
 }
 
 type GetTrackFiltersParams struct {
@@ -351,80 +311,6 @@ func (s *UserService) SetQuickPlaylist(
 	})
 	if err != nil {
 		return userErr.Wrap("set quick playlist: db update settings", err)
-	}
-
-	return nil
-}
-
-type GetFavoriteTrackIdsParams struct {
-	UserId string
-}
-
-func (s *UserService) GetFavoriteTrackIds(
-	ctx context.Context,
-	params GetFavoriteTrackIdsParams,
-) ([]string, error) {
-	items, err := s.db.GetUserFavoritesIds(ctx, params.UserId)
-	if err != nil {
-		return nil, userErr.Wrap("get favorite track ids: db get", err)
-	}
-
-	if items == nil {
-		return []string{}, nil
-	}
-
-	return items, nil
-}
-
-type FavoriteTrackParams struct {
-	UserId  string
-	TrackId string
-}
-
-func (s *UserService) FavoriteTrack(
-	ctx context.Context,
-	params FavoriteTrackParams,
-) error {
-
-	track, err := s.db.GetTrackById(ctx, params.TrackId)
-	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			return ErrUserServiceTrackNotFound
-		}
-
-		return userErr.Wrap("favorite track: db get track", err)
-	}
-
-	err = s.db.CreateUserFavorite(
-		ctx,
-		database.CreateUserFavoriteParams{
-			UserId:  params.UserId,
-			TrackId: track.Id,
-		},
-	)
-	if err != nil {
-		if errors.Is(err, database.ErrItemAlreadyExists) {
-			return nil
-		}
-
-		return userErr.Wrap("favorite track: db create", err)
-	}
-
-	return nil
-}
-
-type UnfavoriteTrackParams struct {
-	UserId  string
-	TrackId string
-}
-
-func (s *UserService) UnfavoriteTrack(
-	ctx context.Context,
-	params UnfavoriteTrackParams,
-) error {
-	err := s.db.DeleteUserFavorite(ctx, params.UserId, params.TrackId)
-	if err != nil {
-		return userErr.Wrap("unfavorite track: db delete", err)
 	}
 
 	return nil
