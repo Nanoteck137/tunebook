@@ -8,13 +8,10 @@
     gitignore.url = "github:hercules-ci/gitignore.nix";
     gitignore.inputs.nixpkgs.follows = "nixpkgs";
 
-    devtools.url     = "github:nanoteck137/devtools";
-    devtools.inputs.nixpkgs.follows = "nixpkgs";
-
-    just.url = "github:casey/just/1.50.0";
+    versionctl.url = "github:nanoteck137/versionctl/0.3.0";
   };
 
-  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, just, ... }:
+  outputs = { self, nixpkgs, flake-utils, gitignore, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [];
@@ -94,8 +91,6 @@
             ];
           };
         };
-
-        tools = devtools.packages.${system};
       in
       {
         packages = {
@@ -111,10 +106,9 @@
             nodejs
             imagemagick
             ffmpeg
+            just
 
-            tools.publishVersion
-
-            just.packages.${system}.default
+            inputs.versionctl.packages.${system}.default
           ];
         };
       }
