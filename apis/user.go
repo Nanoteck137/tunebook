@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -198,7 +197,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 			Path:         "/users/:userId",
 			ResponseType: GetUser{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.TODO()
+				ctx := c.Request().Context()
 
 				user, err := app.UserService().GetUserById(
 					ctx,
