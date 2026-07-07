@@ -202,18 +202,6 @@ func (s *MediaService) ProcessTrackStream(
 		opts.Quality = DefaultQuality
 	}
 
-	log := s.logger.With(
-		slog.String("trackId", trackId),
-		slog.Group("options",
-			slog.String("policy", string(opts.Policy)),
-			slog.String("device", string(opts.Device)),
-			slog.String("quality", string(opts.Quality)),
-			slog.String("format", string(opts.Format)),
-		),
-	)
-
-	log.Info("track stream request")
-
 	ctx := context.Background()
 
 	track, err := s.db.GetTrackById(ctx, trackId)
@@ -231,25 +219,25 @@ func (s *MediaService) ProcessTrackStream(
 
 	if !track.MediaFormat.IsValid() {
 		return "", mediaErr.Newf(
-			"track has invalid media format: %s", track.MediaFormat)
+			"invalid media format: %s", track.MediaFormat)
 	}
 
 	if opts.Policy == PolicyOriginal {
-		log.Info("track stream request using the original file")
+		s.logger.Info("using original file", "trackId", trackId)
 		return track.Filename, nil
 	}
 
-	format, err := s.resolveStreamFormat(track, opts, log)
+	format, err := s.resolveStreamFormat(track, opts)
 	if err != nil {
 		return "", err
 	}
 
 	if format == track.MediaFormat {
-		log.Info("track stream request selected format is matching the original track format")
+		s.logger.Info(
+			"format matches original", "trackId", trackId, "format", format)
 		return track.Filename, nil
 	}
 
-	// TODO(patrik): FilesystemService should handle this
 	cacheDir := s.dataDir.CacheTranscoding()
 	cacheTracksDir := path.Join(cacheDir, "tracks")
 	trackCache := path.Join(cacheTracksDir, track.Id)
@@ -269,19 +257,11 @@ func (s *MediaService) ProcessTrackStream(
 	}
 
 	if format.IsLossy() && bitrate <= 0 {
-		log.Error("bitrate not set for lossy format (something might be wrong with getBitrateFromQuality())",
-			slog.String("format", string(format)),
-		)
-
 		return "", ErrMediaServiceBitrateNotSet
 	}
 
 	ext, ok := format.ToExt()
 	if !ok {
-		log.Error("format has no extention",
-			slog.String("format", string(format)),
-		)
-
 		return "", mediaErr.Newf("format has no extension: %s", format)
 	}
 
@@ -295,7 +275,7 @@ func (s *MediaService) ProcessTrackStream(
 	_, err = os.Stat(out)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := s.transcodeTrack(log, transcodeTrackParams{
+			err := s.transcodeTrack(transcodeTrackParams{
 				track:   track,
 				format:  format,
 				bitrate: bitrate,
@@ -308,13 +288,16 @@ func (s *MediaService) ProcessTrackStream(
 			return "", err
 		}
 	} else {
-		log.Info("track stream request using the cached version")
+		s.logger.Info("using cached version", "trackId", trackId)
 	}
 
 	return out, nil
 }
 
-func (s *MediaService) resolveStreamFormat(track database.Track, opts MediaStreamOptions, log *slog.Logger) (types.MediaFormat, error) {
+func (s *MediaService) resolveStreamFormat(
+	track database.Track, 
+	opts MediaStreamOptions,
+) (types.MediaFormat, error) {
 	switch opts.Policy {
 	case PolicyTranscode:
 		if opts.Format == types.MediaFormatEmpty || !opts.Format.IsValid() {
@@ -328,7 +311,7 @@ func (s *MediaService) resolveStreamFormat(track database.Track, opts MediaStrea
 		if opts.Device != DeviceEmpty {
 			device, ok := s.DeviceSpecs[opts.Device]
 			if !ok {
-				return "", mediaErr.Newf("unknown device: %s", opts.Device)
+				return "", mediaErr.Newf("device not found: %s", opts.Device)
 			}
 
 			if slices.Contains(device.AllowedFormats, track.MediaFormat) {
@@ -341,11 +324,7 @@ func (s *MediaService) resolveStreamFormat(track database.Track, opts MediaStrea
 		}
 
 		if !format.IsValid() {
-			log.Error("no valid format is selected",
-				slog.String("format", string(format)),
-			)
-
-			return "", mediaErr.Newf("selected format is not valid: %s", format)
+			return "", mediaErr.Newf("invalid format: %s", format)
 		}
 
 		return format, nil
@@ -362,17 +341,16 @@ type transcodeTrackParams struct {
 }
 
 func (s *MediaService) transcodeTrack(
-	logger *slog.Logger,
 	params transcodeTrackParams,
 ) error {
 	tmpOut := path.Join(path.Dir(params.out), "temp-"+path.Base(params.out))
 	defer os.RemoveAll(tmpOut)
 
-	logger.Info("track stream request starting transcoding process",
-		slog.String("input", params.track.Filename),
-		slog.String("output", params.out),
-		slog.String("format", string(params.format)),
-		slog.Int("bitrate", params.bitrate),
+	s.logger.Info("starting transcode",
+		"input", params.track.Filename,
+		"output", params.out,
+		"format", params.format,
+		"bitrate", params.bitrate,
 	)
 
 	timer := utils.SimpleTimer{}
@@ -434,9 +412,9 @@ func (s *MediaService) transcodeTrack(
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		logger.Error("ffmpeg failed",
-			slog.String("stderr", stderr.String()),
-			slog.Any("err", err),
+		s.logger.Error("ffmpeg failed",
+			"stderr", stderr.String(),
+			"err", err,
 		)
 		return err
 	}
@@ -447,12 +425,12 @@ func (s *MediaService) transcodeTrack(
 	}
 
 	duration := timer.Stop()
-	logger.Info("track stream request transcoding done",
-		slog.String("input", params.track.Filename),
-		slog.String("output", params.out),
-		slog.String("format", string(params.format)),
-		slog.Int("bitrate", params.bitrate),
-		slog.Duration("duration", duration),
+	s.logger.Info("transcode done",
+		"input", params.track.Filename,
+		"output", params.out,
+		"format", params.format,
+		"bitrate", params.bitrate,
+		"duration", duration,
 	)
 
 	return nil
