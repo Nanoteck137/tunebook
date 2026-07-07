@@ -563,7 +563,6 @@ func createSquareImage(src, dest string) error {
 		"-extent", "%[fx:min(w,h)]x%[fx:min(w,h)]",
 		dest,
 	)
-	// TODO(patrik): Make this configureble
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
@@ -584,7 +583,6 @@ func createResizedImage(src string, dest string, width, height int) error {
 	}
 
 	cmd := exec.Command("magick", args...)
-	// TODO(patrik): Make this configureble
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
