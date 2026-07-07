@@ -38,6 +38,8 @@ const (
 	ErrTypeMediaInvalidPolicy         pyrin.ErrorType = "MEDIA_INVALID_POLICY"
 	ErrTypeMediaBitrateNotSet         pyrin.ErrorType = "MEDIA_BITRATE_NOT_SET"
 
+	ErrTypeQueueItemNotFound          pyrin.ErrorType = "QUEUE_ITEM_NOT_FOUND"
+
 	ErrTypePlaylistItemNotFound       pyrin.ErrorType = "PLAYLIST_ITEM_NOT_FOUND"
 	ErrTypePlaylistAnchorTrackNotFound pyrin.ErrorType = "PLAYLIST_ANCHOR_TRACK_NOT_FOUND"
 	ErrTypeNotAuthorized              pyrin.ErrorType = "NOT_AUTHORIZED"
@@ -248,6 +250,14 @@ func PlaylistAnchorTrackNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypePlaylistAnchorTrackNotFound,
 		Message: "Anchor track not found",
+	}
+}
+
+func QueueItemNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeQueueItemNotFound,
+		Message: "Queue item not found",
 	}
 }
 

@@ -126,8 +126,7 @@ func handleQueueServiceErrors(err error) error {
 	case errors.Is(err, service.ErrQueueServiceQueueNotFound):
 		return QueueNotFound()
 	case errors.Is(err, service.ErrQueueServiceItemNotFound):
-		// TODO(patrik): Replace with its own error
-		return TrackNotFound()
+		return QueueItemNotFound()
 	}
 
 	return err
