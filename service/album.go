@@ -114,8 +114,6 @@ func (s *AlbumService) GetAlbumTracks(
 	for i, track := range tracks {
 		if track.Number.Valid {
 			tracks[i].Order = utils.Pointer(int(track.Number.Int64))
-			// TODO(patrik): Should this not be using i?
-			// tracks[i].Order = utils.IntPtr(i)
 		}
 	}
 
