@@ -2,13 +2,9 @@
   import {
     DiscAlbum,
     FileMusic,
-    Home,
     ListMusic,
-    ListOrdered,
     ListVideo,
-    LogIn,
     LogOut,
-    Menu,
     Search,
     Server,
     User,
@@ -17,9 +13,6 @@
   import AudioPlayer from "$lib/components/audio/AudioPlayer.svelte";
   import MobilePlayer from "$lib/components/audio/MobilePlayer.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
-  import Link from "$lib/components/Link.svelte";
-  import { browser } from "$app/environment";
-  import { fade, fly } from "svelte/transition";
   import { onMount } from "svelte";
   import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
   import toast, { Toaster } from "svelte-5-french-toast";
@@ -60,20 +53,6 @@
   $effect(() => {
     quickPlaylist.setPlaylistId(data.user?.quickPlaylist ?? null);
   });
-
-  let showSideMenu = $state(false);
-
-  function close() {
-    showSideMenu = false;
-  }
-
-  $effect(() => {
-    if (showSideMenu) {
-      if (browser) document.body.style.overflow = "hidden";
-    } else {
-      if (browser) document.body.style.overflow = "";
-    }
-  });
 </script>
 
 <svelte:head>
@@ -90,14 +69,6 @@
   <div
     class="container flex h-14 max-w-screen-2xl items-center gap-4 px-4 sm:px-8"
   >
-    <button
-      onclick={() => {
-        showSideMenu = true;
-      }}
-    >
-      <Menu size="20" />
-    </button>
-
     <a
       class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-2xl font-medium text-transparent"
       href="/">Tunebook</a
@@ -304,90 +275,3 @@
     {/if}
   </nav>
 </footer>
-
-{#if showSideMenu}
-  <!-- svelte-ignore a11y_consider_explicit_label -->
-  <button
-    class="fixed inset-0 z-50 bg-black/80"
-    onclick={() => {
-      showSideMenu = false;
-    }}
-    transition:fade={{ duration: 200 }}
-  ></button>
-
-  <aside
-    class={`fixed bottom-0 top-0 z-50 flex w-72 flex-col bg-sidebar text-sidebar-foreground`}
-    transition:fly={{ x: -400 }}
-  >
-    <div class="flex h-14 items-center gap-4 border-b px-8">
-      <button
-        onclick={() => {
-          showSideMenu = false;
-        }}
-      >
-        <Menu size="20" />
-      </button>
-      <a
-        class="text-2xl font-medium"
-        href="/"
-        onclick={() => {
-          showSideMenu = false;
-        }}
-      >
-        Tunebook
-      </a>
-    </div>
-
-    <div class="flex flex-col gap-2 px-4 py-4">
-      <Link title="Home" href="/" icon={Home} onClick={close} />
-      <Link title="Artists" href="/artists" icon={Users} onClick={close} />
-      <Link title="Albums" href="/albums" icon={DiscAlbum} onClick={close} />
-      <Link title="Tracks" href="/tracks" icon={FileMusic} onClick={close} />
-
-      {#if data.user}
-        <Link
-          title="Playlists"
-          href="/playlists"
-          icon={ListMusic}
-          onClick={close}
-        />
-
-        <Link title="Queue" href="/queue" icon={ListOrdered} onClick={close} />
-      {/if}
-    </div>
-    <div class="flex-grow"></div>
-    <div class="flex flex-col gap-2 px-4 py-2">
-      {#if data.user}
-        <!-- TODO(patrik): Temp -->
-        <img class="w-16" src={data.user.picture.small} alt="" />
-
-        <Link
-          title={data.user.displayName}
-          href="/users/{data.user.id}"
-          icon={User}
-          onClick={close}
-        />
-
-        {#if data.user.role === "super_user"}
-          <Link title="Server" href="/server" icon={Server} onClick={close} />
-        {/if}
-
-        <Link
-          title="Logout"
-          icon={LogOut}
-          onClick={() => {
-            localStorage.removeItem("token");
-            musicManager.reset();
-            invalidateAll();
-            goto("/");
-
-            close();
-          }}
-        />
-      {:else}
-        <Link title="Login" href="/login" icon={LogIn} onClick={close} />
-      {/if}
-    </div>
-    <div class="h-4"></div>
-  </aside>
-{/if}
