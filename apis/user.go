@@ -121,9 +121,12 @@ func handleUserServiceErrors(err error) error {
 		return PlaylistNotFound()
 	case errors.Is(err, service.ErrUserServiceTrackNotFound):
 		return TrackNotFound()
+	case errors.Is(err, service.ErrUserServiceTrackFilterNotFound):
+		return FilterNotFound()
+	case errors.Is(err, service.ErrUserServiceApiTokenNotFound):
+		return ApiTokenNotFound()
 	case errors.Is(err, service.ErrUserServiceUnauthorized):
-		// TODO(patrik): Custom error
-		return UserNotFound()
+		return NotAuthorized()
 	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
 		return UnsupportedImageType()
 	}
