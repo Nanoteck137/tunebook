@@ -137,7 +137,6 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	// TODO(patrik): Should this be in Bootstrap()?
 	if app.config.RunMigrations {
 		err = migrations.RunMigrateUp(context.Background(), app.db)
 		if err != nil {
