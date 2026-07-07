@@ -10,7 +10,6 @@ export const load: PageLoad = async ({ parent, params, url }) => {
     throw error(playlist.error.code, { message: playlist.error.message });
   }
 
-  // TODO(patrik): Change getPagedQueryOptions?
   const query = getPagedQueryOptions(url.searchParams);
   const filterId = url.searchParams.get("filterId");
   if (filterId) {
