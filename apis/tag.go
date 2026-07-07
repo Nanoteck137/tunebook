@@ -1,49 +1,46 @@
 package apis
 
 import (
+	"net/http"
+
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 )
 
-// type tagApi struct {
-// 	app core.App
-// }
-//
-// func (api *tagApi) HandleGetTags(c echo.Context) error {
-// 	// tags, err := api.app.DB().GetAllTags(c.Request().Context())
-// 	// if err != nil {
-// 	// 	return err
-// 	// }
-// 	//
-// 	// res := types.GetTags{
-// 	// 	Tags: make([]types.Tag, len(tags)),
-// 	// }
-// 	//
-// 	// for i, tag := range tags {
-// 	// 	// TODO(patrik): Fix this
-// 	// 	res.Tags[i] = types.Tag{
-// 	// 		Id:   tag.Name,
-// 	// 		Name: tag.Name,
-// 	// 	}
-// 	// }
-// 	//
-// 	// return c.JSON(200, SuccessResponse(res))
-// 	return nil
-// }
+type Tag struct {
+	Slug string `json:"slug"`
+}
 
-// TODO(patrik): Add back
+type GetTags struct {
+	Tags []Tag `json:"tags"`
+}
+
 func InstallTagHandlers(app core.App, group pyrin.Group) {
-	// api := tagApi{app: app}
-	//
-	// group.Register(
-	// 	Handler{
-	// 		Name:        "GetTags",
-	// 		Path:        "/tags",
-	// 		Method:      http.MethodGet,
-	// 		DataType:    types.GetTags{},
-	// 		BodyType:    nil,
-	// 		HandlerFunc: api.HandleGetTags,
-	// 		Middlewares: []echo.MiddlewareFunc{},
-	// 	},
-	// )
+	group.Register(
+		pyrin.ApiHandler{
+			Name:         "GetTags",
+			Method:       http.MethodGet,
+			Path:         "/tags",
+			ResponseType: GetTags{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				tags, err := app.DB().GetAllTags(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetTags{
+					Tags: make([]Tag, len(tags)),
+				}
+				for i, tag := range tags {
+					res.Tags[i] = Tag{
+						Slug: tag.Slug,
+					}
+				}
+
+				return res, nil
+			},
+		},
+	)
 }
