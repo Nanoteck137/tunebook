@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -278,7 +279,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				ctx := c.Request().Context()
+				ctx := context.Background()
 
 				err = app.UserService().UploadUserImage(
 					ctx,

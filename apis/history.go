@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -145,7 +146,7 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				ctx := c.Request().Context()
+				ctx := context.Background()
 
 				id, err := app.HistoryService().PushTrackHistory(
 					ctx,

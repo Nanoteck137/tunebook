@@ -245,7 +245,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				ctx := c.Request().Context()
+				ctx := context.Background()
 
 				playlistId, err := app.PlaylistService().CreatePlaylist(
 					ctx,
