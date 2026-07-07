@@ -143,36 +143,6 @@
       </div>
     </section>
 
-    <section class="border-t pt-4">
-      <h2 class="mb-4 text-xl font-semibold">Dev Tools</h2>
-      <Button
-        onclick={async () => {
-          const trackRes = await data.apiClient.getTracks({
-            query: { perPage: "50" },
-          });
-          if (!trackRes.success) return;
-
-          const tracks = trackRes.data.tracks;
-          const count = 100;
-
-          for (let i = 0; i < count; i++) {
-            const track = tracks[Math.floor(Math.random() * tracks.length)];
-            const pct = Math.random() > 0.2
-              ? Math.floor(Math.random() * 20 + 80)
-              : Math.floor(Math.random() * 70);
-
-            await data.apiClient.pushTrackHistory({
-              trackId: track.id,
-              playbackType: "normal",
-              percentPlayed: pct,
-            });
-          }
-        }}
-      >
-        Push 100 History Entries
-      </Button>
-    </section>
-
     <footer class="mt-8 border-t pt-4">
       <div
         class="flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground"
