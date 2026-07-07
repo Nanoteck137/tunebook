@@ -184,58 +184,94 @@ func setArtistTags(
 	return nil
 }
 
-// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) syncSingleArtist(
+	ctx context.Context,
+	entry *library.ArtistEntry,
+) error {
+	dbArtist, err := s.db.GetArtistById(ctx, entry.Id)
+	if err != nil {
+		if !errors.Is(err, database.ErrItemNotFound) {
+			return fmt.Errorf("get artist: %w", err)
+		}
+
+		return s.createArtist(ctx, entry)
+	}
+
+	return s.updateArtist(ctx, entry, dbArtist)
+}
+
+func (s *LibraryService) createArtist(
 	ctx context.Context,
 	entry *library.ArtistEntry,
 ) error {
 	coverArt := entry.GetCoverArt()
 
-	dbArtist, err := s.db.GetArtistById(ctx, entry.Id)
+	_, err := s.db.CreateArtist(ctx, database.CreateArtistParams{
+		Id:   entry.Id,
+		Name: entry.Name,
+		CoverArt: sql.NullString{
+			String: coverArt,
+			Valid:  coverArt != "",
+		},
+	})
 	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			_, err = s.db.CreateArtist(ctx, database.CreateArtistParams{
-				Id:   entry.Id,
-				Name: entry.Name,
-				CoverArt: sql.NullString{
-					String: coverArt,
-					Valid:  coverArt != "",
-				},
-			})
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		changes := database.ArtistChanges{}
-
-		changes.Name = database.Change[string]{
-			Value:   entry.Name,
-			Changed: entry.Name != dbArtist.Name,
-		}
-
-		changes.CoverArt = database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: coverArt,
-				Valid:  coverArt != "",
-			},
-			Changed: coverArt != dbArtist.CoverArt.String,
-		}
-
-		err := s.db.UpdateArtist(ctx, dbArtist.Id, changes)
-		if err != nil {
-			return err
-		}
+		return fmt.Errorf("create artist: %w", err)
 	}
 
-	err = setArtistTags(
+	return s.setArtistRelations(ctx, entry)
+}
+
+func (s *LibraryService) updateArtist(
+	ctx context.Context,
+	entry *library.ArtistEntry,
+	dbArtist database.Artist,
+) error {
+	changes := buildArtistChanges(entry, dbArtist)
+
+	err := s.db.UpdateArtist(ctx, dbArtist.Id, changes)
+	if err != nil {
+		return fmt.Errorf("update artist: %w", err)
+	}
+
+	return s.setArtistRelations(ctx, entry)
+}
+
+func buildArtistChanges(
+	entry *library.ArtistEntry,
+	dbArtist database.Artist,
+) database.ArtistChanges {
+	coverArt := entry.GetCoverArt()
+
+	changes := database.ArtistChanges{}
+
+	changes.Name = database.Change[string]{
+		Value:   entry.Name,
+		Changed: entry.Name != dbArtist.Name,
+	}
+
+	changes.CoverArt = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: coverArt,
+			Valid:  coverArt != "",
+		},
+		Changed: coverArt != dbArtist.CoverArt.String,
+	}
+
+	return changes
+}
+
+func (s *LibraryService) setArtistRelations(
+	ctx context.Context,
+	entry *library.ArtistEntry,
+) error {
+	err := setArtistTags(
 		ctx,
 		s.db.DB,
 		entry.Id,
 		entry.Tags,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("set artist tags: %w", err)
 	}
 
 	return nil
