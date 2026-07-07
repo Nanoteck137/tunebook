@@ -193,6 +193,15 @@ func getFilterParams(q url.Values) types.FilterParams {
 	}
 }
 
+func parseIntParam(c pyrin.Context, name string) (int, error) {
+	v, err := strconv.Atoi(c.Param(name))
+	if err != nil {
+		return 0, InvalidParam(name)
+	}
+
+	return v, nil
+}
+
 func formatTime(ms int64) string {
 	return time.UnixMilli(ms).UTC().Format(time.RFC3339)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
@@ -217,9 +216,8 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				position, err := strconv.Atoi(c.Param("position"))
+				position, err := parseIntParam(c, "position")
 				if err != nil {
-					// TODO(patrik): Better error
 					return nil, err
 				}
 

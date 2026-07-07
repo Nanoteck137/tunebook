@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
@@ -43,6 +44,7 @@ const (
 	ErrTypePlaylistItemNotFound       pyrin.ErrorType = "PLAYLIST_ITEM_NOT_FOUND"
 	ErrTypePlaylistAnchorTrackNotFound pyrin.ErrorType = "PLAYLIST_ANCHOR_TRACK_NOT_FOUND"
 	ErrTypeNotAuthorized              pyrin.ErrorType = "NOT_AUTHORIZED"
+	ErrTypeInvalidParam               pyrin.ErrorType = "INVALID_PARAM"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -266,5 +268,13 @@ func NotAuthorized() *pyrin.Error {
 		Code:    http.StatusForbidden,
 		Type:    ErrTypeNotAuthorized,
 		Message: "Not authorized",
+	}
+}
+
+func InvalidParam(name string) *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidParam,
+		Message: fmt.Sprintf("invalid param: %s", name),
 	}
 }
