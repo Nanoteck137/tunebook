@@ -99,10 +99,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				mappings := mediaService.QualityMapping
 
-				// TODO(patrik): Should we handle checking for format?
-
 				for _, format := range types.ValidMediaFormats {
-					// TODO(patrik): Handle exists?
 					quality, _ := mappings[format]
 					info, _ := types.MediaFormatInfos[format]
 
@@ -125,7 +122,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					r := MediaDeviceSpec{
 						Name:           spec.Name,
 						PreferedFormat: string(spec.PreferedFormat),
-						AllowedFormats: make([]string, len(spec.AllowedFormats)),
+						AllowedFormats: make(
+							[]string, len(spec.AllowedFormats)),
 					}
 
 					for i, f := range spec.AllowedFormats {
