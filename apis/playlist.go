@@ -305,7 +305,7 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Path:   "/playlists/:playlistId",
 			Method: http.MethodDelete,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.TODO()
+				ctx := context.Background()
 
 				user, err := User(app, c)
 				if err != nil {
@@ -372,13 +372,15 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method: http.MethodPost,
 			Path:   "/playlists/:playlistId/images/generate",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
 
 				err = app.JobService().PushJob(
-					context.Background(),
+					ctx,
 					tasks.GeneratePlaylistImage,
 					service.GeneratePlaylistImageParams{
 						PlaylistId: c.Param("playlistId"),
@@ -468,12 +470,12 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method:   http.MethodPost,
 			BodyType: AddItemToPlaylistBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
-
-				ctx := context.Background()
 
 				body, err := pyrin.Body[AddItemToPlaylistBody](c)
 				if err != nil {
@@ -502,12 +504,12 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method:   http.MethodDelete,
 			BodyType: RemovePlaylistItemBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
 				}
-
-				ctx := context.Background()
 
 				body, err := pyrin.Body[RemovePlaylistItemBody](c)
 				if err != nil {
@@ -536,6 +538,8 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 			Method:   http.MethodPost,
 			BodyType: ReorderPlaylistItemsBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
 				body, err := pyrin.Body[ReorderPlaylistItemsBody](c)
 				if err != nil {
 					return nil, err
@@ -545,8 +549,6 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, err
 				}
-
-				ctx := context.Background()
 
 				err = app.PlaylistService().ReorderPlaylistItems(
 					ctx,
