@@ -21,7 +21,6 @@ class QuickPlaylist {
 
     const res = await this.apiClient.getPlaylistById(playlistId);
     if (!res.success) {
-      // TODO(patrik): Handle error
       handleApiError(res.error);
       return;
     }
