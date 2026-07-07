@@ -554,7 +554,6 @@ func setTrackTags(
 	return nil
 }
 
-// TODO(patrik): Refactor/Cleanup
 func (s *LibraryService) syncSingleTrack(
 	ctx context.Context,
 	entry *library.TrackEntry,
@@ -571,108 +570,151 @@ func (s *LibraryService) syncSingleTrack(
 
 	dbTrack, err := s.db.GetTrackById(ctx, entry.Id)
 	if err != nil {
-		if errors.Is(err, database.ErrItemNotFound) {
-			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
-			if err != nil {
-				return fmt.Errorf(
-					"probe new track %q (%s): %w", entry.Name, trackFile, err)
-			}
-
-			_, err = s.db.CreateTrack(ctx, database.CreateTrackParams{
-				Id:           entry.Id,
-				Filename:     trackFile,
-				ModifiedTime: modifiedTime,
-				MediaFormat:  probeResult.MediaFormat,
-				Name:         entry.Name,
-				AlbumId:      entry.AlbumId,
-				ArtistId:     entry.ArtistId,
-				Duration:     int64(probeResult.Duration.Seconds()),
-				Number: sql.NullInt64{
-					Int64: entry.Number,
-					Valid: entry.Number != 0,
-				},
-				Year: sql.NullInt64{
-					Int64: entry.Year,
-					Valid: entry.Year != 0,
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("create track: %w", err)
-			}
-		} else {
+		if !errors.Is(err, database.ErrItemNotFound) {
 			return fmt.Errorf("get track: %w", err)
 		}
-	} else {
-		changes := database.TrackChanges{}
 
-		if modifiedTime > dbTrack.ModifiedTime || dbTrack.Filename != trackFile {
-			probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
-			if err != nil {
-				return fmt.Errorf(
-					"probe updated track %q (%s): %w", 
-					entry.Name, trackFile, err)
-			}
+		return s.createTrack(ctx, entry, trackFile, modifiedTime)
+	}
 
-			dur := int64(probeResult.Duration.Seconds())
-			changes.Duration = database.Change[int64]{
-				Value:   dur,
-				Changed: dur != dbTrack.Duration,
-			}
+	return s.updateTrack(ctx, entry, dbTrack, trackFile, modifiedTime)
+}
 
-			changes.MediaFormat = database.Change[types.MediaFormat]{
-				Value:   probeResult.MediaFormat,
-				Changed: probeResult.MediaFormat != dbTrack.MediaFormat,
-			}
+func (s *LibraryService) createTrack(
+	ctx context.Context,
+	entry *library.TrackEntry,
+	trackFile string,
+	modifiedTime int64,
+) error {
+	probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
+	if err != nil {
+		return fmt.Errorf(
+			"probe new track %q (%s): %w", entry.Name, trackFile, err)
+	}
 
-			changes.ModifiedTime = database.Change[int64]{
-				Value:   modifiedTime,
-				Changed: modifiedTime != dbTrack.ModifiedTime,
-			}
-		}
+	_, err = s.db.CreateTrack(ctx, database.CreateTrackParams{
+		Id:           entry.Id,
+		Filename:     trackFile,
+		ModifiedTime: modifiedTime,
+		MediaFormat:  probeResult.MediaFormat,
+		Name:         entry.Name,
+		AlbumId:      entry.AlbumId,
+		ArtistId:     entry.ArtistId,
+		Duration:     int64(probeResult.Duration.Seconds()),
+		Number: sql.NullInt64{
+			Int64: entry.Number,
+			Valid: entry.Number != 0,
+		},
+		Year: sql.NullInt64{
+			Int64: entry.Year,
+			Valid: entry.Year != 0,
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("create track: %w", err)
+	}
 
-		changes.Filename = database.Change[string]{
-			Value:   trackFile,
-			Changed: trackFile != dbTrack.Filename,
-		}
+	return s.setTrackRelations(ctx, entry)
+}
 
-		changes.Name = database.Change[string]{
-			Value:   entry.Name,
-			Changed: entry.Name != dbTrack.Name,
-		}
+func (s *LibraryService) updateTrack(
+	ctx context.Context,
+	entry *library.TrackEntry,
+	dbTrack database.Track,
+	trackFile string,
+	modifiedTime int64,
+) error {
+	changes, err := s.buildTrackChanges(ctx, entry, dbTrack, trackFile, modifiedTime)
+	if err != nil {
+		return err
+	}
 
-		changes.AlbumId = database.Change[string]{
-			Value:   entry.AlbumId,
-			Changed: entry.AlbumId != dbTrack.AlbumId,
-		}
+	err = s.db.UpdateTrack(ctx, dbTrack.Id, changes)
+	if err != nil {
+		return fmt.Errorf("update track: %w", err)
+	}
 
-		changes.ArtistId = database.Change[string]{
-			Value:   entry.ArtistId,
-			Changed: entry.ArtistId != dbTrack.ArtistId,
-		}
+	return s.setTrackRelations(ctx, entry)
+}
 
-		changes.Number = database.Change[sql.NullInt64]{
-			Value: sql.NullInt64{
-				Int64: entry.Number,
-				Valid: entry.Number != 0,
-			},
-			Changed: entry.Number != dbTrack.Number.Int64,
-		}
+func (s *LibraryService) buildTrackChanges(
+	ctx context.Context,
+	entry *library.TrackEntry,
+	dbTrack database.Track,
+	trackFile string,
+	modifiedTime int64,
+) (database.TrackChanges, error) {
+	changes := database.TrackChanges{}
 
-		changes.Year = database.Change[sql.NullInt64]{
-			Value: sql.NullInt64{
-				Int64: entry.Year,
-				Valid: entry.Year != 0,
-			},
-			Changed: entry.Year != dbTrack.Year.Int64,
-		}
-
-		err = s.db.UpdateTrack(ctx, dbTrack.Id, changes)
+	if modifiedTime > dbTrack.ModifiedTime || dbTrack.Filename != trackFile {
+		probeResult, err := s.mediaService.ProbeMedia(ctx, trackFile)
 		if err != nil {
-			return fmt.Errorf("update track: %w", err)
+			return database.TrackChanges{}, fmt.Errorf(
+				"probe updated track %q (%s): %w",
+				entry.Name, trackFile, err)
+		}
+
+		dur := int64(probeResult.Duration.Seconds())
+		changes.Duration = database.Change[int64]{
+			Value:   dur,
+			Changed: dur != dbTrack.Duration,
+		}
+
+		changes.MediaFormat = database.Change[types.MediaFormat]{
+			Value:   probeResult.MediaFormat,
+			Changed: probeResult.MediaFormat != dbTrack.MediaFormat,
+		}
+
+		changes.ModifiedTime = database.Change[int64]{
+			Value:   modifiedTime,
+			Changed: modifiedTime != dbTrack.ModifiedTime,
 		}
 	}
 
-	err = setTrackFeaturingArtists(
+	changes.Filename = database.Change[string]{
+		Value:   trackFile,
+		Changed: trackFile != dbTrack.Filename,
+	}
+
+	changes.Name = database.Change[string]{
+		Value:   entry.Name,
+		Changed: entry.Name != dbTrack.Name,
+	}
+
+	changes.AlbumId = database.Change[string]{
+		Value:   entry.AlbumId,
+		Changed: entry.AlbumId != dbTrack.AlbumId,
+	}
+
+	changes.ArtistId = database.Change[string]{
+		Value:   entry.ArtistId,
+		Changed: entry.ArtistId != dbTrack.ArtistId,
+	}
+
+	changes.Number = database.Change[sql.NullInt64]{
+		Value: sql.NullInt64{
+			Int64: entry.Number,
+			Valid: entry.Number != 0,
+		},
+		Changed: entry.Number != dbTrack.Number.Int64,
+	}
+
+	changes.Year = database.Change[sql.NullInt64]{
+		Value: sql.NullInt64{
+			Int64: entry.Year,
+			Valid: entry.Year != 0,
+		},
+		Changed: entry.Year != dbTrack.Year.Int64,
+	}
+
+	return changes, nil
+}
+
+func (s *LibraryService) setTrackRelations(
+	ctx context.Context,
+	entry *library.TrackEntry,
+) error {
+	err := setTrackFeaturingArtists(
 		ctx,
 		s.db.DB,
 		entry.Id,
