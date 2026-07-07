@@ -121,8 +121,7 @@ func (s *NotificationService) SendSimple(params SendSimpleParams) error {
 	}
 
 	if params.Title == "" {
-		// TODO(patrik): Error?
-		return nil
+		return notificationErr.New("send simple: no title set")
 	}
 
 	if params.Priority == 0 {
