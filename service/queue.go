@@ -13,8 +13,8 @@ import (
 var queueErr = NewServiceErrCreator("queue")
 
 var (
-	ErrQueueServiceQueueNotFound = queueErr.New("queue not found")
-	ErrQueueServiceItemNotFound  = queueErr.New("item not found")
+	ErrQueueServiceQueueNotFound  = queueErr.New("queue not found")
+	ErrQueueServiceItemNotFound   = queueErr.New("item not found")
 	ErrQueueServiceFilterNotFound = queueErr.New("filter not found")
 )
 
@@ -178,6 +178,21 @@ func (s *QueueService) ReplaceQueue(
 		})
 		trackIds = shuffled
 	}
+
+	// TODO(patrik): This should be here and not before in the other functions
+	// currentIndex := params.CurrentIndex
+	// if params.QueueIndexToTrackId != "" {
+	// 	for i, id := range trackIds {
+	// 		if id == params.QueueIndexToTrackId {
+	// 			currentIndex = i
+	// 			break
+	// 		}
+	// 	}
+	// }
+	//
+	// if currentIndex < 0 || currentIndex >= len(trackIds) {
+	// 	currentIndex = 0
+	// }
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -841,11 +856,11 @@ func (s *QueueService) SetPosition(
 
 type ClearQueueParams struct {
 	QueueId string
-	UserId string
+	UserId  string
 }
 
 func (s *QueueService) ClearQueue(
-	ctx context.Context, 
+	ctx context.Context,
 	params ClearQueueParams,
 ) error {
 	queue, err := s.getOrCreateQueue(ctx, params.QueueId, params.UserId)
