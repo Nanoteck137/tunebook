@@ -63,49 +63,49 @@
 
 <PlaylistSelectorModal />
 
-<header
-  class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
->
-  <div
-    class="container flex h-14 max-w-screen-2xl items-center gap-4 px-4 sm:px-8"
+{#if data.user}
+  <header
+    class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
   >
-    <a
-      class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-2xl font-medium text-transparent"
-      href="/">Tunebook</a
+    <div
+      class="container flex h-14 max-w-screen-2xl items-center gap-4 px-4 sm:px-8"
     >
+      <a
+        class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-2xl font-medium text-transparent"
+        href="/">Tunebook</a
+      >
 
-    <div class="hidden items-center gap-1 md:flex">
-      <a
-        href="/albums"
-        class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
-          '/albums',
-        )
-          ? 'bg-accent text-accent-foreground'
-          : 'text-muted-foreground'}"
-      >
-        Albums
-      </a>
-      <a
-        href="/artists"
-        class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
-          '/artists',
-        )
-          ? 'bg-accent text-accent-foreground'
-          : 'text-muted-foreground'}"
-      >
-        Artists
-      </a>
-      <a
-        href="/tracks"
-        class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
-          '/tracks',
-        )
-          ? 'bg-accent text-accent-foreground'
-          : 'text-muted-foreground'}"
-      >
-        Tracks
-      </a>
-      {#if data.user}
+      <div class="hidden items-center gap-1 md:flex">
+        <a
+          href="/albums"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
+            '/albums',
+          )
+            ? 'bg-accent text-accent-foreground'
+            : 'text-muted-foreground'}"
+        >
+          Albums
+        </a>
+        <a
+          href="/artists"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
+            '/artists',
+          )
+            ? 'bg-accent text-accent-foreground'
+            : 'text-muted-foreground'}"
+        >
+          Artists
+        </a>
+        <a
+          href="/tracks"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
+            '/tracks',
+          )
+            ? 'bg-accent text-accent-foreground'
+            : 'text-muted-foreground'}"
+        >
+          Tracks
+        </a>
         <a
           href="/playlists"
           class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground {page.url.pathname.startsWith(
@@ -116,13 +116,11 @@
         >
           Playlists
         </a>
-      {/if}
-    </div>
+      </div>
 
-    <div class="flex-grow"></div>
+      <div class="flex-grow"></div>
 
-    <div class="flex items-center gap-2">
-      {#if data.user}
+      <div class="flex items-center gap-2">
         <button
           class={buttonVariants({ variant: "ghost", size: "icon" })}
           onclick={async () => {
@@ -148,13 +146,11 @@
         >
           <ListVideo />
         </button>
-      {/if}
 
-      <Button href="/search" size="icon" variant="ghost">
-        <Search />
-      </Button>
+        <Button href="/search" size="icon" variant="ghost">
+          <Search />
+        </Button>
 
-      {#if data.user}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>
             <img
@@ -208,10 +204,10 @@
             </DropdownMenu.Group>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
-      {/if}
+      </div>
     </div>
-  </div>
-</header>
+  </header>
+{/if}
 
 <main class="container px-4 py-4 sm:px-8">
   {@render children()}
@@ -224,43 +220,43 @@
 <footer class="fixed bottom-0 z-40 w-full">
   <AudioPlayer />
 
-  <nav
-    class="flex items-center justify-around border-t bg-background py-1 md:hidden"
-  >
-    <a
-      href="/albums"
-      class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-        '/albums',
-      )
-        ? 'text-primary'
-        : 'text-muted-foreground'}"
+  {#if data.user}
+    <nav
+      class="flex items-center justify-around border-t bg-background py-1 md:hidden"
     >
-      <DiscAlbum size={18} />
-      Albums
-    </a>
-    <a
-      href="/artists"
-      class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-        '/artists',
-      )
-        ? 'text-primary'
-        : 'text-muted-foreground'}"
-    >
-      <Users size={18} />
-      Artists
-    </a>
-    <a
-      href="/tracks"
-      class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-        '/tracks',
-      )
-        ? 'text-primary'
-        : 'text-muted-foreground'}"
-    >
-      <FileMusic size={18} />
-      Tracks
-    </a>
-    {#if data.user}
+      <a
+        href="/albums"
+        class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+          '/albums',
+        )
+          ? 'text-primary'
+          : 'text-muted-foreground'}"
+      >
+        <DiscAlbum size={18} />
+        Albums
+      </a>
+      <a
+        href="/artists"
+        class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+          '/artists',
+        )
+          ? 'text-primary'
+          : 'text-muted-foreground'}"
+      >
+        <Users size={18} />
+        Artists
+      </a>
+      <a
+        href="/tracks"
+        class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
+          '/tracks',
+        )
+          ? 'text-primary'
+          : 'text-muted-foreground'}"
+      >
+        <FileMusic size={18} />
+        Tracks
+      </a>
       <a
         href="/playlists"
         class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
@@ -272,6 +268,6 @@
         <ListMusic size={18} />
         Playlists
       </a>
-    {/if}
-  </nav>
+    </nav>
+  {/if}
 </footer>
