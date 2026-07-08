@@ -126,7 +126,10 @@
     totalTracks={data.tracks.length}
     tracks={data.tracks}
     onPlay={async (trackId) => {
-      // TODO: queue artist tracks and start from trackId
+      await musicManager.queueRequest(
+        { type: "addArtist", artistId: data.artist.id },
+        { queueIndexToTrackId: trackId },
+      );
     }}
   />
 
