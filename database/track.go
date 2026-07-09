@@ -3,13 +3,12 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
-	"github.com/nanoteck137/tunebook/database/adapter"
-	"github.com/nanoteck137/tunebook/tools/filter"
+	"github.com/nanoteck137/tunebook/tools/query"
+	"github.com/nanoteck137/tunebook/tools/query/schema"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -50,6 +49,30 @@ type Track struct {
 	FeaturingArtists JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 
 	Order *int
+}
+
+// TrackSchema returns the query schema for tracks
+func TrackSchema() *schema.Schema {
+	return schema.New().
+		AddField("id", query.TypeString, schema.Column("tracks.id")).
+		AddField("name", query.TypeString, schema.Column("tracks.name")).
+		AddField("number", query.TypeInt, schema.Column("tracks.number"), schema.Nullable()).
+		AddField("duration", query.TypeInt, schema.Column("tracks.duration"), schema.Nullable()).
+		AddField("year", query.TypeInt, schema.Column("tracks.year"), schema.Nullable()).
+		AddField("albumId", query.TypeString, schema.Column("tracks.album_id")).
+		AddField("artistId", query.TypeString, schema.Column("tracks.artist_id")).
+		AddField("albumName", query.TypeString, schema.Column("albums.name")).
+		AddField("artistName", query.TypeString, schema.Column("artists.name")).
+		AddField("tags", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString)).
+		AddField("featuringArtist", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString)).
+		AddField("created", query.TypeInt, schema.Column("tracks.created")).
+		AddField("updated", query.TypeInt, schema.Column("tracks.updated")).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "name"},
+				Dir:   query.DirAsc,
+			},
+		)
 }
 
 func SqlGroupConcat(col any, seperator string) exp.SQLFunctionExpression {
@@ -102,10 +125,9 @@ func (db DB) GetTrackIdsByFilter(
 ) ([]string, error) {
 	query := TrackQuery().Select(goqu.I("tracks.id"))
 
-	a := adapter.TrackResolverAdapter{}
-	query, err := applyFilterParams(types.FilterParams{
+	query, err := ApplyQuery(query, TrackSchema(), QueryParams{
 		Filter: filterStr,
-	}, &a, query)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -133,8 +155,11 @@ func (db DB) GetTracks(
 
 	var err error
 
-	a := adapter.TrackResolverAdapter{}
-	query, err = applyFilterParams(params.Filter, &a, query)
+	// Use the new query system
+	query, err = ApplyQuery(query, TrackSchema(), QueryParams{
+		Filter: params.Filter.Filter,
+		Sort:   params.Filter.Sort,
+	})
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -162,28 +187,22 @@ func (db DB) GetTrackIdsByAlbum(
 
 	query := TrackQuery().Select("tracks.id")
 
-	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(
-		query, r, filterStr, goqu.I("tracks.album_id").Eq(albumId))
+	// Apply the custom album filter first
+	query = query.Where(goqu.I("tracks.album_id").Eq(albumId))
+
+	// Then apply the user-provided filter and sort
+	query, err = ApplyQuery(query, TrackSchema(), QueryParams{
+		Filter: filterStr,
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	// Apply default album track ordering
 	query = query.Order(
 		goqu.I("tracks.number").Asc().NullsLast(),
 		goqu.I("tracks.name").Asc(),
 	)
-
-	s, _, _ := query.ToSQL()
-	fmt.Printf("s: %v\n", s)
-
-	// dialect.From("tracks").
-	// 	Select("tracks.id").
-	// 	Where(goqu.I("tracks.album_id").Eq(albumId)).
-	// 	Order(
-	// 		goqu.I("tracks.number").Asc().NullsLast(),
-	// 		goqu.I("tracks.name").Asc(),
-	// 	)
 
 	return Multiple[string](db, ctx, query)
 }
@@ -196,13 +215,18 @@ func (db DB) GetTrackIdsByArtist(
 
 	query := TrackQuery().Select("tracks.id")
 
-	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(
-		query, r, filterStr, goqu.I("tracks.artist_id").Eq(artistId))
+	// Apply the custom artist filter first
+	query = query.Where(goqu.I("tracks.artist_id").Eq(artistId))
+
+	// Then apply the user-provided filter and sort
+	query, err = ApplyQuery(query, TrackSchema(), QueryParams{
+		Filter: filterStr,
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	// Apply default ordering
 	query = query.Order(goqu.I("tracks.name").Asc())
 
 	return Multiple[string](db, ctx, query)
@@ -225,14 +249,18 @@ func (db DB) GetTrackIdsByPlaylist(
 			goqu.On(tracksTbl.Col("id").Eq(goqu.I("playlist_items.track_id"))),
 		)
 
-	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(
-		query, r, params.FilterStr, 
-		goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
+	// Apply the custom playlist filter first
+	query = query.Where(goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
+
+	// Then apply the user-provided filter and sort
+	query, err = ApplyQuery(query, TrackSchema(), QueryParams{
+		Filter: params.FilterStr,
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	// Apply default ordering
 	query = query.Order(goqu.I("playlist_items.position").Asc())
 
 	return Multiple[string](db, ctx, query)
@@ -255,15 +283,19 @@ func (db DB) GetTrackIdsByUserFavorites(
 			goqu.On(tracksTbl.Col("id").Eq(goqu.I("user_favorites.track_id"))),
 		)
 
-	r := filter.New(&adapter.TrackResolverAdapter{})
-	query, err = applyFilterCustom(
-		query, r, params.FilterStr, 
-		goqu.I("user_favorites.user_id").Eq(params.UserId))
+	// Apply the custom user favorites filter first
+	query = query.Where(goqu.I("user_favorites.user_id").Eq(params.UserId))
+
+	// Then apply the user-provided filter and sort
+	query, err = ApplyQuery(query, TrackSchema(), QueryParams{
+		Filter: params.FilterStr,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	query = query.Order(goqu.I("user_favorites.added").Desc().NullsLast())
+	// Apply default ordering
+	query = query.Order(goqu.I("user_favorites.added").Desc())
 
 	return Multiple[string](db, ctx, query)
 }
@@ -272,6 +304,8 @@ func (db DB) GetTracksByAlbum(
 	ctx context.Context, 
 	albumId string,
 ) ([]Track, error) {
+	// TODO(patrik): What is this query
+	// FIXME(patrik): This need fixing
 	query := TrackQuery().
 		Where(
 			goqu.I("tracks.id").In(
@@ -298,10 +332,9 @@ func (db DB) GetTracksIn(
 			goqu.I("tracks.id").In(in),
 		)
 
-	a := adapter.TrackResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err := applySort(query, resolver, sort)
+	query, err := ApplyQuery(query, TrackSchema(), QueryParams{
+		Sort: sort,
+	})
 	if err != nil {
 		return nil, err
 	}
