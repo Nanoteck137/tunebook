@@ -73,6 +73,7 @@ type RelationConfig struct {
 	JoinTable      string
 	JoinForeignKey string
 	JoinReference  string
+	ValueType      Type
 }
 
 type Value struct {
@@ -114,9 +115,18 @@ const (
 	DirDesc
 )
 
+type NullOrdering int
+
+const (
+	NullOrderingDefault NullOrdering = iota
+	NullOrderingFirst
+	NullOrderingLast
+)
+
 type FieldOrdering struct {
-	Field *Field
-	Dir   Direction
+	Field      *Field
+	Dir        Direction
+	NullOrder  NullOrdering
 }
 
 type RandomOrdering struct{}

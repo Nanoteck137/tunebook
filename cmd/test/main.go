@@ -13,6 +13,7 @@ import (
 	"github.com/nanoteck137/tunebook/tools/query/parser"
 	"github.com/nanoteck137/tunebook/tools/query/planner"
 	"github.com/nanoteck137/tunebook/tools/query/schema"
+	"github.com/nanoteck137/tunebook/tools/query/sort"
 	querysql "github.com/nanoteck137/tunebook/tools/query/sql"
 )
 
@@ -23,6 +24,7 @@ func main() {
 	testParser()
 	testPlanner()
 	testSQLCompiler()
+	testSort()
 	testFullPipeline()
 	testDatabaseIntegration()
 	testErrorMessages()
@@ -695,6 +697,87 @@ func testFullPipeline() {
 	}
 }
 
+func testSort() {
+	fmt.Println("--- Sort Parser ---\n")
+
+	inputs := []string{
+		"",
+		"random",
+		"score",
+		"recent",
+		"shuffle=1234",
+		"+name",
+		"-year",
+		"+artist,-year",
+		"name asc",
+		"year desc",
+		"artist asc, year desc",
+		"name",
+		"+artist, year desc, -duration",
+		"  +artist  ,  -year  ",
+		"name ASC, year DESC",
+		"name nulls first",
+		"year desc nulls last",
+		"+artist nulls first, -year nulls last",
+		"name asc nulls first, year desc nulls last",
+	}
+
+	for _, input := range inputs {
+		fmt.Printf("Input: %q\n", input)
+		s, err := sort.Parse(input)
+		if err != nil {
+			fmt.Printf("  ERROR: %v\n\n", err)
+			continue
+		}
+
+		fmt.Printf("  Orderings: %d\n", len(s.Orderings))
+		for i, o := range s.Orderings {
+			switch o := o.(type) {
+			case *query.FieldOrdering:
+				dir := "ASC"
+				if o.Dir == query.DirDesc {
+					dir = "DESC"
+				}
+				nullStr := ""
+				switch o.NullOrder {
+				case query.NullOrderingFirst:
+					nullStr = " NULLS FIRST"
+				case query.NullOrderingLast:
+					nullStr = " NULLS LAST"
+				}
+				fmt.Printf("    [%d] Field: %s %s%s\n", i, o.Field.Name, dir, nullStr)
+			case *query.RandomOrdering:
+				fmt.Printf("    [%d] Random\n", i)
+			case *query.ShuffleOrdering:
+				fmt.Printf("    [%d] Shuffle (seed: %d)\n", i, o.Seed)
+			case *query.ScoreOrdering:
+				fmt.Printf("    [%d] Score\n", i)
+			}
+		}
+		fmt.Println()
+	}
+
+	fmt.Println("--- Sort Errors ---\n")
+
+	errorInputs := []string{
+		"shuffle=abc",
+		"+",
+		"-",
+		" asc",
+		" desc",
+	}
+
+	for _, input := range errorInputs {
+		fmt.Printf("Input: %q\n", input)
+		_, err := sort.Parse(input)
+		if err != nil {
+			fmt.Printf("  ERROR: %v\n\n", err)
+		} else {
+			fmt.Printf("  (no error)\n\n")
+		}
+	}
+}
+
 func testDatabaseIntegration() {
 	fmt.Println("--- Database Integration Test ---\n")
 
@@ -717,11 +800,21 @@ func testDatabaseIntegration() {
 		AddField("artistId", query.TypeString, schema.Column("tracks.artist_id")).
 		AddField("albumName", query.TypeString, schema.Column("albums.name")).
 		AddField("artistName", query.TypeString, schema.Column("artists.name")).
-		AddField("tags", query.TypeString, schema.Column("tags.data"), schema.Nullable()).
-		AddField("tag", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug")).
-		AddField("featuringArtist", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id")).
+		AddField("tags", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString)).
+		AddField("featuringArtist", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString)).
+		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt)).
 		AddField("created", query.TypeInt, schema.Column("tracks.created")).
-		AddField("updated", query.TypeInt, schema.Column("tracks.updated"))
+		AddField("updated", query.TypeInt, schema.Column("tracks.updated")).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "artistName"},
+				Dir:   query.DirAsc,
+			},
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "year"},
+				Dir:   query.DirDesc,
+			},
+		)
 
 	pl := planner.New(s)
 	compiler := querysql.NewCompiler()
@@ -729,10 +822,16 @@ func testDatabaseIntegration() {
 	tests := []struct {
 		name  string
 		query string
+		sort  string
 	}{
+		{
+			name:  "Default sort (no sort provided)",
+			query: `year >= 2000`,
+		},
 		{
 			name:  "Year >= 2000",
 			query: `year >= 2000`,
+			sort:  "name asc",
 		},
 		{
 			name:  "Duration between 180 and 300",
@@ -755,40 +854,24 @@ func testDatabaseIntegration() {
 			query: `albumName contains "live"`,
 		},
 		{
-			name:  "Tags contains 'soundtrack'",
-			query: `tags contains "soundtrack"`,
+			name:  "Tags has 'soundtrack' (relation)",
+			query: `tags has "soundtrack"`,
 		},
 		{
-			name:  "Tags contains 'rock'",
-			query: `tags contains "rock"`,
+			name:  "Tags has 'rock' (relation)",
+			query: `tags has "rock"`,
 		},
 		{
-			name:  "Tags NOT contains 'soundtrack'",
-			query: `not tags contains "soundtrack"`,
+			name:  "Tags NOT has 'soundtrack' (relation)",
+			query: `not tags has "soundtrack"`,
 		},
 		{
-			name:  "Tags contains 'rock' and year >= 2000",
-			query: `tags contains "rock" and year >= 2000`,
+			name:  "Tags has 'rock' and year >= 2000 (relation)",
+			query: `tags has "rock" and year >= 2000`,
 		},
 		{
-			name:  "Tag has 'soundtrack' (relation)",
-			query: `tag has "soundtrack"`,
-		},
-		{
-			name:  "Tag has 'rock' (relation)",
-			query: `tag has "rock"`,
-		},
-		{
-			name:  "Tag NOT has 'soundtrack' (relation)",
-			query: `not tag has "soundtrack"`,
-		},
-		{
-			name:  "Tag has 'rock' and year >= 2000 (relation)",
-			query: `tag has "rock" and year >= 2000`,
-		},
-		{
-			name:  "Tag has 'live'",
-			query: `tag has "live"`,
+			name:  "Tags has 'live'",
+			query: `tags has "live"`,
 		},
 		{
 			name:  "Featuring artist has specific ID",
@@ -799,14 +882,108 @@ func testDatabaseIntegration() {
 			query: `not featuringArtist has "artist_123"`,
 		},
 		{
-			name:  "Tag has 'rock' and featuring artist has ID",
-			query: `tag has "rock" and featuringArtist has "vda30ry85z"`,
+			name:  "Tags has 'rock' and featuring artist has ID",
+			query: `tags has "rock" and featuringArtist has "vda30ry85z"`,
+		},
+		{
+			name:  "Rating relation has integer value 5",
+			query: `ratingRelation has 5`,
+		},
+		{
+			name:  "Rating relation has integer value 4 or 5",
+			query: `ratingRelation has 4 or ratingRelation has 5`,
+		},
+		{
+			name:  "Precedence: year >= 2000 or year <= 1990 and duration > 300",
+			query: `year >= 2000 or year <= 1990 and duration > 300`,
+		},
+		{
+			name:  "Precedence with parens: (year >= 2000 or year <= 1990) and duration > 300",
+			query: `(year >= 2000 or year <= 1990) and duration > 300`,
+		},
+		{
+			name:  "Precedence: tags has 'rock' or tags has 'pop' and year >= 2000",
+			query: `tags has "rock" or tags has "pop" and year >= 2000`,
+		},
+		{
+			name:  "Precedence with parens: (tags has 'rock' or tags has 'pop') and year >= 2000",
+			query: `(tags has "rock" or tags has "pop") and year >= 2000`,
+		},
+		{
+			name:  "Complex nested: (year >= 2000 and (tags has 'rock' or tags has 'metal')) or duration < 120",
+			query: `(year >= 2000 and (tags has "rock" or tags has "metal")) or duration < 120`,
+		},
+		{
+			name:  "Deep nesting: ((year >= 2000 or year <= 1980) and (tags has 'rock' or tags has 'pop')) and not tags has 'live'",
+			query: `((year >= 2000 or year <= 1980) and (tags has "rock" or tags has "pop")) and not tags has "live"`,
+		},
+		{
+			name:  "Multiple OR with AND: year >= 2000 and (tags has 'rock' or tags has 'pop' or tags has 'metal')",
+			query: `year >= 2000 and (tags has "rock" or tags has "pop" or tags has "metal")`,
+		},
+		{
+			name:  "NOT with parens: not (tags has 'live' or tags has 'acoustic')",
+			query: `not (tags has "live" or tags has "acoustic")`,
+		},
+		{
+			name:  "NOT without parens: not tags has 'live' or not tags has 'acoustic'",
+			query: `not tags has "live" or not tags has "acoustic"`,
+		},
+		{
+			name:  "Sort by name ascending",
+			query: `year >= 2000`,
+			sort:  "+name",
+		},
+		{
+			name:  "Sort by year descending, name ascending",
+			query: `year >= 2000`,
+			sort:  "-year,+name",
+		},
+		{
+			name:  "Sort by duration ascending",
+			query: `duration > 0`,
+			sort:  "duration asc",
+		},
+		{
+			name:  "Sort by artist name and year",
+			query: `year >= 2000`,
+			sort:  "artistName asc, year desc",
+		},
+		{
+			name:  "Random sort",
+			query: `year >= 2000`,
+			sort:  "random",
+		},
+		{
+			name:  "Recent sort",
+			query: `year >= 2000`,
+			sort:  "recent",
+		},
+		{
+			name:  "Sort with nulls first",
+			query: `year >= 2000`,
+			sort:  "year desc nulls first",
+		},
+		{
+			name:  "Sort with nulls last",
+			query: `year >= 2000`,
+			sort:  "year asc nulls last",
+		},
+		{
+			name:  "Sort with mixed null ordering",
+			query: `year >= 2000`,
+			sort:  "artistName asc nulls first, year desc nulls last",
 		},
 	}
 
 	for _, tt := range tests {
 		fmt.Printf("--- %s ---\n", tt.name)
 		fmt.Printf("Query: %s\n", tt.query)
+		if tt.sort != "" {
+			fmt.Printf("Sort:  %s\n", tt.sort)
+		} else {
+			fmt.Printf("Sort:  (using default)\n")
+		}
 
 		p := parser.New(tt.query)
 		expr, err := p.Parse()
@@ -821,28 +998,30 @@ func testDatabaseIntegration() {
 			continue
 		}
 
+		// Parse sorting if provided, otherwise use default
+		var sortOrderings []query.Ordering
+		if tt.sort != "" {
+			sortObj, err := sort.Parse(tt.sort)
+			if err != nil {
+				fmt.Printf("  SORT ERROR: %v\n\n", err)
+				continue
+			}
+			sortOrderings = sortObj.Orderings
+		}
+
+		// Resolve field names using the schema (applies default if sortOrderings is empty)
+		resolvedOrderings, err := pl.ResolveSort(sortOrderings)
+		if err != nil {
+			fmt.Printf("  SORT RESOLUTION ERROR: %v\n\n", err)
+			continue
+		}
+		plan.OrderBy = resolvedOrderings
+
 		result, err := compiler.Compile(plan)
 		if err != nil {
 			fmt.Printf("  COMPILE ERROR: %v\n\n", err)
 			continue
 		}
-
-		// if result.Where != nil {
-		// 	sql, args, err := goqu.From("dummy").Where(result.Where).ToSQL()
-		// 	if err != nil {
-		// 		fmt.Printf("  TO SQL ERROR: %v\n\n", err)
-		// 		continue
-		// 	}
-		// 	// Extract just the WHERE clause
-		// 	whereIdx := len("SELECT * FROM \"dummy\" WHERE ")
-		// 	if len(sql) > whereIdx {
-		// 		sql = sql[whereIdx:]
-		// 	}
-		// 	fmt.Printf("SQL WHERE: %s\n", sql)
-		// 	if len(args) > 0 {
-		// 		fmt.Printf("SQL ARGS:  %v\n", args)
-		// 	}
-		// }
 
 		count, err := executeTrackQuery(db, result)
 		if err != nil {
@@ -875,11 +1054,10 @@ func executeTrackQuery(executor database.Executor, plan *querysql.CompileResult)
 		return 0, fmt.Errorf("SQL generation error: %w", err)
 	}
 
-	fmt.Printf("sqlStr: %v\n", sqlStr)
-	fmt.Printf("args: %v\n", args)
-
 	const debugPrint = false
 	if debugPrint {
+		fmt.Printf("sqlStr: %v\n", sqlStr)
+		fmt.Printf("args: %v\n", args)
 
 		pretty.Println(tracks)
 	}
@@ -897,7 +1075,8 @@ func testErrorMessages() {
 		AddField("duration", query.TypeInt, schema.Column("tracks.duration"), schema.Nullable()).
 		AddField("rating", query.TypeFloat, schema.Column("tracks.rating")).
 		AddField("active", query.TypeBool, schema.Column("tracks.active")).
-		AddField("tag", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug"))
+		AddField("tag", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString)).
+		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt))
 
 	pl := planner.New(s)
 
@@ -970,6 +1149,8 @@ func testErrorMessages() {
 		`tag = "equality on relation"`,
 		`tag > "comparison on relation"`,
 		`tag contains "contains on relation"`,
+		`tag has 123`,
+		`ratingRelation has "string on int relation"`,
 	}
 
 	for _, input := range plannerErrors {

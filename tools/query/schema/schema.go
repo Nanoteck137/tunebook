@@ -5,7 +5,8 @@ import (
 )
 
 type Schema struct {
-	fields map[string]*query.Field
+	fields      map[string]*query.Field
+	defaultSort []query.Ordering
 }
 
 func New() *Schema {
@@ -25,6 +26,15 @@ func (s *Schema) AddField(name string, typ query.Type, opts ...FieldOption) *Sch
 	}
 	s.fields[name] = f
 	return s
+}
+
+func (s *Schema) SetDefaultSort(orderings ...query.Ordering) *Schema {
+	s.defaultSort = orderings
+	return s
+}
+
+func (s *Schema) GetDefaultSort() []query.Ordering {
+	return s.defaultSort
 }
 
 func (s *Schema) Field(name string) (*query.Field, bool) {
@@ -48,13 +58,14 @@ func Column(name string) FieldOption {
 
 type RelationOption func(*query.RelationConfig)
 
-func Relation(joinTable, joinForeignKey, joinReference string) FieldOption {
+func Relation(joinTable, joinForeignKey, joinReference string, valueType query.Type) FieldOption {
 	return func(f *query.Field) {
 		f.Type = query.TypeRelation
 		f.Relation = &query.RelationConfig{
 			JoinTable:      joinTable,
 			JoinForeignKey: joinForeignKey,
 			JoinReference:  joinReference,
+			ValueType:      valueType,
 		}
 	}
 }

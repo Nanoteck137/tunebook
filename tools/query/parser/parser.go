@@ -346,7 +346,7 @@ func (p *Parser) expect(tt lexer.TokenType) error {
 	return p.advance()
 }
 
-func (p *Parser) errorf(format string, args ...interface{}) error {
+func (p *Parser) errorf(format string, args ...any) error {
 	pos := p.current.Pos
 	return &ParseError{
 		Pos:     pos,

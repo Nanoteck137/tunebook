@@ -95,7 +95,13 @@ func (p *Planner) planComparison(e *ast.BinaryExpr) (query.FilterNode, error) {
 		return nil, fmt.Errorf("field '%s': %w", field.Name, err)
 	}
 
-	value, err := p.resolveValue(e.Right, field.Type)
+	// For relation fields with 'has' operator, use the relation's value type
+	valueType := field.Type
+	if op == opHas && field.Relation != nil {
+		valueType = field.Relation.ValueType
+	}
+
+	value, err := p.resolveValue(e.Right, valueType)
 	if err != nil {
 		return nil, fmt.Errorf("field '%s': %w", field.Name, err)
 	}
@@ -181,7 +187,7 @@ func (p *Planner) planIn(e *ast.InExpr) (query.FilterNode, error) {
 func (p *Planner) resolveValue(expr ast.Expr, fieldType query.Type) (query.Value, error) {
 	switch lit := expr.(type) {
 	case *ast.StringLit:
-		if fieldType != query.TypeString && fieldType != query.TypeRelation {
+		if fieldType != query.TypeString {
 			return query.Value{}, fmt.Errorf("expected %s, got string", typeName(fieldType))
 		}
 		return query.Value{Type: query.TypeString, Value: lit.Value}, nil
@@ -325,4 +331,37 @@ func typeName(t query.Type) string {
 	default:
 		return "unknown"
 	}
+}
+
+func (p *Planner) ResolveSort(orderings []query.Ordering) ([]query.Ordering, error) {
+	// If no orderings provided, use schema default
+	if len(orderings) == 0 {
+		orderings = p.schema.GetDefaultSort()
+		if len(orderings) == 0 {
+			return nil, nil
+		}
+	}
+
+	result := make([]query.Ordering, 0, len(orderings))
+
+	for _, o := range orderings {
+		switch ord := o.(type) {
+		case *query.FieldOrdering:
+			field, ok := p.schema.Field(ord.Field.Name)
+			if !ok {
+				return nil, fmt.Errorf("unknown field in sort: %s", ord.Field.Name)
+			}
+			result = append(result, &query.FieldOrdering{
+				Field:     field,
+				Dir:       ord.Dir,
+				NullOrder: ord.NullOrder,
+			})
+		case *query.RandomOrdering, *query.ShuffleOrdering, *query.ScoreOrdering:
+			result = append(result, ord)
+		default:
+			return nil, fmt.Errorf("unknown ordering type: %T", o)
+		}
+	}
+
+	return result, nil
 }
