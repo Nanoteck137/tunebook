@@ -19,7 +19,7 @@ type Query interface {
 	ToSQL() (string, []any, error)
 }
 
-var dialect = goqu.Dialect("sqlite3")
+var dialect = SqliteDialect()
 
 type Executor interface {
 	Query(ctx context.Context, query Query) (*sql.Rows, error)
@@ -309,4 +309,38 @@ func handleErr(err error) error {
 	}
 
 	return err
+}
+
+type DialectWrapper struct {
+	goqu.DialectWrapper
+}
+
+func (dw DialectWrapper) From(table ...any) *goqu.SelectDataset {
+	return dw.DialectWrapper.From(table...).Prepared(true)
+}
+
+func (dw DialectWrapper) Select(cols ...any) *goqu.SelectDataset {
+	return dw.DialectWrapper.Select(cols...).Prepared(true)
+}
+
+func (dw DialectWrapper) Update(table any) *goqu.UpdateDataset {
+	return dw.DialectWrapper.Update(table).Prepared(true)
+}
+
+func (dw DialectWrapper) Insert(table any) *goqu.InsertDataset {
+	return dw.DialectWrapper.Insert(table).Prepared(true)
+}
+
+func (dw DialectWrapper) Delete(table any) *goqu.DeleteDataset {
+	return dw.DialectWrapper.Delete(table).Prepared(true)
+}
+
+func (dw DialectWrapper) Truncate(table ...any) *goqu.TruncateDataset {
+	return dw.DialectWrapper.Truncate(table...).Prepared(true)
+}
+
+func SqliteDialect() DialectWrapper {
+	return DialectWrapper{
+		DialectWrapper: goqu.Dialect("sqlite3"),
+	}
 }
