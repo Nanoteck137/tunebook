@@ -20,7 +20,7 @@ dev.Println(user)
 Output:
 ```
 dev.User{
-    ID:   1,
+    ID: 1,
     Name: "Alice",
 }
 ```
@@ -42,9 +42,12 @@ dev.Println(user)
 Output:
 ```
 dev.User{
-    ID:      1,
-    Name:    "Alice",
-    Address: dev.Address{City:"NYC", Zip:10001},
+    ID: 1,
+    Name: "Alice",
+    Address: dev.Address{
+        City: "NYC",
+        Zip: 10001,
+    },
 }
 ```
 

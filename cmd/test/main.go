@@ -8,6 +8,7 @@ import (
 	"github.com/kr/pretty"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/dev"
 	"github.com/nanoteck137/tunebook/tools/query"
 	"github.com/nanoteck137/tunebook/tools/query/lexer"
 	"github.com/nanoteck137/tunebook/tools/query/parser"
@@ -18,6 +19,9 @@ import (
 )
 
 func main() {
+	dbTesting()
+
+	return
 	fmt.Println("=== Query Package Test ===\n")
 
 	testLexer()
@@ -30,6 +34,64 @@ func main() {
 	testErrorMessages()
 
 	fmt.Println("\n=== All tests completed ===")
+}
+
+func dbTesting() {
+	db, err := database.Open("work/data.db")
+	if err != nil {
+		fmt.Printf("ERROR opening database: %v\n\n", err)
+		return
+	}
+	defer db.Close()
+
+	fmt.Println("Connected to work/data.db\n")
+
+	playlistId := "nuf8abaigiryew64"
+
+	// query := dialect.From("playlist_items").
+	// 	Select("tracks.*", "playlist_items.position").
+	// 	Join(
+	// 		tracks.As("tracks"),
+	// 		goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+	// 	)
+
+	q := database.TrackQuery().
+		SelectAppend(
+			goqu.I("playlist_items.position").As("position"),
+		).
+		Join(
+			goqu.I("playlist_items"),
+			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+		).Order(goqu.I("playlist_items.position").Desc())
+
+	q = q.Where(goqu.I("playlist_items.playlist_id").Eq(playlistId))
+
+	q, err = database.ApplyQuery(q, database.TrackSchema(), database.QueryParams{
+		Filter: "tags has \"metal\"",
+		Sort:   "",
+	})
+	if err != nil {
+		pretty.Println(err)
+		fmt.Printf("ERROR apply query: %v\n\n", err)
+		return
+	}
+	
+	sql, params, _ := q.ToSQL()
+	fmt.Printf("sql: %v\n", sql)
+	fmt.Printf("params: %v\n", params)
+
+	fmt.Printf("%v\n", database.DebugSQL(q))
+
+	tracks, err := database.Multiple[database.PlaylistItemTrack](db, context.Background(), q)
+	if err != nil {
+		fmt.Printf("ERROR getting tracks: %v\n\n", err)
+		return
+	}
+
+	fmt.Printf("len(tracks): %v\n", len(tracks))
+
+	pretty.Println(tracks[0])
+	dev.Println(tracks[0])
 }
 
 func testLexer() {

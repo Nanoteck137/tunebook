@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+var (
+	sqlKeywordRe  = regexp.MustCompile(`(?i)\b(SELECT|FROM|WHERE|AND|OR|ORDER BY|GROUP BY|HAVING|LIMIT|OFFSET|JOIN|LEFT JOIN|RIGHT JOIN|INNER JOIN|OUTER JOIN|CROSS JOIN|ON|INSERT INTO|VALUES|UPDATE|SET|DELETE FROM|CREATE TABLE|ALTER TABLE|DROP TABLE|UNION|UNION ALL|EXCEPT|INTERSECT|CASE|WHEN|THEN|ELSE|END|AS|DISTINCT|IN|NOT|BETWEEN|LIKE|IS|NULL|EXISTS|ASC|DESC)\b`)
+	sqlClauseRe   = regexp.MustCompile(`\b(SELECT DISTINCT|SELECT|FROM|LEFT JOIN|RIGHT JOIN|INNER JOIN|CROSS JOIN|JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET|UNION ALL|UNION|EXCEPT|INTERSECT)\b`)
+	sqlWhitespace = regexp.MustCompile(`\s+`)
+	sqlLogicalRe  = regexp.MustCompile(`\b(AND|OR)\b`)
+)
+
 func PrettyPrintSQL(query string, args []any) string {
 	query = substituteParams(query, args)
 	query = formatSQL(query)
@@ -60,50 +67,23 @@ func formatValue(v any) string {
 	}
 }
 
-const indent = "    "
+const sqlIndent = "    "
+
+type clause struct {
+	keyword string
+	body    string
+}
 
 func formatSQL(query string) string {
 	query = strings.TrimSpace(query)
 
-	keywords := []string{
-		"SELECT", "FROM", "WHERE", "AND", "OR", "ORDER BY", "GROUP BY",
-		"HAVING", "LIMIT", "OFFSET", "JOIN", "LEFT JOIN", "RIGHT JOIN",
-		"INNER JOIN", "OUTER JOIN", "CROSS JOIN", "ON", "INSERT INTO",
-		"VALUES", "UPDATE", "SET", "DELETE FROM", "CREATE TABLE",
-		"ALTER TABLE", "DROP TABLE", "UNION", "UNION ALL", "EXCEPT",
-		"INTERSECT", "CASE", "WHEN", "THEN", "ELSE", "END", "AS",
-		"DISTINCT", "IN", "NOT", "BETWEEN", "LIKE", "IS", "NULL",
-		"EXISTS", "ASC", "DESC",
-	}
-
-	kwRe := regexp.MustCompile(`(?i)\b(` + strings.Join(keywords, "|") + `)\b`)
-	query = kwRe.ReplaceAllStringFunc(query, func(match string) string {
+	query = sqlKeywordRe.ReplaceAllStringFunc(query, func(match string) string {
 		return strings.ToUpper(match)
 	})
 
-	query = regexp.MustCompile(`\s+`).ReplaceAllString(query, " ")
+	query = sqlWhitespace.ReplaceAllString(query, " ")
 
-	clauseOrder := []string{
-		"SELECT DISTINCT", "SELECT",
-		"FROM",
-		"LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "CROSS JOIN", "JOIN",
-		"WHERE",
-		"GROUP BY",
-		"HAVING",
-		"ORDER BY",
-		"LIMIT",
-		"OFFSET",
-		"UNION ALL", "UNION", "EXCEPT", "INTERSECT",
-	}
-
-	clauseRe := regexp.MustCompile(`\b(` + strings.Join(clauseOrder, "|") + `)\b`)
-
-	type clause struct {
-		keyword string
-		body    string
-	}
-
-	indices := clauseRe.FindAllStringIndex(query, -1)
+	indices := sqlClauseRe.FindAllStringIndex(query, -1)
 	if len(indices) == 0 {
 		return query
 	}
@@ -138,7 +118,7 @@ func formatSQL(query string) string {
 					if j == 0 {
 						b.WriteString(" ")
 					} else {
-						b.WriteString(",\n" + indent)
+						b.WriteString(",\n" + sqlIndent)
 					}
 					b.WriteString(col)
 				}
@@ -161,7 +141,7 @@ func formatSQL(query string) string {
 					if j == 0 {
 						b.WriteString(" " + cond)
 					} else {
-						b.WriteString("\n" + indent + cond)
+						b.WriteString("\n" + sqlIndent + cond)
 					}
 				}
 			} else {
@@ -202,7 +182,7 @@ func formatCommaList(s string) string {
 		if i == 0 {
 			b.WriteString(p)
 		} else {
-			b.WriteString(",\n" + indent + p)
+			b.WriteString(",\n" + sqlIndent + p)
 		}
 	}
 	return b.String()
@@ -242,13 +222,8 @@ func splitTopLevel(s string, sep byte) []string {
 	return parts
 }
 
-type condPart struct {
-	text string
-	conn string
-}
-
 func splitLogical(s string) []string {
-	tokens := regexp.MustCompile(`\b(AND|OR)\b`).FindAllStringIndex(s, -1)
+	tokens := sqlLogicalRe.FindAllStringIndex(s, -1)
 	if len(tokens) == 0 {
 		return []string{s}
 	}
