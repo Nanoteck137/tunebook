@@ -11,7 +11,15 @@ type Event interface {
 	GetEventType() string
 }
 
-type ClientInitFunc func() []Event
+type EventEmitter interface {
+	EmitEvent(event Event)
+}
+
+type EventProducer interface {
+	GetInitEvents() []Event
+}
+
+var _ EventEmitter = (*Broker)(nil)
 
 // NOTE(patrik): Based on: https://gist.github.com/Ananto30/8af841f250e89c07e122e2a838698246
 type Broker struct {
@@ -21,17 +29,20 @@ type Broker struct {
 	closingClients chan chan Event
 	clients        map[chan Event]struct{}
 
-	initFunc ClientInitFunc
+	producers []EventProducer
 }
 
-func NewBroker(initFunc ClientInitFunc) *Broker {
+func NewBroker() *Broker {
 	return &Broker{
 		notifier:       make(chan Event, 1024),
 		newClients:     make(chan chan Event),
 		closingClients: make(chan chan Event),
 		clients:        make(map[chan Event]struct{}),
-		initFunc:       initFunc,
 	}
+}
+
+func (broker *Broker) RegisterProducer(p EventProducer) {
+	broker.producers = append(broker.producers, p)
 }
 
 func (broker *Broker) Listen() {
@@ -94,11 +105,6 @@ func (broker *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "event: %s\n", eventData.GetEventType())
 		fmt.Fprintf(w, "data: ")
 
-		// event := Event{
-		// 	Type: eventData.GetEventType(),
-		// 	Data: eventData,
-		// }
-
 		encode := json.NewEncoder(w)
 		encode.Encode(eventData)
 
@@ -108,9 +114,8 @@ func (broker *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	sendEvent(ConnectedEvent{})
 
-	if broker.initFunc != nil {
-		events := broker.initFunc()
-		for _, event := range events {
+	for _, producer := range broker.producers {
+		for _, event := range producer.GetInitEvents() {
 			sendEvent(event)
 		}
 	}

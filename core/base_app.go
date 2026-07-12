@@ -159,7 +159,12 @@ func (app *BaseApp) Bootstrap() error {
 		slog.Warn("notification service disabled, ntfy_base_url or ntfy_topic not set")
 	}
 
-	app.taskService = service.NewTaskService(newServiceLogger("task"))
+	app.broker = broker.NewBroker()
+
+	app.taskService = service.NewTaskService(
+		newServiceLogger("task"),
+		app.broker,
+	)
 
 	app.jobService = service.NewJobService(
 		newServiceLogger("job"),
@@ -207,6 +212,7 @@ func (app *BaseApp) Bootstrap() error {
 		app.config,
 		app.notificationService,
 		app.mediaService,
+		app.broker,
 	)
 
 	app.artistService = service.NewArtistService(
@@ -245,23 +251,8 @@ func (app *BaseApp) Bootstrap() error {
 		app.db,
 	)
 
-	// TODO(patrik): This need to be changed
-	app.broker = broker.NewBroker(func() []broker.Event {
-		return []broker.Event{
-			app.libraryService.GetSyncStateEvent(),
-			app.taskService.GetSyncStateEvent(),
-		}
-	})
-
-	// TODO(patrik): This need to be changed
-	app.libraryService.SetUpdateFunc(func() {
-		app.broker.EmitEvent(app.libraryService.GetSyncStateEvent())
-	})
-
-	// TODO(patrik): This need to be changed
-	app.taskService.SetUpdateFunc(func() {
-		app.broker.EmitEvent(app.taskService.GetSyncStateEvent())
-	})
+	app.broker.RegisterProducer(app.libraryService)
+	app.broker.RegisterProducer(app.taskService)
 
 	taskList := []service.Task{
 		tasks.NewLibrarySyncTask(app.libraryService),

@@ -29,6 +29,7 @@ const (
 )
 
 var _ (broker.Event) = (*LibrarySyncStateEvent)(nil)
+var _ broker.EventProducer = (*LibraryService)(nil)
 
 type MissingItem struct {
 	Id   string `json:"id"`
@@ -58,8 +59,6 @@ func (e LibrarySyncStateEvent) GetEventType() string {
 
 var libraryErr = NewServiceErrCreator("library")
 
-type UpdateFunc func()
-
 type LibraryService struct {
 	logger *slog.Logger
 
@@ -69,6 +68,8 @@ type LibraryService struct {
 
 	norificationService *NotificationService
 	mediaService        *MediaService
+
+	emitter broker.EventEmitter
 
 	errors []error
 
@@ -88,8 +89,6 @@ type LibraryService struct {
 	albumsSyncDuration  time.Duration
 	tracksSyncDuration  time.Duration
 	totalSyncDuration   time.Duration
-
-	updateFunc UpdateFunc
 }
 
 func NewLibraryService(
@@ -99,6 +98,7 @@ func NewLibraryService(
 	config *config.Config,
 	notificationService *NotificationService,
 	mediaService *MediaService,
+	emitter broker.EventEmitter,
 ) *LibraryService {
 	return &LibraryService{
 		logger:              logger,
@@ -107,6 +107,7 @@ func NewLibraryService(
 		config:              config,
 		norificationService: notificationService,
 		mediaService:        mediaService,
+		emitter:             emitter,
 
 		// NOTE(patrik): We need to initialize these or else the frontend
 		// gets an error because these are nil
@@ -116,14 +117,14 @@ func NewLibraryService(
 	}
 }
 
-func (s *LibraryService) SetUpdateFunc(f UpdateFunc) {
-	s.updateFunc = f
+func (s *LibraryService) update() {
+	if s.emitter != nil {
+		s.emitter.EmitEvent(s.GetSyncStateEvent())
+	}
 }
 
-func (s *LibraryService) update() {
-	if s.updateFunc != nil {
-		s.updateFunc()
-	}
+func (s *LibraryService) GetInitEvents() []broker.Event {
+	return []broker.Event{s.GetSyncStateEvent()}
 }
 
 func (s *LibraryService) GetSyncStateEvent() LibrarySyncStateEvent {

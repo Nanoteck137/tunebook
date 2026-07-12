@@ -26,6 +26,7 @@ type Task interface {
 }
 
 var _ (broker.Event) = (*TaskSyncStateEvent)(nil)
+var _ broker.EventProducer = (*TaskService)(nil)
 
 type TaskSyncStateEventTask struct {
 	Name        string `json:"name"`
@@ -66,14 +67,15 @@ type TaskService struct {
 	wg sync.WaitGroup
 	mu sync.RWMutex
 
-	updateFunc UpdateFunc
+	emitter broker.EventEmitter
 }
 
-func NewTaskService(logger *slog.Logger) *TaskService {
+func NewTaskService(logger *slog.Logger, emitter broker.EventEmitter) *TaskService {
 	return &TaskService{
-		logger: logger,
-		cron:   cron.New(),
-		tasks:  map[string]*taskEntry{},
+		logger:  logger,
+		cron:    cron.New(),
+		tasks:   map[string]*taskEntry{},
+		emitter: emitter,
 	}
 }
 
@@ -107,14 +109,14 @@ func (s *TaskService) GetSyncStateEvent() TaskSyncStateEvent {
 	return res
 }
 
-func (s *TaskService) SetUpdateFunc(f UpdateFunc) {
-	s.updateFunc = f
+func (s *TaskService) update() {
+	if s.emitter != nil {
+		s.emitter.EmitEvent(s.GetSyncStateEvent())
+	}
 }
 
-func (s *TaskService) update() {
-	if s.updateFunc != nil {
-		s.updateFunc()
-	}
+func (s *TaskService) GetInitEvents() []broker.Event {
+	return []broker.Event{s.GetSyncStateEvent()}
 }
 
 func (s *TaskService) AddTask(task Task) error {
