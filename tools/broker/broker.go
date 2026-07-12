@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/nrednav/cuid2"
 )
+
+var createClientId, _ = cuid2.Init(cuid2.WithLength(32))
 
 type Event interface {
 	GetEventType() string
@@ -21,13 +25,19 @@ type EventProducer interface {
 
 var _ EventEmitter = (*Broker)(nil)
 
+type client struct {
+	id     string
+	userId string
+	events chan Event
+}
+
 // NOTE(patrik): Based on: https://gist.github.com/Ananto30/8af841f250e89c07e122e2a838698246
 type Broker struct {
 	notifier chan Event
 
-	newClients     chan chan Event
-	closingClients chan chan Event
-	clients        map[chan Event]struct{}
+	newClients     chan *client
+	closingClients chan *client
+	clients        map[*client]struct{}
 
 	producers []EventProducer
 }
@@ -35,9 +45,9 @@ type Broker struct {
 func NewBroker() *Broker {
 	return &Broker{
 		notifier:       make(chan Event, 1024),
-		newClients:     make(chan chan Event),
-		closingClients: make(chan chan Event),
-		clients:        make(map[chan Event]struct{}),
+		newClients:     make(chan *client),
+		closingClients: make(chan *client),
+		clients:        make(map[*client]struct{}),
 	}
 }
 
@@ -49,19 +59,19 @@ func (broker *Broker) Listen() {
 	for {
 		select {
 		case c := <-broker.newClients:
-			slog.Info("New client connected")
+			slog.Info("New client connected", slog.String("userId", c.userId))
 			broker.clients[c] = struct{}{}
 		case c := <-broker.closingClients:
 			if _, ok := broker.clients[c]; ok {
-				slog.Info("Client disconnected")
+				slog.Info("Client disconnected", slog.String("userId", c.userId))
 
 				delete(broker.clients, c)
-				close(c)
+				close(c.events)
 			}
 		case event := <-broker.notifier:
 			for c := range broker.clients {
 				select {
-				case c <- event:
+				case c.events <- event:
 				default:
 					// Drop event for slow client instead of blocking
 				}
@@ -86,7 +96,7 @@ func (c ConnectedEvent) GetEventType() string {
 	return "connected"
 }
 
-func (broker *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (broker *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request, userId string) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -95,10 +105,14 @@ func (broker *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	rc := http.NewResponseController(w)
 
-	eventChan := make(chan Event, 16)
-	broker.newClients <- eventChan
+	c := &client{
+		id:     createClientId(),
+		userId: userId,
+		events: make(chan Event, 16),
+	}
+	broker.newClients <- c
 	defer func() {
-		broker.closingClients <- eventChan
+		broker.closingClients <- c
 	}()
 
 	sendEvent := func(eventData Event) {
@@ -125,7 +139,7 @@ func (broker *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case <-r.Context().Done():
 			return
 
-		case event := <-eventChan:
+		case event := <-c.events:
 			sendEvent(event)
 		}
 	}

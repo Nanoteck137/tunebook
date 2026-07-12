@@ -2,15 +2,21 @@ package apis
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook"
 	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/service"
 )
 
 type GetSystemInfo struct {
 	Version string `json:"version"`
+}
+
+type CreateSSEToken struct {
+	Token string `json:"token"`
 }
 
 func InstallSystemHandlers(app core.App, group pyrin.Group) {
@@ -47,14 +53,46 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		pyrin.ApiHandler{
+			Name:   "CreateSseToken",
+			Method: http.MethodPost,
+			Path:   "/system/sse/token",
+			ResponseType: CreateSSEToken{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				token, err := app.AuthService().CreateSSEToken(user.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				return CreateSSEToken{Token: token}, nil
+			},
+		},
+
 		pyrin.NormalHandler{
 			Name:   "SseHandler",
 			Method: http.MethodGet,
 			Path:   "/system/sse",
 			HandlerFunc: func(c pyrin.Context) error {
-				// TODO(patrik): Figure out how to authenticate this, because
-				// with the EventSource API you can't send custom headers
-				app.Broker().ServeHTTP(c.Response(), c.Request())
+				tokenString := c.Request().URL.Query().Get("token")
+				if tokenString == "" {
+					return InvalidAuth("missing sse token")
+				}
+
+				userId, err := app.AuthService().ValidateSSEToken(tokenString)
+				if err != nil {
+					if errors.Is(err, service.ErrAuthServiceRequestExpired) {
+						return InvalidAuth("sse token expired")
+					}
+
+					return InvalidAuth("invalid sse token")
+				}
+
+				app.Broker().ServeHTTP(c.Response(), c.Request(), userId)
 				return nil
 			},
 		},

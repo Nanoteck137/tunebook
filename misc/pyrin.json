@@ -567,6 +567,16 @@
       ]
     },
     {
+      "name": "CreateSSEToken",
+      "fields": [
+        {
+          "name": "token",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "CreateTrackFilter",
       "fields": [
         {
@@ -1732,6 +1742,13 @@
       "path": "/api/v1/playlists",
       "response": "CreatePlaylist",
       "body": "CreatePlaylistBody"
+    },
+    {
+      "type": "api",
+      "name": "CreateSseToken",
+      "method": "POST",
+      "path": "/api/v1/system/sse/token",
+      "response": "CreateSSEToken"
     },
     {
       "type": "api",

@@ -43,6 +43,10 @@ const (
 	authQuickRequestExpireDuration   = 5 * time.Minute
 	authQuickRequestDeletionDuration = 
 		authQuickRequestExpireDuration + 10*time.Minute
+
+	sseTokenExpireDuration   = 5 * time.Minute
+	sseTokenDeletionDuration = 
+		sseTokenExpireDuration + 10*time.Minute
 )
 
 type AuthProviderRequestStatus string
@@ -156,6 +160,13 @@ type authQuickConnectRequest struct {
 	delete    time.Time
 }
 
+type sseToken struct {
+	id      string
+	userId  string
+	expires time.Time
+	delete  time.Time
+}
+
 type AuthService struct {
 	logger               *slog.Logger
 	mu                   sync.Mutex
@@ -165,6 +176,7 @@ type AuthService struct {
 	providers            map[string]*authProvider
 	providerRequests     map[string]*authProviderRequest
 	quickConnectRequests map[string]*authQuickConnectRequest
+	sseTokens            map[string]*sseToken
 }
 
 func NewAuthService(
@@ -195,6 +207,7 @@ func NewAuthService(
 		providers:            providers,
 		providerRequests:     make(map[string]*authProviderRequest),
 		quickConnectRequests: make(map[string]*authQuickConnectRequest),
+		sseTokens:            make(map[string]*sseToken),
 	}
 }
 
@@ -602,6 +615,45 @@ func (a *AuthService) SignUserToken(userId string) (string, error) {
 	return tokenString, nil
 }
 
+func (a *AuthService) CreateSSEToken(userId string) (string, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	id := createAuthId()
+
+	t := time.Now()
+	token := &sseToken{
+		id:      id,
+		userId:  userId,
+		expires: t.Add(sseTokenExpireDuration),
+		delete:  t.Add(sseTokenDeletionDuration),
+	}
+
+	a.sseTokens[id] = token
+
+	return id, nil
+}
+
+func (a *AuthService) ValidateSSEToken(id string) (string, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	token, exists := a.sseTokens[id]
+	if !exists {
+		return "", ErrAuthServiceRequestNotFound
+	}
+
+	if time.Now().After(token.expires) {
+		delete(a.sseTokens, id)
+		return "", ErrAuthServiceRequestExpired
+	}
+
+	userId := token.userId
+	delete(a.sseTokens, id)
+
+	return userId, nil
+}
+
 func (a *AuthService) Cleanup() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -617,6 +669,12 @@ func (a *AuthService) Cleanup() {
 	for k, request := range a.quickConnectRequests {
 		if now.After(request.delete) {
 			delete(a.quickConnectRequests, k)
+		}
+	}
+
+	for k, token := range a.sseTokens {
+		if now.After(token.delete) {
+			delete(a.sseTokens, k)
 		}
 	}
 }

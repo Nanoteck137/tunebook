@@ -88,6 +88,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/playlists", "POST", api.CreatePlaylist, z.any(), body, options)
   }
   
+  createSseToken(options?: ExtraOptions) {
+    return this.request("/api/v1/system/sse/token", "POST", api.CreateSSEToken, z.any(), undefined, options)
+  }
+  
   createTrackFilter(body: api.CreateTrackFilterBody, options?: ExtraOptions) {
     return this.request("/api/v1/filters/tracks", "POST", api.CreateTrackFilter, z.any(), body, options)
   }
@@ -392,6 +396,10 @@ export class ClientUrls {
   
   createPlaylist() {
     return createUrl(this.baseUrl, "/api/v1/playlists")
+  }
+  
+  createSseToken() {
+    return createUrl(this.baseUrl, "/api/v1/system/sse/token")
   }
   
   createTrackFilter() {

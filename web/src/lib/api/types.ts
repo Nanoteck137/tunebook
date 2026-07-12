@@ -327,6 +327,13 @@ export const CreatePlaylistBody = z.object({
 });
 export type CreatePlaylistBody = z.infer<typeof CreatePlaylistBody>;
 
+// Name: CreateSSEToken
+export const CreateSSEToken = z.object({
+  // Name: CreateSSEToken.token
+  "token": z.string(),
+});
+export type CreateSSEToken = z.infer<typeof CreateSSEToken>;
+
 // Name: CreateTrackFilter
 export const CreateTrackFilter = z.object({
   // Name: CreateTrackFilter.filterId

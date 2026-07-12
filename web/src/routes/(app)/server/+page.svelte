@@ -69,8 +69,17 @@
 
   let tasks = $state<TaskSyncStateEventTaskTy[]>([]);
 
-  onMount(() => {
-    const eventSource = new EventSource(apiClient.url.sseHandler());
+  async function setupEventSource(): Promise<EventSource | null> {
+    const res = await apiClient.createSseToken();
+    if (!res.success) {
+      handleApiError(res.error);
+      return null;
+    }
+
+    const url = apiClient.url.sseHandler();
+    url.searchParams.set("token", res.data.token);
+
+    const eventSource = new EventSource(url);
 
     eventSource.addEventListener("connected", () => {
       console.log("Connected to SSE handler");
@@ -100,8 +109,18 @@
       tasks = data.tasks;
     });
 
+    return eventSource;
+  }
+
+  let eventSource = $state<EventSource | null>(null);
+
+  onMount(() => {
+    setupEventSource().then((e) => {
+      eventSource = e;
+    });
+
     return () => {
-      eventSource.close();
+      eventSource?.close();
     };
   });
 </script>
