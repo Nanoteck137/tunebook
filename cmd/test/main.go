@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/kr/pretty"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/dev"
@@ -71,7 +70,6 @@ func dbTesting() {
 		Sort:   "",
 	})
 	if err != nil {
-		pretty.Println(err)
 		fmt.Printf("ERROR apply query: %v\n\n", err)
 		return
 	}
@@ -90,7 +88,6 @@ func dbTesting() {
 
 	fmt.Printf("len(tracks): %v\n", len(tracks))
 
-	pretty.Println(tracks[0])
 	dev.Println(tracks[0])
 }
 
@@ -1120,8 +1117,6 @@ func executeTrackQuery(executor database.Executor, plan *querysql.CompileResult)
 	if debugPrint {
 		fmt.Printf("sqlStr: %v\n", sqlStr)
 		fmt.Printf("args: %v\n", args)
-
-		pretty.Println(tracks)
 	}
 
 	return len(tracks), nil
