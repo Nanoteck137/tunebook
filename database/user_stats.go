@@ -96,6 +96,46 @@ func (db DB) SetUserStats(
 	return nil
 }
 
+type IncrementUserStatsParams struct {
+	UserId          string
+	SkipDelta       int
+	ListeningTimeDelta int64
+	LastListenedAt  int64
+}
+
+func (db DB) IncrementUserStats(
+	ctx context.Context,
+	params IncrementUserStatsParams,
+) error {
+	now := time.Now().UnixMilli()
+
+	query := dialect.Insert("user_stats").Rows(goqu.Record{
+		"user_id":              params.UserId,
+		"num_tracks_played":    1,
+		"num_tracks_skipped":   params.SkipDelta,
+		"num_playlists_created": 0,
+		"num_favorite_tracks":  0,
+		"listening_time":       params.ListeningTimeDelta,
+		"last_listened_at":     params.LastListenedAt,
+		"updated":              now,
+	}).OnConflict(
+		goqu.DoUpdate("user_id", goqu.Record{
+			"num_tracks_played":  goqu.L("num_tracks_played + 1"),
+			"num_tracks_skipped": goqu.L("num_tracks_skipped + ?", params.SkipDelta),
+			"listening_time":     goqu.L("listening_time + ?", params.ListeningTimeDelta),
+			"last_listened_at":   params.LastListenedAt,
+			"updated":            now,
+		}),
+	)
+
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (db DB) DeleteUserStats(ctx context.Context, userId string) error {
 	query := dialect.Delete("user_stats").
 		Where(goqu.I("user_stats.user_id").Eq(userId))

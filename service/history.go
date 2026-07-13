@@ -158,8 +158,18 @@ func (s *HistoryService) PushTrackHistory(
 			},
 		)
 		if err != nil {
-			return id, historyErr.Wrap("push track history: upsert stats", err)
+			return "", historyErr.Wrap("push track history: upsert stats", err)
 		}
+	}
+
+	err = s.db.IncrementUserStats(ctx, database.IncrementUserStatsParams{
+		UserId:             params.UserId,
+		SkipDelta:          skipDelta,
+		ListeningTimeDelta: playTimeDelta,
+		LastListenedAt:     now.UnixMilli(),
+	})
+	if err != nil {
+		return "", historyErr.Wrap("push track history: increment user stats", err)
 	}
 
 	return id, nil
