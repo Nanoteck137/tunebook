@@ -50,6 +50,7 @@ func (s *HistoryService) GetTrackHistory(
 		},
 	)
 	if err != nil {
+		// TODO(patrik): Cleanup, when new filter system is used
 		if errors.Is(err, database.ErrInvalidFilter) {
 			return nil, types.Page{}, &InvalidFilterError{
 				Service: "history service",
@@ -57,6 +58,7 @@ func (s *HistoryService) GetTrackHistory(
 			}
 		}
 
+		// TODO(patrik): Cleanup, when new filter system is used
 		if errors.Is(err, database.ErrInvalidSort) {
 			return nil, types.Page{}, &InvalidSortError{
 				Service: "history service",
@@ -68,11 +70,6 @@ func (s *HistoryService) GetTrackHistory(
 	}
 
 	return items, page, nil
-}
-
-type GetTrackHistoryByIdParams struct {
-	HistoryId string
-	UserId    string
 }
 
 type PushTrackHistoryParams struct {
@@ -169,10 +166,16 @@ func (s *HistoryService) PushTrackHistory(
 		LastListenedAt:     now.UnixMilli(),
 	})
 	if err != nil {
-		return "", historyErr.Wrap("push track history: increment user stats", err)
+		return "", historyErr.Wrap(
+			"push track history: increment user stats", err)
 	}
 
 	return id, nil
+}
+
+type GetTrackHistoryByIdParams struct {
+	HistoryId string
+	UserId    string
 }
 
 func (s *HistoryService) GetTrackHistoryById(
