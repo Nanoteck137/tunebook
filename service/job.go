@@ -13,12 +13,28 @@ import (
 
 var jobErr = NewServiceErrCreator("job")
 
+type JobInfo struct {
+	Name        string
+	DisplayName string
+}
+
+type Job interface {
+	Info() JobInfo
+	Run(ctx context.Context, data string) error
+}
+
 type JobHandler func(ctx context.Context, data string) error
+
+type jobEntry struct {
+	job  Job
+	info *JobInfo
+}
 
 type JobService struct {
 	logger   *slog.Logger
 	db       *database.Database
 	handlers map[string]JobHandler
+	jobs     map[string]*jobEntry
 	mu       sync.RWMutex
 
 	stopCh chan struct{}
@@ -30,6 +46,7 @@ func NewJobService(logger *slog.Logger, db *database.Database) *JobService {
 		logger:   logger,
 		db:       db,
 		handlers: make(map[string]JobHandler),
+		jobs:     make(map[string]*jobEntry),
 	}
 }
 
@@ -76,6 +93,37 @@ func (s *JobService) RegisterJob(name string, handler JobHandler) {
 
 	s.handlers[name] = handler
 	s.logger.Info("registered job handler", "name", name)
+}
+
+func (s *JobService) AddJob(job Job) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	info := job.Info()
+
+	if info.Name == "" {
+		return jobErr.New("job name must not be empty")
+	}
+
+	_, exists := s.jobs[info.Name]
+	if exists {
+		s.logger.Error("job with name already exists", "name", info.Name)
+		return jobErr.Newf("job with name already exists: %s", info.Name)
+	}
+
+	s.jobs[info.Name] = &jobEntry{
+		job:  job,
+		info: &info,
+	}
+
+	s.handlers[info.Name] = job.Run
+
+	s.logger.Info(
+		"new job",
+		"name", info.Name,
+	)
+
+	return nil
 }
 
 func (s *JobService) PushJob(

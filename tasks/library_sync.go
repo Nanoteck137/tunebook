@@ -8,6 +8,8 @@ import (
 
 var _ service.Task = (*LibrarySyncTask)(nil)
 
+const LibrarySync = "library-sync"
+
 type LibrarySyncTask struct {
 	libraryService *service.LibraryService
 }

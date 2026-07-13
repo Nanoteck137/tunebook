@@ -2,12 +2,12 @@ package core
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 
 	"github.com/nanoteck137/tunebook/config"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/database/migrations"
+	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tasks"
 	"github.com/nanoteck137/tunebook/tools/broker"
@@ -266,31 +266,17 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	app.jobService.RegisterJob(
-		tasks.GeneratePlaylistImage,
-		func(ctx context.Context, data string) error {
-			var params service.GeneratePlaylistImageParams
-			err := json.Unmarshal([]byte(data), &params)
-			if err != nil {
-				return err
-			}
+	jobList := []service.Job{
+		jobs.NewGeneratePlaylistImageJob(app.playlistService),
+		jobs.NewUserStatsUpdateJob(app.userService),
+	}
 
-			return app.PlaylistService().GeneratePlaylistImage(ctx, params)
-		},
-	)
-
-	app.jobService.RegisterJob(
-		tasks.UserStatsUpdate,
-		func(ctx context.Context, data string) error {
-			var params service.UpdateUserStatsParams
-			err := json.Unmarshal([]byte(data), &params)
-			if err != nil {
-				return err
-			}
-
-			return app.UserService().RecalculateUserStats(ctx, params.UserId)
-		},
-	)
+	for _, job := range jobList {
+		err = app.jobService.AddJob(job)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

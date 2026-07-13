@@ -8,6 +8,8 @@ import (
 
 var _ service.Task = (*SearchIndexTask)(nil)
 
+const SearchIndex = "search-index"
+
 type SearchIndexTask struct {
 	searchService *service.SearchService
 }

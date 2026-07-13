@@ -8,6 +8,8 @@ import (
 
 var _ service.Task = (*CacheCleanupTask)(nil)
 
+const CacheCleanup = "cache-cleanup"
+
 type CacheCleanupTask struct {
 	filesystem *service.FilesystemService
 }

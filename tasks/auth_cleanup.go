@@ -8,6 +8,8 @@ import (
 
 var _ service.Task = (*AuthCleanupTask)(nil)
 
+const AuthCleanup = "auth-cleanup"
+
 type AuthCleanupTask struct {
 	authService *service.AuthService
 }

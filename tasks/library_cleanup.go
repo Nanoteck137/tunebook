@@ -8,6 +8,8 @@ import (
 
 var _ service.Task = (*LibraryCleanupTask)(nil)
 
+const LibraryCleanup = "library-cleanup"
+
 type LibraryCleanupTask struct {
 	libraryService *service.LibraryService
 }
