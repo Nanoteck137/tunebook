@@ -146,6 +146,39 @@ func (s *UserService) GetUserStats(
 	return stats, nil
 }
 
+type GetUserTopTracksParams struct {
+	UserId     string
+	PeriodType string
+	Year       int
+	Limit      int
+}
+
+func (s *UserService) GetUserTopTracks(
+	ctx context.Context,
+	params GetUserTopTracksParams,
+) ([]database.UserTopTrack, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, ErrUserServiceUserNotFound
+		}
+
+		return nil, userErr.Wrap("get user top tracks: user", err)
+	}
+
+	tracks, err := s.db.GetUserTopTracks(ctx, database.GetUserTopTracksParams{
+		UserId:     params.UserId,
+		PeriodType: params.PeriodType,
+		Year:       params.Year,
+		Limit:      params.Limit,
+	})
+	if err != nil {
+		return nil, userErr.Wrap("get user top tracks: tracks", err)
+	}
+
+	return tracks, nil
+}
+
 type UpdateMeParams struct {
 	UserId string
 

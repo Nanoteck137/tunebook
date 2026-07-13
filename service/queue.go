@@ -303,17 +303,6 @@ type AddToQueueParams struct {
 	QueueIndexToTrackId string
 }
 
-type AddAlbumToQueueParams struct {
-	QueueId             string
-	UserId              string
-	AlbumId             string
-	FilterId            string
-	Position            string // "replace", "next", "end"
-	Shuffle             bool
-	CurrentIndex        int
-	QueueIndexToTrackId string
-}
-
 func (s *QueueService) AddToQueue(
 	ctx context.Context,
 	params AddToQueueParams,
@@ -381,6 +370,17 @@ func (s *QueueService) AddToQueue(
 	default:
 		return queueErr.New("unknown position: " + params.Position)
 	}
+}
+
+type AddAlbumToQueueParams struct {
+	QueueId             string
+	UserId              string
+	AlbumId             string
+	FilterId            string
+	Position            string // "replace", "next", "end"
+	Shuffle             bool
+	CurrentIndex        int
+	QueueIndexToTrackId string
 }
 
 func (s *QueueService) AddAlbumToQueue(

@@ -121,6 +121,10 @@ func handleUserServiceErrors(err error) error {
 	return err
 }
 
+type GetUserTopTracks struct {
+	Tracks []Track `json:"tracks"`
+}
+
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -175,6 +179,48 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 						stats.LastListenedAt),
 					Updated: formatTime(stats.Updated),
 				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserTopTracks",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/top-tracks",
+			ResponseType: GetUserTopTracks{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+				q := c.Request().URL.Query()
+
+				periodType := q.Get("period")
+				if periodType == "" {
+					periodType = "all"
+				}
+
+				year := parseIntQuery(q, "year", 0)
+				limit := parseIntQuery(q, "limit", 5)
+
+				tracks, err := app.UserService().GetUserTopTracks(
+					ctx,
+					service.GetUserTopTracksParams{
+						UserId:     c.Param("userId"),
+						PeriodType: periodType,
+						Year:       year,
+						Limit:      limit,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserTopTracks{
+					Tracks: make([]Track, len(tracks)),
+				}
+
+				for i, t := range tracks {
+					res.Tracks[i] = ConvertDBTrack(c, t.Track)
+				}
+
+				return res, nil
 			},
 		},
 

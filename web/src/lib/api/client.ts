@@ -228,6 +228,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/${userId}/stats`, "GET", api.GetUserStats, z.any(), undefined, options)
   }
   
+  getUserTopTracks(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/top-tracks`, "GET", api.GetUserTopTracks, z.any(), undefined, options)
+  }
+  
   getUserTrackFavorites(options?: ExtraOptions) {
     return this.request("/api/v1/favorites/tracks", "GET", api.GetUserFavorites, z.any(), undefined, options)
   }
@@ -548,6 +552,10 @@ export class ClientUrls {
   
   getUserStats(userId: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/stats`)
+  }
+  
+  getUserTopTracks(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/top-tracks`)
   }
   
   getUserTrackFavorites() {

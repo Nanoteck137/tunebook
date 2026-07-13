@@ -9,8 +9,14 @@ export const load: PageLoad = async ({ parent, params }) => {
     throw error(stats.error.code, { message: stats.error.message });
   }
 
+  const topTracks = await data.apiClient.getUserTopTracks(params.id);
+  if (!topTracks.success) {
+    throw error(topTracks.error.code, { message: topTracks.error.message });
+  }
+
   return {
     ...data,
     stats: stats.data,
+    topTracks: topTracks.data.tracks,
   };
 };

@@ -57,6 +57,61 @@ func (db DB) GetUserTrackStatsAgg(
 	return Single[UserTrackStatsAgg](db, ctx, query)
 }
 
+type UserTopTrack struct {
+	Track
+	PlayCount int `db:"play_count"`
+}
+
+type GetUserTopTracksParams struct {
+	UserId     string
+	PeriodType string
+	Year       int
+	Limit      int
+}
+
+func (db DB) GetUserTopTracks(
+	ctx context.Context,
+	params GetUserTopTracksParams,
+) ([]UserTopTrack, error) {
+	trackQuery := TrackQuery().As("t")
+
+	tbl := goqu.T("user_track_stats")
+	query := dialect.From(tbl).
+		Select(
+			goqu.I("t.id"),
+			goqu.I("t.filename"),
+			goqu.I("t.modified_time"),
+			goqu.I("t.media_format"),
+			goqu.I("t.name"),
+			goqu.I("t.album_id"),
+			goqu.I("t.artist_id"),
+			goqu.I("t.number"),
+			goqu.I("t.duration"),
+			goqu.I("t.year"),
+			goqu.I("t.created"),
+			goqu.I("t.updated"),
+			goqu.I("t.album_name"),
+			goqu.I("t.album_cover_art"),
+			goqu.I("t.artist_name"),
+			goqu.I("t.tags"),
+			goqu.I("t.featuring_artists"),
+			tbl.Col("play_count"),
+		).
+		Join(trackQuery, goqu.On(tbl.Col("track_id").Eq(goqu.I("t.id")))).
+		Where(
+			tbl.Col("user_id").Eq(params.UserId),
+			tbl.Col("period_type").Eq(params.PeriodType),
+		).
+		Order(tbl.Col("play_count").Desc()).
+		Limit(uint(params.Limit))
+
+	if params.Year != 0 {
+		query = query.Where(tbl.Col("year").Eq(params.Year))
+	}
+
+	return Multiple[UserTopTrack](db, ctx, query)
+}
+
 func (db DB) UpsertUserTrackStats(
 	ctx context.Context,
 	params UpsertUserTrackStatsParams,

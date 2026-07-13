@@ -8,7 +8,6 @@
     Play,
     TrendingUp,
   } from "lucide-svelte";
-  import type { Track } from "$lib/api/types";
   import TrackListItem from "$lib/components/track-list/TrackListItem.svelte";
 
   type YearStats = {
@@ -48,83 +47,6 @@
 
   // TODO: Replace with API data when available
   // let recentTracks: Track[] = [];
-  let topTracks: Track[] = [
-    {
-      id: "mock-1",
-      name: "Bohemian Rhapsody",
-      order: 1,
-      duration: 354,
-      number: 1,
-      year: 1975,
-      coverArt: { original: "", small: "", medium: "", large: "" },
-      albumId: "mock-album-1",
-      albumName: "A Night at the Opera",
-      artists: [{ id: "mock-artist-1", name: "Queen" }],
-      tags: ["rock", "classic"],
-      created: "2024-01-01T00:00:00Z",
-      updated: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "mock-2",
-      name: "Stairway to Heaven",
-      order: 2,
-      duration: 482,
-      number: 1,
-      year: 1971,
-      coverArt: { original: "", small: "", medium: "", large: "" },
-      albumId: "mock-album-2",
-      albumName: "Led Zeppelin IV",
-      artists: [{ id: "mock-artist-2", name: "Led Zeppelin" }],
-      tags: ["rock", "classic"],
-      created: "2024-01-01T00:00:00Z",
-      updated: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "mock-3",
-      name: "Hotel California",
-      order: 3,
-      duration: 391,
-      number: 1,
-      year: 1976,
-      coverArt: { original: "", small: "", medium: "", large: "" },
-      albumId: "mock-album-3",
-      albumName: "Hotel California",
-      artists: [{ id: "mock-artist-3", name: "Eagles" }],
-      tags: ["rock", "classic"],
-      created: "2024-01-01T00:00:00Z",
-      updated: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "mock-4",
-      name: "Smells Like Teen Spirit",
-      order: 4,
-      duration: 301,
-      number: 1,
-      year: 1991,
-      coverArt: { original: "", small: "", medium: "", large: "" },
-      albumId: "mock-album-4",
-      albumName: "Nevermind",
-      artists: [{ id: "mock-artist-4", name: "Nirvana" }],
-      tags: ["grunge", "rock"],
-      created: "2024-01-01T00:00:00Z",
-      updated: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "mock-5",
-      name: "Imagine",
-      order: 5,
-      duration: 187,
-      number: 1,
-      year: 1971,
-      coverArt: { original: "", small: "", medium: "", large: "" },
-      albumId: "mock-album-5",
-      albumName: "Imagine",
-      artists: [{ id: "mock-artist-5", name: "John Lennon" }],
-      tags: ["rock", "classic"],
-      created: "2024-01-01T00:00:00Z",
-      updated: "2024-01-01T00:00:00Z",
-    },
-  ];
 
   // TODO: Replace with API data when available
   let yearStats: YearStats[] = [
@@ -163,7 +85,7 @@
     {/each}
   </div>
 
-  <!-- TODO: Replace with API data when available -->
+  <!-- Top Tracks -->
   <Card.Root>
     <div class="p-6">
       <div class="flex items-center gap-2">
@@ -171,16 +93,19 @@
         <h2 class="text-lg font-semibold">Top Tracks</h2>
       </div>
       <p class="mt-1 text-sm text-muted-foreground">
-        This section will show the tracks {data.userData.displayName} listens to
-        the most.
+        The tracks {data.userData.displayName} listens to the most.
       </p>
 
       <Separator class="my-4" />
 
       <div class="flex flex-col">
-        {#each topTracks as track (track.id)}
-          <TrackListItem {track} onPlayClicked={() => {}} />
-        {/each}
+        {#if data.topTracks.length === 0}
+          <p class="text-sm text-muted-foreground">No tracks played yet.</p>
+        {:else}
+          {#each data.topTracks as track (track.id)}
+            <TrackListItem {track} onPlayClicked={() => {}} />
+          {/each}
+        {/if}
       </div>
     </div>
   </Card.Root>

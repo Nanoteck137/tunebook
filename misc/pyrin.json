@@ -1007,6 +1007,16 @@
       ]
     },
     {
+      "name": "GetUserTopTracks",
+      "fields": [
+        {
+          "name": "tracks",
+          "type": "[]Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Images",
       "fields": [
         {
@@ -2000,6 +2010,13 @@
       "method": "GET",
       "path": "/api/v1/users/:userId/stats",
       "response": "GetUserStats"
+    },
+    {
+      "type": "api",
+      "name": "GetUserTopTracks",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/top-tracks",
+      "response": "GetUserTopTracks"
     },
     {
       "type": "api",

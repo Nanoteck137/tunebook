@@ -776,6 +776,13 @@ export const GetUserStats = z.object({
 });
 export type GetUserStats = z.infer<typeof GetUserStats>;
 
+// Name: GetUserTopTracks
+export const GetUserTopTracks = z.object({
+  // Name: GetUserTopTracks.tracks
+  "tracks": z.array(Track),
+});
+export type GetUserTopTracks = z.infer<typeof GetUserTopTracks>;
+
 // Name: PushTrackHistory
 export const PushTrackHistory = z.object({
   // Name: PushTrackHistory.id

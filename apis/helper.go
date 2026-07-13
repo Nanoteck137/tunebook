@@ -202,6 +202,18 @@ func parseIntParam(c pyrin.Context, name string) (int, error) {
 	return v, nil
 }
 
+func parseIntQuery(q url.Values, name string, defaultVal int) int {
+	s := q.Get(name)
+	if s != "" {
+		v, err := strconv.Atoi(s)
+		if err == nil {
+			return v
+		}
+	}
+
+	return defaultVal
+}
+
 func formatTime(ms int64) string {
 	return time.UnixMilli(ms).UTC().Format(time.RFC3339)
 }
