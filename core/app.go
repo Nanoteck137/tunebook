@@ -5,7 +5,6 @@ import (
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tools/broker"
-	"github.com/nanoteck137/tunebook/types"
 )
 
 // Inspiration from Pocketbase: https://github.com/pocketbase/pocketbase
@@ -13,8 +12,6 @@ import (
 type App interface {
 	DB() *database.Database
 	Config() *config.Config
-
-	DataDir() types.DataDir
 
 	NotificationService() *service.NotificationService
 	TaskService() *service.TaskService
@@ -25,6 +22,7 @@ type App interface {
 	LibraryService() *service.LibraryService
 	ImageService() *service.ImageService
 	MediaService() *service.MediaService
+	FilesystemService() *service.FilesystemService
 
 	ArtistService() *service.ArtistService
 	AlbumService() *service.AlbumService

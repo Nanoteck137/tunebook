@@ -6,12 +6,10 @@ import (
 	"errors"
 	"log/slog"
 	"mime/multipart"
-	"os"
 	"path"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/tunebook/utils"
 )
 
 var userErr = NewServiceErrCreator("user")
@@ -26,22 +24,22 @@ var (
 type UserService struct {
 	logger *slog.Logger
 
-	db      *database.Database
-	dataDir types.DataDir
+	db *database.Database
 
+	filesystem   *FilesystemService
 	imageService *ImageService
 }
 
 func NewUserService(
 	logger *slog.Logger,
 	db *database.Database,
-	dataDir types.DataDir,
+	filesystem *FilesystemService,
 	imageService *ImageService,
 ) *UserService {
 	return &UserService{
 		logger:       logger,
 		db:           db,
-		dataDir:      dataDir,
+		filesystem:   filesystem,
 		imageService: imageService,
 	}
 }
@@ -92,26 +90,21 @@ func (s *UserService) GetUserImage(
 		return "", err
 	}
 
-	cacheDir := s.dataDir.CacheImages()
-
-	if err := utils.CreateDirectories([]string{
-		cacheDir.String(),
-		cacheDir.Users(),
-		cacheDir.User(user.Id),
-	}); err != nil {
+	err = s.filesystem.EnsureUserImageCacheDirs(user.Id)
+	if err != nil {
 		return "", userErr.Wrap("get user image", err)
 	}
 
 	input := ""
 	if user.Picture.Valid {
-		dir := s.dataDir.User(user.Id)
+		dir := s.filesystem.UserDir(user.Id)
 		input = path.Join(dir, user.Picture.String)
 	}
 
 	p, err := s.imageService.ProcessImage(ProcessImageParams{
 		Input:       input,
 		Default:     "default_album.png",
-		OutputDir:   cacheDir.User(user.Id),
+		OutputDir:   s.filesystem.UserImagePath(user.Id),
 		Size:        params.Size,
 		ImageFormat: params.ImageFormat,
 	})
@@ -207,7 +200,7 @@ func (s *UserService) UpdateMe(
 	}
 
 	if params.PictureUrl != nil {
-		err = os.RemoveAll(s.dataDir.CacheImages().User(user.Id))
+		err = s.filesystem.ClearUserImageCache(user.Id)
 		if err != nil {
 			return userErr.Wrap("update me: remove cache", err)
 		}
@@ -257,7 +250,7 @@ func (s *UserService) UploadUserImage(
 		return userErr.Wrap("upload user image: db update", err)
 	}
 
-	err = os.RemoveAll(s.dataDir.CacheImages().User(user.Id))
+	err = s.filesystem.ClearUserImageCache(user.Id)
 	if err != nil {
 		return userErr.Wrap("upload user image: remove cache", err)
 	}

@@ -26,7 +26,9 @@ func TestQualityMappingHasAllFormats(t *testing.T) {
 		},
 	}
 
-	s := service.NewMediaService(slog.Default(), nil, types.DataDir(dir), cfg)
+	logger := slog.Default()
+	fs := service.NewFilesystemService(logger, dir)
+	s := service.NewMediaService(logger, nil, fs, cfg)
 
 	for _, format := range types.ValidMediaFormats {
 		spec, ok := s.QualityMapping[format]

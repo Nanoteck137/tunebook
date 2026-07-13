@@ -11,8 +11,6 @@ import (
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tasks"
 	"github.com/nanoteck137/tunebook/tools/broker"
-	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/tunebook/utils"
 )
 
 var _ App = (*BaseApp)(nil)
@@ -29,6 +27,7 @@ type BaseApp struct {
 	libraryService      *service.LibraryService
 	imageService        *service.ImageService
 	mediaService        *service.MediaService
+	filesystemService   *service.FilesystemService
 
 	artistService   *service.ArtistService
 	albumService    *service.AlbumService
@@ -93,6 +92,10 @@ func (app *BaseApp) ImageService() *service.ImageService {
 	return app.imageService
 }
 
+func (app *BaseApp) FilesystemService() *service.FilesystemService {
+	return app.filesystemService
+}
+
 func (app *BaseApp) LibraryService() *service.LibraryService {
 	return app.libraryService
 }
@@ -113,26 +116,20 @@ func (app *BaseApp) Config() *config.Config {
 	return app.config
 }
 
-func (app *BaseApp) DataDir() types.DataDir {
-	return types.DataDir(app.config.DataDir)
-}
-
 func (app *BaseApp) Bootstrap() error {
 	var err error
 
-	dataDir := types.DataDir(app.config.DataDir)
+	app.filesystemService = service.NewFilesystemService(
+		slog.With(slog.String("service", "filesystem")),
+		app.config.DataDir,
+	)
 
-	err = utils.CreateDirectories([]string{
-		dataDir.Users(),
-		dataDir.Playlists(),
-		dataDir.Cache(),
-		dataDir.Temp(),
-	})
+	err = app.filesystemService.EnsureBaseDirs()
 	if err != nil {
 		return err
 	}
 
-	app.db, err = database.Open(dataDir.DatabaseFile())
+	app.db, err = database.Open(app.filesystemService.DatabaseFile())
 	if err != nil {
 		return err
 	}
@@ -174,7 +171,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.imageService = service.NewImageService(
 		newServiceLogger("image"),
 		app.db,
-		dataDir,
+		app.filesystemService,
 	)
 
 	app.authService = service.NewAuthService(
@@ -187,29 +184,28 @@ func (app *BaseApp) Bootstrap() error {
 	app.userService = service.NewUserService(
 		newServiceLogger("user"),
 		app.db,
-		dataDir,
+		app.filesystemService,
 		app.imageService,
 	)
 
 	app.searchService = service.NewSearchService(
 		newServiceLogger("search"),
 		app.db,
-		dataDir,
 		app.config,
 	)
 
 	app.mediaService = service.NewMediaService(
 		newServiceLogger("media"),
 		app.db,
-		dataDir,
+		app.filesystemService,
 		app.config,
 	)
 
 	app.libraryService = service.NewLibraryService(
 		newServiceLogger("library"),
 		app.db,
-		dataDir,
 		app.config,
+		app.filesystemService,
 		app.notificationService,
 		app.mediaService,
 		app.broker,
@@ -219,14 +215,14 @@ func (app *BaseApp) Bootstrap() error {
 		newServiceLogger("artist"),
 		app.db,
 		app.imageService,
-		dataDir,
+		app.filesystemService,
 	)
 
 	app.albumService = service.NewAlbumService(
 		newServiceLogger("album"),
 		app.db,
 		app.imageService,
-		dataDir,
+		app.filesystemService,
 	)
 
 	app.trackService = service.NewTrackService(
@@ -237,7 +233,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.playlistService = service.NewPlaylistService(
 		newServiceLogger("playlist"),
 		app.db,
-		dataDir,
+		app.filesystemService,
 		app.imageService,
 	)
 
@@ -259,7 +255,7 @@ func (app *BaseApp) Bootstrap() error {
 		tasks.NewSearchIndexTask(app.searchService),
 		tasks.NewUserStatsRecalculateTask(app.userService, app.jobService),
 		tasks.NewAuthCleanupTask(app.authService),
-		tasks.NewCacheCleanupTask(dataDir),
+		tasks.NewCacheCleanupTask(app.filesystemService),
 		tasks.NewLibraryCleanupTask(app.libraryService),
 	}
 

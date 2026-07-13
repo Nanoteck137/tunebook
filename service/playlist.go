@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log/slog"
 	"mime/multipart"
-	"os"
 	"path"
 
 	"github.com/nanoteck137/tunebook/database"
@@ -29,22 +28,22 @@ var (
 type PlaylistService struct {
 	logger *slog.Logger
 
-	db      *database.Database
-	dataDir types.DataDir
+	db *database.Database
 
+	filesystem   *FilesystemService
 	imageService *ImageService
 }
 
 func NewPlaylistService(
 	logger *slog.Logger,
 	db *database.Database,
-	dataDir types.DataDir,
+	filesystem *FilesystemService,
 	imageService *ImageService,
 ) *PlaylistService {
 	return &PlaylistService{
 		logger:       logger,
 		db:           db,
-		dataDir:      dataDir,
+		filesystem:   filesystem,
 		imageService: imageService,
 	}
 }
@@ -118,26 +117,21 @@ func (s *PlaylistService) GetPlaylistImage(
 		return "", err
 	}
 
-	cacheDir := s.dataDir.CacheImages()
-
-	if err := utils.CreateDirectories([]string{
-		cacheDir.String(),
-		cacheDir.Playlists(),
-		cacheDir.Playlist(playlist.Id),
-	}); err != nil {
+	err = s.filesystem.EnsurePlaylistImageCacheDirs(playlist.Id)
+	if err != nil {
 		return "", playlistErr.Wrap("get playlist image", err)
 	}
 
 	input := ""
 	if playlist.CoverArt.Valid {
-		playlistDir := s.dataDir.Playlist(playlist.Id)
+		playlistDir := s.filesystem.PlaylistDir(playlist.Id)
 		input = path.Join(playlistDir, playlist.CoverArt.String)
 	}
 
 	p, err := s.imageService.ProcessImage(ProcessImageParams{
 		Input:       input,
 		Default:     "default_album.png",
-		OutputDir:   cacheDir.Playlist(playlist.Id),
+		OutputDir:   s.filesystem.PlaylistImagePath(playlist.Id),
 		Size:        params.Size,
 		ImageFormat: params.ImageFormat,
 	})
@@ -229,8 +223,7 @@ func (s *PlaylistService) EditPlaylist(
 		return playlistErr.Wrap("edit: db update", err)
 	}
 
-	// TODO(patrik): Let FilesystemService handle this
-	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
+	err = s.filesystem.ClearPlaylistImageCache(playlist.Id)
 	if err != nil {
 		return playlistErr.Wrap("edit: remove cache", err)
 	}
@@ -264,13 +257,12 @@ func (s *PlaylistService) DeletePlaylist(
 		return playlistErr.Wrap("delete: db delete", err)
 	}
 
-	err = os.RemoveAll(s.dataDir.Playlist(playlist.Id))
+	err = s.filesystem.RemovePlaylistDir(playlist.Id)
 	if err != nil {
 		return playlistErr.Wrap("delete: remove dir", err)
 	}
 
-	// TODO(patrik): Let FilesystemService handle this
-	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
+	err = s.filesystem.ClearPlaylistImageCache(playlist.Id)
 	if err != nil {
 		return playlistErr.Wrap("delete: remove cache", err)
 	}
@@ -325,8 +317,7 @@ func (s *PlaylistService) UploadPlaylistImage(
 		return playlistErr.Wrap("upload image: db update", err)
 	}
 
-	// TODO(patrik): Let FilesystemService handle this
-	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
+	err = s.filesystem.ClearPlaylistImageCache(playlist.Id)
 	if err != nil {
 		return playlistErr.Wrap("upload image: remove cache", err)
 	}
@@ -378,8 +369,7 @@ func (s *PlaylistService) GeneratePlaylistImage(
 		return playlistErr.Wrap("gen image: db update", err)
 	}
 
-	// TODO(patrik): Let FilesystemService handle this
-	err = os.RemoveAll(s.dataDir.CacheImages().Playlist(playlist.Id))
+	err = s.filesystem.ClearPlaylistImageCache(playlist.Id)
 	if err != nil {
 		return playlistErr.Wrap("gen image: remove cache", err)
 	}

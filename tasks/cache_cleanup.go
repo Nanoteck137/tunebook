@@ -2,22 +2,19 @@ package tasks
 
 import (
 	"context"
-	"os"
 
 	"github.com/nanoteck137/tunebook/service"
-	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/tunebook/utils"
 )
 
 var _ service.Task = (*CacheCleanupTask)(nil)
 
 type CacheCleanupTask struct {
-	dataDir types.DataDir
+	filesystem *service.FilesystemService
 }
 
-func NewCacheCleanupTask(dataDir types.DataDir) *CacheCleanupTask {
+func NewCacheCleanupTask(filesystem *service.FilesystemService) *CacheCleanupTask {
 	return &CacheCleanupTask{
-		dataDir: dataDir,
+		filesystem: filesystem,
 	}
 }
 
@@ -30,19 +27,5 @@ func (j *CacheCleanupTask) Info() service.TaskInfo {
 }
 
 func (j *CacheCleanupTask) Run(ctx context.Context) error {
-	cacheDir := j.dataDir.Cache()
-
-	err := os.RemoveAll(cacheDir)
-	if err != nil {
-		return err
-	}
-
-	err = utils.CreateDirectories([]string{
-		cacheDir,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return j.filesystem.ClearCache()
 }

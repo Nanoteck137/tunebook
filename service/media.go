@@ -101,8 +101,8 @@ func getDefaultDeviceSpecs() map[Device]DeviceSpec {
 type MediaService struct {
 	logger *slog.Logger
 
-	db      *database.Database
-	dataDir types.DataDir
+	db         *database.Database
+	filesystem *FilesystemService
 
 	QualityMapping map[types.MediaFormat]QualitySpec
 	DeviceSpecs    map[Device]DeviceSpec
@@ -115,13 +115,13 @@ type MediaService struct {
 func NewMediaService(
 	logger *slog.Logger,
 	db *database.Database,
-	dataDir types.DataDir,
+	filesystem *FilesystemService,
 	cfg *config.Config,
 ) *MediaService {
 	s := &MediaService{
 		logger:             logger,
 		db:                 db,
-		dataDir:            dataDir,
+		filesystem:         filesystem,
 		DeviceSpecs:        getDefaultDeviceSpecs(),
 		audioNormalization: cfg.Media.AudioNormalization,
 	}
@@ -238,15 +238,7 @@ func (s *MediaService) ProcessTrackStream(
 		return track.Filename, nil
 	}
 
-	cacheDir := s.dataDir.CacheTranscoding()
-	cacheTracksDir := path.Join(cacheDir, "tracks")
-	trackCache := path.Join(cacheTracksDir, track.Id)
-
-	err = utils.CreateDirectories([]string{
-		cacheDir,
-		cacheTracksDir,
-		trackCache,
-	})
+	err = s.filesystem.EnsureTranscodingTrackDir(trackId)
 	if err != nil {
 		return "", err
 	}
@@ -270,21 +262,21 @@ func (s *MediaService) ProcessTrackStream(
 		filename = fmt.Sprintf("transcode-%s-lossless%s", format, ext)
 	}
 
-	out := path.Join(trackCache, filename)
+	out := s.filesystem.TranscodingPath(trackId, filename)
 
-	_, err = os.Stat(out)
+	exists, err := s.filesystem.FileExists(out)
 	if err != nil {
-		if os.IsNotExist(err) {
-			err := s.transcodeTrack(transcodeTrackParams{
-				track:   track,
-				format:  format,
-				bitrate: bitrate,
-				out:     out,
-			})
-			if err != nil {
-				return "", err
-			}
-		} else {
+		return "", err
+	}
+
+	if !exists {
+		err := s.transcodeTrack(transcodeTrackParams{
+			track:   track,
+			format:  format,
+			bitrate: bitrate,
+			out:     out,
+		})
+		if err != nil {
 			return "", err
 		}
 	} else {

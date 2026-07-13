@@ -42,7 +42,9 @@ func TestGetImageFormat(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	s := NewImageService(slog.Default(), nil, types.DataDir(dir))
+	logger := slog.Default()
+	fs := NewFilesystemService(logger, dir)
+	s := NewImageService(logger, nil, fs)
 
 	t.Run("png", func(t *testing.T) {
 		p := dir + "/test.png"

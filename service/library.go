@@ -62,9 +62,10 @@ var libraryErr = NewServiceErrCreator("library")
 type LibraryService struct {
 	logger *slog.Logger
 
-	db      *database.Database
-	dataDir types.DataDir
-	config  *config.Config
+	db     *database.Database
+	config *config.Config
+
+	filesystem *FilesystemService
 
 	norificationService *NotificationService
 	mediaService        *MediaService
@@ -94,8 +95,8 @@ type LibraryService struct {
 func NewLibraryService(
 	logger *slog.Logger,
 	db *database.Database,
-	dataDir types.DataDir,
 	config *config.Config,
+	filesystem *FilesystemService,
 	notificationService *NotificationService,
 	mediaService *MediaService,
 	emitter broker.EventEmitter,
@@ -103,8 +104,8 @@ func NewLibraryService(
 	return &LibraryService{
 		logger:              logger,
 		db:                  db,
-		dataDir:             dataDir,
 		config:              config,
+		filesystem:          filesystem,
 		norificationService: notificationService,
 		mediaService:        mediaService,
 		emitter:             emitter,
@@ -1077,17 +1078,9 @@ func (s *LibraryService) findMissingTracks(
 }
 
 func (s *LibraryService) clearCache() error {
-	dir := s.dataDir.Cache()
-	s.logger.Info("clearing the cache", "path", dir)
-
-	err := os.RemoveAll(dir)
+	err := s.filesystem.ClearCache()
 	if err != nil {
 		return libraryErr.Wrap("clear cache", err)
-	}
-
-	err = utils.CreateDirectories([]string{dir})
-	if err != nil {
-		return libraryErr.Wrap("create cache dir", err)
 	}
 
 	return nil

@@ -7,7 +7,6 @@ import (
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/tunebook/utils"
 )
 
 var artistErr = NewServiceErrCreator("artist")
@@ -20,20 +19,20 @@ type ArtistService struct {
 	logger      *slog.Logger
 	db          *database.Database
 	imageService *ImageService
-	dataDir     types.DataDir
+	filesystem   *FilesystemService
 }
 
 func NewArtistService(
 	logger *slog.Logger,
 	db *database.Database,
 	imageService *ImageService,
-	dataDir types.DataDir,
+	filesystem *FilesystemService,
 ) *ArtistService {
 	return &ArtistService{
 		logger:       logger,
 		db:           db,
 		imageService: imageService,
-		dataDir:      dataDir,
+		filesystem:   filesystem,
 	}
 }
 
@@ -131,13 +130,8 @@ func (s *ArtistService) GetArtistImage(
 		return "", err
 	}
 
-	cacheDir := s.dataDir.CacheImages()
-
-	if err := utils.CreateDirectories([]string{
-		cacheDir.String(),
-		cacheDir.Artists(),
-		cacheDir.Artist(artist.Id),
-	}); err != nil {
+	err = s.filesystem.EnsureArtistImageCacheDirs(artist.Id)
+	if err != nil {
 		return "", artistErr.Wrap("get artist image", err)
 	}
 
@@ -149,7 +143,7 @@ func (s *ArtistService) GetArtistImage(
 	p, err := s.imageService.ProcessImage(ProcessImageParams{
 		Input:       input,
 		Default:     "default_artist.png",
-		OutputDir:   cacheDir.Artist(artist.Id),
+		OutputDir:   s.filesystem.ArtistImagePath(artist.Id),
 		Size:        params.Size,
 		ImageFormat: params.ImageFormat,
 	})

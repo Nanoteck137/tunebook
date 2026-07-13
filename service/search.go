@@ -96,8 +96,7 @@ func (s SearchUser) GetID() string { return s.Id }
 type SearchService struct {
 	logger *slog.Logger
 
-	db      *database.Database
-	dataDir types.DataDir
+	db *database.Database
 
 	client meilisearch.ServiceManager
 }
@@ -105,7 +104,6 @@ type SearchService struct {
 func NewSearchService(
 	logger *slog.Logger,
 	db *database.Database,
-	dataDir types.DataDir,
 	config *config.Config,
 ) *SearchService {
 	client := meilisearch.New(
@@ -114,10 +112,9 @@ func NewSearchService(
 	)
 
 	return &SearchService{
-		logger:  logger,
-		db:      db,
-		dataDir: dataDir,
-		client:  client,
+		logger: logger,
+		db:     db,
+		client: client,
 	}
 }
 

@@ -22,7 +22,6 @@ import (
 	"github.com/nanoteck137/tunebook/assets"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
-	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nrednav/cuid2"
 )
 
@@ -47,19 +46,19 @@ var newTempFileId, _ = cuid2.Init(cuid2.WithLength(16))
 type ImageService struct {
 	logger *slog.Logger
 
-	db      *database.Database
-	dataDir types.DataDir
+	db         *database.Database
+	filesystem *FilesystemService
 }
 
 func NewImageService(
 	logger *slog.Logger,
 	db *database.Database,
-	dataDir types.DataDir,
+	filesystem *FilesystemService,
 ) *ImageService {
 	return &ImageService{
-		logger:  logger,
-		db:      db,
-		dataDir: dataDir,
+		logger:     logger,
+		db:         db,
+		filesystem: filesystem,
 	}
 }
 
@@ -85,7 +84,7 @@ func (s *ImageService) ConvertImage(
 }
 
 func (s *ImageService) createTempFilename(ext string) string {
-	return path.Join(s.dataDir.Temp(), newTempFileId()+ext)
+	return path.Join(s.filesystem.TempDir(), newTempFileId()+ext)
 }
 
 func (s *ImageService) ConvertSquareImage(
@@ -283,15 +282,13 @@ func (s *ImageService) DownloadCoverForPlaylist(
 			"download cover for playlist: image format", err)
 	}
 
-	playlistDir := s.dataDir.Playlist(params.PlaylistId)
-
-	err = utils.CreateDirectories([]string{
-		playlistDir,
-	})
+	err = s.filesystem.EnsurePlaylistDir(params.PlaylistId)
 	if err != nil {
 		return "", imageErr.Wrap(
 			"download cover for playlist: mkdir", err)
 	}
+
+	playlistDir := s.filesystem.PlaylistDir(params.PlaylistId)
 
 	filename, err := s.finalizeImage(tmpPath, format, playlistDir)
 	if err != nil {
@@ -326,14 +323,12 @@ func (s *ImageService) GenerateImageForPlaylist(
 		imgs[i] = img.String
 	}
 
-	playlistDir := s.dataDir.Playlist(params.PlaylistId)
-
-	err = utils.CreateDirectories([]string{
-		playlistDir,
-	})
+	err = s.filesystem.EnsurePlaylistDir(params.PlaylistId)
 	if err != nil {
 		return "", imageErr.Wrap("generate image for playlist: mkdir", err)
 	}
+
+	playlistDir := s.filesystem.PlaylistDir(params.PlaylistId)
 
 	tmpPath := s.createTempFilename(".png")
 
@@ -368,15 +363,13 @@ func (s *ImageService) UploadImageForPlaylist(
 	}
 	defer os.Remove(tmpPath)
 
-	playlistDir := s.dataDir.Playlist(params.PlaylistId)
-
-	err = utils.CreateDirectories([]string{
-		playlistDir,
-	})
+	err = s.filesystem.EnsurePlaylistDir(params.PlaylistId)
 	if err != nil {
 		return "", imageErr.Wrap(
 			"upload image for playlist: mkdir", err)
 	}
+
+	playlistDir := s.filesystem.PlaylistDir(params.PlaylistId)
 
 	format, err := s.getImageFormat(tmpPath)
 	if err != nil {
@@ -410,15 +403,13 @@ func (s *ImageService) UploadImageForUser(
 	}
 	defer os.Remove(tmpPath)
 
-	userDir := s.dataDir.User(params.UserId)
-
-	err = utils.CreateDirectories([]string{
-		userDir,
-	})
+	err = s.filesystem.EnsureUserDir(params.UserId)
 	if err != nil {
 		return "", imageErr.Wrap(
 			"upload image for user: mkdir", err)
 	}
+
+	userDir := s.filesystem.UserDir(params.UserId)
 
 	format, err := s.getImageFormat(tmpPath)
 	if err != nil {
@@ -451,15 +442,13 @@ func (s *ImageService) DownloadPictureForUser(
 	}
 	defer os.Remove(tmpPath)
 
-	userDir := s.dataDir.User(params.UserId)
-
-	err = utils.CreateDirectories([]string{
-		userDir,
-	})
+	err = s.filesystem.EnsureUserDir(params.UserId)
 	if err != nil {
 		return "", imageErr.Wrap(
 			"download picture for user: mkdir", err)
 	}
+
+	userDir := s.filesystem.UserDir(params.UserId)
 
 	format, err := s.getImageFormat(tmpPath)
 	if err != nil {
