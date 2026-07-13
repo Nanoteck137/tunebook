@@ -125,6 +125,16 @@ type GetUserTopTracks struct {
 	Tracks []Track `json:"tracks"`
 }
 
+type YearStat struct {
+	Year          int   `json:"year"`
+	TrackCount    int   `json:"trackCount"`
+	ListeningTime int64 `json:"listeningTime"`
+}
+
+type GetUserYearStats struct {
+	Stats []YearStat `json:"stats"`
+}
+
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -218,6 +228,40 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				for i, t := range tracks {
 					res.Tracks[i] = ConvertDBTrack(c, t.Track)
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearStats",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/year-stats",
+			ResponseType: GetUserYearStats{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				stats, err := app.UserService().GetUserYearStats(
+					ctx,
+					service.GetUserYearStatsParams{
+						UserId: c.Param("userId"),
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearStats{
+					Stats: make([]YearStat, len(stats)),
+				}
+
+				for i, s := range stats {
+					res.Stats[i] = YearStat{
+						Year:          s.Year,
+						TrackCount:    s.TrackCount,
+						ListeningTime: s.ListeningTime,
+					}
 				}
 
 				return res, nil

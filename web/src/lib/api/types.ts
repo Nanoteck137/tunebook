@@ -783,6 +783,24 @@ export const GetUserTopTracks = z.object({
 });
 export type GetUserTopTracks = z.infer<typeof GetUserTopTracks>;
 
+// Name: YearStat
+export const YearStat = z.object({
+  // Name: YearStat.year
+  "year": z.number(),
+  // Name: YearStat.trackCount
+  "trackCount": z.number(),
+  // Name: YearStat.listeningTime
+  "listeningTime": z.number(),
+});
+export type YearStat = z.infer<typeof YearStat>;
+
+// Name: GetUserYearStats
+export const GetUserYearStats = z.object({
+  // Name: GetUserYearStats.stats
+  "stats": z.array(YearStat),
+});
+export type GetUserYearStats = z.infer<typeof GetUserYearStats>;
+
 // Name: PushTrackHistory
 export const PushTrackHistory = z.object({
   // Name: PushTrackHistory.id

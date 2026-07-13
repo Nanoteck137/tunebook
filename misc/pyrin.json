@@ -1017,6 +1017,16 @@
       ]
     },
     {
+      "name": "GetUserYearStats",
+      "fields": [
+        {
+          "name": "stats",
+          "type": "[]YearStat",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Images",
       "fields": [
         {
@@ -1605,6 +1615,26 @@
           "omitEmpty": false
         }
       ]
+    },
+    {
+      "name": "YearStat",
+      "fields": [
+        {
+          "name": "year",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "listeningTime",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
     }
   ],
   "endpoints": [
@@ -2031,6 +2061,13 @@
       "method": "GET",
       "path": "/api/v1/favorites/users/:userId/tracks",
       "response": "GetUserFavorites"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearStats",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-stats",
+      "response": "GetUserYearStats"
     },
     {
       "type": "api",

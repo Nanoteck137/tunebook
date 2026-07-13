@@ -14,9 +14,15 @@ export const load: PageLoad = async ({ parent, params }) => {
     throw error(topTracks.error.code, { message: topTracks.error.message });
   }
 
+  const yearStats = await data.apiClient.getUserYearStats(params.id);
+  if (!yearStats.success) {
+    throw error(yearStats.error.code, { message: yearStats.error.message });
+  }
+
   return {
     ...data,
     stats: stats.data,
     topTracks: topTracks.data.tracks,
+    yearStats: yearStats.data.stats,
   };
 };

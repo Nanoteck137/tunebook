@@ -10,12 +10,6 @@
   } from "lucide-svelte";
   import TrackListItem from "$lib/components/track-list/TrackListItem.svelte";
 
-  type YearStats = {
-    year: number;
-    trackCount: number;
-    listeningTime: number;
-  };
-
   let { data } = $props();
 
   let stats = $derived([
@@ -48,16 +42,8 @@
   // TODO: Replace with API data when available
   // let recentTracks: Track[] = [];
 
-  // TODO: Replace with API data when available
-  let yearStats: YearStats[] = [
-    { year: 2026, trackCount: 2847, listeningTime: 184320 },
-    { year: 2025, trackCount: 12563, listeningTime: 783600 },
-    { year: 2024, trackCount: 8931, listeningTime: 542700 },
-    { year: 2023, trackCount: 4215, listeningTime: 261900 },
-  ];
-
   let maxTrackCount = $derived(
-    Math.max(...yearStats.map((y) => y.trackCount)),
+    Math.max(...data.yearStats.map((y) => y.trackCount), 0),
   );
 
   function formatListeningTime(seconds: number): string {
@@ -110,7 +96,7 @@
     </div>
   </Card.Root>
 
-  <!-- TODO: Replace with API data when available -->
+  <!-- Year in Review -->
   <Card.Root>
     <div class="p-6">
       <div class="flex items-center gap-2">
@@ -124,28 +110,34 @@
       <Separator class="my-4" />
 
       <div class="flex flex-col gap-4">
-        {#each yearStats as stat (stat.year)}
-          <a
-            href="/users/{data.userData.id}/history?year={stat.year}"
-            class="flex items-center gap-4 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/50"
-          >
-            <span class="w-12 text-sm font-medium">{stat.year}</span>
-            <div class="flex flex-1 flex-col gap-1">
-              <div
-                class="flex items-center justify-between text-xs text-muted-foreground"
-              >
-                <span>{stat.trackCount.toLocaleString()} tracks</span>
-                <span>{formatListeningTime(stat.listeningTime)}</span>
-              </div>
-              <div class="h-2 w-full rounded-full bg-muted">
+        {#if data.yearStats.length === 0}
+          <p class="text-sm text-muted-foreground">No listening data yet.</p>
+        {:else}
+          {#each data.yearStats as stat (stat.year)}
+            <a
+              href="/users/{data.userData.id}/history?year={stat.year}"
+              class="flex items-center gap-4 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/50"
+            >
+              <span class="w-12 text-sm font-medium">{stat.year}</span>
+              <div class="flex flex-1 flex-col gap-1">
                 <div
-                  class="h-2 rounded-full bg-gradient-to-r from-logo-1 to-logo-3"
-                  style="width: {(stat.trackCount / maxTrackCount) * 100}%"
-                ></div>
+                  class="flex items-center justify-between text-xs text-muted-foreground"
+                >
+                  <span>{stat.trackCount.toLocaleString()} tracks</span>
+                  <span>{formatListeningTime(stat.listeningTime)}</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-muted">
+                  <div
+                    class="h-2 rounded-full bg-gradient-to-r from-logo-1 to-logo-3"
+                    style="width: {maxTrackCount > 0
+                      ? (stat.trackCount / maxTrackCount) * 100
+                      : 0}%"
+                  ></div>
+                </div>
               </div>
-            </div>
-          </a>
-        {/each}
+            </a>
+          {/each}
+        {/if}
       </div>
     </div>
   </Card.Root>

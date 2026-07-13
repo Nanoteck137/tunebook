@@ -240,6 +240,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/favorites/users/${userId}/tracks`, "GET", api.GetUserFavorites, z.any(), undefined, options)
   }
   
+  getUserYearStats(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-stats`, "GET", api.GetUserYearStats, z.any(), undefined, options)
+  }
+  
   pushTrackHistory(body: api.PushTrackHistoryBody, options?: ExtraOptions) {
     return this.request("/api/v1/history/tracks", "POST", api.PushTrackHistory, z.any(), body, options)
   }
@@ -564,6 +568,10 @@ export class ClientUrls {
   
   getUserTrackFavoritesById(userId: string) {
     return createUrl(this.baseUrl, `/api/v1/favorites/users/${userId}/tracks`)
+  }
+  
+  getUserYearStats(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-stats`)
   }
   
   pushTrackHistory() {
