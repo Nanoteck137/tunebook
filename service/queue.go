@@ -153,11 +153,12 @@ func (s *QueueService) getOrCreateQueue(
 }
 
 type ReplaceQueueParams struct {
-	QueueId      string
-	UserId       string
-	TrackIds     []string
-	CurrentIndex int
-	Shuffle      bool
+	QueueId             string
+	UserId              string
+	TrackIds            []string
+	CurrentIndex        int
+	Shuffle             bool
+	QueueIndexToTrackId string
 }
 
 func (s *QueueService) ReplaceQueue(
@@ -179,20 +180,19 @@ func (s *QueueService) ReplaceQueue(
 		trackIds = shuffled
 	}
 
-	// TODO(patrik): This should be here and not before in the other functions
-	// currentIndex := params.CurrentIndex
-	// if params.QueueIndexToTrackId != "" {
-	// 	for i, id := range trackIds {
-	// 		if id == params.QueueIndexToTrackId {
-	// 			currentIndex = i
-	// 			break
-	// 		}
-	// 	}
-	// }
-	//
-	// if currentIndex < 0 || currentIndex >= len(trackIds) {
-	// 	currentIndex = 0
-	// }
+	currentIndex := params.CurrentIndex
+	if params.QueueIndexToTrackId != "" {
+		for i, id := range trackIds {
+			if id == params.QueueIndexToTrackId {
+				currentIndex = i
+				break
+			}
+		}
+	}
+
+	if currentIndex < 0 || currentIndex >= len(trackIds) {
+		currentIndex = 0
+	}
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -220,11 +220,6 @@ func (s *QueueService) ReplaceQueue(
 	})
 	if err != nil {
 		return queueErr.Wrap("replace queue: create items", err)
-	}
-
-	currentIndex := params.CurrentIndex
-	if currentIndex < 0 || currentIndex >= len(trackIds) {
-		currentIndex = 0
 	}
 
 	err = tx.UpdateQueue(ctx, queue.Id, database.QueueChanges{
@@ -375,26 +370,13 @@ func (s *QueueService) AddToQueue(
 			Position: params.Position,
 		})
 	case "replace":
-		currentIndex := params.CurrentIndex
-		if params.QueueIndexToTrackId != "" {
-			for i, id := range trackIds {
-				if id == params.QueueIndexToTrackId {
-					currentIndex = i
-					break
-				}
-			}
-		}
-
-		if currentIndex < 0 || currentIndex >= len(trackIds) {
-			currentIndex = 0
-		}
-
 		return s.ReplaceQueue(ctx, ReplaceQueueParams{
-			QueueId:      params.QueueId,
-			UserId:       params.UserId,
-			TrackIds:     trackIds,
-			CurrentIndex: currentIndex,
-			Shuffle:      params.Shuffle,
+			QueueId:             params.QueueId,
+			UserId:              params.UserId,
+			TrackIds:            trackIds,
+			CurrentIndex:        params.CurrentIndex,
+			Shuffle:             params.Shuffle,
+			QueueIndexToTrackId: params.QueueIndexToTrackId,
 		})
 	default:
 		return queueErr.New("unknown position: " + params.Position)
@@ -438,26 +420,13 @@ func (s *QueueService) AddAlbumToQueue(
 			Position: params.Position,
 		})
 	case "replace":
-		currentIndex := params.CurrentIndex
-		if params.QueueIndexToTrackId != "" {
-			for i, id := range trackIds {
-				if id == params.QueueIndexToTrackId {
-					currentIndex = i
-					break
-				}
-			}
-		}
-
-		if currentIndex < 0 || currentIndex >= len(trackIds) {
-			currentIndex = 0
-		}
-
 		return s.ReplaceQueue(ctx, ReplaceQueueParams{
-			QueueId:      params.QueueId,
-			UserId:       params.UserId,
-			TrackIds:     trackIds,
-			CurrentIndex: currentIndex,
-			Shuffle:      params.Shuffle,
+			QueueId:             params.QueueId,
+			UserId:              params.UserId,
+			TrackIds:            trackIds,
+			CurrentIndex:        params.CurrentIndex,
+			Shuffle:             params.Shuffle,
+			QueueIndexToTrackId: params.QueueIndexToTrackId,
 		})
 	default:
 		return queueErr.New("unknown position: " + params.Position)
@@ -512,26 +481,13 @@ func (s *QueueService) AddArtistToQueue(
 			Position: params.Position,
 		})
 	case "replace":
-		currentIndex := params.CurrentIndex
-		if params.QueueIndexToTrackId != "" {
-			for i, id := range trackIds {
-				if id == params.QueueIndexToTrackId {
-					currentIndex = i
-					break
-				}
-			}
-		}
-
-		if currentIndex < 0 || currentIndex >= len(trackIds) {
-			currentIndex = 0
-		}
-
 		return s.ReplaceQueue(ctx, ReplaceQueueParams{
-			QueueId:      params.QueueId,
-			UserId:       params.UserId,
-			TrackIds:     trackIds,
-			CurrentIndex: currentIndex,
-			Shuffle:      params.Shuffle,
+			QueueId:             params.QueueId,
+			UserId:              params.UserId,
+			TrackIds:            trackIds,
+			CurrentIndex:        params.CurrentIndex,
+			Shuffle:             params.Shuffle,
+			QueueIndexToTrackId: params.QueueIndexToTrackId,
 		})
 	default:
 		return queueErr.New("unknown position: " + params.Position)
@@ -592,26 +548,13 @@ func (s *QueueService) AddPlaylistToQueue(
 			Position: params.Position,
 		})
 	case "replace":
-		currentIndex := params.CurrentIndex
-		if params.QueueIndexToTrackId != "" {
-			for i, id := range trackIds {
-				if id == params.QueueIndexToTrackId {
-					currentIndex = i
-					break
-				}
-			}
-		}
-
-		if currentIndex < 0 || currentIndex >= len(trackIds) {
-			currentIndex = 0
-		}
-
 		return s.ReplaceQueue(ctx, ReplaceQueueParams{
-			QueueId:      params.QueueId,
-			UserId:       params.UserId,
-			TrackIds:     trackIds,
-			CurrentIndex: currentIndex,
-			Shuffle:      params.Shuffle,
+			QueueId:             params.QueueId,
+			UserId:              params.UserId,
+			TrackIds:            trackIds,
+			CurrentIndex:        params.CurrentIndex,
+			Shuffle:             params.Shuffle,
+			QueueIndexToTrackId: params.QueueIndexToTrackId,
 		})
 	default:
 		return queueErr.New("unknown position: " + params.Position)
@@ -672,26 +615,13 @@ func (s *QueueService) AddFavoritesToQueue(
 			Position: params.Position,
 		})
 	case "replace":
-		currentIndex := params.CurrentIndex
-		if params.QueueIndexToTrackId != "" {
-			for i, id := range trackIds {
-				if id == params.QueueIndexToTrackId {
-					currentIndex = i
-					break
-				}
-			}
-		}
-
-		if currentIndex < 0 || currentIndex >= len(trackIds) {
-			currentIndex = 0
-		}
-
 		return s.ReplaceQueue(ctx, ReplaceQueueParams{
-			QueueId:      params.QueueId,
-			UserId:       params.UserId,
-			TrackIds:     trackIds,
-			CurrentIndex: currentIndex,
-			Shuffle:      params.Shuffle,
+			QueueId:             params.QueueId,
+			UserId:              params.UserId,
+			TrackIds:            trackIds,
+			CurrentIndex:        params.CurrentIndex,
+			Shuffle:             params.Shuffle,
+			QueueIndexToTrackId: params.QueueIndexToTrackId,
 		})
 	default:
 		return queueErr.New("unknown position: " + params.Position)
@@ -744,26 +674,13 @@ func (s *QueueService) AddTracksToQueue(
 			Position: params.Position,
 		})
 	case "replace":
-		currentIndex := params.CurrentIndex
-		if params.QueueIndexToTrackId != "" {
-			for i, id := range trackIds {
-				if id == params.QueueIndexToTrackId {
-					currentIndex = i
-					break
-				}
-			}
-		}
-
-		if currentIndex < 0 || currentIndex >= len(trackIds) {
-			currentIndex = 0
-		}
-
 		return s.ReplaceQueue(ctx, ReplaceQueueParams{
-			QueueId:      params.QueueId,
-			UserId:       params.UserId,
-			TrackIds:     trackIds,
-			CurrentIndex: currentIndex,
-			Shuffle:      params.Shuffle,
+			QueueId:             params.QueueId,
+			UserId:              params.UserId,
+			TrackIds:            trackIds,
+			CurrentIndex:        params.CurrentIndex,
+			Shuffle:             params.Shuffle,
+			QueueIndexToTrackId: params.QueueIndexToTrackId,
 		})
 	default:
 		return queueErr.New("unknown position: " + params.Position)
