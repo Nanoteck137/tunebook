@@ -17,28 +17,28 @@ type SortType = (typeof sortTypes)[number];
 function applySort(sort: SortType, query: Record<string, string>) {
   switch (sort) {
     case "name-a-z":
-      query["sort"] = "sort=+name";
+      query["sort"] = "+name";
       break;
     case "name-z-a":
-      query["sort"] = "sort=-name";
+      query["sort"] = "-name";
       break;
     case "artist":
-      query["sort"] = "sort=+artist";
+      query["sort"] = "+artist";
       break;
     case "album":
-      query["sort"] = "sort=+album";
+      query["sort"] = "+album";
       break;
     case "duration":
-      query["sort"] = "sort=+duration";
+      query["sort"] = "+duration";
       break;
     case "year":
-      query["sort"] = "sort=-year";
+      query["sort"] = "-year";
       break;
     case "created-new":
-      query["sort"] = "sort=-created";
+      query["sort"] = "-created";
       break;
     case "created-old":
-      query["sort"] = "sort=+created";
+      query["sort"] = "+created";
       break;
   }
 }

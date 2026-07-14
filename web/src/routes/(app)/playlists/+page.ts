@@ -11,39 +11,39 @@ function constructFilterSort(
   const filters = [];
 
   if (filter.query !== "") {
-    filters.push(`name % "%${filter.query}%"`);
+    filters.push(`name contains "${filter.query}"`);
   }
 
   if (!filter.filters.all && currentUserId) {
-    filters.push(`ownerId == "${currentUserId}"`);
+    filters.push(`ownerId = "${currentUserId}"`);
   }
 
-  query["filter"] = filters.join(" && ");
+  query["filter"] = filters.join(" and ");
 
   switch (filter.sort) {
     case "name-a-z":
-      query["sort"] = "sort=+name";
+      query["sort"] = "+name";
       break;
     case "name-z-a":
-      query["sort"] = "sort=-name";
+      query["sort"] = "-name";
       break;
     case "tracks-most":
-      query["sort"] = "sort=-trackCount";
+      query["sort"] = "-trackCount";
       break;
     case "tracks-least":
-      query["sort"] = "sort=+trackCount";
+      query["sort"] = "+trackCount";
       break;
     case "created-new":
-      query["sort"] = "sort=-created";
+      query["sort"] = "-created";
       break;
     case "created-old":
-      query["sort"] = "sort=+created";
+      query["sort"] = "+created";
       break;
     case "updated-new":
-      query["sort"] = "sort=-updated";
+      query["sort"] = "-updated";
       break;
     case "updated-old":
-      query["sort"] = "sort=+updated";
+      query["sort"] = "+updated";
       break;
   }
 }
@@ -63,6 +63,8 @@ export const load: PageLoad = async ({ parent, url }) => {
   });
 
   constructFilterSort(filter, query, data.user?.id);
+
+  console.log(query);
 
   const res = await data.apiClient.getPlaylists({ query });
   if (!res.success) {

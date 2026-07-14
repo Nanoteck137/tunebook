@@ -10,39 +10,37 @@ function constructFilterSort(
   const filters = [];
 
   if (filter.query !== "") {
-    filters.push(`name % "%${filter.query}%"`);
+    filters.push(`name contains "${filter.query}"`);
   }
 
-  if (filter.filters.tags.length > 0) {
-    const s = filter.filters.tags.map((i) => `"${i}"`).join(",");
-    filters.push(`hasTag(${s})`);
-  }
+  filter.filters.tags.forEach((t) => {
+    filters.push(`tags has "${t}"`);
+  });
 
-  if (filter.excludes.tags.length > 0) {
-    const s = filter.excludes.tags.map((i) => `"${i}"`).join(",");
-    filters.push(`!hasTag(${s})`);
-  }
+  filter.excludes.tags.forEach((t) => {
+    filters.push(`not tags has "${t}"`);
+  });
 
-  query["filter"] = filters.join(" && ");
+  query["filter"] = filters.join(" and ");
 
   switch (filter.sort) {
     case "name-a-z":
-      query["sort"] = "sort=+name";
+      query["sort"] = "+name";
       break;
     case "name-z-a":
-      query["sort"] = "sort=-name";
+      query["sort"] = "-name";
       break;
     case "created-new":
-      query["sort"] = "sort=-created";
+      query["sort"] = "-created";
       break;
     case "created-old":
-      query["sort"] = "sort=+created";
+      query["sort"] = "+created";
       break;
     case "updated-new":
-      query["sort"] = "sort=-updated";
+      query["sort"] = "-updated";
       break;
     case "updated-old":
-      query["sort"] = "sort=+updated";
+      query["sort"] = "+updated";
       break;
   }
 }
