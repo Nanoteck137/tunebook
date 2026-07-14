@@ -54,9 +54,9 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:   "CreateSseToken",
-			Method: http.MethodPost,
-			Path:   "/system/sse/token",
+			Name:         "CreateSseToken",
+			Method:       http.MethodPost,
+			Path:         "/system/sse/token",
 			ResponseType: CreateSSEToken{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				user, err := User(app, c)

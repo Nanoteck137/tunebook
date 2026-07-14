@@ -93,8 +93,8 @@ func (a *AlbumResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 }
 
 func (a *AlbumResolverAdapter) ResolveFunctionCall(
-	resolver *filter.Resolver, 
-	name string, 
+	resolver *filter.Resolver,
+	name string,
 	args []ast.Expr,
 ) (filter.FilterExpr, error) {
 	switch name {

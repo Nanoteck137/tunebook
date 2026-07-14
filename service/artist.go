@@ -16,8 +16,8 @@ var (
 )
 
 type ArtistService struct {
-	logger      *slog.Logger
-	db          *database.Database
+	logger       *slog.Logger
+	db           *database.Database
 	imageService *ImageService
 	filesystem   *FilesystemService
 }

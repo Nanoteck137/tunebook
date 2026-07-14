@@ -376,11 +376,11 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return GetMe{
-					Id:            user.Id,
-					Email:         user.Email,
-					DisplayName:   user.DisplayName,
-					Role:          user.Role,
-					Picture:       ConvertUserPictureURL(c, user.Id),
+					Id:          user.Id,
+					Email:       user.Email,
+					DisplayName: user.DisplayName,
+					Role:        user.Role,
+					Picture:     ConvertUserPictureURL(c, user.Id),
 					QuickPlaylist: utils.SqlNullToStringPtr(
 						user.QuickPlaylist),
 				}, nil

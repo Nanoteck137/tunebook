@@ -23,8 +23,8 @@ func InvalidSort(err error) error {
 }
 
 func applyFilter(
-	query *goqu.SelectDataset, 
-	resolver *filter.Resolver, 
+	query *goqu.SelectDataset,
+	resolver *filter.Resolver,
 	filterStr string,
 ) (*goqu.SelectDataset, error) {
 	if filterStr == "" {
@@ -61,8 +61,8 @@ func applyFilterCustom(
 }
 
 func applySort(
-	query *goqu.SelectDataset, 
-	resolver *filter.Resolver, 
+	query *goqu.SelectDataset,
+	resolver *filter.Resolver,
 	sortStr string,
 ) (*goqu.SelectDataset, error) {
 	sortExpr, err := filter.ParseSort(sortStr)
@@ -84,7 +84,7 @@ func applySort(
 }
 
 func fullParseFilter(
-	resolver *filter.Resolver, 
+	resolver *filter.Resolver,
 	filterStr string,
 ) (exp.Expression, error) {
 	ast, err := parser.ParseExpr(filterStr)
@@ -106,7 +106,7 @@ func fullParseFilter(
 }
 
 func generateTableSelect(
-	table *filter.Table, 
+	table *filter.Table,
 	ids []string,
 ) *goqu.SelectDataset {
 	return goqu.From(table.Name).

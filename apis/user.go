@@ -267,7 +267,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				return res, nil
 			},
 		},
-
 	)
 
 	group.Register(

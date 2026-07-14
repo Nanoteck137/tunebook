@@ -28,8 +28,7 @@ import (
 var imageErr = NewServiceErrCreator("image")
 
 var (
-	ErrImageServiceUnsupportedImageFormat = 
-		imageErr.New("unsupported image format")
+	ErrImageServiceUnsupportedImageFormat = imageErr.New("unsupported image format")
 )
 
 const (

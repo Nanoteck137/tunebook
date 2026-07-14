@@ -287,7 +287,7 @@ func (s *MediaService) ProcessTrackStream(
 }
 
 func (s *MediaService) resolveStreamFormat(
-	track database.Track, 
+	track database.Track,
 	opts MediaStreamOptions,
 ) (types.MediaFormat, error) {
 	switch opts.Policy {

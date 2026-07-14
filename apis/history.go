@@ -29,7 +29,7 @@ type TrackHistory struct {
 }
 
 func ConvertDBTrackHistory(
-	c pyrin.Context, 
+	c pyrin.Context,
 	history database.TrackHistory,
 ) TrackHistory {
 	return TrackHistory{

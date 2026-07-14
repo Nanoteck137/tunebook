@@ -68,7 +68,7 @@ func (c Config) Validate() error {
 		validate.Field(&c.MeilisearchAddress, validate.Required),
 		validate.Field(&c.MeilisearchApiKey, validate.Required),
 
-		validate.Field(&c.OidcProviders, 
+		validate.Field(&c.OidcProviders,
 			validate.Required, validate.Length(1, 0)),
 	)
 }

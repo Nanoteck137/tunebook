@@ -84,7 +84,7 @@ func parseSingleOrdering(part string) (query.Ordering, error) {
 	// Extract null ordering if present
 	nullOrder := query.NullOrderingDefault
 	lowerPart := strings.ToLower(part)
-	
+
 	if idx := strings.Index(lowerPart, " nulls first"); idx != -1 {
 		nullOrder = query.NullOrderingFirst
 		part = strings.TrimSpace(part[:idx])

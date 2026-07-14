@@ -73,7 +73,7 @@ func dbTesting() {
 		fmt.Printf("ERROR apply query: %v\n\n", err)
 		return
 	}
-	
+
 	sql, params, _ := q.ToSQL()
 	fmt.Printf("sql: %v\n", sql)
 	fmt.Printf("params: %v\n", params)

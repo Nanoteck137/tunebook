@@ -42,43 +42,43 @@ func TrackHistorySchema() *schema.Schema {
 	return TrackSchema().
 		AddField("id", query.TypeString, schema.Column("track_history.id")).
 		AddField(
-			"userId", 
-			query.TypeString, 
+			"userId",
+			query.TypeString,
 			schema.Column("track_history.user_id"),
 		).
 		AddField(
-			"trackId", 
-			query.TypeString, 
+			"trackId",
+			query.TypeString,
 			schema.Column("track_history.track_id"),
 		).
 		AddField(
-			"listenedAt", 
-			query.TypeInt, 
+			"listenedAt",
+			query.TypeInt,
 			schema.Column("track_history.listened_at"),
 		).
 		AddField(
-			"playbackType", 
-			query.TypeString, 
+			"playbackType",
+			query.TypeString,
 			schema.Column("track_history.playback_type"),
 		).
 		AddField(
-			"status", 
-			query.TypeString, 
+			"status",
+			query.TypeString,
 			schema.Column("track_history.status"),
 		).
 		AddField(
-			"percentPlayed", 
-			query.TypeInt, 
+			"percentPlayed",
+			query.TypeInt,
 			schema.Column("track_history.percent_played"),
 		).
 		AddField(
-			"created", 
-			query.TypeInt, 
+			"created",
+			query.TypeInt,
 			schema.Column("track_history.created"),
 		).
 		AddField(
-			"updated", 
-			query.TypeInt, 
+			"updated",
+			query.TypeInt,
 			schema.Column("track_history.updated"),
 		).
 		SetDefaultSort(

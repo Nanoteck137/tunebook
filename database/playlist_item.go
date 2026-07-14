@@ -37,8 +37,8 @@ type PlaylistItemTrack struct {
 func PlaylistItemTrackSchema() *schema.Schema {
 	return TrackSchema().
 		AddField(
-			"position", 
-			query.TypeInt, 
+			"position",
+			query.TypeInt,
 			schema.Column("playlist_items.position"),
 		).
 		SetDefaultSort(

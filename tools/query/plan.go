@@ -70,10 +70,10 @@ type Field struct {
 }
 
 type RelationConfig struct {
-	JoinTable        string
-	JoinForeignKey   string
-	JoinReference    string
-	ValueType        Type
+	JoinTable         string
+	JoinForeignKey    string
+	JoinReference     string
+	ValueType         Type
 	MainTableIdColumn string
 }
 
@@ -125,9 +125,9 @@ const (
 )
 
 type FieldOrdering struct {
-	Field      *Field
-	Dir        Direction
-	NullOrder  NullOrdering
+	Field     *Field
+	Dir       Direction
+	NullOrder NullOrdering
 }
 
 type RandomOrdering struct{}
@@ -138,7 +138,7 @@ type ShuffleOrdering struct {
 
 type ScoreOrdering struct{}
 
-func (*FieldOrdering) ordering()  {}
-func (*RandomOrdering) ordering() {}
+func (*FieldOrdering) ordering()   {}
+func (*RandomOrdering) ordering()  {}
 func (*ShuffleOrdering) ordering() {}
-func (*ScoreOrdering) ordering()  {}
+func (*ScoreOrdering) ordering()   {}

@@ -482,7 +482,7 @@ func shortenTypeName(name string) string {
 		keyType := rest[:i-1]
 		valueType := rest[i:]
 
-		return "map[" + shortenTypeName(keyType) + "]" + 
+		return "map[" + shortenTypeName(keyType) + "]" +
 			shortenTypeName(valueType)
 	}
 

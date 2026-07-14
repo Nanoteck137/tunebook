@@ -115,8 +115,8 @@ func (a *TrackResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 }
 
 func (a *TrackResolverAdapter) ResolveFunctionCall(
-	resolver *filter.Resolver, 
-	name string, 
+	resolver *filter.Resolver,
+	name string,
 	args []ast.Expr,
 ) (filter.FilterExpr, error) {
 	switch name {

@@ -17,7 +17,7 @@ type UserStatsRecalculateTask struct {
 }
 
 func NewUserStatsRecalculateTask(
-	userService *service.UserService, 
+	userService *service.UserService,
 	jobService *service.JobService,
 ) *UserStatsRecalculateTask {
 	return &UserStatsRecalculateTask{

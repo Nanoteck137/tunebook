@@ -60,7 +60,7 @@ type CreateUserFavoriteParams struct {
 }
 
 func (db DB) CreateUserFavorite(
-	ctx context.Context, 
+	ctx context.Context,
 	params CreateUserFavoriteParams,
 ) error {
 	if params.Added == 0 {
@@ -84,7 +84,7 @@ func (db DB) CreateUserFavorite(
 }
 
 func (db DB) DeleteUserFavorite(
-	ctx context.Context, 
+	ctx context.Context,
 	userId, trackId string,
 ) error {
 	query := dialect.Delete(userFavoritesTbl).
@@ -102,7 +102,7 @@ func (db DB) DeleteUserFavorite(
 }
 
 func (db DB) GetUserFavoritesIds(
-	ctx context.Context, 
+	ctx context.Context,
 	userId string,
 ) ([]string, error) {
 	query := UserFavoriteQuery().

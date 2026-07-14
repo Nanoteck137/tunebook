@@ -37,14 +37,14 @@ func ArtistSchema() *schema.Schema {
 		AddField("id", query.TypeString, schema.Column("artists.id")).
 		AddField("name", query.TypeString, schema.Column("artists.name")).
 		AddField(
-			"coverArt", 
-			query.TypeString, 
-			schema.Column("artists.cover_art"), 
+			"coverArt",
+			query.TypeString,
+			schema.Column("artists.cover_art"),
 			schema.Nullable(),
 		).
 		AddField(
-			"tags", 
-			query.TypeRelation, 
+			"tags",
+			query.TypeRelation,
 			schema.Relation(
 				"artists_tags", "artist_id", "tag_slug", query.TypeString, "artists.id"),
 		).

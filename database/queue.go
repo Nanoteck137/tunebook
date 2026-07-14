@@ -63,7 +63,7 @@ func (db DB) CreateQueue(
 	}
 
 	query := dialect.Insert(queuesTbl).Rows(goqu.Record{
-		"id":     params.Id,
+		"id":      params.Id,
 		"user_id": params.UserId,
 
 		"current_index": params.CurrentIndex,

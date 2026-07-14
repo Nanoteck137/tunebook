@@ -147,8 +147,8 @@ func (a *TrackHistoryResolverAdapter) ResolveTable(
 }
 
 func (a *TrackHistoryResolverAdapter) ResolveFunctionCall(
-	resolver *filter.Resolver, 
-	name string, 
+	resolver *filter.Resolver,
+	name string,
 	args []ast.Expr,
 ) (filter.FilterExpr, error) {
 	switch name {

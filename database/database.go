@@ -63,7 +63,7 @@ type DBExecutor struct {
 }
 
 func (db *DBExecutor) Exec(
-	ctx context.Context, 
+	ctx context.Context,
 	query Query,
 ) (sql.Result, error) {
 	sql, params, err := query.ToSQL()
@@ -80,8 +80,8 @@ func (db *DBExecutor) Exec(
 }
 
 func (db *DBExecutor) Multiple(
-	ctx context.Context, 
-	query Query, 
+	ctx context.Context,
+	query Query,
 	dest any,
 ) error {
 	sql, params, err := query.ToSQL()
@@ -98,7 +98,7 @@ func (db *DBExecutor) Multiple(
 }
 
 func (db *DBExecutor) Query(
-	ctx context.Context, 
+	ctx context.Context,
 	query Query) (*sql.Rows, error) {
 	sql, params, err := query.ToSQL()
 	if err != nil {
@@ -114,7 +114,7 @@ func (db *DBExecutor) Query(
 }
 
 func (db *DBExecutor) QueryRow(
-	ctx context.Context, 
+	ctx context.Context,
 	query Query,
 ) (*sql.Row, error) {
 	sql, params, err := query.ToSQL()
@@ -127,8 +127,8 @@ func (db *DBExecutor) QueryRow(
 }
 
 func (db *DBExecutor) Single(
-	ctx context.Context, 
-	query Query, 
+	ctx context.Context,
+	query Query,
 	dest any,
 ) error {
 	sql, params, err := query.ToSQL()
@@ -213,7 +213,7 @@ type TxExecutor struct {
 }
 
 func (tx *TxExecutor) Exec(
-	ctx context.Context, 
+	ctx context.Context,
 	query Query,
 ) (sql.Result, error) {
 	sql, params, err := query.ToSQL()
@@ -230,8 +230,8 @@ func (tx *TxExecutor) Exec(
 }
 
 func (tx *TxExecutor) Multiple(
-	ctx context.Context, 
-	query Query, 
+	ctx context.Context,
+	query Query,
 	dest any,
 ) error {
 	sql, params, err := query.ToSQL()
@@ -248,7 +248,7 @@ func (tx *TxExecutor) Multiple(
 }
 
 func (tx *TxExecutor) Query(
-	ctx context.Context, 
+	ctx context.Context,
 	query Query,
 ) (*sql.Rows, error) {
 	sql, params, err := query.ToSQL()
@@ -265,7 +265,7 @@ func (tx *TxExecutor) Query(
 }
 
 func (tx *TxExecutor) QueryRow(
-	ctx context.Context, 
+	ctx context.Context,
 	query Query,
 ) (*sql.Row, error) {
 	sql, params, err := query.ToSQL()
@@ -278,8 +278,8 @@ func (tx *TxExecutor) QueryRow(
 }
 
 func (tx *TxExecutor) Single(
-	ctx context.Context, 
-	query Query, 
+	ctx context.Context,
+	query Query,
 	dest any,
 ) error {
 	sql, params, err := query.ToSQL()

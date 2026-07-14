@@ -11,8 +11,7 @@ var _ filter.ResolverAdapter = (*UserFavoriteTrackResolverAdapter)(nil)
 
 type UserFavoriteTrackResolverAdapter struct{}
 
-func (a *UserFavoriteTrackResolverAdapter) DefaultSort(
-) (string, filter.SortType) {
+func (a *UserFavoriteTrackResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "user_favorites.added", filter.SortTypeDesc
 }
 
@@ -133,8 +132,8 @@ func (a *UserFavoriteTrackResolverAdapter) ResolveTable(
 }
 
 func (a *UserFavoriteTrackResolverAdapter) ResolveFunctionCall(
-	resolver *filter.Resolver, 
-	name string, 
+	resolver *filter.Resolver,
+	name string,
 	args []ast.Expr,
 ) (filter.FilterExpr, error) {
 	switch name {

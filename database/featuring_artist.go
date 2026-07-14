@@ -83,13 +83,13 @@ func AddFeaturingArtistsToQuery(
 }
 
 func (db DB) addFeaturingArtist(
-	ctx context.Context, 
-	junctionTable exp.IdentifierExpression, 
+	ctx context.Context,
+	junctionTable exp.IdentifierExpression,
 	idCol, id, artistId string,
 ) error {
 	query := dialect.Insert(junctionTable).
 		Rows(goqu.Record{
-			idCol:      id,
+			idCol:       id,
 			"artist_id": artistId,
 		})
 
@@ -98,8 +98,8 @@ func (db DB) addFeaturingArtist(
 }
 
 func (db DB) removeAllFeaturingArtists(
-	ctx context.Context, 
-	junctionTable exp.IdentifierExpression, 
+	ctx context.Context,
+	junctionTable exp.IdentifierExpression,
 	idCol, id string,
 ) error {
 	query := dialect.Delete(junctionTable).

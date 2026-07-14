@@ -168,7 +168,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 2 {
 					t.Fatalf("expected 2 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -179,7 +179,7 @@ func TestParse(t *testing.T) {
 				if fo1.Dir != query.DirAsc {
 					t.Errorf("expected DirAsc, got %v", fo1.Dir)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])
@@ -237,7 +237,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 2 {
 					t.Fatalf("expected 2 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -248,7 +248,7 @@ func TestParse(t *testing.T) {
 				if fo1.Dir != query.DirAsc {
 					t.Errorf("expected DirAsc, got %v", fo1.Dir)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])
@@ -287,7 +287,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 3 {
 					t.Fatalf("expected 3 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -298,7 +298,7 @@ func TestParse(t *testing.T) {
 				if fo1.Dir != query.DirAsc {
 					t.Errorf("expected DirAsc, got %v", fo1.Dir)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])
@@ -309,7 +309,7 @@ func TestParse(t *testing.T) {
 				if fo2.Dir != query.DirDesc {
 					t.Errorf("expected DirDesc, got %v", fo2.Dir)
 				}
-				
+
 				fo3, ok := sort.Orderings[2].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[2])
@@ -373,7 +373,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 2 {
 					t.Fatalf("expected 2 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -387,7 +387,7 @@ func TestParse(t *testing.T) {
 				if fo1.NullOrder != query.NullOrderingFirst {
 					t.Errorf("expected NullOrderingFirst, got %v", fo1.NullOrder)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])
@@ -410,7 +410,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 3 {
 					t.Fatalf("expected 3 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -418,7 +418,7 @@ func TestParse(t *testing.T) {
 				if fo1.NullOrder != query.NullOrderingFirst {
 					t.Errorf("expected NullOrderingFirst for first field, got %v", fo1.NullOrder)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])
@@ -426,7 +426,7 @@ func TestParse(t *testing.T) {
 				if fo2.NullOrder != query.NullOrderingLast {
 					t.Errorf("expected NullOrderingLast for second field, got %v", fo2.NullOrder)
 				}
-				
+
 				fo3, ok := sort.Orderings[2].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[2])
@@ -443,7 +443,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 2 {
 					t.Fatalf("expected 2 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -451,7 +451,7 @@ func TestParse(t *testing.T) {
 				if fo1.NullOrder != query.NullOrderingFirst {
 					t.Errorf("expected NullOrderingFirst, got %v", fo1.NullOrder)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])
@@ -488,7 +488,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 2 {
 					t.Fatalf("expected 2 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -496,7 +496,7 @@ func TestParse(t *testing.T) {
 				if fo1.Field.Name != "artist" {
 					t.Errorf("expected field 'artist', got %q", fo1.Field.Name)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])
@@ -513,7 +513,7 @@ func TestParse(t *testing.T) {
 				if len(sort.Orderings) != 2 {
 					t.Fatalf("expected 2 orderings, got %d", len(sort.Orderings))
 				}
-				
+
 				fo1, ok := sort.Orderings[0].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[0])
@@ -524,7 +524,7 @@ func TestParse(t *testing.T) {
 				if fo1.Dir != query.DirAsc {
 					t.Errorf("expected DirAsc, got %v", fo1.Dir)
 				}
-				
+
 				fo2, ok := sort.Orderings[1].(*query.FieldOrdering)
 				if !ok {
 					t.Fatalf("expected FieldOrdering, got %T", sort.Orderings[1])

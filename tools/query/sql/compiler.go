@@ -206,7 +206,7 @@ func (c *Compiler) compileOrdering(orderings []query.Ordering) ([]exp.OrderedExp
 			} else {
 				ordered = col.Asc()
 			}
-			
+
 			// Apply null ordering if specified
 			switch o.NullOrder {
 			case query.NullOrderingFirst:
@@ -214,7 +214,7 @@ func (c *Compiler) compileOrdering(orderings []query.Ordering) ([]exp.OrderedExp
 			case query.NullOrderingLast:
 				ordered = ordered.NullsLast()
 			}
-			
+
 			result = append(result, ordered)
 		case *query.RandomOrdering:
 			result = append(result, goqu.Func("RANDOM").Asc())

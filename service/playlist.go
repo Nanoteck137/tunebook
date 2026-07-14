@@ -70,7 +70,7 @@ func (s *PlaylistService) GetPlaylists(
 }
 
 func (s *PlaylistService) checkOwnership(
-	playlist database.Playlist, 
+	playlist database.Playlist,
 	userId string,
 ) error {
 	if playlist.OwnerId != userId {

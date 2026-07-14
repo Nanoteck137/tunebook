@@ -91,7 +91,7 @@ type CreateUserParams struct {
 }
 
 func (db DB) CreateUser(
-	ctx context.Context, 
+	ctx context.Context,
 	params CreateUserParams,
 ) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
@@ -136,8 +136,8 @@ type UserChanges struct {
 }
 
 func (db DB) UpdateUser(
-	ctx context.Context, 
-	id string, 
+	ctx context.Context,
+	id string,
 	changes UserChanges,
 ) error {
 	record := goqu.Record{}
@@ -168,7 +168,7 @@ func (db DB) UpdateUser(
 }
 
 func (db DB) UpdateUserSettings(
-	ctx context.Context, 
+	ctx context.Context,
 	settings UserSettings,
 ) error {
 	query := dialect.Insert(usersSettingsTbl).
@@ -210,7 +210,6 @@ func (db DB) GetUsersIn(ctx context.Context, in any) ([]User, error) {
 	return Multiple[User](db, ctx, query)
 }
 
-
 func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
 	query := UserQuery().
 		Where(usersTbl.Col("id").Eq(id))
@@ -219,7 +218,7 @@ func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
 }
 
 func (db DB) GetUserByEmail(
-	ctx context.Context, 
+	ctx context.Context,
 	email string,
 ) (User, error) {
 	query := UserQuery().
@@ -229,7 +228,7 @@ func (db DB) GetUserByEmail(
 }
 
 func (db DB) GetUserSettingsById(
-	ctx context.Context, 
+	ctx context.Context,
 	id string,
 ) (UserSettings, error) {
 	query := UserSettingsQuery().

@@ -47,7 +47,7 @@ type CreateUserIdentityParams struct {
 }
 
 func (db DB) CreateUserIdentity(
-	ctx context.Context, 
+	ctx context.Context,
 	params CreateUserIdentityParams,
 ) error {
 	t := time.Now().UnixMilli()
@@ -79,7 +79,7 @@ func (db DB) CreateUserIdentity(
 }
 
 func (db DB) GetUserIdentity(
-	ctx context.Context, 
+	ctx context.Context,
 	provider, providerId string,
 ) (UserIdentity, error) {
 	query := UserIdentityQuery().

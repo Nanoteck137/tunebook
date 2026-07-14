@@ -37,16 +37,13 @@ var (
 
 const (
 	authProviderRequestExpireDuration   = 5 * time.Minute
-	authProviderRequestDeletionDuration = 
-		authProviderRequestExpireDuration + 10*time.Minute
+	authProviderRequestDeletionDuration = authProviderRequestExpireDuration + 10*time.Minute
 
 	authQuickRequestExpireDuration   = 5 * time.Minute
-	authQuickRequestDeletionDuration = 
-		authQuickRequestExpireDuration + 10*time.Minute
+	authQuickRequestDeletionDuration = authQuickRequestExpireDuration + 10*time.Minute
 
 	sseTokenExpireDuration   = 5 * time.Minute
-	sseTokenDeletionDuration = 
-		sseTokenExpireDuration + 10*time.Minute
+	sseTokenDeletionDuration = sseTokenExpireDuration + 10*time.Minute
 )
 
 type AuthProviderRequestStatus string
@@ -124,7 +121,7 @@ type providerClaim struct {
 }
 
 func (p *authProvider) claim(
-	ctx context.Context, 
+	ctx context.Context,
 	code string,
 ) (providerClaim, error) {
 	oauth2Token, err := p.oauth2Config.Exchange(ctx, code)
@@ -276,8 +273,7 @@ type QuickConnectRequestResult struct {
 	Expires   time.Time
 }
 
-func (a *AuthService) CreateQuickConnectRequest(
-) (QuickConnectRequestResult, error) {
+func (a *AuthService) CreateQuickConnectRequest() (QuickConnectRequestResult, error) {
 	code, err := generateCode()
 	if err != nil {
 		return QuickConnectRequestResult{}, authErr.Newf(
@@ -317,7 +313,7 @@ func (a *AuthService) CreateQuickConnectRequest(
 }
 
 func (a *AuthService) CompleteQuickConnectRequest(
-	requestCode, 
+	requestCode,
 	userId string,
 ) error {
 	a.mu.Lock()
@@ -410,7 +406,7 @@ func (a *AuthService) CheckQuickConnectRequestStatus(
 }
 
 func (a *AuthService) CreateAuthTokenForProvider(
-	ctx context.Context, 
+	ctx context.Context,
 	requestId, challenge string,
 ) (string, error) {
 	a.mu.Lock()
@@ -497,8 +493,8 @@ func (a *AuthService) CreateAuthTokenForQuickConnect(
 }
 
 func (a *AuthService) getUserFromCode(
-	ctx context.Context, 
-	provider *authProvider, 
+	ctx context.Context,
+	provider *authProvider,
 	code string,
 ) (string, error) {
 	oidcClaims, err := provider.claim(ctx, code)
@@ -559,8 +555,8 @@ func (a *AuthService) getUserFromCode(
 					},
 				})
 				if err != nil {
-				return "", authErr.Newf(
-					"failed to update user picture: %w", err)
+					return "", authErr.Newf(
+						"failed to update user picture: %w", err)
 				}
 			}
 

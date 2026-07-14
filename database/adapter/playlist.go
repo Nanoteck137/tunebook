@@ -83,8 +83,7 @@ var _ filter.ResolverAdapter = (*PlaylistItemResolverAdapter)(nil)
 
 type PlaylistItemResolverAdapter struct{}
 
-func (a *PlaylistItemResolverAdapter) DefaultSort(
-) (string, filter.SortType) {
+func (a *PlaylistItemResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "playlist_items.order_num", filter.SortTypeAsc
 }
 
@@ -141,8 +140,7 @@ var _ filter.ResolverAdapter = (*PlaylistTrackResolverAdapter)(nil)
 
 type PlaylistTrackResolverAdapter struct{}
 
-func (a *PlaylistTrackResolverAdapter) DefaultSort(
-) (string, filter.SortType) {
+func (a *PlaylistTrackResolverAdapter) DefaultSort() (string, filter.SortType) {
 	return "playlist_items.position", filter.SortTypeAsc
 }
 

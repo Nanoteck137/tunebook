@@ -15,10 +15,10 @@ import (
 var userErr = NewServiceErrCreator("user")
 
 var (
-	ErrUserServiceUserNotFound        = userErr.New("user not found")
-	ErrUserServicePlaylistNotFound    = userErr.New("playlist not found")
-	ErrUserServiceApiTokenNotFound    = userErr.New("api token not found")
-	ErrUserServiceUnauthorized        = userErr.New("unauthorized")
+	ErrUserServiceUserNotFound     = userErr.New("user not found")
+	ErrUserServicePlaylistNotFound = userErr.New("playlist not found")
+	ErrUserServiceApiTokenNotFound = userErr.New("api token not found")
+	ErrUserServiceUnauthorized     = userErr.New("unauthorized")
 )
 
 type UserService struct {
@@ -393,7 +393,7 @@ type DeleteApiTokenParams struct {
 }
 
 func (s *UserService) RecalculateUserStats(
-	ctx context.Context, 
+	ctx context.Context,
 	userId string,
 ) error {
 	agg, err := s.db.GetUserTrackStatsAgg(ctx, userId)

@@ -57,7 +57,7 @@ type NotificationService struct {
 }
 
 func NewNotificationService(
-	logger *slog.Logger, 
+	logger *slog.Logger,
 	config *config.Config,
 ) *NotificationService {
 	return &NotificationService{

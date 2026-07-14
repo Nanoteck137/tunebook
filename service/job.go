@@ -127,8 +127,8 @@ func (s *JobService) AddJob(job Job) error {
 }
 
 func (s *JobService) PushJob(
-	ctx context.Context, 
-	name string, 
+	ctx context.Context,
+	name string,
 	data any,
 ) error {
 	s.mu.RLock()
@@ -171,9 +171,9 @@ func (s *JobService) ProcessPendingJobs(ctx context.Context) error {
 		err := s.processJob(ctx, job)
 		if err != nil {
 			s.logger.Error(
-				"failed to process job", 
-				"id", job.Id, 
-				"name", job.Name, 
+				"failed to process job",
+				"id", job.Id,
+				"name", job.Name,
 				"err", err,
 			)
 		}
@@ -189,9 +189,9 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 	}
 
 	s.logger.Info(
-		"running job", 
-		"id", job.Id, 
-		"name", job.Name, 
+		"running job",
+		"id", job.Id,
+		"name", job.Name,
 		"attempt", job.Attempts+1,
 	)
 
@@ -214,12 +214,12 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 		shouldRequeue := job.Attempts+1 < job.MaxAttempts
 
 		s.logger.Error(
-			"job failed", 
-			"id", job.Id, 
-			"name", job.Name, 
-			"attempt", job.Attempts+1, 
-			"maxAttempts", job.MaxAttempts, 
-			"requeue", shouldRequeue, 
+			"job failed",
+			"id", job.Id,
+			"name", job.Name,
+			"attempt", job.Attempts+1,
+			"maxAttempts", job.MaxAttempts,
+			"requeue", shouldRequeue,
 			"err", err,
 		)
 

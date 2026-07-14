@@ -104,14 +104,14 @@ func (db DB) IncrementUserStats(
 	now := time.Now().UnixMilli()
 
 	query := dialect.Insert(userStatsTbl).Rows(goqu.Record{
-		"user_id":              params.UserId,
-		"num_tracks_played":    1,
-		"num_tracks_skipped":   params.SkipDelta,
+		"user_id":               params.UserId,
+		"num_tracks_played":     1,
+		"num_tracks_skipped":    params.SkipDelta,
 		"num_playlists_created": 0,
-		"num_favorite_tracks":  0,
-		"listening_time":       params.ListeningTimeDelta,
-		"last_listened_at":     params.LastListenedAt,
-		"updated":              now,
+		"num_favorite_tracks":   0,
+		"listening_time":        params.ListeningTimeDelta,
+		"last_listened_at":      params.LastListenedAt,
+		"updated":               now,
 	}).OnConflict(
 		goqu.DoUpdate("user_id", goqu.Record{
 			"num_tracks_played":  goqu.L("num_tracks_played + 1"),

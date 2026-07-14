@@ -35,17 +35,17 @@ const (
 	ErrTypeProviderNotFound  pyrin.ErrorType = "PROVIDER_NOT_FOUND"
 	ErrTypeRequestNotFound   pyrin.ErrorType = "REQUEST_NOT_FOUND"
 
-	ErrTypeMediaInvalidFormat         pyrin.ErrorType = "MEDIA_INVALID_FORMAT"
-	ErrTypeMediaInvalidQuality        pyrin.ErrorType = "MEDIA_INVALID_QUALITY"
-	ErrTypeMediaInvalidPolicy         pyrin.ErrorType = "MEDIA_INVALID_POLICY"
-	ErrTypeMediaBitrateNotSet         pyrin.ErrorType = "MEDIA_BITRATE_NOT_SET"
+	ErrTypeMediaInvalidFormat  pyrin.ErrorType = "MEDIA_INVALID_FORMAT"
+	ErrTypeMediaInvalidQuality pyrin.ErrorType = "MEDIA_INVALID_QUALITY"
+	ErrTypeMediaInvalidPolicy  pyrin.ErrorType = "MEDIA_INVALID_POLICY"
+	ErrTypeMediaBitrateNotSet  pyrin.ErrorType = "MEDIA_BITRATE_NOT_SET"
 
-	ErrTypeQueueItemNotFound          pyrin.ErrorType = "QUEUE_ITEM_NOT_FOUND"
+	ErrTypeQueueItemNotFound pyrin.ErrorType = "QUEUE_ITEM_NOT_FOUND"
 
-	ErrTypePlaylistItemNotFound       pyrin.ErrorType = "PLAYLIST_ITEM_NOT_FOUND"
+	ErrTypePlaylistItemNotFound        pyrin.ErrorType = "PLAYLIST_ITEM_NOT_FOUND"
 	ErrTypePlaylistAnchorTrackNotFound pyrin.ErrorType = "PLAYLIST_ANCHOR_TRACK_NOT_FOUND"
-	ErrTypeNotAuthorized              pyrin.ErrorType = "NOT_AUTHORIZED"
-	ErrTypeInvalidParam               pyrin.ErrorType = "INVALID_PARAM"
+	ErrTypeNotAuthorized               pyrin.ErrorType = "NOT_AUTHORIZED"
+	ErrTypeInvalidParam                pyrin.ErrorType = "INVALID_PARAM"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
