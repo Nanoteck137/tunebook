@@ -6,12 +6,18 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/database/adapter"
-	"github.com/nanoteck137/tunebook/tools/filter"
+	"github.com/nanoteck137/tunebook/tools/query"
+	"github.com/nanoteck137/tunebook/tools/query/schema"
 	"github.com/nanoteck137/tunebook/types"
 )
 
-var createPlaylistId = createIdGenerator(16)
+var (
+	createPlaylistId = createIdGenerator(16)
+
+	playlistsTbl = goqu.T("playlists")
+
+	playlistSchema = PlaylistSchema()
+)
 
 type Playlist struct {
 	Id       string         `db:"id"`
@@ -29,24 +35,59 @@ type Playlist struct {
 	TrackCount int64 `db:"track_count"`
 }
 
-func PlaylistQuery() *goqu.SelectDataset {
-	trackCountQuery := dialect.From("playlist_items").
-		Select(
-			goqu.I("playlist_items.playlist_id").As("id"),
-			goqu.COUNT(goqu.I("playlist_items.track_id")).As("data"),
+func PlaylistSchema() *schema.Schema {
+	return schema.New().
+		AddField("id", query.TypeString, schema.Column("playlists.id")).
+		AddField("name", query.TypeString, schema.Column("playlists.name")).
+		AddField(
+			"ownerId",
+			query.TypeString,
+			schema.Column("playlists.owner_id"),
 		).
-		GroupBy(goqu.I("playlist_items.playlist_id"))
+		AddField(
+			"coverArt",
+			query.TypeString,
+			schema.Column("playlists.cover_art"),
+			schema.Nullable(),
+		).
+		AddField(
+			"ownerDisplayName",
+			query.TypeString,
+			schema.Column("owner.display_name"),
+		).
+		// TODO(patrik): Is this correct? I need to test this later
+		AddField("trackCount", query.TypeInt, schema.Column("track_count.data")).
+		AddField("created", query.TypeInt, schema.Column("playlists.created")).
+		AddField("updated", query.TypeInt, schema.Column("playlists.updated")).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "name"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
 
-	query := dialect.From("playlists").
+func PlaylistQuery() *goqu.SelectDataset {
+	idCol := playlistsTbl.Col("id")
+
+	trackCountQuery := dialect.From(playlistItemsTbl).
 		Select(
-			"playlists.id",
-			"playlists.name",
-			"playlists.cover_art",
+			playlistItemsTbl.Col("playlist_id").As("id"),
+			goqu.COUNT(playlistItemsTbl.Col("track_id")).As("data"),
+		).
+		GroupBy(playlistItemsTbl.Col("playlist_id"))
 
-			"playlists.owner_id",
+	query := dialect.From(playlistsTbl).
+		Select(
+			idCol,
 
-			"playlists.created",
-			"playlists.updated",
+			playlistsTbl.Col("name"),
+			playlistsTbl.Col("cover_art"),
+
+			playlistsTbl.Col("owner_id"),
+
+			playlistsTbl.Col("created"),
+			playlistsTbl.Col("updated"),
 
 			goqu.I("owner.display_name").As("owner_display_name"),
 			goqu.I("owner.picture").As("owner_picture"),
@@ -55,77 +96,14 @@ func PlaylistQuery() *goqu.SelectDataset {
 		).
 		Join(
 			UserQuery().As("owner"),
-			goqu.On(goqu.I("playlists.owner_id").Eq(goqu.I("owner.id"))),
+			goqu.On(playlistsTbl.Col("owner_id").Eq(goqu.I("owner.id"))),
 		).
 		LeftJoin(
 			trackCountQuery.As("track_count"),
-			goqu.On(goqu.I("playlists.id").Eq(goqu.I("track_count.id"))),
+			goqu.On(idCol.Eq(goqu.I("track_count.id"))),
 		)
 
 	return query
-}
-
-type GetPlaylistsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
-}
-
-func (db DB) GetPlaylists(
-	ctx context.Context,
-	params GetPlaylistsParams,
-) ([]Playlist, types.Page, error) {
-	query := PlaylistQuery()
-
-	var err error
-
-	a := adapter.PlaylistResolverAdapter{}
-	query, err = applyFilterParams(params.Filter, &a, query)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	page, err := buildPage(ctx, db, params.Page, query, "playlists.id")
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	query = applyPageParams(params.Page, query)
-
-	items, err := Multiple[Playlist](db, ctx, query)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	return items, page, nil
-}
-
-func (db DB) GetPlaylistsIn(
-	ctx context.Context,
-	in any,
-	sort string,
-) ([]Playlist, error) {
-	query := PlaylistQuery().
-		Where(goqu.I("playlists.id").In(in))
-
-	a := adapter.PlaylistResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err := applySort(query, resolver, sort)
-	if err != nil {
-		return nil, err
-	}
-
-	return Multiple[Playlist](db, ctx, query)
-}
-
-func (db DB) GetPlaylistById(
-	ctx context.Context,
-	playlistId string,
-) (Playlist, error) {
-	query := PlaylistQuery().
-		Where(goqu.I("playlists.id").Eq(playlistId))
-
-	return Single[Playlist](db, ctx, query)
 }
 
 type CreatePlaylistParams struct {
@@ -153,17 +131,16 @@ func (db DB) CreatePlaylist(
 		params.Id = createPlaylistId()
 	}
 
-	query := dialect.Insert("playlists").
-		Rows(goqu.Record{
-			"id":        params.Id,
-			"name":      params.Name,
-			"cover_art": params.CoverArt,
+	query := dialect.Insert(playlistsTbl).Rows(goqu.Record{
+		"id":        params.Id,
+		"name":      params.Name,
+		"cover_art": params.CoverArt,
 
-			"owner_id": params.OwnerId,
+		"owner_id": params.OwnerId,
 
-			"created": params.Created,
-			"updated": params.Updated,
-		})
+		"created": params.Created,
+		"updated": params.Updated,
+	})
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -204,9 +181,9 @@ func (db DB) UpdatePlaylist(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	query := dialect.Update("playlists").
+	query := dialect.Update(playlistsTbl).
 		Set(record).
-		Where(goqu.I("playlists.id").Eq(playlistId))
+		Where(playlistsTbl.Col("id").Eq(playlistId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -217,8 +194,8 @@ func (db DB) UpdatePlaylist(
 }
 
 func (db DB) DeletePlaylist(ctx context.Context, playlistId string) error {
-	query := dialect.Delete("playlists").
-		Where(goqu.I("playlists.id").Eq(playlistId))
+	query := dialect.Delete(playlistsTbl).
+		Where(playlistsTbl.Col("id").Eq(playlistId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -228,17 +205,78 @@ func (db DB) DeletePlaylist(ctx context.Context, playlistId string) error {
 	return nil
 }
 
+func (db DB) GetAllPlaylistIds(ctx context.Context) ([]string, error) {
+	query := dialect.From(playlistsTbl).
+		Select(playlistsTbl.Col("id"))
+
+	return Multiple[string](db, ctx, query)
+}
+
+type GetPlaylistsParams struct {
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (db DB) GetPlaylists(
+	ctx context.Context,
+	params GetPlaylistsParams,
+) ([]Playlist, types.Page, error) {
+	query := PlaylistQuery()
+
+	var err error
+
+	query, err = ApplyQuery(query, playlistSchema, QueryParams{
+		Filter: params.Filter.Filter,
+		Sort:   params.Filter.Sort,
+	})
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, playlistsTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[Playlist](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+func (db DB) GetPlaylistsByIds(
+	ctx context.Context,
+	ids []string,
+) ([]Playlist, error) {
+	query := PlaylistQuery().Where(playlistsTbl.Col("id").In(ids))
+
+	return Multiple[Playlist](db, ctx, query)
+}
+
+func (db DB) GetPlaylistById(
+	ctx context.Context,
+	playlistId string,
+) (Playlist, error) {
+	query := PlaylistQuery().
+		Where(playlistsTbl.Col("id").Eq(playlistId))
+
+	return Single[Playlist](db, ctx, query)
+}
+
 func (db DB) GetUserPlaylistCount(
 	ctx context.Context,
 	userId string,
 ) (int, error) {
-	tbl := goqu.T("playlists")
-	query := dialect.From(tbl).
+	query := dialect.From(playlistsTbl).
 		Select(
-			goqu.COUNT(tbl.Col("id")),
+			goqu.COUNT(playlistsTbl.Col("id")),
 		).
-		Where(tbl.Col("owner_id").Eq(userId)).
-		GroupBy(tbl.Col("owner_id"))
+		Where(playlistsTbl.Col("owner_id").Eq(userId)).
+		GroupBy(playlistsTbl.Col("owner_id"))
 
 	return Single[int](db, ctx, query)
 }

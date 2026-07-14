@@ -8,7 +8,11 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-var createUserId = createIdGenerator(10)
+var (
+	createUserId = createIdGenerator(10)
+
+	usersTbl = goqu.T("users")
+)
 
 type UserSettings struct {
 	Id            string         `db:"id"`

@@ -552,7 +552,7 @@ func (s *SearchService) SearchPlaylists(
 		index,
 		params,
 		func(ctx context.Context, ids []string) ([]database.Playlist, error) {
-			return s.db.GetPlaylistsIn(ctx, ids, "")
+			return s.db.GetPlaylistsByIds(ctx, ids)
 		},
 		func(playlist database.Playlist) string {
 			return playlist.Id

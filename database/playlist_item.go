@@ -11,9 +11,11 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
-type PlaylistItem struct {
-	RowId int `db:"rowid"`
+var (
+	playlistItemsTbl = goqu.T("playlist_items")
+)
 
+type PlaylistItem struct {
 	PlaylistId string `db:"playlist_id"`
 	TrackId    string `db:"track_id"`
 
@@ -30,17 +32,15 @@ type PlaylistItemTrack struct {
 }
 
 func PlaylistItemQuery() *goqu.SelectDataset {
-	query := dialect.From("playlist_items").
+	query := dialect.From(playlistItemsTbl).
 		Select(
-			"playlist_items.rowid",
+			playlistItemsTbl.Col("playlist_id"),
+			playlistItemsTbl.Col("track_id"),
 
-			"playlist_items.playlist_id",
-			"playlist_items.track_id",
+			playlistItemsTbl.Col("position"),
 
-			"playlist_items.position",
-
-			"playlist_items.created",
-			"playlist_items.updated",
+			playlistItemsTbl.Col("created"),
+			playlistItemsTbl.Col("updated"),
 		)
 
 	return query
@@ -52,12 +52,12 @@ func (db DB) GetAllPlaylistItems(ctx context.Context) ([]PlaylistItem, error) {
 }
 
 func (db DB) GetPlaylistItems(
-	ctx context.Context, 
+	ctx context.Context,
 	playlistId string,
 ) ([]PlaylistItem, error) {
 	query := PlaylistItemQuery().
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		Order(goqu.I("playlist_items.position").Asc())
+		Where(playlistItemsTbl.Col("playlist_id").Eq(playlistId)).
+		Order(playlistItemsTbl.Col("position").Asc())
 
 	return Multiple[PlaylistItem](db, ctx, query)
 }
@@ -69,28 +69,28 @@ func (db DB) GetPlaylistTrackImages(
 ) ([]sql.NullString, error) {
 	tracks := TrackQuery()
 
-	query := dialect.From("playlist_items").
+	query := dialect.From(playlistItemsTbl).
 		Select("tracks.album_cover_art").
 		Join(
 			tracks.As("tracks"),
-			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+			goqu.On(playlistItemsTbl.Col("track_id").Eq(goqu.I("tracks.id"))),
 		).
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
+		Where(playlistItemsTbl.Col("playlist_id").Eq(playlistId)).
 		GroupBy(goqu.I("tracks.album_id")).
-		Order(goqu.I("playlist_items.position").Asc()).
+		Order(playlistItemsTbl.Col("position").Asc()).
 		Limit(uint(numImages))
 
 	return Multiple[sql.NullString](db, ctx, query)
 }
 
 func (db DB) GetNextPlaylistItemIndex(
-	ctx context.Context, 
+	ctx context.Context,
 	playlistId string,
 ) (int, error) {
-	query := dialect.From("playlist_items").
-		Select("playlist_items.position").
-		Where(goqu.I("playlist_items.playlist_id").Eq(playlistId)).
-		Order(goqu.I("playlist_items.position").Desc()).
+	query := dialect.From(playlistItemsTbl).
+		Select(playlistItemsTbl.Col("position")).
+		Where(playlistItemsTbl.Col("playlist_id").Eq(playlistId)).
+		Order(playlistItemsTbl.Col("position").Desc()).
 		Limit(1)
 
 	res, err := Single[int](db, ctx, query)
@@ -119,11 +119,11 @@ func (db DB) GetPlaylistTracks(
 
 	var err error
 
-	query := dialect.From("playlist_items").
-		Select("tracks.*", "playlist_items.position").
+	query := dialect.From(playlistItemsTbl).
+		Select("tracks.*", playlistItemsTbl.Col("position")).
 		Join(
 			tracks.As("tracks"),
-			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
+			goqu.On(playlistItemsTbl.Col("track_id").Eq(goqu.I("tracks.id"))),
 		)
 
 	a := adapter.PlaylistTrackResolverAdapter{}
@@ -131,13 +131,13 @@ func (db DB) GetPlaylistTracks(
 		params.Filter,
 		&a,
 		query,
-		goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId),
+		playlistItemsTbl.Col("playlist_id").Eq(params.PlaylistId),
 	)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db, params.Page, query, "tracks.id")
+	page, err := buildPage(ctx, db, params.Page, query, goqu.I("tracks.id"))
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -160,9 +160,9 @@ func (db DB) GetPlaylistItemIds(
 	ctx context.Context,
 	params GetPlaylistItemIdsParams,
 ) ([]string, error) {
-	query := dialect.From("playlist_items").
-		Select("playlist_items.track_id").
-		Where(goqu.I("playlist_items.playlist_id").Eq(params.PlaylistId))
+	query := dialect.From(playlistItemsTbl).
+		Select(playlistItemsTbl.Col("track_id")).
+		Where(playlistItemsTbl.Col("playlist_id").Eq(params.PlaylistId))
 
 	items, err := Multiple[string](db, ctx, query)
 	if err != nil {
@@ -183,7 +183,7 @@ type CreatePlaylistItemParams struct {
 }
 
 func (db DB) CreatePlaylistItem(
-	ctx context.Context, 
+	ctx context.Context,
 	params CreatePlaylistItemParams,
 ) error {
 	if params.Created == 0 && params.Updated == 0 {
@@ -192,16 +192,15 @@ func (db DB) CreatePlaylistItem(
 		params.Updated = t
 	}
 
-	query := dialect.Insert("playlist_items").
-		Rows(goqu.Record{
-			"playlist_id": params.PlaylistId,
-			"track_id":    params.TrackId,
+	query := dialect.Insert(playlistItemsTbl).Rows(goqu.Record{
+		"playlist_id": params.PlaylistId,
+		"track_id":    params.TrackId,
 
-			"position": params.Position,
+		"position": params.Position,
 
-			"created": params.Created,
-			"updated": params.Updated,
-		})
+		"created": params.Created,
+		"updated": params.Updated,
+	})
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -218,8 +217,8 @@ type PlaylistItemChanges struct {
 }
 
 func (db DB) UpdatePlaylistItem(
-	ctx context.Context, 
-	playlistId, trackId string, 
+	ctx context.Context,
+	playlistId, trackId string,
 	changes PlaylistItemChanges,
 ) error {
 	record := goqu.Record{}
@@ -234,11 +233,11 @@ func (db DB) UpdatePlaylistItem(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	query := dialect.Update("playlist_items").
+	query := dialect.Update(playlistItemsTbl).
 		Set(record).
 		Where(
-			goqu.I("playlist_items.playlist_id").Eq(playlistId),
-			goqu.I("playlist_items.track_id").Eq(trackId),
+			playlistItemsTbl.Col("playlist_id").Eq(playlistId),
+			playlistItemsTbl.Col("track_id").Eq(trackId),
 		)
 
 	_, err := db.Exec(ctx, query)
@@ -250,13 +249,13 @@ func (db DB) UpdatePlaylistItem(
 }
 
 func (db DB) DeletePlaylistItem(
-	ctx context.Context, 
+	ctx context.Context,
 	playlistId, trackId string,
 ) error {
-	query := goqu.Delete("playlist_items").
+	query := dialect.Delete(playlistItemsTbl).
 		Where(goqu.And(
-			goqu.I("playlist_items.playlist_id").Eq(playlistId),
-			goqu.I("playlist_items.track_id").Eq(trackId),
+			playlistItemsTbl.Col("playlist_id").Eq(playlistId),
+			playlistItemsTbl.Col("track_id").Eq(trackId),
 		))
 
 	_, err := db.Exec(ctx, query)
@@ -268,30 +267,30 @@ func (db DB) DeletePlaylistItem(
 }
 
 func (db DB) GetPlaylistItemByTrackId(
-	ctx context.Context, 
+	ctx context.Context,
 	playlistId, trackId string,
 ) (PlaylistItem, error) {
 	query := PlaylistItemQuery().
 		Where(
-			goqu.I("playlist_items.playlist_id").Eq(playlistId),
-			goqu.I("playlist_items.track_id").Eq(trackId),
+			playlistItemsTbl.Col("playlist_id").Eq(playlistId),
+			playlistItemsTbl.Col("track_id").Eq(trackId),
 		)
 
 	return Single[PlaylistItem](db, ctx, query)
 }
 
 func (db DB) ReorderPlaylistItemsAfterDelete(
-	ctx context.Context, 
-	playlistId string, 
+	ctx context.Context,
+	playlistId string,
 	deletedPosition int,
 ) error {
-	query := goqu.Update("playlist_items").
+	query := dialect.Update(playlistItemsTbl).
 		Set(goqu.Record{
 			"position": goqu.L("position - 1"),
 		}).
 		Where(
-			goqu.I("playlist_items.playlist_id").Eq(playlistId),
-			goqu.I("position").Gt(deletedPosition),
+			playlistItemsTbl.Col("playlist_id").Eq(playlistId),
+			playlistItemsTbl.Col("position").Gt(deletedPosition),
 		)
 
 	_, err := db.Exec(ctx, query)
