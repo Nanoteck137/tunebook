@@ -36,7 +36,11 @@ type PlaylistItemTrack struct {
 
 func PlaylistItemTrackSchema() *schema.Schema {
 	return TrackSchema().
-		AddField("position", query.TypeInt, schema.Column("playlist_items.position")).
+		AddField(
+			"position", 
+			query.TypeInt, 
+			schema.Column("playlist_items.position"),
+		).
 		SetDefaultSort(
 			&query.FieldOrdering{
 				Field: &query.Field{Name: "position"},
@@ -257,7 +261,8 @@ func (db DB) GetPlaylistTracks(
 			goqu.On(playlistItemsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
 		)
 
-	query = query.Where(playlistItemsTbl.Col("playlist_id").Eq(params.PlaylistId))
+	query = query.Where(
+		playlistItemsTbl.Col("playlist_id").Eq(params.PlaylistId))
 
 	query, err = ApplyQuery(query, playlistItemTrackSchema, QueryParams{
 		Filter: params.Filter.Filter,
