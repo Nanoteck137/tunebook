@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/nrednav/cuid2"
 )
 
@@ -134,4 +135,8 @@ func (kv *KVStore) Scan(src any) error {
 	}
 
 	return nil
+}
+
+func SqlGroupConcat(col any, seperator string) exp.SQLFunctionExpression {
+	return goqu.Func("group_concat", col, seperator)
 }

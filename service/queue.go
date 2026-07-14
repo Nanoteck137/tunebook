@@ -292,7 +292,7 @@ func (s *QueueService) AddItems(
 }
 
 func (s *QueueService) resolveFilter(
-	ctx context.Context, 
+	ctx context.Context,
 	filterId string,
 ) (string, error) {
 	if filterId == "" {
@@ -367,7 +367,13 @@ func (s *QueueService) AddAlbumToQueue(
 		return err
 	}
 
-	trackIds, err := s.db.GetTrackIdsByAlbum(ctx, params.AlbumId, filterStr)
+	trackIds, err := s.db.GetTrackIdsByAlbum(
+		ctx,
+		params.AlbumId,
+		database.GetTrackIdsByAlbumParams{
+			Filter: filterStr,
+		},
+	)
 	if err != nil {
 		return queueErr.Wrap("get track ids by album", err)
 	}
@@ -407,7 +413,13 @@ func (s *QueueService) AddArtistToQueue(
 		return err
 	}
 
-	trackIds, err := s.db.GetTrackIdsByArtist(ctx, params.ArtistId, filterStr)
+	trackIds, err := s.db.GetTrackIdsByArtist(
+		ctx,
+		params.ArtistId,
+		database.GetTrackIdsByArtistParams{
+			Filter: filterStr,
+		},
+	)
 	if err != nil {
 		return queueErr.Wrap("get track ids by artist", err)
 	}
@@ -449,9 +461,9 @@ func (s *QueueService) AddPlaylistToQueue(
 
 	trackIds, err := s.db.GetTrackIdsByPlaylist(
 		ctx,
+		params.PlaylistId,
 		database.GetTrackIdsByPlaylistParams{
-			PlaylistId: params.PlaylistId,
-			FilterStr:  filterStr,
+			Filter: filterStr,
 		},
 	)
 	if err != nil {
@@ -495,9 +507,9 @@ func (s *QueueService) AddFavoritesToQueue(
 
 	trackIds, err := s.db.GetTrackIdsByUserFavorites(
 		ctx,
+		params.FavoriteUserId,
 		database.GetTrackIdsByUserFavoritesParams{
-			UserId:    params.FavoriteUserId,
-			FilterStr: filterStr,
+			Filter: filterStr,
 		},
 	)
 	if err != nil {
@@ -542,7 +554,15 @@ func (s *QueueService) AddTracksToQueue(
 			return err
 		}
 
-		trackIds, err = s.db.GetTrackIdsByFilter(ctx, filterStr)
+		trackIds, err = s.db.GetTrackIdsByFilter(
+			ctx,
+			database.GetTrackIdsByFilterParams{
+				Filter: types.FilterParams{
+					Filter: filterStr,
+					Sort:   "",
+				},
+			},
+		)
 		if err != nil {
 			return queueErr.Wrap("get track ids by filter", err)
 		}

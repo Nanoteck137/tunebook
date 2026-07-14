@@ -524,7 +524,7 @@ func (s *SearchService) SearchTracks(
 		index,
 		params,
 		func(ctx context.Context, ids []string) ([]database.Track, error) {
-			return s.db.GetTracksIn(ctx, ids, "")
+			return s.db.GetTracksByIds(ctx, ids)
 		},
 		func(track database.Track) string {
 			return track.Id

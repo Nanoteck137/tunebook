@@ -306,35 +306,3 @@ func (db DB) DeleteArtist(ctx context.Context, artistId string) error {
 
 	return nil
 }
-
-// TODO(patrik): Generalize
-func (db DB) AddArtistTag(
-	ctx context.Context, 
-	tagSlug, artistId string,
-) error {
-	query := dialect.Insert("artists_tags").
-		Rows(goqu.Record{
-			"artist_id": artistId,
-			"tag_slug":  tagSlug,
-		})
-
-	_, err := db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// TODO(patrik): Generalize
-func (db DB) RemoveAllArtistTags(ctx context.Context, artistId string) error {
-	query := dialect.Delete("artists_tags").
-		Where(goqu.I("artist_id").Eq(artistId))
-
-	_, err := db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

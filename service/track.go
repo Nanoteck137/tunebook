@@ -33,26 +33,6 @@ func NewTrackService(
 	}
 }
 
-type LoadTracksFromIdsParams struct {
-	Ids []string
-}
-
-func (s *TrackService) LoadTracksFromIds(
-	ctx context.Context,
-	params LoadTracksFromIdsParams,
-) ([]database.Track, error) {
-	tracks, err := s.db.GetTracksIn(ctx, params.Ids, "")
-	if err != nil {
-		return nil, trackErr.Wrap("load tracks from ids", err)
-	}
-
-	for i := range tracks {
-		tracks[i].Order = utils.Pointer(i + 1)
-	}
-
-	return tracks, nil
-}
-
 type GetTracksParams struct {
 	Page   types.PageParams
 	Filter types.FilterParams
