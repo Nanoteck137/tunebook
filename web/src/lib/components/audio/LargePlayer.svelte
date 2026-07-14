@@ -22,6 +22,7 @@
 
   let currentMediaItem = $state<MediaItem | null>(null);
   let previousItems = $state<MediaItem[]>([]);
+  let previousStartIndex = $state(0);
   let currentQueueItem = $state<MediaItem | null>(null);
   let nextItems = $state<MediaItem[]>([]);
 
@@ -29,8 +30,9 @@
     currentMediaItem = musicManager.currentItem;
     currentQueueItem = musicManager.currentItem;
 
-    musicManager.queue.getPreviousItems(0, 50).then((items) => {
-      previousItems = items;
+    musicManager.queue.getPreviousItems(0, 10).then((result) => {
+      previousItems = result.items;
+      previousStartIndex = result.startIndex;
     });
     musicManager.queue.getNextItems(0, 50).then((items) => {
       nextItems = items;
@@ -73,7 +75,7 @@
               </p>
               <div class="flex flex-col gap-1">
                 {#each previousItems as mediaItem, i (mediaItem.trackId)}
-                  {@const queueIndex = i}
+                  {@const queueIndex = previousStartIndex + i}
                   <div
                     class="group flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent/50"
                   >

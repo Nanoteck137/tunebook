@@ -54,66 +54,34 @@ type GetQueueItem struct {
 	Item QueueItem `json:"item"`
 }
 
-type ReplaceQueueBody struct {
-	TrackIds     []string `json:"trackIds"`
-	CurrentIndex *int     `json:"currentIndex,omitempty"`
-	Shuffle      bool     `json:"shuffle,omitempty"`
-}
-
-type AddQueueItemsBody struct {
-	TrackIds []string `json:"trackIds"`
-	Position string   `json:"position"`
-}
-
-type AddToQueueBody struct {
-	Source              string   `json:"source"`
-	SourceId            string   `json:"sourceId"`
-	TrackIds            []string `json:"trackIds,omitempty"`
-	Position            string   `json:"position"`
-	Shuffle             bool     `json:"shuffle,omitempty"`
-	CurrentIndex        *int     `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+type AddToQueue struct {
+	FilterId            string  `json:"filterId,omitempty"`
+	Position            string  `json:"position"`
+	Shuffle             bool    `json:"shuffle,omitempty"`
+	CurrentIndex        *int    `json:"currentIndex,omitempty"`
+	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
 }
 
 type AddAlbumToQueueBody struct {
-	FilterId            string  `json:"filterId,omitempty"`
-	Position            string  `json:"position"`
-	Shuffle             bool    `json:"shuffle,omitempty"`
-	CurrentIndex        *int    `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
+	AddToQueue
 }
 
 type AddArtistToQueueBody struct {
-	FilterId            string  `json:"filterId,omitempty"`
-	Position            string  `json:"position"`
-	Shuffle             bool    `json:"shuffle,omitempty"`
-	CurrentIndex        *int    `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
+	AddToQueue
 }
 
 type AddPlaylistToQueueBody struct {
-	FilterId            string  `json:"filterId,omitempty"`
-	Position            string  `json:"position"`
-	Shuffle             bool    `json:"shuffle,omitempty"`
-	CurrentIndex        *int    `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
+	AddToQueue
 }
 
 type AddFavoritesToQueueBody struct {
-	FilterId            string  `json:"filterId,omitempty"`
-	Position            string  `json:"position"`
-	Shuffle             bool    `json:"shuffle,omitempty"`
-	CurrentIndex        *int    `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string `json:"queueIndexToTrackId,omitempty"`
+	AddToQueue
 }
 
 type AddTracksToQueueBody struct {
-	TrackIds            []string `json:"trackIds"`
-	FilterId            string   `json:"filterId,omitempty"`
-	Position            string   `json:"position"`
-	Shuffle             bool     `json:"shuffle,omitempty"`
-	CurrentIndex        *int     `json:"currentIndex,omitempty"`
-	QueueIndexToTrackId *string  `json:"queueIndexToTrackId,omitempty"`
+	AddToQueue
+
+	TrackIds []string `json:"trackIds"`
 }
 
 type SetQueuePositionBody struct {
@@ -122,8 +90,6 @@ type SetQueuePositionBody struct {
 
 func handleQueueServiceErrors(err error) error {
 	switch {
-	case errors.Is(err, service.ErrQueueServiceQueueNotFound):
-		return QueueNotFound()
 	case errors.Is(err, service.ErrQueueServiceItemNotFound):
 		return QueueItemNotFound()
 	case errors.Is(err, service.ErrQueueServiceFilterNotFound):
@@ -238,82 +204,6 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				return GetQueueItem{
 					Item: ConvertDBQueueItem(c, item),
 				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:     "ReplaceQueue",
-			Path:     "/queues/:queueId",
-			Method:   http.MethodPut,
-			BodyType: ReplaceQueueBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.Background()
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				body, err := pyrin.Body[ReplaceQueueBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				currentIndex := 0
-				if body.CurrentIndex != nil {
-					currentIndex = *body.CurrentIndex
-				}
-
-				err = app.QueueService().ReplaceQueue(
-					ctx,
-					service.ReplaceQueueParams{
-						QueueId:      c.Param("queueId"),
-						UserId:       user.Id,
-						TrackIds:     body.TrackIds,
-						CurrentIndex: currentIndex,
-						Shuffle:      body.Shuffle,
-					},
-				)
-				if err != nil {
-					return nil, handleQueueServiceErrors(err)
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:     "AddQueueItems",
-			Path:     "/queues/:queueId/items",
-			Method:   http.MethodPost,
-			BodyType: AddQueueItemsBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.Background()
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				body, err := pyrin.Body[AddQueueItemsBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				err = app.QueueService().AddItems(
-					ctx,
-					service.AddItemsParams{
-						QueueId:  c.Param("queueId"),
-						UserId:   user.Id,
-						TrackIds: body.TrackIds,
-						Position: body.Position,
-					},
-				)
-				if err != nil {
-					return nil, handleQueueServiceErrors(err)
-				}
-
-				return nil, nil
 			},
 		},
 
@@ -576,56 +466,6 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						UserId:              user.Id,
 						TrackIds:            body.TrackIds,
 						FilterId:            body.FilterId,
-						Position:            body.Position,
-						Shuffle:             body.Shuffle,
-						CurrentIndex:        currentIndex,
-						QueueIndexToTrackId: queueIndexToTrackId,
-					},
-				)
-				if err != nil {
-					return nil, handleQueueServiceErrors(err)
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:     "AddToQueue",
-			Path:     "/queues/:queueId/add",
-			Method:   http.MethodPost,
-			BodyType: AddToQueueBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				ctx := context.Background()
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				body, err := pyrin.Body[AddToQueueBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				currentIndex := 0
-				if body.CurrentIndex != nil {
-					currentIndex = *body.CurrentIndex
-				}
-
-				queueIndexToTrackId := ""
-				if body.QueueIndexToTrackId != nil {
-					queueIndexToTrackId = *body.QueueIndexToTrackId
-				}
-
-				err = app.QueueService().AddToQueue(
-					ctx,
-					service.AddToQueueParams{
-						QueueId:             c.Param("queueId"),
-						UserId:              user.Id,
-						Source:              body.Source,
-						SourceId:            body.SourceId,
-						TrackIds:            body.TrackIds,
 						Position:            body.Position,
 						Shuffle:             body.Shuffle,
 						CurrentIndex:        currentIndex,

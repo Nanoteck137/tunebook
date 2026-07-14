@@ -31,14 +31,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/queues/${queueId}/add/playlists/${playlistId}`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  addQueueItems(queueId: string, body: api.AddQueueItemsBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/queues/${queueId}/items`, "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  addToQueue(queueId: string, body: api.AddToQueueBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/queues/${queueId}/add`, "POST", z.undefined(), z.any(), body, options)
-  }
-  
   addTracksToQueue(queueId: string, body: api.AddTracksToQueueBody, options?: ExtraOptions) {
     return this.request(`/api/v1/queues/${queueId}/add/tracks`, "POST", z.undefined(), z.any(), body, options)
   }
@@ -260,10 +252,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items/reorder`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  replaceQueue(queueId: string, body: api.ReplaceQueueBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/queues/${queueId}`, "PUT", z.undefined(), z.any(), body, options)
-  }
-  
   runTask(taskName: string, options?: ExtraOptions) {
     return this.request(`/api/v1/system/task/${taskName}`, "POST", z.undefined(), z.any(), undefined, options)
   }
@@ -344,14 +332,6 @@ export class ClientUrls {
   
   addPlaylistToQueue(queueId: string, playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add/playlists/${playlistId}`)
-  }
-  
-  addQueueItems(queueId: string) {
-    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/items`)
-  }
-  
-  addToQueue(queueId: string) {
-    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/add`)
   }
   
   addTracksToQueue(queueId: string) {
@@ -588,10 +568,6 @@ export class ClientUrls {
   
   reorderPlaylistItems(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items/reorder`)
-  }
-  
-  replaceQueue(queueId: string) {
-    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}`)
   }
   
   runTask(taskName: string) {

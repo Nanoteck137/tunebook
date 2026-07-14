@@ -68,38 +68,23 @@ export const AddPlaylistToQueueBody = z.object({
 });
 export type AddPlaylistToQueueBody = z.infer<typeof AddPlaylistToQueueBody>;
 
-// Name: AddQueueItemsBody
-export const AddQueueItemsBody = z.object({
-  // Name: AddQueueItemsBody.trackIds
-  "trackIds": z.array(z.string()),
-  // Name: AddQueueItemsBody.position
+// Name: AddToQueue
+export const AddToQueue = z.object({
+  // Name: AddToQueue.filterId
+  "filterId": z.string().optional(),
+  // Name: AddToQueue.position
   "position": z.string(),
-});
-export type AddQueueItemsBody = z.infer<typeof AddQueueItemsBody>;
-
-// Name: AddToQueueBody
-export const AddToQueueBody = z.object({
-  // Name: AddToQueueBody.source
-  "source": z.string(),
-  // Name: AddToQueueBody.sourceId
-  "sourceId": z.string(),
-  // Name: AddToQueueBody.trackIds
-  "trackIds": z.array(z.string()).optional(),
-  // Name: AddToQueueBody.position
-  "position": z.string(),
-  // Name: AddToQueueBody.shuffle
+  // Name: AddToQueue.shuffle
   "shuffle": z.boolean().optional(),
-  // Name: AddToQueueBody.currentIndex
+  // Name: AddToQueue.currentIndex
   "currentIndex": z.number().nullable().optional(),
-  // Name: AddToQueueBody.queueIndexToTrackId
+  // Name: AddToQueue.queueIndexToTrackId
   "queueIndexToTrackId": z.string().nullable().optional(),
 });
-export type AddToQueueBody = z.infer<typeof AddToQueueBody>;
+export type AddToQueue = z.infer<typeof AddToQueue>;
 
 // Name: AddTracksToQueueBody
 export const AddTracksToQueueBody = z.object({
-  // Name: AddTracksToQueueBody.trackIds
-  "trackIds": z.array(z.string()),
   // Name: AddTracksToQueueBody.filterId
   "filterId": z.string().optional(),
   // Name: AddTracksToQueueBody.position
@@ -110,6 +95,8 @@ export const AddTracksToQueueBody = z.object({
   "currentIndex": z.number().nullable().optional(),
   // Name: AddTracksToQueueBody.queueIndexToTrackId
   "queueIndexToTrackId": z.string().nullable().optional(),
+  // Name: AddTracksToQueueBody.trackIds
+  "trackIds": z.array(z.string()),
 });
 export type AddTracksToQueueBody = z.infer<typeof AddTracksToQueueBody>;
 
@@ -836,17 +823,6 @@ export const ReorderPlaylistItemsBody = z.object({
   "trackIds": z.array(z.string()),
 });
 export type ReorderPlaylistItemsBody = z.infer<typeof ReorderPlaylistItemsBody>;
-
-// Name: ReplaceQueueBody
-export const ReplaceQueueBody = z.object({
-  // Name: ReplaceQueueBody.trackIds
-  "trackIds": z.array(z.string()),
-  // Name: ReplaceQueueBody.currentIndex
-  "currentIndex": z.number().nullable().optional(),
-  // Name: ReplaceQueueBody.shuffle
-  "shuffle": z.boolean().optional(),
-});
-export type ReplaceQueueBody = z.infer<typeof ReplaceQueueBody>;
 
 // Name: SearchAlbums
 export const SearchAlbums = z.object({

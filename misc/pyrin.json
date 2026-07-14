@@ -132,36 +132,11 @@
       ]
     },
     {
-      "name": "AddQueueItemsBody",
+      "name": "AddToQueue",
       "fields": [
         {
-          "name": "trackIds",
-          "type": "[]string",
-          "omitEmpty": false
-        },
-        {
-          "name": "position",
+          "name": "filterId",
           "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "AddToQueueBody",
-      "fields": [
-        {
-          "name": "source",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "sourceId",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "trackIds",
-          "type": "[]string",
           "omitEmpty": true
         },
         {
@@ -190,11 +165,6 @@
       "name": "AddTracksToQueueBody",
       "fields": [
         {
-          "name": "trackIds",
-          "type": "[]string",
-          "omitEmpty": false
-        },
-        {
           "name": "filterId",
           "type": "string",
           "omitEmpty": true
@@ -218,6 +188,11 @@
           "name": "queueIndexToTrackId",
           "type": "*string",
           "omitEmpty": true
+        },
+        {
+          "name": "trackIds",
+          "type": "[]string",
+          "omitEmpty": false
         }
       ]
     },
@@ -1277,26 +1252,6 @@
       ]
     },
     {
-      "name": "ReplaceQueueBody",
-      "fields": [
-        {
-          "name": "trackIds",
-          "type": "[]string",
-          "omitEmpty": false
-        },
-        {
-          "name": "currentIndex",
-          "type": "*int",
-          "omitEmpty": true
-        },
-        {
-          "name": "shuffle",
-          "type": "bool",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
       "name": "SearchAlbums",
       "fields": [
         {
@@ -1672,20 +1627,6 @@
       "method": "POST",
       "path": "/api/v1/queues/:queueId/add/playlists/:playlistId",
       "body": "AddPlaylistToQueueBody"
-    },
-    {
-      "type": "api",
-      "name": "AddQueueItems",
-      "method": "POST",
-      "path": "/api/v1/queues/:queueId/items",
-      "body": "AddQueueItemsBody"
-    },
-    {
-      "type": "api",
-      "name": "AddToQueue",
-      "method": "POST",
-      "path": "/api/v1/queues/:queueId/add",
-      "body": "AddToQueueBody"
     },
     {
       "type": "api",
@@ -2096,13 +2037,6 @@
       "method": "POST",
       "path": "/api/v1/playlists/:playlistId/items/reorder",
       "body": "ReorderPlaylistItemsBody"
-    },
-    {
-      "type": "api",
-      "name": "ReplaceQueue",
-      "method": "PUT",
-      "path": "/api/v1/queues/:queueId",
-      "body": "ReplaceQueueBody"
     },
     {
       "type": "api",

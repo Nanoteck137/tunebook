@@ -148,10 +148,14 @@ class Queue {
     return result;
   }
 
-  async getPreviousItems(page: number, perPage: number): Promise<MediaItem[]> {
-    const start = page * perPage;
-    const end = Math.min(this.index, start + perPage);
-    return this.#loadRange(start, end);
+  async getPreviousItems(
+    page: number,
+    perPage: number,
+  ): Promise<{ items: MediaItem[]; startIndex: number }> {
+    const end = this.index - page * perPage;
+    const start = Math.max(0, end - perPage);
+    const items = await this.#loadRange(start, end);
+    return { items, startIndex: start };
   }
 
   async getNextItems(page: number, perPage: number): Promise<MediaItem[]> {
@@ -514,7 +518,8 @@ export class MusicManager {
       queueIndexToTrackId: options.queueIndexToTrackId ?? undefined,
     };
 
-    let res: Awaited<ReturnType<typeof this.apiClient.addToQueue>>;
+    let res: Awaited<ReturnType<typeof this.apiClient.addAlbumToQueue>>;
+
     switch (request.type) {
       case "addAlbum":
         res = await this.apiClient.addAlbumToQueue(
