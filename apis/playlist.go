@@ -162,6 +162,20 @@ func handlePlaylistServiceErrors(err error) error {
 		return UnsupportedImageType()
 	}
 
+	var queryErr *database.QueryError
+	if errors.As(err, &queryErr) {
+		var filterErr, sortErr error
+		if queryErr.Filter != nil {
+			filterErr = queryErr.Filter
+		}
+
+		if queryErr.Sort != nil {
+			sortErr = queryErr.Sort
+		}
+
+		return QueryError(filterErr, sortErr)
+	}
+
 	return err
 }
 
