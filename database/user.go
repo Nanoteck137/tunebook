@@ -77,62 +77,6 @@ func UserSettingsQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db DB) GetAllUsers(ctx context.Context) ([]User, error) {
-	query := UserQuery()
-
-	return Multiple[User](db, ctx, query)
-}
-
-func (db DB) GetUsersIn(ctx context.Context, in any) ([]User, error) {
-	query := UserQuery().
-		Where(usersTbl.Col("id").In(in))
-
-	return Multiple[User](db, ctx, query)
-}
-
-func (db DB) CountUsers(ctx context.Context) (int, error) {
-	query := UserQuery().Select(goqu.COUNT("users.id").As("count"))
-
-	return Single[int](db, ctx, query)
-}
-
-func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
-	query := UserQuery().
-		Where(usersTbl.Col("id").Eq(id))
-
-	return Single[User](db, ctx, query)
-}
-
-func (db DB) GetUserByUsername(
-	ctx context.Context, 
-	username string,
-) (User, error) {
-	query := UserQuery().
-		Where(usersTbl.Col("username").Eq(username))
-
-	return Single[User](db, ctx, query)
-}
-
-func (db DB) GetUserByEmail(
-	ctx context.Context, 
-	email string,
-) (User, error) {
-	query := UserQuery().
-		Where(usersTbl.Col("email").Eq(email))
-
-	return Single[User](db, ctx, query)
-}
-
-func (db DB) GetUserSettingsById(
-	ctx context.Context, 
-	id string,
-) (UserSettings, error) {
-	query := UserSettingsQuery().
-		Where(usersSettingsTbl.Col("id").Eq(id))
-
-	return Single[UserSettings](db, ctx, query)
-}
-
 type CreateUserParams struct {
 	Id    string
 	Email string
@@ -242,4 +186,54 @@ func (db DB) UpdateUserSettings(
 	}
 
 	return nil
+}
+
+func (db DB) CountUsers(ctx context.Context) (int, error) {
+	query := UserQuery().
+		Select(
+			goqu.COUNT(usersTbl.Col("id")).As("count"),
+		)
+
+	return Single[int](db, ctx, query)
+}
+
+func (db DB) GetAllUsers(ctx context.Context) ([]User, error) {
+	query := UserQuery()
+
+	return Multiple[User](db, ctx, query)
+}
+
+func (db DB) GetUsersIn(ctx context.Context, in any) ([]User, error) {
+	query := UserQuery().
+		Where(usersTbl.Col("id").In(in))
+
+	return Multiple[User](db, ctx, query)
+}
+
+
+func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
+	query := UserQuery().
+		Where(usersTbl.Col("id").Eq(id))
+
+	return Single[User](db, ctx, query)
+}
+
+func (db DB) GetUserByEmail(
+	ctx context.Context, 
+	email string,
+) (User, error) {
+	query := UserQuery().
+		Where(usersTbl.Col("email").Eq(email))
+
+	return Single[User](db, ctx, query)
+}
+
+func (db DB) GetUserSettingsById(
+	ctx context.Context, 
+	id string,
+) (UserSettings, error) {
+	query := UserSettingsQuery().
+		Where(usersSettingsTbl.Col("id").Eq(id))
+
+	return Single[UserSettings](db, ctx, query)
 }
