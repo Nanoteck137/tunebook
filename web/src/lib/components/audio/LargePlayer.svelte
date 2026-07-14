@@ -17,6 +17,8 @@
   import { getMusicManager, type MediaItem } from "$lib/music-manager.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import Image from "$lib/components/Image.svelte";
+  import FavoriteButton from "$lib/components/FavoriteButton.svelte";
+  import QuickAddButton from "$lib/components/QuickAddButton.svelte";
 
   const musicManager = getMusicManager();
 
@@ -272,6 +274,13 @@
           {/if}
         </p>
       </div>
+
+      {#if currentMediaItem}
+        <div class="flex items-center gap-0.5">
+          <FavoriteButton show trackId={currentMediaItem.trackId} />
+          <QuickAddButton trackId={currentMediaItem.trackId} />
+        </div>
+      {/if}
     </div>
 
     <!-- Center: Controls + time -->
