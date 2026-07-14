@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -74,7 +73,7 @@ func AlbumSchema() *schema.Schema {
 				"albums_tags", "album_id", "tag_slug", query.TypeString, "albums.id"),
 		).
 		AddField(
-			"featuringArtist",
+			"featuringArtists",
 			query.TypeRelation,
 			schema.Relation(
 				"albums_featuring_artists",
@@ -260,19 +259,15 @@ func (db DB) GetAlbums(
 
 	query, err = ApplyQuery(query, albumSchema, params.Query)
 	if err != nil {
-		fmt.Printf("1 err: %v\n", err)
 		return nil, types.Page{}, err
 	}
 
 	page, err := buildPage(ctx, db, params.Page, query, albumsTbl.Col("id"))
 	if err != nil {
-		fmt.Printf("2 err: %v\n", err)
 		return nil, types.Page{}, err
 	}
 
 	query = applyPageParams(params.Page, query)
-
-	fmt.Printf("DebugSQL(query): %v\n", DebugSQL(query))
 
 	items, err := Multiple[Album](db, ctx, query)
 	if err != nil {

@@ -65,7 +65,7 @@ func TrackSchema() *schema.Schema {
 		AddField("albumName", query.TypeString, schema.Column("albums.name")).
 		AddField("artistName", query.TypeString, schema.Column("artists.name")).
 		AddField("tags", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString, "tracks.id")).
-		AddField("featuringArtist", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString, "tracks.id")).
+		AddField("featuringArtists", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString, "tracks.id")).
 		AddField("created", query.TypeInt, schema.Column("tracks.created")).
 		AddField("updated", query.TypeInt, schema.Column("tracks.updated")).
 		SetDefaultSort(
