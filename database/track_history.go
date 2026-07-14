@@ -6,11 +6,18 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/database/adapter"
+	"github.com/nanoteck137/tunebook/tools/query"
+	"github.com/nanoteck137/tunebook/tools/query/schema"
 	"github.com/nanoteck137/tunebook/types"
 )
 
-var createTrackHistoryId = createIdGenerator(32)
+var (
+	createTrackHistoryId = createIdGenerator(32)
+
+	trackHistoryTbl = goqu.T("track_history")
+
+	trackHistorySchema = TrackHistorySchema()
+)
 
 type TrackHistory struct {
 	Track
@@ -31,84 +38,81 @@ type TrackHistory struct {
 	Updated int64 `db:"history_updated"`
 }
 
+func TrackHistorySchema() *schema.Schema {
+	return TrackSchema().
+		AddField("id", query.TypeString, schema.Column("track_history.id")).
+		AddField(
+			"userId", 
+			query.TypeString, 
+			schema.Column("track_history.user_id"),
+		).
+		AddField(
+			"trackId", 
+			query.TypeString, 
+			schema.Column("track_history.track_id"),
+		).
+		AddField(
+			"listenedAt", 
+			query.TypeInt, 
+			schema.Column("track_history.listened_at"),
+		).
+		AddField(
+			"playbackType", 
+			query.TypeString, 
+			schema.Column("track_history.playback_type"),
+		).
+		AddField(
+			"status", 
+			query.TypeString, 
+			schema.Column("track_history.status"),
+		).
+		AddField(
+			"percentPlayed", 
+			query.TypeInt, 
+			schema.Column("track_history.percent_played"),
+		).
+		AddField(
+			"created", 
+			query.TypeInt, 
+			schema.Column("track_history.created"),
+		).
+		AddField(
+			"updated", 
+			query.TypeInt, 
+			schema.Column("track_history.updated"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "listenedAt"},
+				Dir:   query.DirDesc,
+			},
+		)
+}
+
 func TrackHistoryQuery() *goqu.SelectDataset {
-	tbl := goqu.T("track_history")
+	query := TrackQuery().
+		SelectAppend(
+			trackHistoryTbl.Col("id").As("history_id"),
 
-	query := dialect.From(tbl).
-		Select(
-			"tracks.*",
+			trackHistoryTbl.Col("user_id").As("history_user_id"),
+			trackHistoryTbl.Col("track_id").As("history_track_id"),
 
-			tbl.Col("id").As("history_id"),
+			trackHistoryTbl.Col("listened_at").As("history_listened_at"),
 
-			tbl.Col("user_id").As("history_user_id"),
-			tbl.Col("track_id").As("history_track_id"),
+			trackHistoryTbl.Col("playback_type").As("history_playback_type"),
+			trackHistoryTbl.Col("status").As("history_status"),
 
-			tbl.Col("listened_at").As("history_listened_at"),
+			trackHistoryTbl.Col("percent_played").As("history_percent_played"),
 
-			tbl.Col("playback_type").As("history_playback_type"),
-			tbl.Col("status").As("history_status"),
-
-			tbl.Col("percent_played").As("history_percent_played"),
-
-			tbl.Col("updated").As("history_updated"),
-			tbl.Col("created").As("history_created"),
+			trackHistoryTbl.Col("updated").As("history_updated"),
+			trackHistoryTbl.Col("created").As("history_created"),
 		).
 		Join(
-			TrackQuery().As("tracks"),
-			goqu.On(tbl.Col("track_id").Eq(goqu.I("tracks.id"))),
+			trackHistoryTbl,
+			goqu.On(trackHistoryTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
 		)
 
 	return query
-}
-
-type GetTrackHistoryParams struct {
-	UserId string
-	Page   types.PageParams
-	Filter types.FilterParams
-}
-
-func (db DB) GetTrackHistory(
-	ctx context.Context,
-	params GetTrackHistoryParams,
-) ([]TrackHistory, types.Page, error) {
-	query := TrackHistoryQuery()
-
-	var err error
-
-	a := adapter.TrackHistoryResolverAdapter{}
-	query, err = applyFilterParamsCustom(
-		params.Filter,
-		&a,
-		query,
-		goqu.I("track_history.user_id").Eq(params.UserId),
-	)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	page, err := buildPage(ctx, db, params.Page, query, "track_history.id")
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	query = applyPageParams(params.Page, query)
-
-	items, err := Multiple[TrackHistory](db, ctx, query)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	return items, page, nil
-}
-
-func (db DB) GetTrackHistoryById(
-	ctx context.Context,
-	id string,
-) (TrackHistory, error) {
-	query := TrackHistoryQuery().
-		Where(goqu.I("track_history.id").Eq(id))
-
-	return Single[TrackHistory](db, ctx, query)
 }
 
 type CreateTrackHistoryParams struct {
@@ -142,7 +146,7 @@ func (db DB) CreateTrackHistory(
 		params.Id = createTrackHistoryId()
 	}
 
-	query := dialect.Insert("track_history").Rows(goqu.Record{
+	query := dialect.Insert(trackHistoryTbl).Rows(goqu.Record{
 		"id": params.Id,
 
 		"user_id":  params.UserId,
@@ -168,11 +172,11 @@ func (db DB) CreateTrackHistory(
 }
 
 func (db DB) DeleteTrackHistory(
-	ctx context.Context, 
+	ctx context.Context,
 	trackHistoryId string,
 ) error {
-	query := dialect.Delete("track_history").
-		Where(goqu.I("track_history.id").Eq(trackHistoryId))
+	query := dialect.Delete(trackHistoryTbl).
+		Where(trackHistoryTbl.Col("id").Eq(trackHistoryId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -182,15 +186,64 @@ func (db DB) DeleteTrackHistory(
 	return nil
 }
 
+type GetTrackHistoryParams struct {
+	UserId string
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (db DB) GetTrackHistory(
+	ctx context.Context,
+	params GetTrackHistoryParams,
+) ([]TrackHistory, types.Page, error) {
+	query := TrackHistoryQuery()
+
+	var err error
+
+	query = query.Where(trackHistoryTbl.Col("user_id").Eq(params.UserId))
+
+	query, err = ApplyQuery(query, trackHistorySchema, QueryParams{
+		Filter: params.Filter.Filter,
+		Sort:   params.Filter.Sort,
+	})
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(
+		ctx, db, params.Page, query, trackHistoryTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[TrackHistory](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+func (db DB) GetTrackHistoryById(
+	ctx context.Context,
+	id string,
+) (TrackHistory, error) {
+	query := TrackHistoryQuery().
+		Where(trackHistoryTbl.Col("id").Eq(id))
+
+	return Single[TrackHistory](db, ctx, query)
+}
+
 func (db DB) GetCompletedPlayCount(
 	ctx context.Context,
 	userId string,
 ) (int, error) {
-	tbl := goqu.T("track_history")
-	query := dialect.From(tbl).
+	query := dialect.From(trackHistoryTbl).
 		Where(
-			tbl.Col("user_id").Eq(userId),
-			tbl.Col("status").Eq("completed"),
+			trackHistoryTbl.Col("user_id").Eq(userId),
+			trackHistoryTbl.Col("status").Eq("completed"),
 		).
 		Select(goqu.COUNT("*"))
 
@@ -201,11 +254,10 @@ func (db DB) GetSkippedPlayCount(
 	ctx context.Context,
 	userId string,
 ) (int, error) {
-	tbl := goqu.T("track_history")
-	query := dialect.From(tbl).
+	query := dialect.From(trackHistoryTbl).
 		Where(
-			tbl.Col("user_id").Eq(userId),
-			tbl.Col("status").Eq("skipped"),
+			trackHistoryTbl.Col("user_id").Eq(userId),
+			trackHistoryTbl.Col("status").Eq("skipped"),
 		).
 		Select(goqu.COUNT("*"))
 
@@ -216,10 +268,7 @@ func (db DB) GetCompletedListeningTime(
 	ctx context.Context,
 	userId string,
 ) (int64, error) {
-	historyTbl := goqu.T("track_history")
-	tracksTbl := goqu.T("tracks")
-
-	query := dialect.From(historyTbl).
+	query := dialect.From(trackHistoryTbl).
 		Select(
 			goqu.COALESCE(
 				goqu.SUM(tracksTbl.Col("duration")), 0,
@@ -227,11 +276,11 @@ func (db DB) GetCompletedListeningTime(
 		).
 		Join(
 			tracksTbl,
-			goqu.On(historyTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
+			goqu.On(trackHistoryTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
 		).
 		Where(
-			historyTbl.Col("user_id").Eq(userId),
-			historyTbl.Col("status").Eq("completed"),
+			trackHistoryTbl.Col("user_id").Eq(userId),
+			trackHistoryTbl.Col("status").Eq("completed"),
 		)
 
 	listeningTime, err := Single[sql.NullInt64](db, ctx, query)
@@ -246,10 +295,9 @@ func (db DB) GetLastListenedAt(
 	ctx context.Context,
 	userId string,
 ) (sql.NullInt64, error) {
-	tbl := goqu.T("track_history")
-	query := dialect.From(tbl).
-		Where(tbl.Col("user_id").Eq(userId)).
-		Select(goqu.MAX(tbl.Col("listened_at")))
+	query := dialect.From(trackHistoryTbl).
+		Where(trackHistoryTbl.Col("user_id").Eq(userId)).
+		Select(goqu.MAX(trackHistoryTbl.Col("listened_at")))
 
 	return Single[sql.NullInt64](db, ctx, query)
 }
