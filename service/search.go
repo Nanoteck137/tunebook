@@ -500,7 +500,7 @@ func (s *SearchService) SearchAlbums(
 		index,
 		params,
 		func(ctx context.Context, ids []string) ([]database.Album, error) {
-			return s.db.GetAlbumsIn(ctx, ids, "")
+			return s.db.GetAlbumsByIds(ctx, ids)
 		},
 		func(album database.Album) string {
 			return album.Id

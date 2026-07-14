@@ -6,17 +6,21 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/library"
-	"github.com/nanoteck137/tunebook/tools/filter"
+	"github.com/nanoteck137/tunebook/tools/query"
+	"github.com/nanoteck137/tunebook/tools/query/schema"
 	"github.com/nanoteck137/tunebook/types"
 )
 
-var createAlbumId = createIdGenerator(16)
+var (
+	createAlbumId = createIdGenerator(16)
+
+	albumsTbl = goqu.T("albums")
+
+	albumSchema = AlbumSchema()
+)
 
 type Album struct {
-	RowId int `db:"rowid"`
-
 	Id string `db:"id"`
 
 	Name string `db:"name"`
@@ -37,140 +41,87 @@ type Album struct {
 	FeaturingArtists JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 }
 
-func AlbumQuery() *goqu.SelectDataset {
-	tags := dialect.From("albums_tags").
-		Select(
-			goqu.I("albums_tags.album_id").As("album_id"),
-			goqu.Func("group_concat", goqu.I("tags.slug"), ",").As("tags"),
+func AlbumSchema() *schema.Schema {
+	return schema.New().
+		AddField("id", query.TypeString, schema.Column("albums.id")).
+		AddField("name", query.TypeString, schema.Column("albums.name")).
+		AddField(
+			"artistId",
+			query.TypeString,
+			schema.Column("albums.artist_id"),
 		).
-		Join(
-			goqu.I("tags"),
-			goqu.On(goqu.I("albums_tags.tag_slug").Eq(goqu.I("tags.slug"))),
+		AddField(
+			"coverArt",
+			query.TypeString,
+			schema.Column("albums.cover_art"),
+			schema.Nullable(),
 		).
-		GroupBy(goqu.I("albums_tags.album_id"))
-
-	query := dialect.From("albums").
-		Select(
-			"albums.rowid",
-
-			"albums.id",
-
-			"albums.name",
-
-			"albums.artist_id",
-
-			"albums.cover_art",
-			"albums.year",
-			"albums.album_type",
-
-			"albums.created",
-			"albums.updated",
-
-			goqu.I("artists.name").As("artist_name"),
-
-			goqu.I("tags.tags").As("tags"),
-
-			goqu.I("featuring_artists.artists").As("featuring_artists"),
+		AddField(
+			"year",
+			query.TypeInt,
+			schema.Column("albums.year"),
+			schema.Nullable(),
 		).
-		Join(
-			goqu.I("artists"),
-			goqu.On(
-				goqu.I("albums.artist_id").Eq(goqu.I("artists.id")),
+		AddField(
+			"albumType", query.TypeString, schema.Column("albums.album_type")).
+		AddField(
+			"artistName", query.TypeString, schema.Column("artists.name")).
+		AddField(
+			"tags",
+			query.TypeRelation,
+			schema.Relation(
+				"albums_tags", "album_id", "tag_slug", query.TypeString),
+		).
+		AddField(
+			"featuringArtist",
+			query.TypeRelation,
+			schema.Relation(
+				"albums_featuring_artists",
+				"album_id",
+				"artist_id",
+				query.TypeString,
 			),
 		).
-		LeftJoin(
-			tags.As("tags"),
-			goqu.On(goqu.I("albums.id").Eq(goqu.I("tags.album_id"))),
-		).
-		LeftJoin(
-			FeaturingArtistsQuery(
-				"albums_featuring_artists", 
-				"album_id",
-			).As("featuring_artists"),
-			goqu.On(goqu.I("albums.id").Eq(goqu.I("featuring_artists.id"))),
+		AddField("created", query.TypeInt, schema.Column("albums.created")).
+		AddField("updated", query.TypeInt, schema.Column("albums.updated")).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "name"},
+				Dir:   query.DirAsc,
+			},
 		)
+}
+
+func AlbumQuery() *goqu.SelectDataset {
+	idCol := albumsTbl.Col("id")
+
+	query := dialect.From(albumsTbl).
+		Select(
+			idCol,
+
+			albumsTbl.Col("name"),
+
+			albumsTbl.Col("artist_id"),
+
+			albumsTbl.Col("cover_art"),
+			albumsTbl.Col("year"),
+			albumsTbl.Col("album_type"),
+
+			albumsTbl.Col("created"),
+			albumsTbl.Col("updated"),
+
+			artistsTbl.Col("name").As("artist_name"),
+		).
+		Join(
+			artistsTbl,
+			goqu.On(albumsTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
+		)
+
+	query = AddTagsToQuery(query, idCol, albumsTagsTbl, "album_id")
+	query = AddFeaturingArtistsToQuery(
+		query, idCol, albumsFeaturingArtistsTbl, "album_id")
 
 	return query
-}
-
-func (db DB) GetAllAlbumIds(ctx context.Context) ([]string, error) {
-	query := dialect.From("albums").
-		Select("albums.id")
-
-	return Multiple[string](db, ctx, query)
-}
-
-type GetAlbumsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
-}
-
-func (db DB) GetAlbums(
-	ctx context.Context,
-	params GetAlbumsParams,
-) ([]Album, types.Page, error) {
-	query := AlbumQuery()
-
-	var err error
-
-	a := adapter.AlbumResolverAdapter{}
-
-	query, err = applyFilterParams(params.Filter, &a, query)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	page, err := buildPage(ctx, db, params.Page, query, "albums.id")
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	query = applyPageParams(params.Page, query)
-
-	items, err := Multiple[Album](db, ctx, query)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	return items, page, nil
-}
-
-func (db DB) GetAlbumsByArtist(
-	ctx context.Context,
-	artistId string,
-) ([]Album, error) {
-	query := AlbumQuery().
-		Where(goqu.I("albums.artist_id").Eq(artistId))
-
-	return Multiple[Album](db, ctx, query)
-}
-
-func (db DB) GetAlbumById(ctx context.Context, albumId string) (Album, error) {
-	query := AlbumQuery().
-		Where(goqu.I("albums.id").Eq(albumId))
-
-	return Single[Album](db, ctx, query)
-}
-
-func (db DB) GetAlbumsIn(
-	ctx context.Context,
-	in any,
-	sort string,
-) ([]Album, error) {
-	query := AlbumQuery().
-		Where(
-			goqu.I("albums.id").In(in),
-		)
-
-	a := adapter.AlbumResolverAdapter{}
-	resolver := filter.New(&a)
-
-	query, err := applySort(query, resolver, sort)
-	if err != nil {
-		return nil, err
-	}
-
-	return Multiple[Album](db, ctx, query)
 }
 
 type CreateAlbumParams struct {
@@ -202,7 +153,7 @@ func (db DB) CreateAlbum(
 		params.Id = createAlbumId()
 	}
 
-	query := dialect.Insert("albums").
+	query := dialect.Insert(albumsTbl).
 		Rows(goqu.Record{
 			"id": params.Id,
 
@@ -261,9 +212,9 @@ func (db DB) UpdateAlbum(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	query := dialect.Update("albums").
+	query := dialect.Update(albumsTbl).
 		Set(record).
-		Where(goqu.I("albums.id").Eq(albumId))
+		Where(albumsTbl.Col("id").Eq(albumId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -274,8 +225,8 @@ func (db DB) UpdateAlbum(
 }
 
 func (db DB) DeleteAlbum(ctx context.Context, albumId string) error {
-	query := dialect.Delete("albums").
-		Where(goqu.I("albums.id").Eq(albumId))
+	query := dialect.Delete(albumsTbl).
+		Where(albumsTbl.Col("id").Eq(albumId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -283,4 +234,73 @@ func (db DB) DeleteAlbum(ctx context.Context, albumId string) error {
 	}
 
 	return nil
+}
+
+func (db DB) GetAllAlbumIds(ctx context.Context) ([]string, error) {
+	query := dialect.From(albumsTbl).
+		Select(albumsTbl.Col("id"))
+
+	return Multiple[string](db, ctx, query)
+}
+
+type GetAlbumsParams struct {
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (db DB) GetAlbums(
+	ctx context.Context,
+	params GetAlbumsParams,
+) ([]Album, types.Page, error) {
+	query := AlbumQuery()
+
+	var err error
+
+	query, err = ApplyQuery(query, albumSchema, QueryParams{
+		Filter: params.Filter.Filter,
+		Sort:   params.Filter.Sort,
+	})
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, albumsTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[Album](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+func (db DB) GetAlbumsByArtist(
+	ctx context.Context,
+	artistId string,
+) ([]Album, error) {
+	query := AlbumQuery().
+		Where(albumsTbl.Col("artist_id").Eq(artistId))
+
+	return Multiple[Album](db, ctx, query)
+}
+
+func (db DB) GetAlbumById(ctx context.Context, albumId string) (Album, error) {
+	query := AlbumQuery().
+		Where(albumsTbl.Col("id").Eq(albumId))
+
+	return Single[Album](db, ctx, query)
+}
+
+func (db DB) GetAlbumsByIds(
+	ctx context.Context,
+	ids []string,
+) ([]Album, error) {
+	query := AlbumQuery().Where(albumsTbl.Col("id").In(ids))
+
+	return Multiple[Album](db, ctx, query)
 }
