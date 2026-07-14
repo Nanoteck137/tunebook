@@ -7,7 +7,11 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-var createQueueId = createIdGenerator(10)
+var (
+	createQueueId = createIdGenerator(10)
+
+	queuesTbl = goqu.T("queues")
+)
 
 type Queue struct {
 	Id     string `db:"id"`
@@ -20,28 +24,18 @@ type Queue struct {
 }
 
 func QueueQuery() *goqu.SelectDataset {
-	query := dialect.From("queues").
+	query := dialect.From(queuesTbl).
 		Select(
-			"queues.id",
-			"queues.user_id",
+			queuesTbl.Col("id"),
+			queuesTbl.Col("user_id"),
 
-			"queues.current_index",
+			queuesTbl.Col("current_index"),
 
-			"queues.updated",
-			"queues.created",
+			queuesTbl.Col("updated"),
+			queuesTbl.Col("created"),
 		)
 
 	return query
-}
-
-func (db DB) GetQueueById(
-	ctx context.Context,
-	queueId string,
-) (Queue, error) {
-	query := QueueQuery().
-		Where(goqu.I("queues.id").Eq(queueId))
-
-	return Single[Queue](db, ctx, query)
 }
 
 type CreateQueueParams struct {
@@ -68,7 +62,7 @@ func (db DB) CreateQueue(
 		params.Id = createQueueId()
 	}
 
-	query := dialect.Insert("queues").Rows(goqu.Record{
+	query := dialect.Insert(queuesTbl).Rows(goqu.Record{
 		"id":     params.Id,
 		"user_id": params.UserId,
 
@@ -109,9 +103,9 @@ func (db DB) UpdateQueue(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	query := dialect.Update("queues").
+	query := dialect.Update(queuesTbl).
 		Set(record).
-		Where(goqu.I("queues.id").Eq(queueId))
+		Where(queuesTbl.Col("id").Eq(queueId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -122,8 +116,8 @@ func (db DB) UpdateQueue(
 }
 
 func (db DB) DeleteQueue(ctx context.Context, queueId string) error {
-	query := dialect.Delete("queues").
-		Where(goqu.I("queues.id").Eq(queueId))
+	query := dialect.Delete(queuesTbl).
+		Where(queuesTbl.Col("id").Eq(queueId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -131,4 +125,14 @@ func (db DB) DeleteQueue(ctx context.Context, queueId string) error {
 	}
 
 	return nil
+}
+
+func (db DB) GetQueueById(
+	ctx context.Context,
+	queueId string,
+) (Queue, error) {
+	query := QueueQuery().
+		Where(queuesTbl.Col("id").Eq(queueId))
+
+	return Single[Queue](db, ctx, query)
 }

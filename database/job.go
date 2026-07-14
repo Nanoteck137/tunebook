@@ -14,7 +14,11 @@ const (
 	JobStatusFailed    = "failed"
 )
 
-var createJobId = createIdGenerator(16)
+var (
+	createJobId = createIdGenerator(16)
+
+	jobsTbl = goqu.T("jobs")
+)
 
 type Job struct {
 	Id          string `db:"id"`
@@ -29,27 +33,20 @@ type Job struct {
 }
 
 func JobQuery() *goqu.SelectDataset {
-	query := dialect.From("jobs").
+	query := dialect.From(jobsTbl).
 		Select(
-			"jobs.id",
-			"jobs.name",
-			"jobs.data",
-			"jobs.status",
-			"jobs.error",
-			"jobs.attempts",
-			"jobs.max_attempts",
-			"jobs.created",
-			"jobs.updated",
+			jobsTbl.Col("id"),
+			jobsTbl.Col("name"),
+			jobsTbl.Col("data"),
+			jobsTbl.Col("status"),
+			jobsTbl.Col("error"),
+			jobsTbl.Col("attempts"),
+			jobsTbl.Col("max_attempts"),
+			jobsTbl.Col("created"),
+			jobsTbl.Col("updated"),
 		)
 
 	return query
-}
-
-func (db DB) GetJobById(ctx context.Context, jobId string) (Job, error) {
-	query := JobQuery().
-		Where(goqu.I("jobs.id").Eq(jobId))
-
-	return Single[Job](db, ctx, query)
 }
 
 type CreateJobParams struct {
@@ -73,7 +70,7 @@ func (db DB) CreateJob(
 		params.MaxAttempts = 1
 	}
 
-	query := dialect.Insert("jobs").Rows(goqu.Record{
+	query := dialect.Insert(jobsTbl).Rows(goqu.Record{
 		"id":           params.Id,
 		"name":         params.Name,
 		"data":         params.Data,
@@ -93,36 +90,43 @@ func (db DB) CreateJob(
 	return params.Id, nil
 }
 
+func (db DB) GetJobById(ctx context.Context, jobId string) (Job, error) {
+	query := JobQuery().
+		Where(jobsTbl.Col("id").Eq(jobId))
+
+	return Single[Job](db, ctx, query)
+}
+
 func (db DB) GetPendingJobs(ctx context.Context, limit int) ([]Job, error) {
 	query := JobQuery().
-		Where(goqu.I("jobs.status").Eq(JobStatusPending)).
-		Order(goqu.I("jobs.created").Asc()).
+		Where(jobsTbl.Col("status").Eq(JobStatusPending)).
+		Order(jobsTbl.Col("created").Asc()).
 		Limit(uint(limit))
 
 	return Multiple[Job](db, ctx, query)
 }
 
 func (db DB) ClaimJob(ctx context.Context, jobId string) error {
-	query := dialect.Update("jobs").
+	query := dialect.Update(jobsTbl).
 		Set(goqu.Record{
 			"status":   JobStatusRunning,
 			"attempts": goqu.L("attempts + 1"),
 			"updated":  time.Now().UnixMilli(),
 		}).
-		Where(goqu.I("jobs.id").Eq(jobId))
+		Where(jobsTbl.Col("id").Eq(jobId))
 
 	_, err := db.Exec(ctx, query)
 	return err
 }
 
 func (db DB) CompleteJob(ctx context.Context, jobId string) error {
-	query := dialect.Update("jobs").
+	query := dialect.Update(jobsTbl).
 		Set(goqu.Record{
 			"status":  JobStatusCompleted,
 			"error":   "",
 			"updated": time.Now().UnixMilli(),
 		}).
-		Where(goqu.I("jobs.id").Eq(jobId))
+		Where(jobsTbl.Col("id").Eq(jobId))
 
 	_, err := db.Exec(ctx, query)
 	return err
@@ -149,9 +153,9 @@ func (db DB) FailJob(
 		record["status"] = JobStatusFailed
 	}
 
-	query := dialect.Update("jobs").
+	query := dialect.Update(jobsTbl).
 		Set(record).
-		Where(goqu.I("jobs.id").Eq(jobId))
+		Where(jobsTbl.Col("id").Eq(jobId))
 
 	_, err := db.Exec(ctx, query)
 	return err

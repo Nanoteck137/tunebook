@@ -7,11 +7,13 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-var createTrackFilterId = createIdGenerator(8)
+var (
+	createTrackFilterId = createIdGenerator(8)
+
+	trackFiltersTbl = goqu.T("track_filters")
+)
 
 type TrackFilter struct {
-	RowId int `db:"rowid"`
-
 	Id string `db:"id"`
 
 	UserId string `db:"user_id"`
@@ -24,42 +26,20 @@ type TrackFilter struct {
 }
 
 func TrackFilterQuery() *goqu.SelectDataset {
-	query := dialect.From("track_filters").
+	query := dialect.From(trackFiltersTbl).
 		Select(
-			"track_filters.rowid",
+			trackFiltersTbl.Col("id"),
 
-			"track_filters.id",
+			trackFiltersTbl.Col("user_id"),
 
-			"track_filters.user_id",
+			trackFiltersTbl.Col("name"),
+			trackFiltersTbl.Col("filter"),
 
-			"track_filters.name",
-			"track_filters.filter",
-
-			"track_filters.created",
-			"track_filters.updated",
+			trackFiltersTbl.Col("created"),
+			trackFiltersTbl.Col("updated"),
 		)
 
 	return query
-}
-
-func (db DB) GetTrackFilterById(
-	ctx context.Context, 
-	id string,
-) (TrackFilter, error) {
-	query := TrackFilterQuery().
-		Where(goqu.I("track_filters.id").Eq(id))
-
-	return Single[TrackFilter](db, ctx, query)
-}
-
-func (db DB) GetTrackFiltersByUserId(
-	ctx context.Context, 
-	userId string,
-) ([]TrackFilter, error) {
-	query := TrackFilterQuery().
-		Where(goqu.I("track_filters.user_id").Eq(userId))
-
-	return Multiple[TrackFilter](db, ctx, query)
 }
 
 type CreateTrackFilterParams struct {
@@ -74,7 +54,7 @@ type CreateTrackFilterParams struct {
 }
 
 func (db DB) CreateTrackFilter(
-	ctx context.Context, 
+	ctx context.Context,
 	params CreateTrackFilterParams,
 ) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
@@ -87,7 +67,7 @@ func (db DB) CreateTrackFilter(
 		params.Id = createTrackFilterId()
 	}
 
-	query := dialect.Insert("track_filters").Rows(goqu.Record{
+	query := dialect.Insert(trackFiltersTbl).Rows(goqu.Record{
 		"id": params.Id,
 
 		"user_id": params.UserId,
@@ -117,8 +97,8 @@ type TrackFilterChanges struct {
 }
 
 func (db DB) UpdateTrackFilter(
-	ctx context.Context, 
-	id string, 
+	ctx context.Context,
+	id string,
 	changes TrackFilterChanges,
 ) error {
 	record := goqu.Record{}
@@ -136,9 +116,9 @@ func (db DB) UpdateTrackFilter(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	query := dialect.Update("track_filters").
+	query := dialect.Update(trackFiltersTbl).
 		Set(record).
-		Where(goqu.I("track_filters.id").Eq(id))
+		Where(trackFiltersTbl.Col("id").Eq(id))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -149,8 +129,8 @@ func (db DB) UpdateTrackFilter(
 }
 
 func (db DB) DeleteTrackFilter(ctx context.Context, id string) error {
-	query := dialect.Delete("track_filters").
-		Where(goqu.I("track_filters.id").Eq(id))
+	query := dialect.Delete(trackFiltersTbl).
+		Where(trackFiltersTbl.Col("id").Eq(id))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -158,4 +138,24 @@ func (db DB) DeleteTrackFilter(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (db DB) GetTrackFilterById(
+	ctx context.Context,
+	id string,
+) (TrackFilter, error) {
+	query := TrackFilterQuery().
+		Where(trackFiltersTbl.Col("id").Eq(id))
+
+	return Single[TrackFilter](db, ctx, query)
+}
+
+func (db DB) GetTrackFiltersByUserId(
+	ctx context.Context,
+	userId string,
+) ([]TrackFilter, error) {
+	query := TrackFilterQuery().
+		Where(trackFiltersTbl.Col("user_id").Eq(userId))
+
+	return Multiple[TrackFilter](db, ctx, query)
 }

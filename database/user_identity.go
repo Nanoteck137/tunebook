@@ -7,6 +7,10 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
+var (
+	userIdentitiesTbl = goqu.T("user_identities")
+)
+
 type UserIdentity struct {
 	Provider   string `db:"provider"`
 	ProviderId string `db:"provider_id"`
@@ -18,31 +22,18 @@ type UserIdentity struct {
 }
 
 func UserIdentityQuery() *goqu.SelectDataset {
-	query := dialect.From("user_identities").
+	query := dialect.From(userIdentitiesTbl).
 		Select(
-			"user_identities.provider",
-			"user_identities.provider_id",
+			userIdentitiesTbl.Col("provider"),
+			userIdentitiesTbl.Col("provider_id"),
 
-			"user_identities.user_id",
+			userIdentitiesTbl.Col("user_id"),
 
-			"user_identities.created",
-			"user_identities.updated",
+			userIdentitiesTbl.Col("created"),
+			userIdentitiesTbl.Col("updated"),
 		)
 
 	return query
-}
-
-func (db DB) GetUserIdentity(
-	ctx context.Context, 
-	provider, providerId string,
-) (UserIdentity, error) {
-	query := UserIdentityQuery().
-		Where(
-			goqu.I("user_identities.provider").Eq(provider),
-			goqu.I("user_identities.provider_id").Eq(providerId),
-		)
-
-	return Single[UserIdentity](db, ctx, query)
 }
 
 type CreateUserIdentityParams struct {
@@ -68,8 +59,7 @@ func (db DB) CreateUserIdentity(
 		updated = t
 	}
 
-	query := dialect.
-		Insert("user_identities").
+	query := dialect.Insert(userIdentitiesTbl).
 		Rows(goqu.Record{
 			"provider":    params.Provider,
 			"provider_id": params.ProviderId,
@@ -86,4 +76,17 @@ func (db DB) CreateUserIdentity(
 	}
 
 	return nil
+}
+
+func (db DB) GetUserIdentity(
+	ctx context.Context, 
+	provider, providerId string,
+) (UserIdentity, error) {
+	query := UserIdentityQuery().
+		Where(
+			userIdentitiesTbl.Col("provider").Eq(provider),
+			userIdentitiesTbl.Col("provider_id").Eq(providerId),
+		)
+
+	return Single[UserIdentity](db, ctx, query)
 }

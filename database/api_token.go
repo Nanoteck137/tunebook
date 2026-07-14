@@ -7,7 +7,11 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-var createApiTokenId = createIdGenerator(32)
+var (
+	createApiTokenId = createIdGenerator(32)
+
+	apiTokensTbl = goqu.T("api_tokens")
+)
 
 type ApiToken struct {
 	Id     string `db:"id"`
@@ -20,17 +24,16 @@ type ApiToken struct {
 }
 
 func ApiTokenQuery() *goqu.SelectDataset {
-	query := dialect.From("api_tokens").
+	query := dialect.From(apiTokensTbl).
 		Select(
-			"api_tokens.id",
-			"api_tokens.user_id",
+			apiTokensTbl.Col("id"),
+			apiTokensTbl.Col("user_id"),
 
-			"api_tokens.name",
+			apiTokensTbl.Col("name"),
 
-			"api_tokens.updated",
-			"api_tokens.created",
-		).
-		Prepared(true)
+			apiTokensTbl.Col("updated"),
+			apiTokensTbl.Col("created"),
+		)
 
 	return query
 }
@@ -40,7 +43,7 @@ func (db DB) GetApiTokenById(
 	tokenId string,
 ) (ApiToken, error) {
 	query := ApiTokenQuery().
-		Where(goqu.I("api_tokens.id").Eq(tokenId))
+		Where(apiTokensTbl.Col("id").Eq(tokenId))
 
 	return Single[ApiToken](db, ctx, query)
 }
@@ -50,7 +53,7 @@ func (db DB) GetAllApiTokensForUser(
 	userId string,
 ) ([]ApiToken, error) {
 	query := ApiTokenQuery().
-		Where(goqu.I("api_tokens.user_id").Eq(userId))
+		Where(apiTokensTbl.Col("user_id").Eq(userId))
 
 	return Multiple[ApiToken](db, ctx, query)
 }
@@ -78,7 +81,7 @@ func (db DB) CreateApiToken(
 		params.Id = createApiTokenId()
 	}
 
-	query := dialect.Insert("api_tokens").Rows(goqu.Record{
+	query := dialect.Insert(apiTokensTbl).Rows(goqu.Record{
 		"id":      params.Id,
 		"user_id": params.UserId,
 
@@ -97,8 +100,8 @@ func (db DB) CreateApiToken(
 }
 
 func (db DB) DeleteApiToken(ctx context.Context, tokenId string) error {
-	query := dialect.Delete("api_tokens").
-		Where(goqu.I("api_tokens.id").Eq(tokenId))
+	query := dialect.Delete(apiTokensTbl).
+		Where(apiTokensTbl.Col("id").Eq(tokenId))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
