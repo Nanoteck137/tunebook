@@ -37,8 +37,16 @@ func (p *Planner) planFilter(expr ast.Expr) (query.FilterNode, error) {
 		return p.planIsNull(e)
 	case *ast.InExpr:
 		return p.planIn(e)
+	case *ast.FieldRef:
+		return nil, fmt.Errorf("expected a comparison (e.g., %s == value), got just a field name", e.Name)
+	case *ast.StringLit:
+		return nil, fmt.Errorf("expected a comparison (e.g., field == '%s'), got just a string value", e.Value)
+	case *ast.IntLit:
+		return nil, fmt.Errorf("expected a comparison (e.g., field == %d), got just a number", e.Value)
+	case *ast.BoolLit:
+		return nil, fmt.Errorf("expected a comparison (e.g., field == %v), got just a boolean", e.Value)
 	default:
-		return nil, fmt.Errorf("unexpected expression: %T", expr)
+		return nil, fmt.Errorf("invalid filter expression")
 	}
 }
 
@@ -74,17 +82,17 @@ func (p *Planner) planBinary(e *ast.BinaryExpr) (query.FilterNode, error) {
 func (p *Planner) planComparison(e *ast.BinaryExpr) (query.FilterNode, error) {
 	fieldRef, ok := e.Left.(*ast.FieldRef)
 	if !ok {
-		return nil, fmt.Errorf("left side of comparison must be a field")
+		return nil, fmt.Errorf("left side of comparison must be a field name")
 	}
 
 	field, ok := p.schema.Field(fieldRef.Name)
 	if !ok {
-		return nil, fmt.Errorf("unknown field: %s", fieldRef.Name)
+		return nil, fmt.Errorf("unknown field '%s'", fieldRef.Name)
 	}
 
 	if _, isNull := e.Right.(*ast.NullLit); isNull {
 		if !field.Nullable {
-			return nil, fmt.Errorf("field '%s' is not nullable", field.Name)
+			return nil, fmt.Errorf("field '%s' cannot be null", field.Name)
 		}
 		not := e.Op == ast.OpNeq
 		return &query.IsNullNode{Field: field, Not: not}, nil
@@ -92,7 +100,7 @@ func (p *Planner) planComparison(e *ast.BinaryExpr) (query.FilterNode, error) {
 
 	op, err := p.resolveOperator(e.Op, field.Type)
 	if err != nil {
-		return nil, fmt.Errorf("field '%s': %w", field.Name, err)
+		return nil, err
 	}
 
 	// For relation fields with 'has' operator, use the relation's value type
@@ -139,23 +147,23 @@ func (p *Planner) planUnary(e *ast.UnaryExpr) (query.FilterNode, error) {
 		}
 		return &query.NotNode{Expr: expr}, nil
 	default:
-		return nil, fmt.Errorf("unexpected unary operator: %v", e.Op)
+		return nil, fmt.Errorf("unsupported operator")
 	}
 }
 
 func (p *Planner) planIsNull(e *ast.IsNullExpr) (query.FilterNode, error) {
 	fieldRef, ok := e.Field.(*ast.FieldRef)
 	if !ok {
-		return nil, fmt.Errorf("is null requires a field")
+		return nil, fmt.Errorf("is null check requires a field name")
 	}
 
 	field, ok := p.schema.Field(fieldRef.Name)
 	if !ok {
-		return nil, fmt.Errorf("unknown field: %s", fieldRef.Name)
+		return nil, fmt.Errorf("unknown field '%s'", fieldRef.Name)
 	}
 
 	if !field.Nullable {
-		return nil, fmt.Errorf("field '%s' is not nullable", field.Name)
+		return nil, fmt.Errorf("field '%s' cannot be null", field.Name)
 	}
 
 	return &query.IsNullNode{Field: field, Not: e.Not}, nil
@@ -164,12 +172,12 @@ func (p *Planner) planIsNull(e *ast.IsNullExpr) (query.FilterNode, error) {
 func (p *Planner) planIn(e *ast.InExpr) (query.FilterNode, error) {
 	fieldRef, ok := e.Field.(*ast.FieldRef)
 	if !ok {
-		return nil, fmt.Errorf("in requires a field")
+		return nil, fmt.Errorf("'in' expression requires a field name")
 	}
 
 	field, ok := p.schema.Field(fieldRef.Name)
 	if !ok {
-		return nil, fmt.Errorf("unknown field: %s", fieldRef.Name)
+		return nil, fmt.Errorf("unknown field '%s'", fieldRef.Name)
 	}
 
 	values := make([]query.Value, 0, len(e.Values))
@@ -188,13 +196,13 @@ func (p *Planner) resolveValue(expr ast.Expr, fieldType query.Type) (query.Value
 	switch lit := expr.(type) {
 	case *ast.StringLit:
 		if fieldType != query.TypeString {
-			return query.Value{}, fmt.Errorf("expected %s, got string", typeName(fieldType))
+			return query.Value{}, fmt.Errorf("expected %s value, got string", typeName(fieldType))
 		}
 		return query.Value{Type: query.TypeString, Value: lit.Value}, nil
 
 	case *ast.IntLit:
 		if fieldType != query.TypeInt && fieldType != query.TypeFloat {
-			return query.Value{}, fmt.Errorf("expected %s, got integer", typeName(fieldType))
+			return query.Value{}, fmt.Errorf("expected %s value, got integer", typeName(fieldType))
 		}
 		if fieldType == query.TypeFloat {
 			return query.Value{Type: query.TypeFloat, Value: float64(lit.Value)}, nil
@@ -203,21 +211,21 @@ func (p *Planner) resolveValue(expr ast.Expr, fieldType query.Type) (query.Value
 
 	case *ast.FloatLit:
 		if fieldType != query.TypeFloat {
-			return query.Value{}, fmt.Errorf("expected %s, got float", typeName(fieldType))
+			return query.Value{}, fmt.Errorf("expected %s value, got float", typeName(fieldType))
 		}
 		return query.Value{Type: query.TypeFloat, Value: lit.Value}, nil
 
 	case *ast.BoolLit:
 		if fieldType != query.TypeBool {
-			return query.Value{}, fmt.Errorf("expected %s, got bool", typeName(fieldType))
+			return query.Value{}, fmt.Errorf("expected %s value, got boolean", typeName(fieldType))
 		}
 		return query.Value{Type: query.TypeBool, Value: lit.Value}, nil
 
 	case *ast.FieldRef:
-		return query.Value{}, fmt.Errorf("field references not supported in values")
+		return query.Value{}, fmt.Errorf("cannot compare field to another field")
 
 	default:
-		return query.Value{}, fmt.Errorf("unexpected literal type: %T", expr)
+		return query.Value{}, fmt.Errorf("invalid value in comparison")
 	}
 }
 
@@ -239,51 +247,51 @@ func (p *Planner) resolveOperator(op ast.BinaryOp, fieldType query.Type) (intern
 	switch op {
 	case ast.OpEq:
 		if fieldType == query.TypeRelation {
-			return 0, fmt.Errorf("operator '=' cannot be used on relation field, use 'has' instead")
+			return 0, fmt.Errorf("cannot use '=' on relation field, use 'has' instead")
 		}
 		return opEq, nil
 	case ast.OpNeq:
 		if fieldType == query.TypeRelation {
-			return 0, fmt.Errorf("operator '!=' cannot be used on relation field, use 'not has' instead")
+			return 0, fmt.Errorf("cannot use '!=' on relation field, use 'not has' instead")
 		}
 		return opNeq, nil
 	case ast.OpGt:
 		if !comparable(fieldType) {
-			return 0, fmt.Errorf("operator '>' cannot be used on %s field", typeName(fieldType))
+			return 0, fmt.Errorf("cannot use '>' on %s field", typeName(fieldType))
 		}
 		return opGt, nil
 	case ast.OpGte:
 		if !comparable(fieldType) {
-			return 0, fmt.Errorf("operator '>=' cannot be used on %s field", typeName(fieldType))
+			return 0, fmt.Errorf("cannot use '>=' on %s field", typeName(fieldType))
 		}
 		return opGte, nil
 	case ast.OpLt:
 		if !comparable(fieldType) {
-			return 0, fmt.Errorf("operator '<' cannot be used on %s field", typeName(fieldType))
+			return 0, fmt.Errorf("cannot use '<' on %s field", typeName(fieldType))
 		}
 		return opLt, nil
 	case ast.OpLte:
 		if !comparable(fieldType) {
-			return 0, fmt.Errorf("operator '<=' cannot be used on %s field", typeName(fieldType))
+			return 0, fmt.Errorf("cannot use '<=' on %s field", typeName(fieldType))
 		}
 		return opLte, nil
 	case ast.OpContains:
 		if fieldType != query.TypeString {
-			return 0, fmt.Errorf("operator 'contains' cannot be used on %s field", typeName(fieldType))
+			return 0, fmt.Errorf("'contains' can only be used on string fields")
 		}
 		return opContains, nil
 	case ast.OpLike:
 		if fieldType != query.TypeString {
-			return 0, fmt.Errorf("operator 'like' cannot be used on %s field", typeName(fieldType))
+			return 0, fmt.Errorf("'like' can only be used on string fields")
 		}
 		return opLike, nil
 	case ast.OpHas:
 		if fieldType != query.TypeRelation {
-			return 0, fmt.Errorf("operator 'has' can only be used on relation fields")
+			return 0, fmt.Errorf("'has' can only be used on relation fields")
 		}
 		return opHas, nil
 	default:
-		return 0, fmt.Errorf("unexpected operator: %v", op)
+		return 0, fmt.Errorf("unsupported operator")
 	}
 }
 
@@ -349,7 +357,7 @@ func (p *Planner) ResolveSort(orderings []query.Ordering) ([]query.Ordering, err
 		case *query.FieldOrdering:
 			field, ok := p.schema.Field(ord.Field.Name)
 			if !ok {
-				return nil, fmt.Errorf("unknown field in sort: %s", ord.Field.Name)
+				return nil, fmt.Errorf("unknown field '%s' in sort", ord.Field.Name)
 			}
 			result = append(result, &query.FieldOrdering{
 				Field:     field,
@@ -359,7 +367,7 @@ func (p *Planner) ResolveSort(orderings []query.Ordering) ([]query.Ordering, err
 		case *query.RandomOrdering, *query.ShuffleOrdering, *query.ScoreOrdering:
 			result = append(result, ord)
 		default:
-			return nil, fmt.Errorf("unknown ordering type: %T", o)
+			return nil, fmt.Errorf("unsupported sort option")
 		}
 	}
 
