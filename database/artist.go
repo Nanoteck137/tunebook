@@ -46,7 +46,7 @@ func ArtistSchema() *schema.Schema {
 			"tags", 
 			query.TypeRelation, 
 			schema.Relation(
-				"artists_tags", "artist_id", "tag_slug", query.TypeString),
+				"artists_tags", "artist_id", "tag_slug", query.TypeString, "artists.id"),
 		).
 		AddField("created", query.TypeInt, schema.Column("artists.created")).
 		AddField("updated", query.TypeInt, schema.Column("artists.updated")).

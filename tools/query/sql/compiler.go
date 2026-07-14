@@ -178,7 +178,7 @@ func (c *Compiler) compileHas(n *query.HasNode) (goqu.Expression, error) {
 	// Create the EXISTS subquery
 	existsSubquery := joinTable.Select(goqu.L("1")).Where(
 		goqu.And(
-			goqu.I(rel.JoinTable+"."+rel.JoinForeignKey).Eq(goqu.I("tracks.id")),
+			goqu.I(rel.JoinTable+"."+rel.JoinForeignKey).Eq(goqu.I(rel.MainTableIdColumn)),
 			existsCondition,
 		),
 	)

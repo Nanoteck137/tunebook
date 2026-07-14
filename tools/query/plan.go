@@ -70,10 +70,11 @@ type Field struct {
 }
 
 type RelationConfig struct {
-	JoinTable      string
-	JoinForeignKey string
-	JoinReference  string
-	ValueType      Type
+	JoinTable        string
+	JoinForeignKey   string
+	JoinReference    string
+	ValueType        Type
+	MainTableIdColumn string
 }
 
 type Value struct {

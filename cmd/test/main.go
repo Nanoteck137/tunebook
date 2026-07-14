@@ -859,9 +859,9 @@ func testDatabaseIntegration() {
 		AddField("artistId", query.TypeString, schema.Column("tracks.artist_id")).
 		AddField("albumName", query.TypeString, schema.Column("albums.name")).
 		AddField("artistName", query.TypeString, schema.Column("artists.name")).
-		AddField("tags", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString)).
-		AddField("featuringArtist", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString)).
-		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt)).
+		AddField("tags", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString, "tracks.id")).
+		AddField("featuringArtist", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString, "tracks.id")).
+		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt, "tracks.id")).
 		AddField("created", query.TypeInt, schema.Column("tracks.created")).
 		AddField("updated", query.TypeInt, schema.Column("tracks.updated")).
 		SetDefaultSort(
@@ -1132,8 +1132,8 @@ func testErrorMessages() {
 		AddField("duration", query.TypeInt, schema.Column("tracks.duration"), schema.Nullable()).
 		AddField("rating", query.TypeFloat, schema.Column("tracks.rating")).
 		AddField("active", query.TypeBool, schema.Column("tracks.active")).
-		AddField("tag", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString)).
-		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt))
+		AddField("tag", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString, "tracks.id")).
+		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt, "tracks.id"))
 
 	pl := planner.New(s)
 

@@ -58,14 +58,15 @@ func Column(name string) FieldOption {
 
 type RelationOption func(*query.RelationConfig)
 
-func Relation(joinTable, joinForeignKey, joinReference string, valueType query.Type) FieldOption {
+func Relation(joinTable, joinForeignKey, joinReference string, valueType query.Type, mainTableIdColumn string) FieldOption {
 	return func(f *query.Field) {
 		f.Type = query.TypeRelation
 		f.Relation = &query.RelationConfig{
-			JoinTable:      joinTable,
-			JoinForeignKey: joinForeignKey,
-			JoinReference:  joinReference,
-			ValueType:      valueType,
+			JoinTable:         joinTable,
+			JoinForeignKey:    joinForeignKey,
+			JoinReference:     joinReference,
+			ValueType:         valueType,
+			MainTableIdColumn: mainTableIdColumn,
 		}
 	}
 }
