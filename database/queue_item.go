@@ -9,7 +9,11 @@ import (
 	"github.com/nanoteck137/tunebook/types"
 )
 
-var createQueueItemId = createIdGenerator(32)
+var (
+	createQueueItemId = createIdGenerator(32)
+
+	queueItemsTbl = goqu.T("queue_items")
+)
 
 type QueueItem struct {
 	Id       string `db:"id"`
@@ -33,25 +37,25 @@ type QueueItemEntry struct {
 }
 
 func QueueItemQuery() *goqu.SelectDataset {
-	return dialect.From("queue_items").
+	return dialect.From(queueItemsTbl).
 		Select(
-			"queue_items.id",
-			"queue_items.queue_id",
-			"queue_items.user_id",
-			"queue_items.track_id",
-			"queue_items.position",
-			"queue_items.created",
+			queueItemsTbl.Col("id"),
+			queueItemsTbl.Col("queue_id"),
+			queueItemsTbl.Col("user_id"),
+			queueItemsTbl.Col("track_id"),
+			queueItemsTbl.Col("position"),
+			queueItemsTbl.Col("created"),
 		)
 }
 
 func QueueItemTrackQuery() *goqu.SelectDataset {
-	tracks := TrackQuery()
-
-	return dialect.From("queue_items").
-		Select("tracks.*", "queue_items.position").
+	return TrackQuery().
+		SelectAppend(
+			queueItemsTbl.Col("position"),
+		).
 		Join(
-			tracks.As("tracks"),
-			goqu.On(goqu.I("queue_items.track_id").Eq(goqu.I("tracks.id"))),
+			queueItemsTbl,
+			goqu.On(queueItemsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
 		)
 }
 
@@ -88,10 +92,44 @@ func (db DB) CreateQueueItems(
 		return nil
 	}
 
-	query := dialect.Insert("queue_items").Rows(rows)
+	query := dialect.Insert(queueItemsTbl).Rows(rows)
 
 	_, err := db.Exec(ctx, query)
 	return err
+}
+
+func (db DB) DeleteQueueItem(ctx context.Context, itemId string) error {
+	query := dialect.Delete(queueItemsTbl).
+		Where(queueItemsTbl.Col("id").Eq(itemId))
+
+	_, err := db.Exec(ctx, query)
+	return err
+}
+
+func (db DB) ClearQueueItems(ctx context.Context, queueId string, userId string) error {
+	query := dialect.Delete(queueItemsTbl).
+		Where(
+			queueItemsTbl.Col("queue_id").Eq(queueId),
+			queueItemsTbl.Col("user_id").Eq(userId),
+		)
+
+	_, err := db.Exec(ctx, query)
+	return err
+}
+
+func (db DB) GetQueueItemCount(
+	ctx context.Context,
+	queueId string,
+	userId string,
+) (int, error) {
+	query := dialect.From(queueItemsTbl).
+		Select(goqu.COUNT(queueItemsTbl.Col("id"))).
+		Where(
+			queueItemsTbl.Col("queue_id").Eq(queueId),
+			queueItemsTbl.Col("user_id").Eq(userId),
+		)
+
+	return Single[int](db, ctx, query)
 }
 
 func (db DB) GetNextQueueItemPosition(
@@ -99,13 +137,13 @@ func (db DB) GetNextQueueItemPosition(
 	queueId string,
 	userId string,
 ) (int, error) {
-	query := dialect.From("queue_items").
-		Select("queue_items.position").
+	query := dialect.From(queueItemsTbl).
+		Select(queueItemsTbl.Col("position")).
 		Where(
-			goqu.I("queue_items.queue_id").Eq(queueId),
-			goqu.I("queue_items.user_id").Eq(userId),
+			queueItemsTbl.Col("queue_id").Eq(queueId),
+			queueItemsTbl.Col("user_id").Eq(userId),
 		).
-		Order(goqu.I("queue_items.position").Desc()).
+		Order(queueItemsTbl.Col("position").Desc()).
 		Limit(1)
 
 	res, err := Single[int](db, ctx, query)
@@ -133,12 +171,12 @@ func (db DB) GetQueueItems(
 ) ([]QueueItemTrack, types.Page, error) {
 	query := QueueItemTrackQuery().
 		Where(
-			goqu.I("queue_items.queue_id").Eq(params.QueueId),
-			goqu.I("queue_items.user_id").Eq(params.UserId),
+			queueItemsTbl.Col("queue_id").Eq(params.QueueId),
+			queueItemsTbl.Col("user_id").Eq(params.UserId),
 		).
-		Order(goqu.I("queue_items.position").Asc())
+		Order(queueItemsTbl.Col("position").Asc())
 
-	page, err := buildPage(ctx, db, params.Page, query, "queue_items.id")
+	page, err := buildPage(ctx, db, params.Page, query, queueItemsTbl.Col("id"))
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -158,13 +196,13 @@ func (db DB) GetQueueItemIds(
 	queueId string,
 	userId string,
 ) ([]string, error) {
-	query := dialect.From("queue_items").
-		Select("queue_items.track_id").
+	query := dialect.From(queueItemsTbl).
+		Select(queueItemsTbl.Col("track_id")).
 		Where(
-			goqu.I("queue_items.queue_id").Eq(queueId),
-			goqu.I("queue_items.user_id").Eq(userId),
+			queueItemsTbl.Col("queue_id").Eq(queueId),
+			queueItemsTbl.Col("user_id").Eq(userId),
 		).
-		Order(goqu.I("queue_items.position").Asc())
+		Order(queueItemsTbl.Col("position").Asc())
 
 	return Multiple[string](db, ctx, query)
 }
@@ -174,17 +212,17 @@ func (db DB) GetQueueItemEntries(
 	queueId string,
 	userId string,
 ) ([]QueueItemEntry, error) {
-	query := dialect.From("queue_items").
+	query := dialect.From(queueItemsTbl).
 		Select(
-			"queue_items.id",
-			"queue_items.track_id",
-			"queue_items.position",
+			queueItemsTbl.Col("id"),
+			queueItemsTbl.Col("track_id"),
+			queueItemsTbl.Col("position"),
 		).
 		Where(
-			goqu.I("queue_items.queue_id").Eq(queueId),
-			goqu.I("queue_items.user_id").Eq(userId),
+			queueItemsTbl.Col("queue_id").Eq(queueId),
+			queueItemsTbl.Col("user_id").Eq(userId),
 		).
-		Order(goqu.I("queue_items.position").Asc())
+		Order(queueItemsTbl.Col("position").Asc())
 
 	return Multiple[QueueItemEntry](db, ctx, query)
 }
@@ -197,9 +235,9 @@ func (db DB) GetQueueItemAtPosition(
 ) (QueueItemTrack, error) {
 	query := QueueItemTrackQuery().
 		Where(
-			goqu.I("queue_items.queue_id").Eq(queueId),
-			goqu.I("queue_items.user_id").Eq(userId),
-			goqu.I("queue_items.position").Eq(position),
+			queueItemsTbl.Col("queue_id").Eq(queueId),
+			queueItemsTbl.Col("user_id").Eq(userId),
+			queueItemsTbl.Col("position").Eq(position),
 		)
 
 	return Single[QueueItemTrack](db, ctx, query)
@@ -210,41 +248,7 @@ func (db DB) GetQueueItemById(
 	itemId string,
 ) (QueueItem, error) {
 	query := QueueItemQuery().
-		Where(goqu.I("queue_items.id").Eq(itemId))
+		Where(queueItemsTbl.Col("id").Eq(itemId))
 
 	return Single[QueueItem](db, ctx, query)
-}
-
-func (db DB) DeleteQueueItem(ctx context.Context, itemId string) error {
-	query := goqu.Delete("queue_items").
-		Where(goqu.I("queue_items.id").Eq(itemId))
-
-	_, err := db.Exec(ctx, query)
-	return err
-}
-
-func (db DB) ClearQueueItems(ctx context.Context, queueId string, userId string) error {
-	query := goqu.Delete("queue_items").
-		Where(
-			goqu.I("queue_items.queue_id").Eq(queueId),
-			goqu.I("queue_items.user_id").Eq(userId),
-		)
-
-	_, err := db.Exec(ctx, query)
-	return err
-}
-
-func (db DB) GetQueueItemCount(
-	ctx context.Context,
-	queueId string,
-	userId string,
-) (int, error) {
-	query := dialect.From("queue_items").
-		Select(goqu.COUNT("queue_items.id")).
-		Where(
-			goqu.I("queue_items.queue_id").Eq(queueId),
-			goqu.I("queue_items.user_id").Eq(userId),
-		)
-
-	return Single[int](db, ctx, query)
 }
