@@ -7,13 +7,13 @@ export const load: PageLoad = async ({ parent, params }) => {
   const [albums, tracks] = await Promise.all([
     data.apiClient.getAlbums({
       query: {
-        filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
+        filter: `artistId = "${params.id}" or featuringArtists has "${params.id}"`,
         perPage: "6",
       },
     }),
     data.apiClient.getTracks({
       query: {
-        filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
+        filter: `artistId = "${params.id}" or featuringArtists has "${params.id}"`,
         perPage: "5",
       },
     }),
