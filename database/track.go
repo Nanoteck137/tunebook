@@ -47,8 +47,8 @@ type Track struct {
 
 	FeaturingArtists JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 
-	// This can be set elsewhere just to give tracks a order number, 
-	// so for albums it is just set to the number but for 
+	// This can be set elsewhere just to give tracks a order number,
+	// so for albums it is just set to the number but for
 	// playlists it set to the playlist item position
 	Order *int
 }
@@ -396,7 +396,7 @@ func (db DB) GetTrackIdsByArtist(
 }
 
 type GetTrackIdsByPlaylistParams struct {
-	Filter     string
+	Filter string
 }
 
 func (db DB) GetTrackIdsByPlaylist(
@@ -406,15 +406,15 @@ func (db DB) GetTrackIdsByPlaylist(
 ) ([]string, error) {
 	var err error
 
-	query := TrackQuery().Select(tracksTbl.Col("id")).
+	query := TrackQuery().
+		Select(tracksTbl.Col("id")).
 		Join(
-			// TODO(patrik): Remove when we have a const for this
-			goqu.I("playlist_items"),
-			goqu.On(tracksTbl.Col("id").Eq(goqu.I("playlist_items.track_id"))),
+			playlistItemsTbl,
+			goqu.On(tracksTbl.Col("id").Eq(playlistItemsTbl.Col("track_id"))),
 		)
 
 	// Apply the custom playlist filter first
-	query = query.Where(goqu.I("playlist_items.playlist_id").Eq(playlistId))
+	query = query.Where(playlistItemsTbl.Col("playlist_id").Eq(playlistId))
 
 	// Then apply the user-provided filter and sort
 	query, err = ApplyQuery(query, trackSchema, QueryParams{
@@ -425,7 +425,7 @@ func (db DB) GetTrackIdsByPlaylist(
 	}
 
 	// Apply default ordering
-	query = query.Order(goqu.I("playlist_items.position").Asc())
+	query = query.Order(playlistItemsTbl.Col("position").Asc())
 
 	return Multiple[string](db, ctx, query)
 }
@@ -441,15 +441,15 @@ func (db DB) GetTrackIdsByUserFavorites(
 ) ([]string, error) {
 	var err error
 
-	query := TrackQuery().Select(tracksTbl.Col("id")).
+	query := TrackQuery().
+		Select(tracksTbl.Col("id")).
 		Join(
-			// TODO(patrik): Remove when we have a const for this
-			goqu.I("user_favorites"),
-			goqu.On(tracksTbl.Col("id").Eq(goqu.I("user_favorites.track_id"))),
+			userFavoritesTbl,
+			goqu.On(tracksTbl.Col("id").Eq(userFavoritesTbl.Col("track_id"))),
 		)
 
 	// Apply the custom user favorites filter first
-	query = query.Where(goqu.I("user_favorites.user_id").Eq(userId))
+	query = query.Where(userFavoritesTbl.Col("user_id").Eq(userId))
 
 	// Then apply the user-provided filter and sort
 	query, err = ApplyQuery(query, trackSchema, QueryParams{
@@ -460,7 +460,7 @@ func (db DB) GetTrackIdsByUserFavorites(
 	}
 
 	// Apply default ordering
-	query = query.Order(goqu.I("user_favorites.added").Desc())
+	query = query.Order(userFavoritesTbl.Col("added").Desc())
 
 	return Multiple[string](db, ctx, query)
 }

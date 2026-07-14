@@ -11,6 +11,7 @@ var (
 	artistsTagsTbl = goqu.T("artists_tags")
 	albumsTagsTbl  = goqu.T("albums_tags")
 	tracksTagsTbl  = goqu.T("tracks_tags")
+	tagsTbl        = goqu.T("tags")
 )
 
 type Tag struct {
@@ -18,34 +19,19 @@ type Tag struct {
 }
 
 func TagQuery() *goqu.SelectDataset {
-	query := dialect.From("tags").
+	query := dialect.From(tagsTbl).
 		Select(
-			"tags.slug",
-		).
-		Prepared(true)
+			tagsTbl.Col("slug"),
+		)
 
 	return query
 }
 
-func (db DB) GetAllTags(ctx context.Context) ([]Tag, error) {
-	query := TagQuery()
-
-	return Multiple[Tag](db, ctx, query)
-}
-
-func (db DB) GetTagBySlug(ctx context.Context, slug string) (Tag, error) {
-	query := TagQuery().
-		Where(goqu.I("tags.slug").Eq(slug))
-
-	return Single[Tag](db, ctx, query)
-}
-
 func (db DB) CreateTag(ctx context.Context, slug string) error {
-	query := dialect.Insert("tags").
+	query := dialect.Insert(tagsTbl).
 		Rows(goqu.Record{
 			"slug": slug,
-		}).
-		Prepared(true)
+		})
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -55,10 +41,14 @@ func (db DB) CreateTag(ctx context.Context, slug string) error {
 	return nil
 }
 
-func (db DB) addTag(ctx context.Context, junctionTable exp.IdentifierExpression, idCol, id, tagSlug string) error {
+func (db DB) addTag(
+	ctx context.Context,
+	junctionTable exp.IdentifierExpression,
+	idCol, id, tagSlug string,
+) error {
 	query := dialect.Insert(junctionTable).
 		Rows(goqu.Record{
-			idCol:     id,
+			idCol:      id,
 			"tag_slug": tagSlug,
 		})
 
@@ -66,7 +56,11 @@ func (db DB) addTag(ctx context.Context, junctionTable exp.IdentifierExpression,
 	return err
 }
 
-func (db DB) removeAllTags(ctx context.Context, junctionTable exp.IdentifierExpression, idCol, id string) error {
+func (db DB) removeAllTags(
+	ctx context.Context,
+	junctionTable exp.IdentifierExpression,
+	idCol, id string,
+) error {
 	query := dialect.Delete(junctionTable).
 		Where(goqu.I(idCol).Eq(id))
 
@@ -90,12 +84,28 @@ func (db DB) RemoveAllAlbumTags(ctx context.Context, albumId string) error {
 	return db.removeAllTags(ctx, albumsTagsTbl, "album_id", albumId)
 }
 
-func (db DB) AddArtistTag(ctx context.Context, tagSlug, artistId string) error {
+func (db DB) AddArtistTag(
+	ctx context.Context,
+	tagSlug, artistId string,
+) error {
 	return db.addTag(ctx, artistsTagsTbl, "artist_id", artistId, tagSlug)
 }
 
 func (db DB) RemoveAllArtistTags(ctx context.Context, artistId string) error {
 	return db.removeAllTags(ctx, artistsTagsTbl, "artist_id", artistId)
+}
+
+func (db DB) GetAllTags(ctx context.Context) ([]Tag, error) {
+	query := TagQuery()
+
+	return Multiple[Tag](db, ctx, query)
+}
+
+func (db DB) GetTagBySlug(ctx context.Context, slug string) (Tag, error) {
+	query := TagQuery().
+		Where(tagsTbl.Col("slug").Eq(slug))
+
+	return Single[Tag](db, ctx, query)
 }
 
 func AddTagsToQuery(
@@ -104,8 +114,7 @@ func AddTagsToQuery(
 	objectTagTable exp.IdentifierExpression,
 	idCol any,
 ) *goqu.SelectDataset {
-	tagsTable := goqu.T("tags")
-	tagsTableSlugCol := tagsTable.Col("slug")
+	tagsTableSlugCol := tagsTbl.Col("slug")
 
 	tableSlugCol := objectTagTable.Col("tag_slug")
 	tableIdCol := objectTagTable.Col(idCol)
@@ -116,7 +125,7 @@ func AddTagsToQuery(
 			SqlGroupConcat(tagsTableSlugCol, ",").As("data"),
 		).
 		Join(
-			tagsTable,
+			tagsTbl,
 			goqu.On(tableSlugCol.Eq(tagsTableSlugCol)),
 		).
 		GroupBy(tableIdCol).

@@ -11,7 +11,8 @@ import (
 var (
 	createUserId = createIdGenerator(10)
 
-	usersTbl = goqu.T("users")
+	usersTbl         = goqu.T("users")
+	usersSettingsTbl = goqu.T("users_settings")
 )
 
 type UserSettings struct {
@@ -42,35 +43,35 @@ func (u User) ToUserSettings() UserSettings {
 }
 
 func UserQuery() *goqu.SelectDataset {
-	query := dialect.From("users").
+	query := dialect.From(usersTbl).
 		Select(
-			"users.id",
-			"users.email",
+			usersTbl.Col("id"),
+			usersTbl.Col("email"),
 
-			"users.display_name",
-			"users.role",
+			usersTbl.Col("display_name"),
+			usersTbl.Col("role"),
 
-			"users.picture",
+			usersTbl.Col("picture"),
 
-			"users.created",
-			"users.updated",
+			usersTbl.Col("created"),
+			usersTbl.Col("updated"),
 
-			"users_settings.quick_playlist",
+			usersSettingsTbl.Col("quick_playlist"),
 		).
 		LeftJoin(
-			goqu.I("users_settings"),
-			goqu.On(goqu.I("users.id").Eq(goqu.I("users_settings.id"))),
+			usersSettingsTbl,
+			goqu.On(usersTbl.Col("id").Eq(usersSettingsTbl.Col("id"))),
 		)
 
 	return query
 }
 
 func UserSettingsQuery() *goqu.SelectDataset {
-	query := dialect.From("users_settings").
+	query := dialect.From(usersSettingsTbl).
 		Select(
-			"users_settings.id",
+			usersSettingsTbl.Col("id"),
 
-			"users_settings.quick_playlist",
+			usersSettingsTbl.Col("quick_playlist"),
 		)
 
 	return query
@@ -84,7 +85,7 @@ func (db DB) GetAllUsers(ctx context.Context) ([]User, error) {
 
 func (db DB) GetUsersIn(ctx context.Context, in any) ([]User, error) {
 	query := UserQuery().
-		Where(goqu.I("users.id").In(in))
+		Where(usersTbl.Col("id").In(in))
 
 	return Multiple[User](db, ctx, query)
 }
@@ -97,7 +98,7 @@ func (db DB) CountUsers(ctx context.Context) (int, error) {
 
 func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
 	query := UserQuery().
-		Where(goqu.I("users.id").Eq(id))
+		Where(usersTbl.Col("id").Eq(id))
 
 	return Single[User](db, ctx, query)
 }
@@ -107,7 +108,7 @@ func (db DB) GetUserByUsername(
 	username string,
 ) (User, error) {
 	query := UserQuery().
-		Where(goqu.I("users.username").Eq(username))
+		Where(usersTbl.Col("username").Eq(username))
 
 	return Single[User](db, ctx, query)
 }
@@ -117,7 +118,7 @@ func (db DB) GetUserByEmail(
 	email string,
 ) (User, error) {
 	query := UserQuery().
-		Where(goqu.I("users.email").Eq(email))
+		Where(usersTbl.Col("email").Eq(email))
 
 	return Single[User](db, ctx, query)
 }
@@ -127,7 +128,7 @@ func (db DB) GetUserSettingsById(
 	id string,
 ) (UserSettings, error) {
 	query := UserSettingsQuery().
-		Where(goqu.I("users_settings.id").Eq(id))
+		Where(usersSettingsTbl.Col("id").Eq(id))
 
 	return Single[UserSettings](db, ctx, query)
 }
@@ -159,8 +160,7 @@ func (db DB) CreateUser(
 		params.Id = createUserId()
 	}
 
-	query := dialect.
-		Insert("users").
+	query := dialect.Insert(usersTbl).
 		Rows(goqu.Record{
 			"id":    params.Id,
 			"email": params.Email,
@@ -211,9 +211,9 @@ func (db DB) UpdateUser(
 
 	record["updated"] = time.Now().UnixMilli()
 
-	query := dialect.Update("users").
+	query := dialect.Update(usersTbl).
 		Set(record).
-		Where(goqu.I("users.id").Eq(id))
+		Where(usersTbl.Col("id").Eq(id))
 
 	_, err := db.Exec(ctx, query)
 	if err != nil {
@@ -227,7 +227,7 @@ func (db DB) UpdateUserSettings(
 	ctx context.Context, 
 	settings UserSettings,
 ) error {
-	query := dialect.Insert("users_settings").
+	query := dialect.Insert(usersSettingsTbl).
 		Rows(goqu.Record{
 			"id":             settings.Id,
 			"quick_playlist": settings.QuickPlaylist,

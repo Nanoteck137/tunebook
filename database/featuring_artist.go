@@ -28,15 +28,15 @@ func FeaturingArtistsQuery(table, idColName string) *goqu.SelectDataset {
 				goqu.Func(
 					"json_object",
 					"id",
-					goqu.I("artists.id"),
+					artistsTbl.Col("id"),
 					"name",
-					goqu.I("artists.name"),
+					artistsTbl.Col("name"),
 				),
 			).As("artists"),
 		).
 		Join(
-			goqu.I("artists"),
-			goqu.On(tbl.Col("artist_id").Eq(goqu.I("artists.id"))),
+			artistsTbl,
+			goqu.On(tbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
 		).
 		GroupBy(tbl.Col(idColName))
 }
@@ -47,8 +47,6 @@ func AddFeaturingArtistsToQuery(
 	objectTable exp.IdentifierExpression,
 	idCol any,
 ) *goqu.SelectDataset {
-	artistsTable := goqu.T("artists")
-
 	tableIdCol := objectTable.Col(idCol)
 
 	subQuery := dialect.From(objectTable).
@@ -59,15 +57,15 @@ func AddFeaturingArtistsToQuery(
 				goqu.Func(
 					"json_object",
 					"id",
-					goqu.I("artists.id"),
+					artistsTbl.Col("id"),
 					"name",
-					goqu.I("artists.name"),
+					artistsTbl.Col("name"),
 				),
 			).As("data"),
 		).
 		Join(
-			artistsTable,
-			goqu.On(objectTable.Col("artist_id").Eq(artistsTable.Col("id"))),
+			artistsTbl,
+			goqu.On(objectTable.Col("artist_id").Eq(artistsTbl.Col("id"))),
 		).
 		GroupBy(tableIdCol).
 		As("featuring_artists")
@@ -84,7 +82,11 @@ func AddFeaturingArtistsToQuery(
 	return query
 }
 
-func (db DB) addFeaturingArtist(ctx context.Context, junctionTable exp.IdentifierExpression, idCol, id, artistId string) error {
+func (db DB) addFeaturingArtist(
+	ctx context.Context, 
+	junctionTable exp.IdentifierExpression, 
+	idCol, id, artistId string,
+) error {
 	query := dialect.Insert(junctionTable).
 		Rows(goqu.Record{
 			idCol:      id,
@@ -95,7 +97,11 @@ func (db DB) addFeaturingArtist(ctx context.Context, junctionTable exp.Identifie
 	return err
 }
 
-func (db DB) removeAllFeaturingArtists(ctx context.Context, junctionTable exp.IdentifierExpression, idCol, id string) error {
+func (db DB) removeAllFeaturingArtists(
+	ctx context.Context, 
+	junctionTable exp.IdentifierExpression, 
+	idCol, id string,
+) error {
 	query := dialect.Delete(junctionTable).
 		Where(goqu.I(idCol).Eq(id))
 
@@ -107,26 +113,30 @@ func (db DB) AddFeaturingArtistToTrack(
 	ctx context.Context,
 	trackId, artistId string,
 ) error {
-	return db.addFeaturingArtist(ctx, tracksFeaturingArtistsTbl, "track_id", trackId, artistId)
+	return db.addFeaturingArtist(
+		ctx, tracksFeaturingArtistsTbl, "track_id", trackId, artistId)
 }
 
 func (db DB) RemoveAllTrackFeaturingArtists(
 	ctx context.Context,
 	trackId string,
 ) error {
-	return db.removeAllFeaturingArtists(ctx, tracksFeaturingArtistsTbl, "track_id", trackId)
+	return db.removeAllFeaturingArtists(
+		ctx, tracksFeaturingArtistsTbl, "track_id", trackId)
 }
 
 func (db DB) AddFeaturingArtistToAlbum(
 	ctx context.Context,
 	albumId, artistId string,
 ) error {
-	return db.addFeaturingArtist(ctx, albumsFeaturingArtistsTbl, "album_id", albumId, artistId)
+	return db.addFeaturingArtist(
+		ctx, albumsFeaturingArtistsTbl, "album_id", albumId, artistId)
 }
 
 func (db DB) RemoveAllAlbumFeaturingArtists(
 	ctx context.Context,
 	albumId string,
 ) error {
-	return db.removeAllFeaturingArtists(ctx, albumsFeaturingArtistsTbl, "album_id", albumId)
+	return db.removeAllFeaturingArtists(
+		ctx, albumsFeaturingArtistsTbl, "album_id", albumId)
 }
