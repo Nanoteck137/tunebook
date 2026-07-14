@@ -53,7 +53,6 @@ type Track struct {
 	Order *int
 }
 
-// TrackSchema returns the query schema for tracks
 func TrackSchema() *schema.Schema {
 	return schema.New().
 		AddField("id", query.TypeString, schema.Column("tracks.id")).
@@ -80,10 +79,6 @@ func TrackSchema() *schema.Schema {
 func TrackQuery() *goqu.SelectDataset {
 	idCol := tracksTbl.Col("id")
 
-	// TODO(patrik): Move these
-	albumsTable := goqu.T("albums")
-	artistsTable := goqu.T("artists")
-
 	query := dialect.From(tracksTbl).
 		Select(
 			idCol,
@@ -104,18 +99,18 @@ func TrackQuery() *goqu.SelectDataset {
 			tracksTbl.Col("created"),
 			tracksTbl.Col("updated"),
 
-			albumsTable.Col("name").As("album_name"),
-			albumsTable.Col("cover_art").As("album_cover_art"),
+			albumsTbl.Col("name").As("album_name"),
+			albumsTbl.Col("cover_art").As("album_cover_art"),
 
-			artistsTable.Col("name").As("artist_name"),
+			artistsTbl.Col("name").As("artist_name"),
 		).
 		Join(
-			albumsTable,
-			goqu.On(tracksTbl.Col("album_id").Eq(albumsTable.Col("id"))),
+			albumsTbl,
+			goqu.On(tracksTbl.Col("album_id").Eq(albumsTbl.Col("id"))),
 		).
 		Join(
-			artistsTable,
-			goqu.On(tracksTbl.Col("artist_id").Eq(artistsTable.Col("id"))),
+			artistsTbl,
+			goqu.On(tracksTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
 		)
 
 	query = AddTagsToQuery(query, idCol, tracksTagsTbl, "track_id")

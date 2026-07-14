@@ -476,7 +476,7 @@ func (s *SearchService) SearchArtists(
 		index,
 		params,
 		func(ctx context.Context, ids []string) ([]database.Artist, error) {
-			return s.db.GetArtistsIn(ctx, ids, "")
+			return s.db.GetArtistsByIds(ctx, ids)
 		},
 		func(artist database.Artist) string {
 			return artist.Id
