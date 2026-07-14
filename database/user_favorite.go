@@ -5,13 +5,18 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/nanoteck137/tunebook/database/adapter"
+	"github.com/nanoteck137/tunebook/tools/query"
+	"github.com/nanoteck137/tunebook/tools/query/schema"
 	"github.com/nanoteck137/tunebook/types"
 )
 
-type UserFavorite struct {
-	RowId int `db:"rowid"`
+var (
+	userFavoritesTbl = goqu.T("user_favorites")
 
+	userFavoriteTrackSchema = UserFavoriteTrackSchema()
+)
+
+type UserFavorite struct {
 	UserId  string `db:"user_id"`
 	TrackId string `db:"track_id"`
 
@@ -24,81 +29,27 @@ type UserFavoriteTrack struct {
 	Added int64 `db:"added"`
 }
 
+func UserFavoriteTrackSchema() *schema.Schema {
+	return TrackSchema().
+		AddField("added", query.TypeInt, schema.Column("user_favorites.added")).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "added"},
+				Dir:   query.DirDesc,
+			},
+		)
+}
+
 func UserFavoriteQuery() *goqu.SelectDataset {
-	query := dialect.From("user_favorites").
+	query := dialect.From(userFavoritesTbl).
 		Select(
-			"user_favorites.rowid",
+			userFavoritesTbl.Col("user_id"),
+			userFavoritesTbl.Col("track_id"),
 
-			"user_favorites.user_id",
-			"user_favorites.track_id",
-
-			"user_favorites.added",
+			userFavoritesTbl.Col("added"),
 		)
 
 	return query
-}
-
-func (db DB) GetUserFavoritesIds(
-	ctx context.Context, 
-	userId string,
-) ([]string, error) {
-	query := UserFavoriteQuery().
-		Select("user_favorites.track_id").
-		Where(goqu.I("user_favorites.user_id").Eq(userId))
-
-	items, err := Multiple[string](db, ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	return items, nil
-}
-
-type GetUserFavoriteTracksParams struct {
-	UserId string
-	Page   types.PageParams
-	Filter types.FilterParams
-}
-
-func (db DB) GetUserFavoriteTracks(
-	ctx context.Context,
-	params GetUserFavoriteTracksParams,
-) ([]UserFavoriteTrack, types.Page, error) {
-	tracks := TrackQuery()
-
-	var err error
-
-	query := dialect.From("user_favorites").
-		Select("tracks.*", "user_favorites.added").
-		Join(
-			tracks.As("tracks"),
-			goqu.On(goqu.I("user_favorites.track_id").Eq(goqu.I("tracks.id"))),
-		)
-
-	a := adapter.UserFavoriteTrackResolverAdapter{}
-	query, err = applyFilterParamsCustom(
-		params.Filter,
-		&a,
-		query,
-		goqu.I("user_favorites.user_id").Eq(params.UserId),
-	)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	page, err := buildPage(ctx, db, params.Page, query, "tracks.id")
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	query = applyPageParams(params.Page, query)
-
-	items, err := Multiple[UserFavoriteTrack](db, ctx, query)
-	if err != nil {
-		return nil, types.Page{}, err
-	}
-
-	return items, page, nil
 }
 
 type CreateUserFavoriteParams struct {
@@ -116,7 +67,7 @@ func (db DB) CreateUserFavorite(
 		params.Added = time.Now().UnixMilli()
 	}
 
-	query := dialect.Insert("user_favorites").
+	query := dialect.Insert(userFavoritesTbl).
 		Rows(goqu.Record{
 			"user_id":  params.UserId,
 			"track_id": params.TrackId,
@@ -136,10 +87,10 @@ func (db DB) DeleteUserFavorite(
 	ctx context.Context, 
 	userId, trackId string,
 ) error {
-	query := goqu.Delete("user_favorites").
+	query := dialect.Delete(userFavoritesTbl).
 		Where(
-			goqu.I("user_favorites.user_id").Eq(userId),
-			goqu.I("user_favorites.track_id").Eq(trackId),
+			userFavoritesTbl.Col("user_id").Eq(userId),
+			userFavoritesTbl.Col("track_id").Eq(trackId),
 		)
 
 	_, err := db.Exec(ctx, query)
@@ -150,17 +101,78 @@ func (db DB) DeleteUserFavorite(
 	return nil
 }
 
+func (db DB) GetUserFavoritesIds(
+	ctx context.Context, 
+	userId string,
+) ([]string, error) {
+	query := UserFavoriteQuery().
+		Select(userFavoritesTbl.Col("track_id")).
+		Where(userFavoritesTbl.Col("user_id").Eq(userId))
+
+	items, err := Multiple[string](db, ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+type GetUserFavoriteTracksParams struct {
+	UserId string
+	Page   types.PageParams
+	Filter types.FilterParams
+}
+
+func (db DB) GetUserFavoriteTracks(
+	ctx context.Context,
+	params GetUserFavoriteTracksParams,
+) ([]UserFavoriteTrack, types.Page, error) {
+	var err error
+
+	query := TrackQuery().
+		SelectAppend(
+			userFavoritesTbl.Col("added"),
+		).
+		Join(
+			userFavoritesTbl,
+			goqu.On(userFavoritesTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
+		)
+
+	query = query.Where(userFavoritesTbl.Col("user_id").Eq(params.UserId))
+
+	query, err = ApplyQuery(query, userFavoriteTrackSchema, QueryParams{
+		Filter: params.Filter.Filter,
+		Sort:   params.Filter.Sort,
+	})
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, tracksTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserFavoriteTrack](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
 func (db DB) GetUserFavoriteCount(
 	ctx context.Context,
 	userId string,
 ) (int, error) {
-	tbl := goqu.T("user_favorites")
-	query := dialect.From(tbl).
+	query := dialect.From(userFavoritesTbl).
 		Select(
-			goqu.COUNT(tbl.Col("track_id")),
+			goqu.COUNT(userFavoritesTbl.Col("track_id")),
 		).
-		Where(tbl.Col("user_id").Eq(userId)).
-		GroupBy(tbl.Col("user_id"))
+		Where(userFavoritesTbl.Col("user_id").Eq(userId)).
+		GroupBy(userFavoritesTbl.Col("user_id"))
 
 	return Single[int](db, ctx, query)
 }
