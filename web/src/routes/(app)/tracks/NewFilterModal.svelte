@@ -25,6 +25,9 @@
 
   let nameInput: HTMLInputElement | undefined = $state();
 
+  const toFieldError = (val: unknown): [string] | undefined =>
+    typeof val === "string" && val ? [val] : undefined;
+
   $effect(() => {
     if (open) {
       reset({});
@@ -49,6 +52,15 @@
           });
           if (!res.success) {
             cancel();
+
+            if (res.error.type === "VALIDATION_ERROR" && res.error.extra) {
+              const rec = res.error.extra as Record<string, unknown>;
+              if (rec["filter"]) {
+                $errors.filter = toFieldError(rec["filter"]);
+              }
+              return;
+            }
+
             return handleApiError(res.error);
           }
 
@@ -71,7 +83,9 @@
 
       <Dialog.Header class="relative text-left">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3"
+          >
             <ListFilter size={18} class="text-white" />
           </div>
           <div>
