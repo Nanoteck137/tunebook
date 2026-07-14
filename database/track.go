@@ -268,7 +268,7 @@ func (db DB) GetTracksByIds(
 }
 
 func (db DB) GetAllTrackIds(ctx context.Context) ([]string, error) {
-	query := dialect.From("tracks").
+	query := dialect.From(tracksTbl).
 		Select(tracksTbl.Col("id"))
 
 	return Multiple[string](db, ctx, query)
