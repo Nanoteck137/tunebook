@@ -557,7 +557,7 @@ func (s *QueueService) AddTracksToQueue(
 		trackIds, err = s.db.GetTrackIdsByFilter(
 			ctx,
 			database.GetTrackIdsByFilterParams{
-				Filter: types.FilterParams{
+				Query: types.QueryParams{
 					Filter: filterStr,
 					Sort:   "",
 				},

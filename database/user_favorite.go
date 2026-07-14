@@ -120,7 +120,7 @@ func (db DB) GetUserFavoritesIds(
 type GetUserFavoriteTracksParams struct {
 	UserId string
 	Page   types.PageParams
-	Filter types.FilterParams
+	Query  types.QueryParams
 }
 
 func (db DB) GetUserFavoriteTracks(
@@ -140,10 +140,7 @@ func (db DB) GetUserFavoriteTracks(
 
 	query = query.Where(userFavoritesTbl.Col("user_id").Eq(params.UserId))
 
-	query, err = ApplyQuery(query, userFavoriteTrackSchema, QueryParams{
-		Filter: params.Filter.Filter,
-		Sort:   params.Filter.Sort,
-	})
+	query, err = ApplyQuery(query, userFavoriteTrackSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}

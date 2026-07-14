@@ -246,8 +246,8 @@ func (db DB) GetAllAlbumIds(ctx context.Context) ([]string, error) {
 }
 
 type GetAlbumsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetAlbums(
@@ -258,10 +258,7 @@ func (db DB) GetAlbums(
 
 	var err error
 
-	query, err = ApplyQuery(query, albumSchema, QueryParams{
-		Filter: params.Filter.Filter,
-		Sort:   params.Filter.Sort,
-	})
+	query, err = ApplyQuery(query, albumSchema, params.Query)
 	if err != nil {
 		fmt.Printf("1 err: %v\n", err)
 		return nil, types.Page{}, err

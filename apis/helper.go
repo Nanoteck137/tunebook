@@ -186,8 +186,8 @@ func getPageParams(q url.Values, defaultPerPage int) types.PageParams {
 	}
 }
 
-func getFilterParams(q url.Values) types.FilterParams {
-	return types.FilterParams{
+func getQueryParams(q url.Values) types.QueryParams {
+	return types.QueryParams{
 		Filter: q.Get("filter"),
 		Sort:   q.Get("sort"),
 	}

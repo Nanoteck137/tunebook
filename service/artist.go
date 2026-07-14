@@ -37,8 +37,8 @@ func NewArtistService(
 }
 
 type GetArtistsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (s *ArtistService) GetArtists(
@@ -46,8 +46,8 @@ func (s *ArtistService) GetArtists(
 	params GetArtistsParams,
 ) ([]database.Artist, types.Page, error) {
 	artists, page, err := s.db.GetArtists(ctx, database.GetArtistsParams{
-		Page:   params.Page,
-		Filter: params.Filter,
+		Page:  params.Page,
+		Query: params.Query,
 	})
 	if err != nil {
 		return nil, types.Page{}, artistErr.Wrap("get artists", err)

@@ -111,7 +111,7 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 					service.GetTrackHistoryParams{
 						UserId: user.Id,
 						Page:   getPageParams(q, 100),
-						Filter: getFilterParams(q),
+						Query:  getQueryParams(q),
 					},
 				)
 				if err != nil {

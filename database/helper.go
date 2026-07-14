@@ -146,7 +146,7 @@ func SqlGroupConcat(col any, seperator string) exp.SQLFunctionExpression {
 }
 
 func applyFilterParams(
-	params types.FilterParams,
+	params types.QueryParams,
 	adapter filter.ResolverAdapter,
 	query *goqu.SelectDataset,
 ) (*goqu.SelectDataset, error) {
@@ -166,7 +166,7 @@ func applyFilterParams(
 }
 
 func applyFilterParamsCustom(
-	params types.FilterParams,
+	params types.QueryParams,
 	adapter filter.ResolverAdapter,
 	query *goqu.SelectDataset,
 	customWhere exp.Expression,

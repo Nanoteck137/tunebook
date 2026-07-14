@@ -49,8 +49,8 @@ func NewPlaylistService(
 }
 
 type GetPlaylistsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (s *PlaylistService) GetPlaylists(
@@ -58,8 +58,8 @@ func (s *PlaylistService) GetPlaylists(
 	params GetPlaylistsParams,
 ) ([]database.Playlist, types.Page, error) {
 	playlists, page, err := s.db.GetPlaylists(ctx, database.GetPlaylistsParams{
-		Page:   params.Page,
-		Filter: params.Filter,
+		Page:  params.Page,
+		Query: params.Query,
 	})
 	if err != nil {
 		return nil, types.Page{}, playlistErr.Wrap(
@@ -380,8 +380,8 @@ func (s *PlaylistService) GeneratePlaylistImage(
 type GetPlaylistItemsParams struct {
 	PlaylistId string
 
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 
 	FilterId string
 }
@@ -408,7 +408,7 @@ func (s *PlaylistService) GetPlaylistItems(
 				"get items: db get filter", err)
 		}
 
-		params.Filter.Filter = filter.Filter
+		params.Query.Filter = filter.Filter
 	}
 
 	tracks, page, err := s.db.GetPlaylistTracks(
@@ -416,7 +416,7 @@ func (s *PlaylistService) GetPlaylistItems(
 		database.GetPlaylistTracksParams{
 			PlaylistId: playlist.Id,
 			Page:       params.Page,
-			Filter:     params.Filter,
+			Query:      params.Query,
 		},
 	)
 	if err != nil {

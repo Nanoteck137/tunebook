@@ -89,13 +89,13 @@ func InstallArtistHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				pageParams := getPageParams(q, 100)
-				filterParams := getFilterParams(q)
+				queryParams := getQueryParams(q)
 
 				artists, page, err := app.ArtistService().GetArtists(
 					ctx,
 					service.GetArtistsParams{
-						Page:   pageParams,
-						Filter: filterParams,
+						Page:  pageParams,
+						Query: queryParams,
 					},
 				)
 				if err != nil {

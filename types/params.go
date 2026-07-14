@@ -1,6 +1,6 @@
 package types
 
-type FilterParams struct {
+type QueryParams struct {
 	Filter string
 	Sort   string
 }

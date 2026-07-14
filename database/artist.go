@@ -174,8 +174,8 @@ func (db DB) DeleteArtist(ctx context.Context, artistId string) error {
 }
 
 type GetArtistsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetArtists(
@@ -186,10 +186,7 @@ func (db DB) GetArtists(
 
 	var err error
 
-	query, err = ApplyQuery(query, artistSchema, QueryParams{
-		Filter: params.Filter.Filter,
-		Sort:   params.Filter.Sort,
-	})
+	query, err = ApplyQuery(query, artistSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}

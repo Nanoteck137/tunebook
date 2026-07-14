@@ -11,6 +11,7 @@ import (
 	"github.com/nanoteck137/tunebook/tools/query/schema"
 	"github.com/nanoteck137/tunebook/tools/query/sort"
 	querysql "github.com/nanoteck137/tunebook/tools/query/sql"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 type FilterError struct {
@@ -74,15 +75,10 @@ func ValidateFilter(schema *schema.Schema, filter string) error {
 	return nil
 }
 
-type QueryParams struct {
-	Filter string
-	Sort   string
-}
-
 func ApplyQuery(
 	q *goqu.SelectDataset,
 	s *schema.Schema,
-	params QueryParams,
+	params types.QueryParams,
 ) (*goqu.SelectDataset, error) {
 	pl := planner.New(s)
 	compiler := querysql.NewCompiler()

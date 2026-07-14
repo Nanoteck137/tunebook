@@ -192,13 +192,13 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				pageParams := getPageParams(q, 100)
-				filterParams := getFilterParams(q)
+				queryParams := getQueryParams(q)
 
 				playlists, page, err := app.PlaylistService().GetPlaylists(
 					ctx,
 					service.GetPlaylistsParams{
-						Page:   pageParams,
-						Filter: filterParams,
+						Page:  pageParams,
+						Query: queryParams,
 					},
 				)
 				if err != nil {
@@ -420,14 +420,14 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				pageParams := getPageParams(q, 100)
-				filterParams := getFilterParams(q)
+				queryParams := getQueryParams(q)
 
 				tracks, page, err := app.PlaylistService().GetPlaylistItems(
 					ctx,
 					service.GetPlaylistItemsParams{
 						PlaylistId: c.Param("playlistId"),
 						Page:       pageParams,
-						Filter:     filterParams,
+						Query:      queryParams,
 						FilterId:   q.Get("filterId"),
 					},
 				)

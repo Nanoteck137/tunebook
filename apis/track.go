@@ -114,13 +114,13 @@ func InstallTrackHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				pageParams := getPageParams(q, 100)
-				filterParams := getFilterParams(q)
+				queryParams := getQueryParams(q)
 
 				tracks, p, err := app.TrackService().GetTracks(
 					ctx,
 					service.GetTracksParams{
 						Page:     pageParams,
-						Filter:   filterParams,
+						Query:    queryParams,
 						FilterId: q.Get("filterId"),
 					},
 				)

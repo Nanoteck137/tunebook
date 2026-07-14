@@ -34,7 +34,7 @@ func NewHistoryService(
 type GetTrackHistoryParams struct {
 	UserId string
 	Page   types.PageParams
-	Filter types.FilterParams
+	Query  types.QueryParams
 }
 
 func (s *HistoryService) GetTrackHistory(
@@ -46,7 +46,7 @@ func (s *HistoryService) GetTrackHistory(
 		database.GetTrackHistoryParams{
 			UserId: params.UserId,
 			Page:   params.Page,
-			Filter: params.Filter,
+			Query:  params.Query,
 		},
 	)
 	if err != nil {

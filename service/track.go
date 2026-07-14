@@ -34,8 +34,8 @@ func NewTrackService(
 }
 
 type GetTracksParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 
 	FilterId string
 }
@@ -54,12 +54,12 @@ func (s *TrackService) GetTracks(
 			return nil, types.Page{}, trackErr.Wrap("get filter", err)
 		}
 
-		params.Filter.Filter = dbFilter.Filter
+		params.Query.Filter = dbFilter.Filter
 	}
 
 	tracks, page, err := s.db.GetTracks(ctx, database.GetTracksParams{
-		Page:   params.Page,
-		Filter: params.Filter,
+		Page:  params.Page,
+		Query: params.Query,
 	})
 	if err != nil {
 		return nil, types.Page{}, trackErr.Wrap("get tracks", err)
@@ -79,7 +79,7 @@ type GetTrackByIdParams struct {
 type GetFavoriteTracksParams struct {
 	UserId   string
 	Page     types.PageParams
-	Filter   types.FilterParams
+	Query    types.QueryParams
 	FilterId string
 }
 
@@ -90,7 +90,7 @@ func (s *TrackService) GetFavoriteTracks(
 	if params.FilterId != "" {
 		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err == nil {
-			params.Filter.Filter = dbFilter.Filter
+			params.Query.Filter = dbFilter.Filter
 		}
 	}
 
@@ -99,7 +99,7 @@ func (s *TrackService) GetFavoriteTracks(
 		database.GetUserFavoriteTracksParams{
 			UserId: params.UserId,
 			Page:   params.Page,
-			Filter: params.Filter,
+			Query:  params.Query,
 		},
 	)
 	if err != nil {

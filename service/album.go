@@ -38,8 +38,8 @@ func NewAlbumService(
 }
 
 type GetAlbumsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (s *AlbumService) GetAlbums(
@@ -47,8 +47,8 @@ func (s *AlbumService) GetAlbums(
 	params GetAlbumsParams,
 ) ([]database.Album, types.Page, error) {
 	albums, page, err := s.db.GetAlbums(ctx, database.GetAlbumsParams{
-		Page:   params.Page,
-		Filter: params.Filter,
+		Page:  params.Page,
+		Query: params.Query,
 	})
 	if err != nil {
 		return nil, types.Page{}, albumErr.Wrap("get albums", err)

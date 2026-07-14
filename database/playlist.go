@@ -213,8 +213,8 @@ func (db DB) GetAllPlaylistIds(ctx context.Context) ([]string, error) {
 }
 
 type GetPlaylistsParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetPlaylists(
@@ -225,10 +225,7 @@ func (db DB) GetPlaylists(
 
 	var err error
 
-	query, err = ApplyQuery(query, playlistSchema, QueryParams{
-		Filter: params.Filter.Filter,
-		Sort:   params.Filter.Sort,
-	})
+	query, err = ApplyQuery(query, playlistSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}

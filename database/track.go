@@ -275,7 +275,7 @@ func (db DB) GetAllTrackIds(ctx context.Context) ([]string, error) {
 }
 
 type GetTrackIdsByFilterParams struct {
-	Filter types.FilterParams
+	Query types.QueryParams
 }
 
 func (db DB) GetTrackIdsByFilter(
@@ -284,10 +284,7 @@ func (db DB) GetTrackIdsByFilter(
 ) ([]string, error) {
 	query := TrackQuery().Select(tracksTbl.Col("id"))
 
-	query, err := ApplyQuery(query, trackSchema, QueryParams{
-		Filter: params.Filter.Filter,
-		Sort:   params.Filter.Sort,
-	})
+	query, err := ApplyQuery(query, trackSchema, params.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -296,8 +293,8 @@ func (db DB) GetTrackIdsByFilter(
 }
 
 type GetTracksParams struct {
-	Page   types.PageParams
-	Filter types.FilterParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetTracks(
@@ -309,10 +306,7 @@ func (db DB) GetTracks(
 	var err error
 
 	// Use the new query system
-	query, err = ApplyQuery(query, trackSchema, QueryParams{
-		Filter: params.Filter.Filter,
-		Sort:   params.Filter.Sort,
-	})
+	query, err = ApplyQuery(query, trackSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -349,7 +343,7 @@ func (db DB) GetTrackIdsByAlbum(
 	query = query.Where(tracksTbl.Col("album_id").Eq(albumId))
 
 	// Then apply the user-provided filter and sort
-	query, err = ApplyQuery(query, trackSchema, QueryParams{
+	query, err = ApplyQuery(query, trackSchema, types.QueryParams{
 		Filter: params.Filter,
 	})
 	if err != nil {
@@ -382,7 +376,7 @@ func (db DB) GetTrackIdsByArtist(
 	query = query.Where(tracksTbl.Col("artist_id").Eq(artistId))
 
 	// Then apply the user-provided filter and sort
-	query, err = ApplyQuery(query, trackSchema, QueryParams{
+	query, err = ApplyQuery(query, trackSchema, types.QueryParams{
 		Filter: params.Filter,
 	})
 	if err != nil {
@@ -417,7 +411,7 @@ func (db DB) GetTrackIdsByPlaylist(
 	query = query.Where(playlistItemsTbl.Col("playlist_id").Eq(playlistId))
 
 	// Then apply the user-provided filter and sort
-	query, err = ApplyQuery(query, trackSchema, QueryParams{
+	query, err = ApplyQuery(query, trackSchema, types.QueryParams{
 		Filter: params.Filter,
 	})
 	if err != nil {
@@ -452,7 +446,7 @@ func (db DB) GetTrackIdsByUserFavorites(
 	query = query.Where(userFavoritesTbl.Col("user_id").Eq(userId))
 
 	// Then apply the user-provided filter and sort
-	query, err = ApplyQuery(query, trackSchema, QueryParams{
+	query, err = ApplyQuery(query, trackSchema, types.QueryParams{
 		Filter: params.Filter,
 	})
 	if err != nil {

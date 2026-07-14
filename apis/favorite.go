@@ -34,7 +34,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 					service.GetFavoriteTracksParams{
 						UserId:   c.Param("userId"),
 						Page:     getPageParams(q, 100),
-						Filter:   getFilterParams(q),
+						Query:    getQueryParams(q),
 						FilterId: q.Get("filterId"),
 					},
 				)
@@ -74,7 +74,7 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 					service.GetFavoriteTracksParams{
 						UserId:   user.Id,
 						Page:     getPageParams(q, 100),
-						Filter:   getFilterParams(q),
+						Query:    getQueryParams(q),
 						FilterId: q.Get("filterId"),
 					},
 				)

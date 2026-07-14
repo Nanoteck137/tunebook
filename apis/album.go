@@ -104,13 +104,13 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 				ctx := c.Request().Context()
 
 				pageParams := getPageParams(q, 100)
-				filterParams := getFilterParams(q)
+				queryParams := getQueryParams(q)
 
 				albums, pageInfo, err := app.AlbumService().GetAlbums(
 					ctx,
 					service.GetAlbumsParams{
-						Page:   pageParams,
-						Filter: filterParams,
+						Page:  pageParams,
+						Query: queryParams,
 					},
 				)
 				if err != nil {

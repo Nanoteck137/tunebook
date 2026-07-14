@@ -242,7 +242,7 @@ func (db DB) GetNextPlaylistItemIndex(
 type GetPlaylistTracksParams struct {
 	PlaylistId string
 	Page       types.PageParams
-	Filter     types.FilterParams
+	Query      types.QueryParams
 }
 
 func (db DB) GetPlaylistTracks(
@@ -264,10 +264,7 @@ func (db DB) GetPlaylistTracks(
 	query = query.Where(
 		playlistItemsTbl.Col("playlist_id").Eq(params.PlaylistId))
 
-	query, err = ApplyQuery(query, playlistItemTrackSchema, QueryParams{
-		Filter: params.Filter.Filter,
-		Sort:   params.Filter.Sort,
-	})
+	query, err = ApplyQuery(query, playlistItemTrackSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
