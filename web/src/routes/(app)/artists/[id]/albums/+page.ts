@@ -54,7 +54,7 @@ export const load: PageLoad = async ({ parent, params, url }) => {
   const albums = await data.apiClient.getAlbums({
     query: {
       ...query,
-      filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
+      filter: `artistId = "${params.id}" or featuringArtists has "${params.id}"`,
     },
   });
   if (!albums.success) {

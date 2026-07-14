@@ -54,7 +54,7 @@ export const load: PageLoad = async ({ parent, params, url }) => {
   const tracks = await data.apiClient.getTracks({
     query: {
       ...query,
-      filter: `artistId == "${params.id}" || hasFeaturingArtist("${params.id}")`,
+      filter: `artistId = "${params.id}" or featuringArtists has "${params.id}"`,
     },
   });
   if (!tracks.success) {
