@@ -7,6 +7,10 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
+var (
+	userTrackStatsTbl = goqu.T("user_track_stats")
+)
+
 type UserTrackStats struct {
 	UserId      string `db:"user_id"`
 	TrackId     string `db:"track_id"`
@@ -39,19 +43,21 @@ type UserTrackStatsAgg struct {
 }
 
 func (db DB) GetUserTrackStatsAgg(
-	ctx context.Context, 
+	ctx context.Context,
 	userId string,
 ) (UserTrackStatsAgg, error) {
-	tbl := goqu.T("user_track_stats")
-	query := dialect.From(tbl).
+	query := dialect.From(userTrackStatsTbl).
 		Select(
-			goqu.COALESCE(goqu.SUM(tbl.Col("play_count")), 0).As("num_tracks_played"),
-			goqu.COALESCE(goqu.SUM(tbl.Col("skip_count")), 0).As("num_tracks_skipped"),
-			goqu.COALESCE(goqu.SUM(tbl.Col("play_time")), 0).As("play_time"),
+			goqu.COALESCE(goqu.SUM(userTrackStatsTbl.Col("play_count")), 0).
+				As("num_tracks_played"),
+			goqu.COALESCE(goqu.SUM(userTrackStatsTbl.Col("skip_count")), 0).
+				As("num_tracks_skipped"),
+			goqu.COALESCE(goqu.SUM(userTrackStatsTbl.Col("play_time")), 0).
+				As("play_time"),
 		).
 		Where(
-			tbl.Col("user_id").Eq(userId),
-			tbl.Col("period_type").Eq("all"),
+			userTrackStatsTbl.Col("user_id").Eq(userId),
+			userTrackStatsTbl.Col("period_type").Eq("all"),
 		)
 
 	return Single[UserTrackStatsAgg](db, ctx, query)
@@ -73,48 +79,31 @@ func (db DB) GetUserTopTracks(
 	ctx context.Context,
 	params GetUserTopTracksParams,
 ) ([]UserTopTrack, error) {
-	trackQuery := TrackQuery().As("t")
-
-	tbl := goqu.T("user_track_stats")
-	query := dialect.From(tbl).
-		Select(
-			goqu.I("t.id"),
-			goqu.I("t.filename"),
-			goqu.I("t.modified_time"),
-			goqu.I("t.media_format"),
-			goqu.I("t.name"),
-			goqu.I("t.album_id"),
-			goqu.I("t.artist_id"),
-			goqu.I("t.number"),
-			goqu.I("t.duration"),
-			goqu.I("t.year"),
-			goqu.I("t.created"),
-			goqu.I("t.updated"),
-			goqu.I("t.album_name"),
-			goqu.I("t.album_cover_art"),
-			goqu.I("t.artist_name"),
-			goqu.I("t.tags"),
-			goqu.I("t.featuring_artists"),
-			tbl.Col("play_count"),
+	query := TrackQuery().
+		SelectAppend(
+			userTrackStatsTbl.Col("play_count"),
 		).
-		Join(trackQuery, goqu.On(tbl.Col("track_id").Eq(goqu.I("t.id")))).
+		Join(
+			userTrackStatsTbl,
+			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
+		).
 		Where(
-			tbl.Col("user_id").Eq(params.UserId),
-			tbl.Col("period_type").Eq(params.PeriodType),
+			userTrackStatsTbl.Col("user_id").Eq(params.UserId),
+			userTrackStatsTbl.Col("period_type").Eq(params.PeriodType),
 		).
-		Order(tbl.Col("play_count").Desc()).
+		Order(userTrackStatsTbl.Col("play_count").Desc()).
 		Limit(uint(params.Limit))
 
 	if params.Year != 0 {
-		query = query.Where(tbl.Col("year").Eq(params.Year))
+		query = query.Where(userTrackStatsTbl.Col("year").Eq(params.Year))
 	}
 
 	return Multiple[UserTopTrack](db, ctx, query)
 }
 
 type UserYearStats struct {
-	Year         int   `db:"year"`
-	TrackCount   int   `db:"track_count"`
+	Year          int   `db:"year"`
+	TrackCount    int   `db:"track_count"`
 	ListeningTime int64 `db:"listening_time"`
 }
 
@@ -122,19 +111,18 @@ func (db DB) GetUserYearStats(
 	ctx context.Context,
 	userId string,
 ) ([]UserYearStats, error) {
-	tbl := goqu.T("user_track_stats")
-	query := dialect.From(tbl).
+	query := dialect.From(userTrackStatsTbl).
 		Select(
-			tbl.Col("year"),
-			goqu.SUM(tbl.Col("play_count")).As("track_count"),
-			goqu.SUM(tbl.Col("play_time")).As("listening_time"),
+			userTrackStatsTbl.Col("year"),
+			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("track_count"),
+			goqu.SUM(userTrackStatsTbl.Col("play_time")).As("listening_time"),
 		).
 		Where(
-			tbl.Col("user_id").Eq(userId),
-			tbl.Col("period_type").Eq("year"),
+			userTrackStatsTbl.Col("user_id").Eq(userId),
+			userTrackStatsTbl.Col("period_type").Eq("year"),
 		).
-		GroupBy(tbl.Col("year")).
-		Order(tbl.Col("year").Desc())
+		GroupBy(userTrackStatsTbl.Col("year")).
+		Order(userTrackStatsTbl.Col("year").Desc())
 
 	return Multiple[UserYearStats](db, ctx, query)
 }
@@ -145,20 +133,20 @@ func (db DB) UpsertUserTrackStats(
 ) error {
 	now := time.Now().UnixMilli()
 
-	query := dialect.Insert("user_track_stats").Rows(goqu.Record{
-		"user_id":      params.UserId,
-		"track_id":     params.TrackId,
+	query := dialect.Insert(userTrackStatsTbl).Rows(goqu.Record{
+		"user_id":  params.UserId,
+		"track_id": params.TrackId,
 
 		"period_type":  params.PeriodType,
 		"year":         params.Year,
 		"period_value": params.PeriodValue,
 
-		"play_count":   1,
-		"skip_count":   params.SkipDelta,
-		"play_time":    params.PlayTimeDelta,
+		"play_count": 1,
+		"skip_count": params.SkipDelta,
+		"play_time":  params.PlayTimeDelta,
 
-		"created_at":   now,
-		"updated_at":   now,
+		"created_at": now,
+		"updated_at": now,
 	}).OnConflict(
 		goqu.DoUpdate(
 			"user_id, track_id, period_type, year, period_value",
