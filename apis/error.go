@@ -18,6 +18,7 @@ const (
 
 	ErrTypeInvalidFilter      pyrin.ErrorType = "INVALID_FILTER"
 	ErrTypeInvalidSort        pyrin.ErrorType = "INVALID_SORT"
+	ErrTypeInvalidQuery       pyrin.ErrorType = "INVALID_QUERY"
 	ErrTypeUserAlreadyExists  pyrin.ErrorType = "USER_ALREADY_EXISTS"
 	ErrTypeUserNotFound       pyrin.ErrorType = "USER_NOT_FOUND"
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
@@ -116,6 +117,24 @@ func InvalidSort(err error) *pyrin.Error {
 		Code:    http.StatusBadRequest,
 		Type:    ErrTypeInvalidSort,
 		Message: err.Error(),
+	}
+}
+
+func QueryError(filterErr, sortErr error) *pyrin.Error {
+	extra := map[string]any{}
+	if filterErr != nil {
+		extra["filter"] = filterErr.Error()
+	}
+
+	if sortErr != nil {
+		extra["sort"] = sortErr.Error()
+	}
+
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidQuery,
+		Message: "Invalid query",
+		Extra:   extra,
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/database/adapter"
 	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tools/anvil"
@@ -87,22 +86,30 @@ type RemovePlaylistItemBody struct {
 	TrackId string `json:"trackId"`
 }
 
-func testPlaylistItemFilter(val string) error {
-	// TODO(patrik): Replace with PlaylistResolverAdapter when it exists
-	return database.TestFilter(val, &adapter.TrackResolverAdapter{})
-}
+var trackSchema = database.TrackSchema()
 
 // TODO(patrik): Move
-var validateFilter = validate.By(func(value any) error {
+var validateTrackFilter = validate.By(func(value any) error {
+	var filterStr string
 	switch value := value.(type) {
 	case *string:
-		return testPlaylistItemFilter(*value)
+		filterStr = *value
 	case string:
-		return testPlaylistItemFilter(value)
+		filterStr = value
 	default:
-		panic(fmt.Sprintf("validateFilter: Unknown type: %T", value))
+		panic(fmt.Sprintf("validateTrackFilter: Unknown type: %T", value))
 	}
 
+	err := database.ValidateFilter(trackSchema, filterStr)
+	if err != nil {
+		var filterErr *database.FilterError
+		if errors.As(err, &filterErr) {
+			return &database.QueryError{Filter: filterErr}
+		}
+		return err
+	}
+
+	return nil
 })
 
 type EditPlaylistBody struct {

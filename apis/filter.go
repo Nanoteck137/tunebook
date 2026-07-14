@@ -43,7 +43,7 @@ func (b *CreateTrackFilterBody) Transform() {
 func (b CreateTrackFilterBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Name, validate.Required),
-		validate.Field(&b.Filter, validate.Required, validateFilter),
+		validate.Field(&b.Filter, validate.Required, validateTrackFilter),
 	)
 }
 
@@ -63,7 +63,7 @@ func (b UpdateTrackFilterBody) Validate() error {
 		validate.Field(
 			&b.Filter,
 			validate.Required.When(b.Filter != nil),
-			validateFilter,
+			validateTrackFilter,
 		),
 	)
 }

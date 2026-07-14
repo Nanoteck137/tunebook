@@ -74,14 +74,16 @@ func handleHistoryServiceErrors(err error) error {
 		return HistoryNotFound()
 	}
 
-	var invalidFilter *service.InvalidFilterError
-	if errors.As(err, &invalidFilter) {
-		return InvalidFilter(errors.New(invalidFilter.Message))
-	}
-
-	var invalidSort *service.InvalidSortError
-	if errors.As(err, &invalidSort) {
-		return InvalidSort(errors.New(invalidSort.Message))
+	var queryErr *database.QueryError
+	if errors.As(err, &queryErr) {
+		var filterErr, sortErr error
+		if queryErr.Filter != nil {
+			filterErr = queryErr.Filter
+		}
+		if queryErr.Sort != nil {
+			sortErr = queryErr.Sort
+		}
+		return QueryError(filterErr, sortErr)
 	}
 
 	return err

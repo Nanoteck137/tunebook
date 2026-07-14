@@ -51,20 +51,6 @@ func (s *AlbumService) GetAlbums(
 		Filter: params.Filter,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrInvalidFilter) {
-			return nil, types.Page{}, &InvalidFilterError{
-				Service: "album service",
-				Message: err.Error(),
-			}
-		}
-
-		if errors.Is(err, database.ErrInvalidSort) {
-			return nil, types.Page{}, &InvalidSortError{
-				Service: "album service",
-				Message: err.Error(),
-			}
-		}
-
 		return nil, types.Page{}, albumErr.Wrap("get albums", err)
 	}
 

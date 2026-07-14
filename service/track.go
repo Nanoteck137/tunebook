@@ -62,20 +62,6 @@ func (s *TrackService) GetTracks(
 		Filter: params.Filter,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrInvalidFilter) {
-			return nil, types.Page{}, &InvalidFilterError{
-				Service: "track service",
-				Message: err.Error(),
-			}
-		}
-
-		if errors.Is(err, database.ErrInvalidSort) {
-			return nil, types.Page{}, &InvalidSortError{
-				Service: "track service",
-				Message: err.Error(),
-			}
-		}
-
 		return nil, types.Page{}, trackErr.Wrap("get tracks", err)
 	}
 
@@ -230,7 +216,14 @@ func (s *TrackService) CreateTrackFilter(
 	ctx context.Context,
 	params CreateTrackFilterParams,
 ) (string, error) {
-	// TODO(patrik): Test filter
+	// if err := database.ValidateTrackFilter(params.Filter); err != nil {
+	// 	var filterErr *database.FilterError
+	// 	if errors.As(err, &filterErr) {
+	// 		return "", &database.QueryError{Filter: filterErr}
+	// 	}
+	//
+	// 	return "", trackErr.Wrap("create track filter: validate", err)
+	// }
 
 	filterId, err := s.db.CreateTrackFilter(
 		ctx,
@@ -282,7 +275,13 @@ func (s *TrackService) UpdateTrackFilter(
 	}
 
 	if params.Filter != nil {
-		// TODO(patrik): Test filter
+		// if err := database.ValidateTrackFilter(*params.Filter); err != nil {
+		// 	var filterErr *database.FilterError
+		// 	if errors.As(err, &filterErr) {
+		// 		return &database.QueryError{Filter: filterErr}
+		// 	}
+		// 	return trackErr.Wrap("update track filter: validate", err)
+		// }
 
 		changes.Filter = database.Change[string]{
 			Value:   *params.Filter,

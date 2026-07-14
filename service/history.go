@@ -50,22 +50,6 @@ func (s *HistoryService) GetTrackHistory(
 		},
 	)
 	if err != nil {
-		// TODO(patrik): Cleanup, when new filter system is used
-		if errors.Is(err, database.ErrInvalidFilter) {
-			return nil, types.Page{}, &InvalidFilterError{
-				Service: "history service",
-				Message: err.Error(),
-			}
-		}
-
-		// TODO(patrik): Cleanup, when new filter system is used
-		if errors.Is(err, database.ErrInvalidSort) {
-			return nil, types.Page{}, &InvalidSortError{
-				Service: "history service",
-				Message: err.Error(),
-			}
-		}
-
 		return nil, types.Page{}, historyErr.Wrap("get track history", err)
 	}
 
