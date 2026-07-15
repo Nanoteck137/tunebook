@@ -57,15 +57,54 @@ func TrackSchema() *schema.Schema {
 	return schema.New().
 		AddField("id", query.TypeString, schema.Column("tracks.id")).
 		AddField("name", query.TypeString, schema.Column("tracks.name")).
-		AddField("number", query.TypeInt, schema.Column("tracks.number"), schema.Nullable()).
-		AddField("duration", query.TypeInt, schema.Column("tracks.duration"), schema.Nullable()).
-		AddField("year", query.TypeInt, schema.Column("tracks.year"), schema.Nullable()).
-		AddField("albumId", query.TypeString, schema.Column("tracks.album_id")).
-		AddField("artistId", query.TypeString, schema.Column("tracks.artist_id")).
-		AddField("albumName", query.TypeString, schema.Column("albums.name")).
-		AddField("artistName", query.TypeString, schema.Column("artists.name")).
-		AddField("tags", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString, "tracks.id")).
-		AddField("featuringArtists", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString, "tracks.id")).
+		AddField(
+			"number", 
+			query.TypeInt, 
+			schema.Column("tracks.number"), 
+			schema.Nullable(),
+		).
+		AddField(
+			"duration", 
+			query.TypeInt, 
+			schema.Column("tracks.duration"), 
+			schema.Nullable(),
+		).
+		AddField(
+			"year", 
+			query.TypeInt, 
+			schema.Column("tracks.year"), 
+			schema.Nullable(),
+		).
+		AddField(
+			"albumId", query.TypeString, schema.Column("tracks.album_id")).
+		AddField(
+			"artistId", query.TypeString, schema.Column("tracks.artist_id")).
+		AddField(
+			"albumName", query.TypeString, schema.Column("albums.name")).
+		AddField(
+			"artistName", query.TypeString, schema.Column("artists.name")).
+		AddField(
+			"tags", 
+			query.TypeRelation, 
+			schema.Relation(
+				"tracks_tags", 
+				"track_id", 
+				"tag_slug", 
+				query.TypeString, 
+				"tracks.id",
+			),
+		).
+		AddField(
+			"featuringArtists", 
+			query.TypeRelation, 
+			schema.Relation(
+				"tracks_featuring_artists", 
+				"track_id", 
+				"artist_id", 
+				query.TypeString, 
+				"tracks.id",
+			),
+		).
 		AddField("created", query.TypeInt, schema.Column("tracks.created")).
 		AddField("updated", query.TypeInt, schema.Column("tracks.updated")).
 		SetDefaultSort(

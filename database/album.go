@@ -70,7 +70,12 @@ func AlbumSchema() *schema.Schema {
 			"tags",
 			query.TypeRelation,
 			schema.Relation(
-				"albums_tags", "album_id", "tag_slug", query.TypeString, "albums.id"),
+				"albums_tags", 
+				"album_id", 
+				"tag_slug", 
+				query.TypeString, 
+				"albums.id",
+			),
 		).
 		AddField(
 			"featuringArtists",
