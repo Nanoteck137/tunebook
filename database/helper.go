@@ -2,9 +2,6 @@ package database
 
 import (
 	"context"
-	"database/sql/driver"
-	"encoding/json"
-	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
