@@ -3,7 +3,7 @@ import type { PageLoad } from "./$types";
 
 async function getPlaylists(apiClient: ApiClient, userId?: string) {
   const res = await apiClient.getPlaylists({
-    query: { filter: `ownerId == "${userId}"` },
+    query: { filter: `ownerId = "${userId}"` },
   });
   if (!res.success) {
     return [];
