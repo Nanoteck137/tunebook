@@ -196,8 +196,6 @@ func buildPage(
 ) (types.Page, error) {
 	countQuery := query.Select(goqu.COUNT(countCol))
 
-	fmt.Printf("DebugSQL(countQuery): %v\n", DebugSQL(countQuery))
-
 	totalItems, err := Single[int](db, ctx, countQuery)
 	if err != nil {
 		return types.Page{}, err
