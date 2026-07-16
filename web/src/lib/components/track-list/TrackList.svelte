@@ -38,7 +38,7 @@
     displayOrder?: boolean;
 
     // eslint-disable-next-line no-unused-vars
-    onPlay: (trackId: string) => void;
+    onPlay: (trackId: string, shuffle: boolean) => void;
     // eslint-disable-next-line no-unused-vars
     onReorder?: (items: string[], anchor: string | null) => void;
   };
@@ -109,7 +109,7 @@
           {displayOrder}
           {track}
           onPlayClicked={() => {
-            onPlay(track.id);
+            onPlay(track.id, false);
           }}
         >
           {#if selectedTracks.length > 0}
@@ -164,6 +164,14 @@
                     }}
                   >
                     Select track
+                  </DropdownMenu.Item>
+
+                  <DropdownMenu.Item
+                    onSelect={() => {
+                      onPlay(track.id, true);
+                    }}
+                  >
+                    Shuffle play
                   </DropdownMenu.Item>
 
                   <DropdownMenu.Item

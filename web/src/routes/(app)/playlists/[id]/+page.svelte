@@ -190,10 +190,10 @@
   displayOrder
   totalTracks={data.page.totalItems}
   tracks={data.items}
-  onPlay={async (trackId) => {
+  onPlay={async (trackId, shuffle) => {
     await musicManager.queueRequest(
       { type: "addPlaylist", playlistId: data.playlist.id },
-      { queueIndexToTrackId: trackId },
+      { queueIndexToTrackId: trackId, shuffle },
     );
   }}
   onReorder={async (items, anchor) => {

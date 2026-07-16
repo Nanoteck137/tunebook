@@ -170,6 +170,8 @@ func (s *QueueService) ReplaceQueue(
 		return err
 	}
 
+	currentIndex := params.CurrentIndex
+
 	trackIds := params.TrackIds
 	if params.Shuffle {
 		shuffled := make([]string, len(trackIds))
@@ -178,14 +180,24 @@ func (s *QueueService) ReplaceQueue(
 			shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 		})
 		trackIds = shuffled
-	}
 
-	currentIndex := params.CurrentIndex
-	if params.QueueIndexToTrackId != "" {
-		for i, id := range trackIds {
-			if id == params.QueueIndexToTrackId {
-				currentIndex = i
-				break
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					trackIds[0], trackIds[i] = trackIds[i], trackIds[0]
+					break
+				}
+			}
+
+			currentIndex = 0
+		}
+	} else {
+		if params.QueueIndexToTrackId != "" {
+			for i, id := range trackIds {
+				if id == params.QueueIndexToTrackId {
+					currentIndex = i
+					break
+				}
 			}
 		}
 	}
