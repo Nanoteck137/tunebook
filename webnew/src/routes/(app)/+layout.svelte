@@ -1,6 +1,7 @@
 <script lang="ts">
 import {
 		Compass,
+		House,
 		Library,
 		ListVideo,
 		LogOut,
@@ -250,6 +251,16 @@ import {
 		<nav
 			class="flex items-center justify-around border-t bg-background py-1 md:hidden"
 		>
+			<a
+				href="/"
+				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname ===
+				'/'
+					? 'text-primary'
+					: 'text-muted-foreground'}"
+			>
+				<House size={18} />
+				Home
+			</a>
 			<a
 				href="/browse"
 				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
