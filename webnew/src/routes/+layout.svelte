@@ -1,18 +1,14 @@
 <script lang="ts">
-  import "../app.css";
-  import favicon from "$lib/assets/favicon.svg";
-  import { Tooltip } from "$lib/components/ui";
-  import { ModeWatcher } from "mode-watcher";
+	import { ModeWatcher } from "mode-watcher";
+	import "../app.css";
+	import { Toaster, Tooltip } from "$lib/components/ui";
 
-  let { children } = $props();
+	const { children } = $props();
 </script>
 
-<svelte:head>
-  <link rel="icon" href={favicon} />
-</svelte:head>
-
 <ModeWatcher />
+<Toaster />
 
 <Tooltip.Provider>
-  {@render children()}
+	{@render children()}
 </Tooltip.Provider>

@@ -52,6 +52,17 @@ var genCmd = &cobra.Command{
 			}
 		}
 
+		// TODO(patrik): Remove after webnew
+		{
+			gen := typescript.TypescriptGenerator{}
+
+			err = gen.Generate(&serverDef, resolver, "webnew/src/lib/api")
+			if err != nil {
+				slog.Error("failed to generate typescript client", "err", err)
+				os.Exit(1)
+			}
+		}
+
 		// {
 		// 	gen := golang.GolangGenerator{}
 		//

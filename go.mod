@@ -13,7 +13,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/meilisearch/meilisearch-go v0.36.1
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nanoteck137/pyrin v0.19.0
+	github.com/nanoteck137/pyrin v0.20.1
 	github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343
 	github.com/nrednav/cuid2 v1.0.0
 	github.com/pelletier/go-toml/v2 v2.1.0
