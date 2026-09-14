@@ -160,7 +160,7 @@
 	<Breadcrumb.Root>
 		<Breadcrumb.List>
 			<Breadcrumb.Item>
-				<Breadcrumb.Link href="/playlists">Playlists</Breadcrumb.Link>
+				<Breadcrumb.Link href="/library/playlists">Playlists</Breadcrumb.Link>
 			</Breadcrumb.Item>
 			<Breadcrumb.Separator />
 			<Breadcrumb.Item>
@@ -450,7 +450,7 @@
 		}
 
 		toast.success("Deleted playlist");
-		goto("/playlists", { invalidateAll: true });
+		goto("/library/playlists", { invalidateAll: true });
 	}}
 />
 

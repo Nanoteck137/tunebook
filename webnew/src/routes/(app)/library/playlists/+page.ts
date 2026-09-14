@@ -1,7 +1,7 @@
 import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
-import { FullFilter } from "./types";
+import { FullFilter } from "../../playlists/types";
 
 function constructFilterSort(
   filter: FullFilter,
@@ -63,8 +63,6 @@ export const load: PageLoad = async ({ parent, url }) => {
   });
 
   constructFilterSort(filter, query, data.user?.id);
-
-  console.log(query);
 
   const res = await data.apiClient.getPlaylists({ query });
   if (!res.success) {

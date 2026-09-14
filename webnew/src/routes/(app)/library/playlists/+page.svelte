@@ -21,10 +21,10 @@
   import Spacer from "$lib/components/Spacer.svelte";
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
-  import NewPlaylistModal from "./NewPlaylistModal.svelte";
+  import NewPlaylistModal from "../../playlists/NewPlaylistModal.svelte";
   import Image from "$lib/components/Image.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
-  import { sortTypes, defaultSort, type SortType } from "./types";
+  import { sortTypes, defaultSort, type SortType } from "../../playlists/types";
 
   let { data } = $props();
   const apiClient = getApiClient();
@@ -39,10 +39,7 @@
 
     const query = page.url.searchParams;
     query.delete("sort");
-
-    if (sort !== defaultSort) {
-      query.set("sort", sort);
-    }
+    query.set("sort", sort);
 
     goto("?" + query.toString(), { invalidateAll: true });
   }

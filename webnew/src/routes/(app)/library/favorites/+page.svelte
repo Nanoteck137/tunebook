@@ -7,7 +7,7 @@
   import Pagination from "$lib/components/Pagination.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import FilterButton from "../tracks/FilterButton.svelte";
+  import FilterButton from "../../tracks/FilterButton.svelte";
 
   let { data } = $props();
 

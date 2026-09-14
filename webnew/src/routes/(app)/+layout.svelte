@@ -1,9 +1,7 @@
 <script lang="ts">
-	import {
-		DiscAlbum,
-		FileMusic,
-		Heart,
-		ListMusic,
+import {
+		Compass,
+		Library,
 		ListVideo,
 		LogOut,
 		MonitorIcon,
@@ -12,7 +10,6 @@
 		Server,
 		SunIcon,
 		User,
-		Users,
 	} from "@lucide/svelte";
 	import AudioPlayer from "$lib/components/audio/AudioPlayer.svelte";
 	import MobilePlayer from "$lib/components/audio/MobilePlayer.svelte";
@@ -81,63 +78,33 @@
 
 			<div class="hidden items-center gap-1 md:flex">
 				<Button
-					href="/albums"
-					class="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
-						'/albums',
+					href="/browse"
+					class="text-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
+						'/browse',
 					)
 						? 'bg-accent text-accent-foreground'
 						: 'text-muted-foreground'}"
 					variant="ghost"
+					title="Browse"
+					aria-label="Browse"
 				>
-					Albums
+					<Compass />
+					Browse
 				</Button>
 
 				<Button
-					href="/artists"
-					class="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
-						'/artists',
+					href="/library"
+					class="text-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
+						'/library',
 					)
 						? 'bg-accent text-accent-foreground'
 						: 'text-muted-foreground'}"
 					variant="ghost"
+					title="Library"
+					aria-label="Library"
 				>
-					Artists
-				</Button>
-
-				<Button
-					href="/tracks"
-					class="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
-						'/tracks',
-					)
-						? 'bg-accent text-accent-foreground'
-						: 'text-muted-foreground'}"
-					variant="ghost"
-				>
-					Tracks
-				</Button>
-
-				<Button
-					href="/playlists"
-					class="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
-						'/playlists',
-					)
-						? 'bg-accent text-accent-foreground'
-						: 'text-muted-foreground'}"
-					variant="ghost"
-				>
-					Playlists
-				</Button>
-
-				<Button
-					href="/favorites"
-					class="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
-						'/favorites',
-					)
-						? 'bg-accent text-accent-foreground'
-						: 'text-muted-foreground'}"
-					variant="ghost"
-				>
-					Favorites
+					<Library />
+					Library
 				</Button>
 			</div>
 
@@ -284,59 +251,26 @@
 			class="flex items-center justify-around border-t bg-background py-1 md:hidden"
 		>
 			<a
-				href="/albums"
+				href="/browse"
 				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-					'/albums',
+					'/browse',
 				)
 					? 'text-primary'
 					: 'text-muted-foreground'}"
 			>
-				<DiscAlbum size={18} />
-				Albums
+				<Compass size={18} />
+				Browse
 			</a>
 			<a
-				href="/artists"
+				href="/library"
 				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-					'/artists',
+					'/library',
 				)
 					? 'text-primary'
 					: 'text-muted-foreground'}"
 			>
-				<Users size={18} />
-				Artists
-			</a>
-			<a
-				href="/tracks"
-				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-					'/tracks',
-				)
-					? 'text-primary'
-					: 'text-muted-foreground'}"
-			>
-				<FileMusic size={18} />
-				Tracks
-			</a>
-			<a
-				href="/playlists"
-				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-					'/playlists',
-				)
-					? 'text-primary'
-					: 'text-muted-foreground'}"
-			>
-				<ListMusic size={18} />
-				Playlists
-			</a>
-			<a
-				href="/favorites"
-				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname.startsWith(
-					'/favorites',
-				)
-					? 'text-primary'
-					: 'text-muted-foreground'}"
-			>
-				<Heart size={18} />
-				Favorites
+				<Library size={18} />
+				Library
 			</a>
 		</nav>
 	{/if}

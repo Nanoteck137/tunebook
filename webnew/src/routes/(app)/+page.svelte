@@ -1,6 +1,4 @@
 <script lang="ts">
-	import AlbumSkeletonTile from "$lib/components/tiles/AlbumSkeletonTile.svelte";
-	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 	import PlaylistSkeletonTile from "$lib/components/tiles/PlaylistSkeletonTile.svelte";
 	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
 	import TrackSkeletonTile from "$lib/components/tiles/TrackSkeletonTile.svelte";
@@ -55,7 +53,7 @@
 		<section>
 			<a
 				class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-				href="/playlists"
+				href="/library/playlists"
 			>
 				Your Playlists
 				<ChevronRight />
@@ -106,35 +104,6 @@
 							cover={track.coverArt.medium}
 							name={track.name}
 							artists={track.artists}
-						/>
-					{/each}
-				{/await}
-			</div>
-		</section>
-
-		<section>
-			<a
-				class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-				href="/albums?sort=created-new"
-			>
-				Recently Added Albums
-				<ChevronRight />
-			</a>
-
-			<div class="h-4"></div>
-
-			<div class="flex gap-2 overflow-x-auto pb-4">
-				{#await data.recentAlbums}
-					{#each Array(5) as _i}
-						<AlbumSkeletonTile />
-					{/each}
-				{:then albums}
-					{#each albums as album (album.id)}
-						<AlbumTile
-							id={album.id}
-							cover={album.coverArt.medium}
-							name={album.name}
-							artists={album.artists}
 						/>
 					{/each}
 				{/await}

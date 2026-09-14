@@ -12,17 +12,6 @@ async function getPlaylists(apiClient: ApiClient, userId?: string) {
   return res.data.playlists;
 }
 
-async function getRecentAlbums(apiClient: ApiClient) {
-  const res = await apiClient.getAlbums({
-    query: { sort: "-created", perPage: "10" },
-  });
-  if (!res.success) {
-    return [];
-  }
-
-  return res.data.albums;
-}
-
 async function getFavorites(apiClient: ApiClient, userId?: string) {
   if (!userId) return [];
 
@@ -42,7 +31,6 @@ export const load: PageLoad = async ({ parent }) => {
   return {
     ...data,
     playlists: getPlaylists(data.apiClient, data.user?.id),
-    recentAlbums: getRecentAlbums(data.apiClient),
     favorites: getFavorites(data.apiClient, data.user?.id),
   };
 };
