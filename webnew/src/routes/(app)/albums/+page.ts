@@ -90,8 +90,6 @@ export const load: PageLoad = async ({ parent, url }) => {
 
   constructFilterSort(filter, query);
 
-  console.log(query);
-
   const res = await data.apiClient.getAlbums({ query });
   if (!res.success) {
     throw error(res.error.code, { message: res.error.message });
