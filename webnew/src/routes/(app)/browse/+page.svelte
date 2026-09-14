@@ -13,6 +13,7 @@
 			title: "Albums",
 			description: "Browse your album collection",
 			icon: DiscAlbum,
+			allHref: "/albums",
 			search: { label: "Search Albums", href: "/search/albums" },
 			links: [
 				{ label: "All albums", href: "/albums" },
@@ -24,6 +25,7 @@
 			title: "Artists",
 			description: "Browse your artists",
 			icon: Users,
+			allHref: "/artists",
 			search: { label: "Search Artists", href: "/search/artists" },
 			links: [
 				{ label: "All artists", href: "/artists" },
@@ -35,6 +37,7 @@
 			title: "Tracks",
 			description: "Browse your tracks",
 			icon: FileMusic,
+			allHref: "/tracks",
 			search: { label: "Search Tracks", href: "/search/tracks" },
 			links: [
 				{ label: "All tracks", href: "/tracks" },
@@ -73,17 +76,24 @@
 				<div
 					class="flex flex-col gap-3 rounded-lg border bg-card p-4"
 				>
-					<div
-						class="flex items-center gap-3 rounded border bg-muted p-3"
-					>
-						<category.icon class="h-6 w-6 shrink-0" />
-						<div>
-							<p class="font-semibold">{category.title}</p>
-							<p class="text-xs text-muted-foreground">
-								{category.description}
-							</p>
-						</div>
+<a
+					href={category.allHref}
+					class="group flex items-center gap-3 rounded border bg-muted p-3 transition-colors hover:bg-accent"
+					title={`Browse all ${category.title.toLowerCase()}`}
+				>
+					<category.icon class="h-6 w-6 shrink-0" />
+					<div class="min-w-0 flex-1">
+						<p class="font-semibold group-hover:underline">{category.title}</p>
+						<p
+							class="text-xs text-muted-foreground group-hover:text-accent-foreground"
+						>
+							{category.description}
+						</p>
 					</div>
+					<ChevronRight
+						class="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+					/>
+				</a>
 
 					<div class="flex flex-col">
 						{#each category.links as link (link.href)}
