@@ -45,6 +45,7 @@ const (
 	ErrTypePlaylistItemNotFound        pyrin.ErrorType = "PLAYLIST_ITEM_NOT_FOUND"
 	ErrTypePlaylistAnchorTrackNotFound pyrin.ErrorType = "PLAYLIST_ANCHOR_TRACK_NOT_FOUND"
 	ErrTypePlaylistAnchorNotFound      pyrin.ErrorType = "PLAYLIST_ANCHOR_PLAYLIST_NOT_FOUND"
+	ErrTypeFilterAnchorNotFound        pyrin.ErrorType = "FILTER_ANCHOR_NOT_FOUND"
 	ErrTypeNotAuthorized               pyrin.ErrorType = "NOT_AUTHORIZED"
 	ErrTypeInvalidParam                pyrin.ErrorType = "INVALID_PARAM"
 )
@@ -280,6 +281,14 @@ func PlaylistAnchorNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypePlaylistAnchorNotFound,
 		Message: "Anchor playlist not found",
+	}
+}
+
+func FilterAnchorNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeFilterAnchorNotFound,
+		Message: "Anchor filter not found",
 	}
 }
 

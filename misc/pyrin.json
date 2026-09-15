@@ -1272,6 +1272,26 @@
       ]
     },
     {
+      "name": "ReorderTrackFiltersBody",
+      "fields": [
+        {
+          "name": "before",
+          "type": "bool",
+          "omitEmpty": false
+        },
+        {
+          "name": "anchorFilterId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "filterIds",
+          "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "SearchAlbums",
       "fields": [
         {
@@ -2064,6 +2084,13 @@
       "method": "POST",
       "path": "/api/v1/playlists/reorder",
       "body": "ReorderPlaylistsBody"
+    },
+    {
+      "type": "api",
+      "name": "ReorderTrackFilters",
+      "method": "POST",
+      "path": "/api/v1/filters/tracks/reorder",
+      "body": "ReorderTrackFiltersBody"
     },
     {
       "type": "api",

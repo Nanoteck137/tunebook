@@ -82,6 +82,8 @@ func handleTrackServiceErrors(err error) error {
 		return TrackNotFound()
 	case errors.Is(err, service.ErrTrackServiceFilterNotFound):
 		return FilterNotFound()
+	case errors.Is(err, service.ErrTrackServiceAnchorFilterNotFound):
+		return FilterAnchorNotFound()
 	case errors.Is(err, service.ErrTrackServiceUnauthorized):
 		return NotAuthorized()
 	}

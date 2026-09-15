@@ -13,9 +13,10 @@ import (
 var trackErr = NewServiceErrCreator("track")
 
 var (
-	ErrTrackServiceTrackNotFound  = trackErr.New("track not found")
-	ErrTrackServiceFilterNotFound = trackErr.New("filter not found")
-	ErrTrackServiceUnauthorized   = trackErr.New("unauthorized")
+	ErrTrackServiceTrackNotFound        = trackErr.New("track not found")
+	ErrTrackServiceFilterNotFound       = trackErr.New("filter not found")
+	ErrTrackServiceAnchorFilterNotFound = trackErr.New("anchor filter not found")
+	ErrTrackServiceUnauthorized         = trackErr.New("unauthorized")
 )
 
 type TrackService struct {
@@ -225,12 +226,18 @@ func (s *TrackService) CreateTrackFilter(
 	// 	return "", trackErr.Wrap("create track filter: validate", err)
 	// }
 
+	position, err := s.db.GetNextTrackFilterPosition(ctx, params.UserId)
+	if err != nil {
+		return "", trackErr.Wrap("create track filter: db get next position", err)
+	}
+
 	filterId, err := s.db.CreateTrackFilter(
 		ctx,
 		database.CreateTrackFilterParams{
-			UserId: params.UserId,
-			Name:   params.Name,
-			Filter: params.Filter,
+			UserId:   params.UserId,
+			Name:     params.Name,
+			Filter:   params.Filter,
+			Position: position,
 		},
 	)
 	if err != nil {
@@ -319,9 +326,124 @@ func (s *TrackService) DeleteTrackFilter(
 		return ErrTrackServiceUnauthorized
 	}
 
-	err = s.db.DeleteTrackFilter(ctx, filter.Id)
+	tx, err := s.db.Begin()
+	if err != nil {
+		return trackErr.Wrap("delete track filter: db begin", err)
+	}
+	defer tx.Rollback()
+
+	err = tx.DeleteTrackFilter(ctx, filter.Id)
 	if err != nil {
 		return trackErr.Wrap("delete track filter: db delete", err)
+	}
+
+	err = tx.ReorderTrackFiltersAfterDelete(ctx, filter.UserId, filter.Position)
+	if err != nil {
+		return trackErr.Wrap("delete track filter: db reorder filters", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return trackErr.Wrap("delete track filter: db commit", err)
+	}
+
+	return nil
+}
+
+type ReorderTrackFiltersParams struct {
+	UserId string
+
+	Before         bool
+	AnchorFilterId string
+	FilterIds      []string
+}
+
+func (s *TrackService) ReorderTrackFilters(
+	ctx context.Context,
+	params ReorderTrackFiltersParams,
+) error {
+	current, err := s.db.GetTrackFiltersByUserId(ctx, params.UserId)
+	if err != nil {
+		return trackErr.Wrap("reorder track filters: db get filters", err)
+	}
+
+	index := make(map[string]database.TrackFilter, len(current))
+	for _, filter := range current {
+		index[filter.Id] = filter
+	}
+
+	filters := make([]database.TrackFilter, 0, len(params.FilterIds))
+	for _, id := range params.FilterIds {
+		filter, ok := index[id]
+		if !ok {
+			continue
+		}
+
+		filters = append(filters, filter)
+	}
+
+	if len(filters) == 0 {
+		return nil
+	}
+
+	if params.AnchorFilterId != "" {
+		if _, ok := index[params.AnchorFilterId]; !ok {
+			return ErrTrackServiceAnchorFilterNotFound
+		}
+	}
+
+	moveSet := make(map[string]bool, len(filters))
+	for _, filter := range filters {
+		moveSet[filter.Id] = true
+	}
+
+	stationary := make([]database.TrackFilter, 0, len(current))
+	for _, filter := range current {
+		if !moveSet[filter.Id] {
+			stationary = append(stationary, filter)
+		}
+	}
+
+	insertAt := 0
+	if params.AnchorFilterId != "" {
+		for i, filter := range stationary {
+			if filter.Id == params.AnchorFilterId {
+				insertAt = i + 1
+				break
+			}
+		}
+	}
+
+	spliced := make([]database.TrackFilter, 0, len(current))
+	spliced = append(spliced, stationary[:insertAt]...)
+	spliced = append(spliced, filters...)
+	spliced = append(spliced, stationary[insertAt:]...)
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return trackErr.Wrap("reorder track filters: db begin", err)
+	}
+	defer tx.Rollback()
+
+	for i, filter := range spliced {
+		err := tx.UpdateTrackFilter(
+			ctx,
+			filter.Id,
+			database.TrackFilterChanges{
+				Position: database.Change[int]{
+					Value:   i,
+					Changed: i != filter.Position,
+				},
+			},
+		)
+		if err != nil {
+			return trackErr.Wrap("reorder track filters: db update filter", err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return trackErr.Wrap("reorder track filters: db commit", err)
 	}
 
 	return nil

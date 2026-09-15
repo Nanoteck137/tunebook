@@ -68,6 +68,12 @@ func (b UpdateTrackFilterBody) Validate() error {
 	)
 }
 
+type ReorderTrackFiltersBody struct {
+	Before         bool     `json:"before"`
+	AnchorFilterId string   `json:"anchorFilterId"`
+	FilterIds      []string `json:"filterIds"`
+}
+
 func InstallFilterHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -201,6 +207,41 @@ func InstallFilterHandlers(app core.App, group pyrin.Group) {
 					service.DeleteTrackFilterParams{
 						FilterId: c.Param("filterId"),
 						UserId:   user.Id,
+					},
+				)
+				if err != nil {
+					return nil, handleTrackServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "ReorderTrackFilters",
+			Method:   http.MethodPost,
+			Path:     "/filters/tracks/reorder",
+			BodyType: ReorderTrackFiltersBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[ReorderTrackFiltersBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				err = app.TrackService().ReorderTrackFilters(
+					ctx,
+					service.ReorderTrackFiltersParams{
+						UserId:         user.Id,
+						Before:         body.Before,
+						AnchorFilterId: body.AnchorFilterId,
+						FilterIds:      body.FilterIds,
 					},
 				)
 				if err != nil {
