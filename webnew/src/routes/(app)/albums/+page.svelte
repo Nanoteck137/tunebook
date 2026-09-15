@@ -10,6 +10,7 @@
 		ListSortAscendingIcon,
 		CheckIcon,
 		Shuffle,
+		User,
 	} from "@lucide/svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 	import Pagination from "$lib/components/Pagination.svelte";
@@ -381,7 +382,7 @@
 				</a>
 
 				<button
-					class="absolute right-2 bottom-2 hidden h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
+					class="absolute right-2 bottom-2 hidden h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
 					title="Play album"
 					aria-label={`Play ${album.name}`}
 					onclick={() => playAlbum(album.id)}
@@ -410,14 +411,41 @@
 						>
 							<EllipsisVertical size={14} />
 						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="end">
+						<DropdownMenu.Content align="center">
 							<DropdownMenu.Group>
+								<DropdownMenu.Item
+									onclick={() => playAlbum(album.id)}
+								>
+									<Play size={14} />
+									Play
+								</DropdownMenu.Item>
 								<DropdownMenu.Item
 									onclick={() => playAlbum(album.id, true)}
 								>
 									<Shuffle size={14} />
 									Shuffle play
 								</DropdownMenu.Item>
+							</DropdownMenu.Group>
+
+							<DropdownMenu.Separator />
+
+							<DropdownMenu.Group>
+								<DropdownMenu.Sub>
+									<DropdownMenu.SubTrigger>
+										<User size={14} />
+										Go to artist
+									</DropdownMenu.SubTrigger>
+									<DropdownMenu.SubContent>
+										{#each album.artists as artist (artist.id)}
+											<a
+												href="/artists/{artist.id}"
+												class="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+											>
+												{artist.name}
+											</a>
+										{/each}
+									</DropdownMenu.SubContent>
+								</DropdownMenu.Sub>
 							</DropdownMenu.Group>
 
 							<DropdownMenu.Separator />

@@ -2,6 +2,7 @@
   import { Search, X, Plus, EllipsisVertical, Info } from "@lucide/svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import ArtistVariants from "./ArtistVariants.svelte";
   import {
     Separator,
     Button,
@@ -270,6 +271,23 @@
 </div>
 
 <Spacer size="lg" />
+
+<section class="rounded-lg border bg-card p-4">
+  <h2 class="mb-2 text-lg font-bold">Design Variants</h2>
+  <ArtistVariants artists={data.artists} />
+</section>
+
+<Spacer size="lg" />
+
+<Separator />
+
+<Spacer size="md" />
+
+<div class="flex items-baseline gap-2 px-2">
+  <h2 class="text-lg font-bold">Current layout</h2>
+</div>
+
+<Spacer size="md" />
 
 <div
   class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"

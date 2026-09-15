@@ -14,7 +14,7 @@ function constructFilterSort(
     filters.push(`name contains "${filter.query}"`);
   }
 
-  if (!filter.filters.all && currentUserId) {
+  if (currentUserId) {
     filters.push(`ownerId = "${currentUserId}"`);
   }
 
@@ -56,9 +56,7 @@ export const load: PageLoad = async ({ parent, url }) => {
   const filter = FullFilter.parse({
     query: url.searchParams.get("query") ?? "",
     sort: url.searchParams.get("sort") ?? undefined,
-    filters: {
-      all: url.searchParams.get("all") ?? undefined,
-    },
+    filters: {},
     excludes: {},
   });
 

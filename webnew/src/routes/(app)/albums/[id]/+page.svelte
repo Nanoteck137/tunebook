@@ -4,8 +4,16 @@
     Button,
     buttonVariants,
     DropdownMenu,
+    Input,
   } from "$lib/components/ui";
-  import { EllipsisVertical, ListPlus, Play, Shuffle } from "@lucide/svelte";
+  import {
+    EllipsisVertical,
+    ListPlus,
+    ListSortAscendingIcon,
+    CheckIcon,
+    Play,
+    Shuffle,
+  } from "@lucide/svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte.js";
   import Image from "$lib/components/Image.svelte";
@@ -13,6 +21,14 @@
 
   let { data } = $props();
   const musicManager = getMusicManager();
+
+  let durationLabel = $derived.by(() => {
+    const totalMs = data.tracks.reduce((sum, t) => sum + t.duration, 0);
+    const s = Math.floor(totalMs / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  });
 </script>
 
 <div class="py-2">
@@ -30,10 +46,10 @@
 </div>
 
 <div
-  class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.94_0.06_80)] to-background dark:from-zinc-900 dark:to-background p-4 sm:p-6 md:flex-row md:items-end md:gap-8"
+  class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
 >
   <Image
-    class="w-40 min-w-40 self-center shadow-lg md:w-52 md:min-w-52"
+    class="w-40 min-w-40 self-center rounded-xl shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:w-52 md:min-w-52 dark:ring-white/10"
     src={data.album.coverArt.large}
     alt={data.album.name}
   />
@@ -43,6 +59,9 @@
       class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
     >
       {data.album.albumType}
+      {#if data.album.year}
+        &middot; {data.album.year}
+      {/if}
     </p>
 
     <h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
@@ -53,11 +72,12 @@
       class="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground"
     >
       <ArtistList artists={data.album.artists} class="text-sm" />
-
-      {#if data.album.year}
-        <span>&middot; {data.album.year}</span>
-      {/if}
     </div>
+
+    <p class="text-sm text-muted-foreground">
+      {data.tracks.length} {data.tracks.length === 1 ? "song" : "songs"}
+      &middot; {durationLabel}
+    </p>
 
     {#if data.album.tags.length > 0}
       <div class="flex flex-wrap gap-1">
@@ -120,6 +140,36 @@
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     </div>
+  </div>
+</div>
+
+<div class="h-4"></div>
+
+<div class="flex flex-wrap items-center justify-between gap-2">
+  <div class="relative w-full md:max-w-56">
+    <Input class="pr-8" placeholder="Search tracks..." />
+  </div>
+
+  <div class="flex items-center gap-1">
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger
+        class={buttonVariants({ variant: "ghost", size: "icon" })}
+        title="Sort"
+        aria-label="Sort"
+      >
+        <ListSortAscendingIcon />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content align="end">
+        <DropdownMenu.Group>
+          <DropdownMenu.Item>
+            <CheckIcon />
+            Name (A-Z)
+          </DropdownMenu.Item>
+          <DropdownMenu.Item>Name (Z-A)</DropdownMenu.Item>
+          <DropdownMenu.Item>Disc / Track number</DropdownMenu.Item>
+        </DropdownMenu.Group>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   </div>
 </div>
 

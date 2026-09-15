@@ -1,12 +1,12 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, Input, Select, Separator } from "$lib/components/ui";
-  import { Play, Shuffle, Plus, X } from "@lucide/svelte";
+  import { Button, Input, Select, Separator, buttonVariants } from "$lib/components/ui";
+  import { Play, Shuffle, Plus, X, ListFilter } from "@lucide/svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
+  import TrackVariants from "$lib/components/track-list/TrackVariants.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import NewFilterModal from "./NewFilterModal.svelte";
   import FilterButton from "./FilterButton.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
   import { sortTypes, defaultSort, type SortType } from "./types";
@@ -14,7 +14,6 @@
   let { data } = $props();
   const musicManager = getMusicManager();
 
-  let openNewFilterModal = $state(false);
   let selectedSort = $state<SortType>(defaultSort);
 
   let tagInput = $state("");
@@ -176,37 +175,62 @@
       {/if}
     </div>
 
-    <div class="mt-3 flex flex-wrap items-center gap-2">
+    </div>
+
+  <div
+    class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2"
+  >
+    <div class="flex flex-wrap items-center gap-1.5">
+      <span
+        class="mr-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+      >
+        <ListFilter size={12} />
+        Saved Filters
+      </span>
+
       {#if data.filters && data.filters.length > 0}
-        <span class="text-xs font-medium text-muted-foreground"
-          >Saved Filters</span
-        >
         {#each data.filters as filter (filter.filterId)}
           <FilterButton {filter} />
         {/each}
+      {:else}
+        <span class="text-sm text-muted-foreground">None saved yet</span>
       {/if}
+    </div>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onclick={() => (openNewFilterModal = true)}
+    <div class="flex items-center gap-1">
+      <a
+        href="/library/filters/tracks"
+        class={buttonVariants({ variant: "ghost", size: "sm" })}
       >
-        <Plus size={14} />
-        New Filter
-      </Button>
+        <ListFilter size={14} />
+        Manage Filters
+      </a>
 
       {#if page.url.searchParams.has("filterId")}
-        <Button
-          variant="ghost"
-          size="sm"
-          onclick={clearFilter}
-        >
+        <Button variant="ghost" size="sm" onclick={clearFilter}>
           <X size={14} />
           Clear
         </Button>
       {/if}
     </div>
   </div>
+</div>
+
+<Spacer size="md" />
+
+<section class="rounded-lg border bg-card p-4">
+  <h2 class="mb-2 text-lg font-bold">Design Variants</h2>
+  <TrackVariants tracks={data.tracks} />
+</section>
+
+<Spacer size="lg" />
+
+<Separator />
+
+<Spacer size="md" />
+
+<div class="flex items-baseline gap-2 px-2">
+  <h2 class="text-lg font-bold">Current list</h2>
 </div>
 
 <Spacer size="md" />
@@ -235,5 +259,3 @@
 <Spacer size="lg" />
 
 <Pagination page={data.page} />
-
-<NewFilterModal bind:open={openNewFilterModal} />

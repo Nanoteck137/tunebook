@@ -1,19 +1,51 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, Separator } from "$lib/components/ui";
-  import { Play, Shuffle, X } from "@lucide/svelte";
+  import { Button, Separator, Input, DropdownMenu, buttonVariants } from "$lib/components/ui";
+  import { Play, Shuffle, X, ListSortAscendingIcon, CheckIcon, ListFilter } from "@lucide/svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import FilterButton from "../../tracks/FilterButton.svelte";
+  import collage from "$lib/assets/collage.png";
+  import { sortTypes, defaultSort, type SortType } from "./types";
 
   let { data } = $props();
 
   const musicManager = getMusicManager();
 
   let filterId = $derived(page.url.searchParams.get("filterId"));
+
+  let searchQuery = $state(page.url.searchParams.get("query") ?? "");
+  function updateSearch() {
+    const query = page.url.searchParams;
+    query.delete("query");
+
+    if (searchQuery) {
+      query.set("query", searchQuery);
+    }
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
+
+  function clearSearch() {
+    searchQuery = "";
+    updateSearch();
+  }
+
+  let sort = $state(
+    (page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+  );
+  function updateSort(value: string) {
+    sort = value as SortType;
+
+    const query = page.url.searchParams;
+    query.delete("sort");
+    query.set("sort", sort);
+
+    goto("?" + query.toString(), { invalidateAll: true });
+  }
 
   function clearFilter() {
     const query = page.url.searchParams;
@@ -32,53 +64,149 @@
 </script>
 
 <div class="flex flex-col gap-4">
-  <div
-    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  <section
+    class="relative flex justify-center overflow-hidden rounded-lg bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 p-6 sm:justify-start sm:p-8"
   >
-    <div class="flex items-baseline gap-2">
-      <h1 class="text-xl font-bold">Favorites</h1>
-      {#if data.page}
-        <span class="text-sm text-muted-foreground"
-          >{data.page.totalItems}</span
+    <div
+      class="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-2xl"
+    ></div>
+
+    <img
+      src={collage}
+      alt=""
+      class="pointer-events-none absolute inset-0 h-full w-full object-cover"
+    />
+
+    <div
+      class="relative flex min-w-0 flex-col items-center gap-3 rounded-lg border border-white/20 bg-black/30 p-4 text-center backdrop-blur-sm sm:items-start sm:p-6 sm:text-left"
+    >
+      <h1 class="text-3xl font-bold text-white">Favorites</h1>
+
+      <p class="text-sm text-white/90">
+        {#if data.page}
+          {data.page.totalItems} saved track{data.page.totalItems !== 1 ? "s" : ""}
+        {/if}
+      </p>
+
+      <div class="mt-1 flex items-center gap-2">
+        <Button
+          size="lg"
+          class="bg-white text-black hover:bg-white/90"
+          onclick={() => playAll()}
         >
+          <Play />
+          Play All
+        </Button>
+        <Button
+          size="lg"
+          variant="secondary"
+          class="border-white/30 bg-black/25 text-white backdrop-blur-sm hover:bg-black/40"
+          onclick={async () => {
+            await musicManager.queueRequest(
+              { type: "addFavorites", userId: data.user.id, filterId: filterId ?? undefined },
+              { shuffle: true },
+            );
+          }}
+        >
+          <Shuffle />
+          Shuffle
+        </Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Toolbar -->
+  <div class="flex flex-wrap items-center justify-between gap-2 px-2">
+    <div class="relative flex-1 md:max-w-64">
+      <Input
+        class="pr-8"
+        placeholder="Search favorites..."
+        bind:value={searchQuery}
+        onkeydown={(e) => {
+          if (e.key === "Enter") {
+            updateSearch();
+          }
+        }}
+      />
+      {#if searchQuery}
+        <button
+          class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+          onclick={clearSearch}
+          aria-label="Clear search"
+        >
+          <X size={14} />
+        </button>
       {/if}
     </div>
 
-    <div class="flex items-center gap-2">
-      <Button size="sm" onclick={() => playAll()}>
-        <Play size={14} />
-        Play All
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onclick={async () => {
-          await musicManager.queueRequest(
-            { type: "addFavorites", userId: data.user.id, filterId: filterId ?? undefined },
-            { shuffle: true },
-          );
-        }}
-      >
-        <Shuffle size={14} />
-        Shuffle
-      </Button>
+    <div class="flex items-center gap-1">
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger
+          class={buttonVariants({ variant: "ghost", size: "icon" })}
+          title="Sort"
+          aria-label="Sort"
+        >
+          <ListSortAscendingIcon />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content align="end">
+          <DropdownMenu.Group>
+            {#each sortTypes as ty (ty.value)}
+              {@const selected = sort === ty.value}
+              <DropdownMenu.Item
+                onSelect={() => updateSort(ty.value)}
+                class={selected ? "bg-accent text-foreground" : ""}
+              >
+                {#if selected}
+                  <CheckIcon />
+                {/if}
+                {ty.label}
+              </DropdownMenu.Item>
+            {/each}
+          </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
     </div>
   </div>
 
-  {#if data.filters && data.filters.length > 0}
-    <div class="flex flex-wrap items-center gap-2">
+  <Separator />
+</div>
+
+<div
+  class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2"
+>
+  <div class="flex flex-wrap items-center gap-1.5">
+    <span
+      class="mr-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+    >
+      <ListFilter size={12} />
+      Saved Filters
+    </span>
+
+    {#if data.filters && data.filters.length > 0}
       {#each data.filters as filter (filter.filterId)}
         <FilterButton {filter} />
       {/each}
+    {:else}
+      <span class="text-sm text-muted-foreground">None saved yet</span>
+    {/if}
+  </div>
 
-      {#if filterId}
-        <Button variant="ghost" size="sm" onclick={clearFilter}>
-          <X size={14} />
-          Clear
-        </Button>
-      {/if}
-    </div>
-  {/if}
+  <div class="flex items-center gap-1">
+    <a
+      href="/library/filters/tracks"
+      class={buttonVariants({ variant: "ghost", size: "sm" })}
+    >
+      <ListFilter size={14} />
+      Manage Filters
+    </a>
+
+    {#if filterId}
+      <Button variant="ghost" size="sm" onclick={clearFilter}>
+        <X size={14} />
+        Clear
+      </Button>
+    {/if}
+  </div>
 </div>
 
 <Spacer size="lg" />

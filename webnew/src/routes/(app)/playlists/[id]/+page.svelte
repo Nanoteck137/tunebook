@@ -172,10 +172,10 @@
 
 <div
 	bind:this={heroRef}
-	class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-accent to-background p-4 sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-zinc-900 dark:to-background"
+	class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
 >
 	<Image
-		class="w-40 min-w-40 self-center shadow-lg md:w-52 md:min-w-52"
+		class="w-40 min-w-40 self-center rounded-xl shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:w-52 md:min-w-52 dark:ring-white/10"
 		src={data.playlist.coverArt.large}
 		alt={data.playlist.name}
 	/>
@@ -194,20 +194,30 @@
 		<div
 			class="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground"
 		>
-			<span class="font-medium text-foreground"
-				>{data.playlist.ownerDisplayName}</span
+			<a
+				href="/users/{data.playlist.ownerId}"
+				class="font-medium text-foreground hover:underline"
+				title={data.playlist.ownerDisplayName}
 			>
+				{data.playlist.ownerDisplayName}
+			</a>
 			<span>&middot; {data.playlist.trackCount} tracks</span>
 		</div>
 
 		<div class="flex gap-2 pt-2">
 			<Button onclick={() => playPlaylist()}>
-				<Play size={14} />
+				<Play />
 				Play
 			</Button>
 
-			<Button variant="ghost" onclick={() => playPlaylist({ shuffle: true })}>
-				<Shuffle size={14} />
+			<Button
+				variant="ghost"
+				size="icon"
+				onclick={() => playPlaylist({ shuffle: true })}
+				title="Shuffle"
+				aria-label="Shuffle"
+			>
+				<Shuffle />
 			</Button>
 
 			<DropdownMenu.Root>

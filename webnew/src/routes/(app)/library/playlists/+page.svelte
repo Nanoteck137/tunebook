@@ -1,33 +1,35 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
   import {
     Button,
     buttonVariants,
     DropdownMenu,
     Input,
-    Select,
     Separator,
   } from "$lib/components/ui";
   import {
-    Check,
+    CheckIcon,
     EllipsisVertical,
     FileHeart,
+    ListSortAscendingIcon,
+    Play,
     Plus,
-    Search,
+    Shuffle,
+    Star,
     X,
   } from "@lucide/svelte";
   import { cn } from "$lib/utils";
   import Spacer from "$lib/components/Spacer.svelte";
-  import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
+  import { getMusicManager } from "$lib/music-manager.svelte";
   import NewPlaylistModal from "../../playlists/NewPlaylistModal.svelte";
-  import Image from "$lib/components/Image.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
   import { sortTypes, defaultSort, type SortType } from "../../playlists/types";
 
   let { data } = $props();
   const apiClient = getApiClient();
+  const musicManager = getMusicManager();
 
   let openNewPlaylistModal = $state(false);
 
@@ -56,37 +58,35 @@
     goto("?" + query.toString(), { invalidateAll: true });
   }
 
-  let showAll = $state(page.url.searchParams.get("all") === "true");
-
-  function clearFilters() {
+  function clearSearch() {
     searchQuery = "";
-    showAll = false;
-    sort = defaultSort;
-    const query = page.url.searchParams;
-    query.delete("query");
-    query.delete("all");
-    query.delete("sort");
-    goto("?" + query.toString(), { invalidateAll: true });
+    updateSearch();
   }
 
-  let hasActiveFilters = $derived(searchQuery !== "" || showAll);
+  async function playPlaylist(playlistId: string, shuffle = false) {
+    await musicManager.queueRequest(
+      { type: "addPlaylist", playlistId },
+      { shuffle },
+    );
+  }
 
-  function toggleAll() {
-    showAll = !showAll;
+  async function toggleQuick(playlistId: string) {
+    const isQuick = data.user?.quickPlaylist === playlistId;
 
-    const query = page.url.searchParams;
-    query.delete("all");
-
-    if (showAll) {
-      query.set("all", "true");
+    const res = await apiClient.setQuickPlaylist({
+      playlistId: isQuick ? "" : playlistId,
+    });
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
     }
 
-    goto("?" + query.toString(), { invalidateAll: true });
+    await invalidateAll();
   }
 </script>
 
 <div class="flex flex-col gap-4">
-  <div class="flex items-baseline justify-between gap-2">
+  <div class="flex items-baseline justify-between gap-2 px-2">
     <div class="flex items-baseline gap-2">
       <h1 class="text-xl font-bold">Playlists</h1>
       {#if data.page}
@@ -96,164 +96,190 @@
       {/if}
     </div>
 
-    <Button variant="ghost" onclick={() => (openNewPlaylistModal = true)}>
-      <Plus />
+    <Button size="sm" onclick={() => (openNewPlaylistModal = true)}>
+      <Plus size={14} />
       New Playlist
     </Button>
   </div>
 
-  <div class="rounded-lg border bg-card p-3">
-    <div
-      class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
-    >
-      <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-        <Input
-          class="sm:w-56"
-          placeholder="Search playlists..."
-          bind:value={searchQuery}
-          onkeydown={(e) => {
-            if (e.key === "Enter") {
-              updateSearch();
-            }
-          }}
-        />
-        <Select.Root
-          type="single"
-          allowDeselect={false}
-          value={sort}
-          onValueChange={updateSort}
+  <!-- Toolbar -->
+  <div class="flex flex-wrap items-center justify-between gap-2 px-2">
+    <div class="relative flex-1 md:max-w-64">
+      <Input
+        class="pr-8"
+        placeholder="Search playlists..."
+        bind:value={searchQuery}
+        onkeydown={(e) => {
+          if (e.key === "Enter") {
+            updateSearch();
+          }
+        }}
+      />
+      {#if searchQuery}
+        <button
+          class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+          onclick={clearSearch}
+          aria-label="Clear search"
         >
-          <Select.Trigger class="h-9 w-full sm:w-40">
-            {sortTypes.find((i) => i.value === sort)?.label ?? "Sort"}
-          </Select.Trigger>
-          <Select.Content>
-            {#each sortTypes as ty (ty.value)}
-              <Select.Item value={ty.value} label={ty.label} />
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      </div>
-
-      <div class="flex items-center gap-1.5">
-        <Button variant="outline" size="icon" onclick={updateSearch}>
-          <Search size={16} />
-        </Button>
-        {#if hasActiveFilters}
-          <Button variant="ghost" size="sm" onclick={clearFilters}>
-            <X size={14} />
-            Clear
-          </Button>
-        {/if}
-      </div>
+          <X size={14} />
+        </button>
+      {/if}
     </div>
 
-    <div class="mt-3 flex flex-wrap items-center gap-1.5">
-      <span class="text-xs font-medium text-muted-foreground">Owner</span>
-      <button
-        class="rounded-md border px-2 py-1 text-xs transition-colors {!showAll
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'bg-transparent text-muted-foreground hover:text-foreground'}"
-        onclick={() => {
-          if (showAll) toggleAll();
-        }}
-      >
-        My Playlists
-      </button>
-      <button
-        class="rounded-md border px-2 py-1 text-xs transition-colors {showAll
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'bg-transparent text-muted-foreground hover:text-foreground'}"
-        onclick={() => {
-          if (!showAll) toggleAll();
-        }}
-      >
-        All Playlists
-      </button>
+    <div class="flex items-center gap-1">
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger
+          class={buttonVariants({ variant: "ghost", size: "icon" })}
+          title="Sort"
+          aria-label="Sort"
+        >
+          <ListSortAscendingIcon />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content align="end">
+          <DropdownMenu.Group>
+            {#each sortTypes as ty (ty.value)}
+              {@const selected = sort === ty.value}
+              <DropdownMenu.Item
+                onSelect={() => updateSort(ty.value)}
+                class={selected ? "bg-accent text-foreground" : ""}
+              >
+                {#if selected}
+                  <CheckIcon />
+                {/if}
+                {ty.label}
+              </DropdownMenu.Item>
+            {/each}
+          </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
     </div>
   </div>
+
+  <Separator />
 
   <div
     class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
   >
     {#each data.playlists as playlist (playlist.id)}
-      <div
-        class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
-      >
-        <a href="/playlists/{playlist.id}">
-          <Image
-            class="aspect-square w-full rounded-none border-0"
-            src={playlist.coverArt.medium}
-            alt={playlist.name}
-          />
-        </a>
-
-        <div class="flex flex-col gap-0.5 p-2">
+      {@const isQuick = data.user?.quickPlaylist === playlist.id}
+      <div class="group relative flex flex-col">
+        <div class="relative">
           <a
             href="/playlists/{playlist.id}"
-            class="truncate text-sm font-medium hover:underline"
-            title={playlist.name}
+            class="block overflow-hidden rounded-lg"
           >
-            {playlist.name}
+            <img
+              src={playlist.coverArt.medium}
+              alt={playlist.name}
+              class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
           </a>
+
+          <button
+            class="absolute top-1.5 right-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all {isQuick
+              ? 'bg-primary text-primary-foreground shadow-md'
+              : 'border bg-background/70 text-muted-foreground backdrop-blur-sm hover:scale-105 hover:text-foreground'}"
+            title={isQuick ? "Unset as quick playlist" : "Set as quick playlist"}
+            aria-label={isQuick
+              ? `Unset ${playlist.name} as quick playlist`
+              : `Set ${playlist.name} as quick playlist`}
+            onclick={() => toggleQuick(playlist.id)}
+          >
+            <Star size={14} class={isQuick ? "fill-current" : ""} />
+          </button>
+
+          <button
+            class="absolute right-2 bottom-2 hidden h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
+            title="Play playlist"
+            aria-label={`Play ${playlist.name}`}
+            onclick={() => playPlaylist(playlist.id)}
+          >
+            <Play size={18} />
+          </button>
+        </div>
+
+        <div class="flex flex-col gap-0.5 pt-2">
+          <div class="flex items-center gap-1">
+            <a
+              href="/playlists/{playlist.id}"
+              class="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
+              title={playlist.name}
+            >
+              {playlist.name}
+            </a>
+
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger
+                class={cn(
+                  buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                  "-mr-1 shrink-0 rounded-full text-muted-foreground",
+                )}
+                aria-label={`More options for ${playlist.name}`}
+              >
+                <EllipsisVertical size={14} />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content align="end">
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item
+                    onSelect={() => playPlaylist(playlist.id)}
+                  >
+                    <Play size={14} />
+                    Play
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    onSelect={() => playPlaylist(playlist.id, true)}
+                  >
+                    <Shuffle size={14} />
+                    Shuffle play
+                  </DropdownMenu.Item>
+                </DropdownMenu.Group>
+
+                <DropdownMenu.Separator />
+
+                <DropdownMenu.Group>
+                  {#if data.user?.quickPlaylist !== playlist.id}
+                    <DropdownMenu.Item
+                      onSelect={async () => {
+                        const res = await apiClient.setQuickPlaylist({
+                          playlistId: playlist.id,
+                        });
+                        if (!res.success) {
+                          handleApiError(res.error);
+                          return;
+                        }
+
+                        await invalidateAll();
+                      }}
+                    >
+                      <FileHeart />
+                      Set as Quick Playlist
+                    </DropdownMenu.Item>
+                  {:else}
+                    <DropdownMenu.Item
+                      onSelect={async () => {
+                        const res = await apiClient.setQuickPlaylist({
+                          playlistId: "",
+                        });
+                        if (!res.success) {
+                          handleApiError(res.error);
+                          return;
+                        }
+
+                        await invalidateAll();
+                      }}
+                    >
+                      <FileHeart />
+                      Remove Quick Playlist
+                    </DropdownMenu.Item>
+                  {/if}
+                </DropdownMenu.Group>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </div>
+
           <p class="truncate text-xs text-muted-foreground">
             {playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
           </p>
-          <p
-            class="flex items-center gap-1 truncate text-xs text-muted-foreground"
-          >
-            {#if playlist.ownerPicture}
-              <img
-                src={playlist.ownerPicture.small}
-                alt=""
-                class="h-4 w-4 rounded-full object-cover"
-              />
-            {/if}
-            {playlist.ownerDisplayName}
-          </p>
-        </div>
-
-        {#if data.user?.quickPlaylist === playlist.id}
-          <div
-            class="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground"
-          >
-            <Check size={12} />
-            Quick
-          </div>
-        {/if}
-
-        <div class="absolute right-1.5 top-1.5">
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger
-              class={cn(
-                buttonVariants({ variant: "secondary", size: "icon" }),
-                "h-7 w-7 rounded-full opacity-0 transition-opacity group-hover:opacity-100",
-              )}
-            >
-              <EllipsisVertical size={14} />
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end">
-              <DropdownMenu.Group>
-                {#if data.user?.quickPlaylist !== playlist.id}
-                  <DropdownMenu.Item
-                    onSelect={async () => {
-                      const res = await apiClient.setQuickPlaylist({
-                        playlistId: playlist.id,
-                      });
-                      if (!res.success) {
-                        handleApiError(res.error);
-                        return;
-                      }
-
-                      await invalidateAll();
-                    }}
-                  >
-                    <FileHeart />
-                    Set as Quick Playlist
-                  </DropdownMenu.Item>
-                {/if}
-              </DropdownMenu.Group>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
         </div>
       </div>
     {/each}
