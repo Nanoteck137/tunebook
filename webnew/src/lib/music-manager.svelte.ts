@@ -40,6 +40,8 @@ class Queue {
 	index = $state(0);
 	totalItems = $state(0);
 
+	playbackPosition = $state(0);
+
 	private apiClient: ApiClient;
 	private queueId: string;
 	private loadedItems = $state(new Map<number, MediaItem>());
@@ -49,10 +51,16 @@ class Queue {
 		this.queueId = queueId;
 	}
 
-	setQueue(entries: QueueEntry[], index: number, totalItems: number) {
+	setQueue(
+		entries: QueueEntry[],
+		index: number,
+		totalItems: number,
+		playbackPosition: number,
+	) {
 		this.entries = entries;
 		this.index = index;
 		this.totalItems = totalItems;
+		this.playbackPosition = playbackPosition;
 		this.loadedItems.clear();
 	}
 
@@ -67,6 +75,7 @@ class Queue {
 			res.data.items,
 			res.data.currentIndex,
 			res.data.items.length,
+			res.data.playbackPosition ?? 0,
 		);
 	}
 
@@ -250,6 +259,10 @@ export class MusicManager {
 
 	#trackEventSent = $state(false);
 
+	#restorePosition = 0;
+
+	#reportTimer: ReturnType<typeof setInterval> | null = null;
+
 	#deviceId = getDeviceId();
 
 	constructor(apiClient: ApiClient) {
@@ -262,11 +275,19 @@ export class MusicManager {
 		this.#setupMediaSession();
 
 		this.#audio.volume = this.#muted ? 0 : this.#volume;
+
+		this.#reportTimer = setInterval(() => {
+			this.#reportPlayback();
+		}, 2000);
 	}
 
 	async initQueue() {
 		await this.queue.loadEntries();
 		await this.#queueUpdate();
+
+		if (!this.queue.isQueueEmpty() && this.queue.playbackPosition > 0) {
+			this.#restorePosition = this.queue.playbackPosition;
+		}
 	}
 
 	reset() {
@@ -274,7 +295,7 @@ export class MusicManager {
 		this.#audio.removeAttribute("src");
 		this.#audio.load();
 
-		this.queue.setQueue([], 0, 0);
+		this.queue.setQueue([], 0, 0, 0);
 
 		this.playing = false;
 		this.loading = false;
@@ -284,8 +305,20 @@ export class MusicManager {
 		this.duration = 0;
 		this.buffered = 0;
 		this.#trackEventSent = false;
+		this.#restorePosition = 0;
 
 		this.#updateMediaSession();
+	}
+
+	async #reportPlayback(force = false) {
+		if (!this.currentItem) return;
+		if (!force && !this.playing) return;
+
+		const position = Math.max(0, Math.round(this.#audio.currentTime * 1000));
+
+		await this.apiClient.setQueuePlaybackPosition(this.#deviceId, {
+			position,
+		});
 	}
 
 	async #refreshQueue() {
@@ -296,6 +329,11 @@ export class MusicManager {
 	#setupAudio() {
 		this.#audio.addEventListener("canplay", () => {
 			this.loading = false;
+
+			if (this.#restorePosition > 0) {
+				this.#audio.currentTime = this.#restorePosition / 1000;
+				this.#restorePosition = 0;
+			}
 		});
 
 		this.#audio.addEventListener("loadstart", () => {
@@ -400,6 +438,7 @@ export class MusicManager {
 
 	setPosition(position: number) {
 		this.#audio.currentTime = position;
+		this.#reportPlayback(true);
 	}
 
 	async removeQueueItem(index: number) {
@@ -459,6 +498,7 @@ export class MusicManager {
 		if (mediaItem) {
 			if (mediaItem.trackId !== this.currentItem?.trackId) {
 				this.#trackEventSent = false;
+				this.#restorePosition = 0;
 			}
 
 			const src = this.apiClient.url.streamTrack(mediaItem.trackId).toString();

@@ -284,6 +284,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/search/users", "GET", api.SearchUsers, z.any().optional(), undefined, options)
   }
   
+  setQueuePlaybackPosition(queueId: string, body: api.SetQueuePlaybackPositionBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/queues/${queueId}/playback`, "PATCH", z.undefined().optional(), z.any().optional(), body, options)
+  }
+  
   setQueuePosition(queueId: string, body: api.SetQueuePositionBody, options?: ExtraOptions) {
     return this.request(`/api/v1/queues/${queueId}/position`, "PATCH", z.undefined().optional(), z.any().optional(), body, options)
   }
@@ -608,6 +612,10 @@ export class ClientUrls {
   
   searchUsers() {
     return createUrl(this.baseUrl, "/api/v1/search/users")
+  }
+  
+  setQueuePlaybackPosition(queueId: string) {
+    return createUrl(this.baseUrl, `/api/v1/queues/${queueId}/playback`)
   }
   
   setQueuePosition(queueId: string) {

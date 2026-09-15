@@ -19,6 +19,9 @@ type Queue struct {
 
 	CurrentIndex int `db:"current_index"`
 
+	PlaybackPosition int64 `db:"playback_position"`
+	PlaybackUpdated  int64 `db:"playback_updated"`
+
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 }
@@ -30,6 +33,9 @@ func QueueQuery() *goqu.SelectDataset {
 			queuesTbl.Col("user_id"),
 
 			queuesTbl.Col("current_index"),
+
+			queuesTbl.Col("playback_position"),
+			queuesTbl.Col("playback_updated"),
 
 			queuesTbl.Col("updated"),
 			queuesTbl.Col("created"),
@@ -83,6 +89,9 @@ func (db DB) CreateQueue(
 type QueueChanges struct {
 	CurrentIndex Change[int]
 
+	PlaybackPosition Change[int64]
+	PlaybackUpdated  Change[int64]
+
 	Created Change[int64]
 }
 
@@ -94,6 +103,9 @@ func (db DB) UpdateQueue(
 	record := goqu.Record{}
 
 	addToRecord(record, "current_index", changes.CurrentIndex)
+
+	addToRecord(record, "playback_position", changes.PlaybackPosition)
+	addToRecord(record, "playback_updated", changes.PlaybackUpdated)
 
 	addToRecord(record, "created", changes.Created)
 

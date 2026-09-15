@@ -35,14 +35,16 @@ func ConvertDBQueueIdItem(item database.QueueItemEntry) QueueIdItem {
 }
 
 type GetQueue struct {
-	CurrentIndex int         `json:"currentIndex"`
-	Items        []QueueItem `json:"items"`
-	Page         types.Page  `json:"page"`
+	CurrentIndex     int         `json:"currentIndex"`
+	PlaybackPosition int64       `json:"playbackPosition"`
+	Items            []QueueItem `json:"items"`
+	Page             types.Page  `json:"page"`
 }
 
 type GetQueueIds struct {
-	CurrentIndex int           `json:"currentIndex"`
-	Items        []QueueIdItem `json:"items"`
+	CurrentIndex     int           `json:"currentIndex"`
+	PlaybackPosition int64         `json:"playbackPosition"`
+	Items            []QueueIdItem `json:"items"`
 }
 
 type QueueIdItem struct {
@@ -86,6 +88,10 @@ type AddTracksToQueueBody struct {
 
 type SetQueuePositionBody struct {
 	Index int `json:"index"`
+}
+
+type SetQueuePlaybackPositionBody struct {
+	Position int64 `json:"position"`
 }
 
 func handleQueueServiceErrors(err error) error {
@@ -133,9 +139,10 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return GetQueue{
-					CurrentIndex: result.CurrentIndex,
-					Items:        items,
-					Page:         result.Page,
+					CurrentIndex:     result.CurrentIndex,
+					PlaybackPosition: result.PlaybackPosition,
+					Items:            items,
+					Page:             result.Page,
 				}, nil
 			},
 		},
@@ -165,8 +172,9 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return GetQueueIds{
-					CurrentIndex: result.CurrentIndex,
-					Items:        items,
+					CurrentIndex:     result.CurrentIndex,
+					PlaybackPosition: result.PlaybackPosition,
+					Items:            items,
 				}, nil
 			},
 		},
@@ -504,6 +512,40 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						QueueId: c.Param("queueId"),
 						UserId:  user.Id,
 						Index:   body.Index,
+					},
+				)
+				if err != nil {
+					return nil, handleQueueServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "SetQueuePlaybackPosition",
+			Path:     "/queues/:queueId/playback",
+			Method:   http.MethodPatch,
+			BodyType: SetQueuePlaybackPositionBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[SetQueuePlaybackPositionBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.QueueService().SetPlaybackPosition(
+					ctx,
+					service.SetPlaybackPositionParams{
+						QueueId:  c.Param("queueId"),
+						UserId:   user.Id,
+						Position: body.Position,
 					},
 				)
 				if err != nil {

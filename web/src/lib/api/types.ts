@@ -611,6 +611,8 @@ export type QueueItem = z.infer<typeof QueueItem>;
 export const GetQueue = z.object({
   // Name: GetQueue.currentIndex
   "currentIndex": z.number(),
+  // Name: GetQueue.playbackPosition
+  "playbackPosition": z.number(),
   // Name: GetQueue.items
   "items": z.array(QueueItem),
   // Name: GetQueue.page
@@ -631,6 +633,8 @@ export type QueueIdItem = z.infer<typeof QueueIdItem>;
 export const GetQueueIds = z.object({
   // Name: GetQueueIds.currentIndex
   "currentIndex": z.number(),
+  // Name: GetQueueIds.playbackPosition
+  "playbackPosition": z.number(),
   // Name: GetQueueIds.items
   "items": z.array(QueueIdItem),
 });
@@ -890,6 +894,13 @@ export const SearchUsers = z.object({
   "users": z.array(UserData),
 });
 export type SearchUsers = z.infer<typeof SearchUsers>;
+
+// Name: SetQueuePlaybackPositionBody
+export const SetQueuePlaybackPositionBody = z.object({
+  // Name: SetQueuePlaybackPositionBody.position
+  "position": z.number(),
+});
+export type SetQueuePlaybackPositionBody = z.infer<typeof SetQueuePlaybackPositionBody>;
 
 // Name: SetQueuePositionBody
 export const SetQueuePositionBody = z.object({

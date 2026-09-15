@@ -810,6 +810,11 @@
           "omitEmpty": false
         },
         {
+          "name": "playbackPosition",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
           "name": "items",
           "type": "[]QueueItem",
           "omitEmpty": false
@@ -826,6 +831,11 @@
       "fields": [
         {
           "name": "currentIndex",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playbackPosition",
           "type": "int",
           "omitEmpty": false
         },
@@ -1362,6 +1372,16 @@
         {
           "name": "users",
           "type": "[]UserData",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "SetQueuePlaybackPositionBody",
+      "fields": [
+        {
+          "name": "position",
+          "type": "int",
           "omitEmpty": false
         }
       ]
@@ -2132,6 +2152,13 @@
       "method": "GET",
       "path": "/api/v1/search/users",
       "response": "SearchUsers"
+    },
+    {
+      "type": "api",
+      "name": "SetQueuePlaybackPosition",
+      "method": "PATCH",
+      "path": "/api/v1/queues/:queueId/playback",
+      "body": "SetQueuePlaybackPositionBody"
     },
     {
       "type": "api",

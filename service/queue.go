@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"math/rand"
+	"time"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
@@ -42,7 +43,11 @@ type GetQueueParams struct {
 type GetQueueResult struct {
 	Items        []database.QueueItemTrack
 	CurrentIndex int
-	Page         types.Page
+
+	PlaybackPosition int64
+	PlaybackUpdated  int64
+
+	Page types.Page
 }
 
 func (s *QueueService) GetQueue(
@@ -66,13 +71,20 @@ func (s *QueueService) GetQueue(
 	return GetQueueResult{
 		Items:        items,
 		CurrentIndex: queue.CurrentIndex,
-		Page:         page,
+
+		PlaybackPosition: queue.PlaybackPosition,
+		PlaybackUpdated:  queue.PlaybackUpdated,
+
+		Page: page,
 	}, nil
 }
 
 type QueueIdsResult struct {
 	Entries      []database.QueueItemEntry
 	CurrentIndex int
+
+	PlaybackPosition int64
+	PlaybackUpdated  int64
 }
 
 func (s *QueueService) GetQueueIds(
@@ -93,6 +105,9 @@ func (s *QueueService) GetQueueIds(
 	return QueueIdsResult{
 		Entries:      entries,
 		CurrentIndex: queue.CurrentIndex,
+
+		PlaybackPosition: queue.PlaybackPosition,
+		PlaybackUpdated:  queue.PlaybackUpdated,
 	}, nil
 }
 
@@ -237,6 +252,14 @@ func (s *QueueService) ReplaceQueue(
 	err = tx.UpdateQueue(ctx, queue.Id, database.QueueChanges{
 		CurrentIndex: database.Change[int]{
 			Value:   currentIndex,
+			Changed: true,
+		},
+		PlaybackPosition: database.Change[int64]{
+			Value:   0,
+			Changed: true,
+		},
+		PlaybackUpdated: database.Change[int64]{
+			Value:   0,
 			Changed: true,
 		},
 	})
@@ -671,9 +694,49 @@ func (s *QueueService) SetPosition(
 			Value:   params.Index,
 			Changed: true,
 		},
+		PlaybackPosition: database.Change[int64]{
+			Value:   0,
+			Changed: true,
+		},
+		PlaybackUpdated: database.Change[int64]{
+			Value:   0,
+			Changed: true,
+		},
 	})
 	if err != nil {
 		return queueErr.Wrap("set position", err)
+	}
+
+	return nil
+}
+
+type SetPlaybackPositionParams struct {
+	QueueId  string
+	UserId   string
+	Position int64
+}
+
+func (s *QueueService) SetPlaybackPosition(
+	ctx context.Context,
+	params SetPlaybackPositionParams,
+) error {
+	queue, err := s.getOrCreateQueue(ctx, params.QueueId, params.UserId)
+	if err != nil {
+		return err
+	}
+
+	err = s.db.UpdateQueue(ctx, queue.Id, database.QueueChanges{
+		PlaybackPosition: database.Change[int64]{
+			Value:   params.Position,
+			Changed: true,
+		},
+		PlaybackUpdated: database.Change[int64]{
+			Value:   time.Now().UnixMilli(),
+			Changed: true,
+		},
+	})
+	if err != nil {
+		return queueErr.Wrap("set playback position", err)
 	}
 
 	return nil
@@ -706,6 +769,14 @@ func (s *QueueService) ClearQueue(
 
 	err = tx.UpdateQueue(ctx, queue.Id, database.QueueChanges{
 		CurrentIndex: database.Change[int]{
+			Value:   0,
+			Changed: true,
+		},
+		PlaybackPosition: database.Change[int64]{
+			Value:   0,
+			Changed: true,
+		},
+		PlaybackUpdated: database.Change[int64]{
 			Value:   0,
 			Changed: true,
 		},
