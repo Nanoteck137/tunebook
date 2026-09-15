@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { Button, InputGroup, Separator } from "$lib/components/ui";
-	import { SearchIcon, XIcon } from "@lucide/svelte";
+	import {
+		Disc,
+		ListMusic,
+		Music,
+		Mic,
+		SearchIcon,
+		Users,
+		XIcon,
+	} from "@lucide/svelte";
 
 	type Props = {
 		searchBarPlaceholder: string;
@@ -22,12 +30,12 @@
 	}: Props = $props();
 
 	const tabs = [
-		{ label: "All", href: "/search" },
-		{ label: "Tracks", href: "/search/tracks" },
-		{ label: "Artists", href: "/search/artists" },
-		{ label: "Albums", href: "/search/albums" },
-		{ label: "Playlists", href: "/search/playlists" },
-		{ label: "Users", href: "/search/users" },
+		{ label: "All", href: "/search", icon: SearchIcon },
+		{ label: "Tracks", href: "/search/tracks", icon: Music },
+		{ label: "Artists", href: "/search/artists", icon: Mic },
+		{ label: "Albums", href: "/search/albums", icon: Disc },
+		{ label: "Playlists", href: "/search/playlists", icon: ListMusic },
+		{ label: "Users", href: "/search/users", icon: Users },
 	];
 
 	let timer: ReturnType<typeof setTimeout>;
@@ -87,12 +95,16 @@
 </form>
 
 <nav class="flex flex-wrap gap-1">
-	{#each tabs as { label, href }}
+	{#each tabs as { label, href, icon: Icon }}
 		<Button
-			class="transition-colors"
-			variant={page.url.pathname === href ? "default" : "outline"}
+			class="transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page
+				.url.pathname === href
+				? 'bg-accent text-accent-foreground'
+				: 'text-muted-foreground'}"
+			variant="ghost"
 			href="{href}?query={value}"
 		>
+			<Icon />
 			{label}
 		</Button>
 	{/each}
