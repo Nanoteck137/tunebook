@@ -1,13 +1,14 @@
-import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ parent, url }) => {
+const USERS_PAGE_SIZE = 30;
+
+export const load: PageLoad = async ({ parent }) => {
 	const data = await parent();
 
-	const query = getPagedQueryOptions(url.searchParams);
-
-	const users = await data.apiClient.searchUsers({ query });
+	const users = await data.apiClient.searchUsers({
+		query: { perPage: USERS_PAGE_SIZE.toString() },
+	});
 	if (!users.success) {
 		throw error(users.error.code, { message: users.error.message });
 	}

@@ -13,7 +13,10 @@
 		User,
 	} from "@lucide/svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
-	import Pagination from "$lib/components/Pagination.svelte";
+	import { getApiClient, handleApiError } from "$lib";
+	import type { Album } from "$lib/api/types";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import {
 		Separator,
 		Button,
@@ -30,6 +33,7 @@
 		decadeTypes,
 		defaultSort,
 		defaultDecade,
+		constructFilterSort,
 		type SortType,
 		type DecadeType,
 	} from "./types";
@@ -153,12 +157,42 @@
 
 	let filterOpen = $state(false);
 
+	const apiClient = getApiClient();
+
+	const scroll = new InfiniteScrollController<Album>({
+		initialLoad: () => ({
+			items: data.albums,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (nextPage) => {
+			const query: Record<string, string> = {
+				page: String(nextPage),
+				perPage: String(data.page.perPage),
+			};
+
+			constructFilterSort(data.filter, query);
+
+			const res = await apiClient.getAlbums({ query });
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
+			}
+
+			return {
+				items: res.data.albums,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (album) => album.id,
+	});
+
 	let infoAlbumId = $state<string | null>(null);
 	let infoOpen = $state(false);
 
 	let infoAlbum = $derived(
 		infoAlbumId
-			? (data.albums.find((a) => a.id === infoAlbumId) ?? null)
+			? (scroll.items.find((a) => a.id === infoAlbumId) ?? null)
 			: null,
 	);
 
@@ -216,7 +250,12 @@
 		</div>
 
 		<div class="flex items-center gap-1">
-			<Button variant="ghost" size="icon" href="/search/albums" title="Advanced search">
+			<Button
+				variant="ghost"
+				size="icon"
+				href="/search/albums"
+				title="Advanced search"
+			>
 				<Search />
 			</Button>
 
@@ -225,59 +264,62 @@
 				size="icon"
 				title="Filters"
 				aria-label="Filters"
-					class={cn(
-						"relative transition-opacity",
-						filterOpen && "bg-accent text-accent-foreground",
-					)}
-					onclick={() => (filterOpen = !filterOpen)}
-				>
-					<ListFilter />
-					{#if hasActiveFilters}
-						<span
-							class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary"
-						></span>
-					{/if}
-				</Button>
-
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger
-						class={buttonVariants({ variant: "ghost", size: "icon" })}
-						title="Sort"
-						aria-label="Sort"
-					>
-						<ListSortAscendingIcon />
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="end">
-						<DropdownMenu.Group>
-							{#each sortTypes as ty (ty.value)}
-								{@const selected = sort === ty.value}
-								<DropdownMenu.Item
-									onSelect={() => updateSort(ty.value)}
-									class={selected ? "bg-accent text-foreground" : ""}
-								>
-									{#if selected}
-										<CheckIcon />
-									{/if}
-									{ty.label}
-								</DropdownMenu.Item>
-							{/each}
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-
+				class={cn(
+					"relative transition-opacity",
+					filterOpen && "bg-accent text-accent-foreground",
+				)}
+				onclick={() => (filterOpen = !filterOpen)}
+			>
+				<ListFilter />
 				{#if hasActiveFilters}
-					<Button variant="ghost" size="sm" onclick={clearFilters} class="pr-1">
-						<X size={14} />
-						Clear
-					</Button>
+					<span
+						class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary"
+					></span>
 				{/if}
+			</Button>
+
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger
+					class={buttonVariants({ variant: "ghost", size: "icon" })}
+					title="Sort"
+					aria-label="Sort"
+				>
+					<ListSortAscendingIcon />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					<DropdownMenu.Group>
+						{#each sortTypes as ty (ty.value)}
+							{@const selected = sort === ty.value}
+							<DropdownMenu.Item
+								onSelect={() => updateSort(ty.value)}
+								class={selected ? "bg-accent text-foreground" : ""}
+							>
+								{#if selected}
+									<CheckIcon />
+								{/if}
+								{ty.label}
+							</DropdownMenu.Item>
+						{/each}
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+
+			{#if hasActiveFilters}
+				<Button variant="ghost" size="sm" onclick={clearFilters} class="pr-1">
+					<X size={14} />
+					Clear
+				</Button>
+			{/if}
 		</div>
 	</div>
 
 	<Separator />
 
 	{#if filterOpen}
-		<div transition:fly={{ y: -6, duration: 150 }} class="flex flex-col gap-3 px-2">
+		<div
+			transition:fly={{ y: -6, duration: 150 }}
+			class="flex flex-col gap-3 px-2"
+		>
 			<div class="flex flex-wrap items-center gap-1.5">
 				<span class="text-xs font-medium text-muted-foreground">Decade</span>
 				{#each decadeTypes as d (d.value)}
@@ -367,120 +409,113 @@
 
 <Spacer size="lg" />
 
-<div
-	class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
->
-	{#each data.albums as album (album.id)}
-		<div class="group relative flex flex-col">
-			<div class="relative">
-				<a href="/albums/{album.id}" class="block overflow-hidden rounded-lg">
-					<img
-						src={album.coverArt.medium}
-						alt={album.name}
-						class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
-					/>
-				</a>
-
-				<button
-					class="absolute right-2 bottom-2 hidden h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
-					title="Play album"
-					aria-label={`Play ${album.name}`}
-					onclick={() => playAlbum(album.id)}
-				>
-					<Play size={18} />
-				</button>
-			</div>
-
-			<div class="flex flex-col gap-0.5 pt-2">
-				<div class="flex items-center gap-1">
+<InfiniteScroll controller={scroll}>
+	<div
+		class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
+	>
+		{#each scroll.items as album (album.id)}
+			<div class="group relative flex flex-col">
+				<div class="relative">
 					<a
 						href="/albums/{album.id}"
-						class="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
-						title={album.name}
+						class="block overflow-hidden rounded-lg"
 					>
-						{album.name}
+						<img
+							src={album.coverArt.medium}
+							alt={album.name}
+							class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+						/>
 					</a>
 
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger
-							class={cn(
-								buttonVariants({ variant: "ghost", size: "icon-sm" }),
-								"-mr-1 shrink-0 rounded-full text-muted-foreground",
-							)}
-							aria-label={`More options for ${album.name}`}
-						>
-							<EllipsisVertical size={14} />
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="center">
-							<DropdownMenu.Group>
-								<DropdownMenu.Item
-									onclick={() => playAlbum(album.id)}
-								>
-									<Play size={14} />
-									Play
-								</DropdownMenu.Item>
-								<DropdownMenu.Item
-									onclick={() => playAlbum(album.id, true)}
-								>
-									<Shuffle size={14} />
-									Shuffle play
-								</DropdownMenu.Item>
-							</DropdownMenu.Group>
-
-							<DropdownMenu.Separator />
-
-							<DropdownMenu.Group>
-								<DropdownMenu.Sub>
-									<DropdownMenu.SubTrigger>
-										<User size={14} />
-										Go to artist
-									</DropdownMenu.SubTrigger>
-									<DropdownMenu.SubContent>
-										{#each album.artists as artist (artist.id)}
-											<a
-												href="/artists/{artist.id}"
-												class="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
-											>
-												{artist.name}
-											</a>
-										{/each}
-									</DropdownMenu.SubContent>
-								</DropdownMenu.Sub>
-							</DropdownMenu.Group>
-
-							<DropdownMenu.Separator />
-
-							<DropdownMenu.Group>
-								<DropdownMenu.Item onclick={() => showInfo(album.id)}>
-									<Info size={14} />
-									Show more info
-								</DropdownMenu.Item>
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
+					<button
+						class="absolute right-2 bottom-2 hidden h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
+						title="Play album"
+						aria-label={`Play ${album.name}`}
+						onclick={() => playAlbum(album.id)}
+					>
+						<Play size={18} />
+					</button>
 				</div>
 
-				<p
-					class="truncate text-xs text-muted-foreground"
-					title={album.artists.map((a) => a.name).join(", ")}
-				>
-					{#if album.year}
-						{album.year} &middot;
-					{/if}
-					{album.artists.map((a) => a.name).join(", ")}
-				</p>
+				<div class="flex flex-col gap-0.5 pt-2">
+					<div class="flex items-center gap-1">
+						<a
+							href="/albums/{album.id}"
+							class="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
+							title={album.name}
+						>
+							{album.name}
+						</a>
+
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger
+								class={cn(
+									buttonVariants({ variant: "ghost", size: "icon-sm" }),
+									"-mr-1 shrink-0 rounded-full text-muted-foreground",
+								)}
+								aria-label={`More options for ${album.name}`}
+							>
+								<EllipsisVertical size={14} />
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content align="center">
+								<DropdownMenu.Group>
+									<DropdownMenu.Item onclick={() => playAlbum(album.id)}>
+										<Play size={14} />
+										Play
+									</DropdownMenu.Item>
+									<DropdownMenu.Item onclick={() => playAlbum(album.id, true)}>
+										<Shuffle size={14} />
+										Shuffle play
+									</DropdownMenu.Item>
+								</DropdownMenu.Group>
+
+								<DropdownMenu.Separator />
+
+								<DropdownMenu.Group>
+									<DropdownMenu.Sub>
+										<DropdownMenu.SubTrigger>
+											<User size={14} />
+											Go to artist
+										</DropdownMenu.SubTrigger>
+										<DropdownMenu.SubContent>
+											{#each album.artists as artist (artist.id)}
+												<a
+													href="/artists/{artist.id}"
+													class="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+												>
+													{artist.name}
+												</a>
+											{/each}
+										</DropdownMenu.SubContent>
+									</DropdownMenu.Sub>
+								</DropdownMenu.Group>
+
+								<DropdownMenu.Separator />
+
+								<DropdownMenu.Group>
+									<DropdownMenu.Item onclick={() => showInfo(album.id)}>
+										<Info size={14} />
+										Show more info
+									</DropdownMenu.Item>
+								</DropdownMenu.Group>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+					</div>
+
+					<p
+						class="truncate text-xs text-muted-foreground"
+						title={album.artists.map((a) => a.name).join(", ")}
+					>
+						{#if album.year}
+							{album.year} &middot;
+						{/if}
+						{album.artists.map((a) => a.name).join(", ")}
+					</p>
+				</div>
 			</div>
-		</div>
-	{/each}
-</div>
-
-<Spacer size="lg" />
-
-<Separator />
-
-<Spacer size="lg" />
-
-<Pagination page={data.page} />
+		{/each}
+	</div>
+</InfiniteScroll>
 
 <Dialog.Root open={infoOpen} onOpenChange={(v) => (infoOpen = v)}>
 	<Dialog.Content class="max-w-md gap-0 overflow-hidden p-0">

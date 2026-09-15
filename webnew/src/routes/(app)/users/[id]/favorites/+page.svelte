@@ -2,9 +2,12 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { EllipsisVertical, Play, Shuffle, X } from "@lucide/svelte";
-	import { Button, buttonVariants, DropdownMenu, Separator } from "$lib/components/ui";
+	import { Button, buttonVariants, DropdownMenu } from "$lib/components/ui";
 	import { getMusicManager } from "$lib/music-manager.svelte";
-	import Pagination from "$lib/components/Pagination.svelte";
+	import { getApiClient, handleApiError } from "$lib";
+	import type { Track } from "$lib/api/types";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 	// import FilterButton from "../../../tracks/FilterButton.svelte";
@@ -12,6 +15,7 @@
 	let { data } = $props();
 
 	const musicManager = getMusicManager();
+	const apiClient = getApiClient();
 
 	let filterId = $derived(page.url.searchParams.get("filterId"));
 
@@ -31,6 +35,38 @@
 			filterId: filterId ?? undefined,
 		});
 	}
+
+	const scroll = new InfiniteScrollController<Track>({
+		initialLoad: () => ({
+			items: data.tracks,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (nextPage) => {
+			const query: Record<string, string> = {
+				page: String(nextPage),
+				perPage: String(data.page.perPage),
+			};
+
+			if (filterId) {
+				query["filterId"] = filterId;
+			}
+
+			const res = await apiClient.getUserTrackFavoritesById(data.userData.id, {
+				query,
+			});
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
+			}
+
+			return {
+				items: res.data.items,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (track) => track.id,
+	});
 </script>
 
 <div class="flex flex-col gap-6">
@@ -39,7 +75,7 @@
 	>
 		<div class="flex min-w-0 flex-col gap-2">
 			<p
-				class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+				class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 			>
 				Favorites
 			</p>
@@ -106,25 +142,19 @@
 
 <Spacer size="lg" />
 
-<TrackList
-	totalTracks={data.page.totalItems}
-	tracks={data.tracks}
-	onPlay={async (trackId) => {
-		await musicManager.queueRequest(
-			{
-				type: "addFavorites",
-				userId: data.userData.id,
-				filterId: filterId ?? undefined,
-			},
-			{ queueIndexToTrackId: trackId },
-		);
-	}}
-/>
-
-<Spacer size="lg" />
-
-<Separator />
-
-<Spacer size="lg" />
-
-<Pagination page={data.page} />
+<InfiniteScroll controller={scroll}>
+	<TrackList
+		totalTracks={data.page.totalItems}
+		tracks={scroll.items}
+		onPlay={async (trackId) => {
+			await musicManager.queueRequest(
+				{
+					type: "addFavorites",
+					userId: data.userData.id,
+					filterId: filterId ?? undefined,
+				},
+				{ queueIndexToTrackId: trackId },
+			);
+		}}
+	/>
+</InfiniteScroll>

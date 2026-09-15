@@ -1,15 +1,12 @@
-import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ parent, url }) => {
+export const load: PageLoad = async ({ parent }) => {
 	const data = await parent();
 
-	const query = getPagedQueryOptions(url.searchParams);
-
-	const history = await data.apiClient.getTrackHistory({ query });
+	const history = await data.apiClient.getTrackHistory({});
 	if (!history.success) {
-		error(history.error.code, { message: history.error.message });
+		throw error(history.error.code, { message: history.error.message });
 	}
 
 	return {

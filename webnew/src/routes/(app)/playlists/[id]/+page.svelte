@@ -3,9 +3,10 @@
 	import { getApiClient, handleApiError } from "$lib";
 	import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
 	import Image from "$lib/components/Image.svelte";
-	import Spinner from "$lib/components/Spinner.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
-	import { getMusicManager } from "$lib/music-manager.svelte.js";
+	import { getMusicManager } from "$lib/music-manager.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
 	import type { Track } from "$lib/api/types";
 	import {
 		Breadcrumb,
@@ -92,67 +93,30 @@
 		);
 	}
 
-	let tracks = $state<Track[]>([]);
-	let totalItems = $state(0);
-	let currentPage = $state(0);
-	let trackIds = $state<Set<string>>(new Set());
-	let loadingMore = $state(false);
-	let loadMoreError = $state(false);
-	let sentinel = $state<HTMLDivElement | null>(null);
+	const totalTracks = $derived(data.page.totalItems);
 
-	$effect(() => {
-		tracks = [...data.items];
-		totalItems = data.page.totalItems;
-		currentPage = data.page.page;
-		trackIds = new Set(data.items.map((t) => t.id));
-	});
+	const scroll = new InfiniteScrollController<Track>({
+		initialLoad: () => ({
+			items: data.items,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (page) => {
+			const res = await apiClient.getPlaylistItems(data.playlist.id, {
+				query: { page: String(page), perPage: String(data.page.perPage) },
+			});
 
-	const hasMore = $derived(tracks.length < totalItems);
-
-	async function loadMore() {
-		if (loadingMore || !hasMore) return;
-
-		loadingMore = true;
-		loadMoreError = false;
-
-		const res = await apiClient.getPlaylistItems(data.playlist.id, {
-			query: {
-				page: String(currentPage + 1),
-				perPage: String(data.page.perPage),
-			},
-		});
-
-		if (res.success) {
-			const newItems = res.data.items.filter((t) => !trackIds.has(t.id));
-			for (const track of newItems) {
-				trackIds.add(track.id);
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
 			}
-			tracks = [...tracks, ...newItems];
-			currentPage = res.data.page.page;
-			totalItems = res.data.page.totalItems;
-		} else {
-			handleApiError(res.error);
-			loadMoreError = true;
-		}
 
-		loadingMore = false;
-	}
-
-	$effect(() => {
-		const el = sentinel;
-		if (!el) return;
-
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (entry.isIntersecting) {
-					loadMore();
-				}
-			},
-			{ rootMargin: "200px 0px 0px 0px" },
-		);
-
-		observer.observe(el);
-		return () => observer.disconnect();
+			return {
+				items: res.data.items,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (track) => track.id,
 	});
 </script>
 
@@ -405,47 +369,32 @@
 <div class="h-2"></div>
 <Separator />
 
-<TrackList
-	displayOrder
-	totalTracks={totalItems}
-	{tracks}
-	onPlay={async (trackId, shuffle) => {
-		await musicManager.queueRequest(
-			{ type: "addPlaylist", playlistId: data.playlist.id },
-			{ queueIndexToTrackId: trackId, shuffle },
-		);
-	}}
-	onReorder={async (items, anchor) => {
-		const res = await apiClient.reorderPlaylistItems(data.playlist.id, {
-			before: false,
-			anchorTrackId: anchor ?? "",
-			trackIds: items,
-		});
-		if (!res.success) {
-			return handleApiError(res.error);
-		}
+<InfiniteScroll controller={scroll} errorMessage="Failed to load more tracks">
+	<TrackList
+		displayOrder
+		{totalTracks}
+		tracks={scroll.items}
+		onPlay={async (trackId, shuffle) => {
+			await musicManager.queueRequest(
+				{ type: "addPlaylist", playlistId: data.playlist.id },
+				{ queueIndexToTrackId: trackId, shuffle },
+			);
+		}}
+		onReorder={async (items, anchor) => {
+			const res = await apiClient.reorderPlaylistItems(data.playlist.id, {
+				before: false,
+				anchorTrackId: anchor ?? "",
+				trackIds: items,
+			});
+			if (!res.success) {
+				return handleApiError(res.error);
+			}
 
-		toast.success("Updated playlist");
-		invalidateAll();
-	}}
-/>
-
-<div class="h-4"></div>
-
-<div bind:this={sentinel}></div>
-
-{#if loadingMore}
-	<div class="flex justify-center py-6">
-		<Spinner />
-	</div>
-{/if}
-
-{#if loadMoreError}
-	<div class="flex flex-col items-center gap-2 py-6">
-		<p class="text-sm text-muted-foreground">Failed to load more tracks</p>
-		<Button size="sm" variant="outline" onclick={loadMore}>Retry</Button>
-	</div>
-{/if}
+			toast.success("Updated playlist");
+			invalidateAll();
+		}}
+	/>
+</InfiniteScroll>
 
 <ConfirmModal
 	bind:open={openConfirmDelete}

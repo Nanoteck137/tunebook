@@ -1,5 +1,4 @@
 import type { TrackFilter } from "$lib/api/types";
-import { getPagedQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 
@@ -13,7 +12,7 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 	}
 	filters = res.data.filters;
 
-	const query = getPagedQueryOptions(url.searchParams);
+	const query: Record<string, string> = {};
 
 	const filterId = url.searchParams.get("filterId");
 	if (filterId) {
