@@ -23,6 +23,10 @@ export function capitilize(s: string) {
 }
 
 export function formatTime(s: number) {
+	if(Number.isNaN(s)){
+		return "0:00"
+	}
+
 	const min = Math.floor(s / 60);
 	const sec = Math.floor(s % 60);
 
