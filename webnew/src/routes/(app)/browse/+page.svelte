@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, DiscAlbum, FileMusic, Search, Users } from "@lucide/svelte";
+	import { ChevronRight, Disc, Mic, Music, Search } from "@lucide/svelte";
 	import collage from "$lib/assets/collage.png";
 	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 	import TrackTile from "$lib/components/tiles/TrackTile.svelte";
@@ -12,7 +12,7 @@
 		{
 			title: "Albums",
 			description: "Browse your album collection",
-			icon: DiscAlbum,
+			icon: Disc,
 			allHref: "/albums",
 			search: { label: "Search Albums", href: "/search/albums" },
 			links: [
@@ -24,7 +24,7 @@
 		{
 			title: "Artists",
 			description: "Browse your artists",
-			icon: Users,
+			icon: Mic,
 			allHref: "/artists",
 			search: { label: "Search Artists", href: "/search/artists" },
 			links: [
@@ -36,7 +36,7 @@
 		{
 			title: "Tracks",
 			description: "Browse your tracks",
-			icon: FileMusic,
+			icon: Music,
 			allHref: "/tracks",
 			search: { label: "Search Tracks", href: "/search/tracks" },
 			links: [
