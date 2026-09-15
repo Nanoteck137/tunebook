@@ -378,6 +378,10 @@
                   musicManager.setPosition(p * musicManager.duration);
                 }}
                 buffered={musicManager.buffered}
+                tooltip
+                formatTooltip={(p) =>
+                  formatTime(p * musicManager.duration)
+                }
               />
               <div
                 class="flex justify-between text-xs tabular-nums text-white/60"
@@ -457,6 +461,7 @@
               <div class="flex-1">
                 <SeekSlider
                   growOnHover={false}
+                  tooltip
                   value={musicManager.muted ? 0 : musicManager.volume}
                   onValue={(p) => {
                     musicManager.volume = p;

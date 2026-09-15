@@ -7,6 +7,8 @@
     onValue: (value: number) => void;
     growOnHover?: boolean;
     buffered?: number;
+    tooltip?: boolean;
+    formatTooltip?: (value: number) => string;
     class?: string;
     ariaLabel?: string;
   }
@@ -16,12 +18,15 @@
     onValue,
     growOnHover = true,
     buffered = 0,
+    tooltip = false,
+    formatTooltip = (v: number) => `${Math.round(v * 100)}%`,
     class: className = "",
     ariaLabel = "Seek",
   }: Props = $props();
 
   let trackEl: HTMLDivElement | undefined = $state();
   let dragging = $state(false);
+  let hovering = $state(false);
   let dragValue = $state(0);
 
   let settling = $state(false);
@@ -103,6 +108,12 @@
     "pointer-events-none absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" +
       (growOnHover ? " transition-[height] group-hover:h-1.5" : ""),
   );
+
+  let showTooltip = $derived(tooltip && (dragging || hovering));
+
+  let tooltipLeft = $derived(
+    Math.min(92, Math.max(8, displayValue * 100)),
+  );
 </script>
 
 <div
@@ -112,6 +123,8 @@
   onpointermove={onPointerMove}
   onpointerup={onPointerUp}
   onpointercancel={onPointerUp}
+  onpointerenter={() => (hovering = true)}
+  onpointerleave={() => (hovering = false)}
   onkeydown={onKeyDown}
   role="slider"
   tabindex="0"
@@ -120,6 +133,16 @@
   aria-valuemax="100"
   aria-label={ariaLabel}
 >
+  <!-- Tooltip -->
+  {#if showTooltip}
+    <div
+      class="pointer-events-none absolute -top-8 z-10 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background shadow-md"
+      style="left: {tooltipLeft}%"
+    >
+      {formatTooltip(displayValue)}
+    </div>
+  {/if}
+
   <!-- Track background -->
   <div class={trackClasses}></div>
 

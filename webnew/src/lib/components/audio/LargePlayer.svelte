@@ -235,6 +235,8 @@
         musicManager.setPosition(p * musicManager.duration);
       }}
       buffered={musicManager.buffered}
+      tooltip
+      formatTooltip={(p) => formatTime(p * musicManager.duration)}
     />
   </div>
 
@@ -350,6 +352,7 @@
       <SeekSlider
         class="w-24"
         growOnHover={false}
+        tooltip
         value={musicManager.muted ? 0 : musicManager.volume}
         onValue={(p) => {
           musicManager.volume = p;
