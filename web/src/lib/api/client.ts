@@ -252,6 +252,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/items/reorder`, "POST", z.undefined().optional(), z.any().optional(), body, options)
   }
   
+  reorderPlaylists(body: api.ReorderPlaylistsBody, options?: ExtraOptions) {
+    return this.request("/api/v1/playlists/reorder", "POST", z.undefined().optional(), z.any().optional(), body, options)
+  }
+  
   runTask(taskName: string, options?: ExtraOptions) {
     return this.request(`/api/v1/system/task/${taskName}`, "POST", z.undefined().optional(), z.any().optional(), undefined, options)
   }
@@ -568,6 +572,10 @@ export class ClientUrls {
   
   reorderPlaylistItems(playlistId: string) {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/items/reorder`)
+  }
+  
+  reorderPlaylists() {
+    return createUrl(this.baseUrl, "/api/v1/playlists/reorder")
   }
   
   runTask(taskName: string) {

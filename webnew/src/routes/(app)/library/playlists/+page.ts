@@ -21,6 +21,9 @@ function constructFilterSort(
   query["filter"] = filters.join(" and ");
 
   switch (filter.sort) {
+    case "custom":
+      query["sort"] = "+position";
+      break;
     case "name-a-z":
       query["sort"] = "+name";
       break;

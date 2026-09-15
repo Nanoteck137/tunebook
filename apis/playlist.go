@@ -138,6 +138,12 @@ type ReorderPlaylistItemsBody struct {
 	TrackIds      []string `json:"trackIds"`
 }
 
+type ReorderPlaylistsBody struct {
+	Before           bool     `json:"before"`
+	AnchorPlaylistId string   `json:"anchorPlaylistId"`
+	PlaylistIds      []string `json:"playlistIds"`
+}
+
 type GetPlaylistItemIds struct {
 	Ids []string `json:"ids"`
 }
@@ -156,6 +162,8 @@ func handlePlaylistServiceErrors(err error) error {
 		return FilterNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceAnchorTrackNotFound):
 		return PlaylistAnchorTrackNotFound()
+	case errors.Is(err, service.ErrPlaylistServiceAnchorPlaylistNotFound):
+		return PlaylistAnchorNotFound()
 	case errors.Is(err, service.ErrPlaylistServiceNotAuthorized):
 		return NotAuthorized()
 	case errors.Is(err, service.ErrImageServiceUnsupportedImageFormat):
@@ -572,6 +580,41 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 						Before:        body.Before,
 						AnchorTrackId: body.AnchorTrackId,
 						TrackIds:      body.TrackIds,
+					},
+				)
+				if err != nil {
+					return nil, handlePlaylistServiceErrors(err)
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "ReorderPlaylists",
+			Path:     "/playlists/reorder",
+			Method:   http.MethodPost,
+			BodyType: ReorderPlaylistsBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				body, err := pyrin.Body[ReorderPlaylistsBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.PlaylistService().ReorderPlaylists(
+					ctx,
+					service.ReorderPlaylistsParams{
+						UserId:           user.Id,
+						Before:           body.Before,
+						AnchorPlaylistId: body.AnchorPlaylistId,
+						PlaylistIds:      body.PlaylistIds,
 					},
 				)
 				if err != nil {

@@ -6,7 +6,7 @@ async function getPlaylists(apiClient: ApiClient, userId?: string) {
   if (!userId) return [];
 
   const res = await apiClient.getPlaylists({
-    query: { filter: `ownerId = "${userId}"` },
+    query: { filter: `ownerId = "${userId}"`, sort: "position" },
   });
   if (!res.success) {
     return [];

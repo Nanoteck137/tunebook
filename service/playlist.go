@@ -16,13 +16,14 @@ import (
 var playlistErr = NewServiceErrCreator("playlist")
 
 var (
-	ErrPlaylistServicePlaylistNotFound    = playlistErr.New("playlist not found")
-	ErrPlaylistServiceTrackNotFound       = playlistErr.New("track not found")
-	ErrPlaylistServiceTrackAlreadyAdded   = playlistErr.New("track already added")
-	ErrPlaylistServiceItemNotFound        = playlistErr.New("item not found")
-	ErrPlaylistServiceFilterNotFound      = playlistErr.New("filter not found")
-	ErrPlaylistServiceAnchorTrackNotFound = playlistErr.New("anchor track not found")
-	ErrPlaylistServiceNotAuthorized       = playlistErr.New("not authorized")
+	ErrPlaylistServicePlaylistNotFound       = playlistErr.New("playlist not found")
+	ErrPlaylistServiceTrackNotFound          = playlistErr.New("track not found")
+	ErrPlaylistServiceTrackAlreadyAdded      = playlistErr.New("track already added")
+	ErrPlaylistServiceItemNotFound           = playlistErr.New("item not found")
+	ErrPlaylistServiceFilterNotFound         = playlistErr.New("filter not found")
+	ErrPlaylistServiceAnchorTrackNotFound    = playlistErr.New("anchor track not found")
+	ErrPlaylistServiceAnchorPlaylistNotFound = playlistErr.New("anchor playlist not found")
+	ErrPlaylistServiceNotAuthorized          = playlistErr.New("not authorized")
 )
 
 type PlaylistService struct {
@@ -151,9 +152,15 @@ func (s *PlaylistService) CreatePlaylist(
 	ctx context.Context,
 	params CreatePlaylistParams,
 ) (string, error) {
+	position, err := s.db.GetNextPlaylistPosition(ctx, params.OwnerId)
+	if err != nil {
+		return "", playlistErr.Wrap("create: db get next position", err)
+	}
+
 	playlistId, err := s.db.CreatePlaylist(ctx, database.CreatePlaylistParams{
-		Name:    params.Name,
-		OwnerId: params.OwnerId,
+		Name:     params.Name,
+		OwnerId:  params.OwnerId,
+		Position: position,
 	})
 	if err != nil {
 		return "", playlistErr.Wrap("create: db create", err)
@@ -252,9 +259,25 @@ func (s *PlaylistService) DeletePlaylist(
 		return err
 	}
 
-	err = s.db.DeletePlaylist(ctx, playlist.Id)
+	tx, err := s.db.Begin()
+	if err != nil {
+		return playlistErr.Wrap("delete: db begin", err)
+	}
+	defer tx.Rollback()
+
+	err = tx.DeletePlaylist(ctx, playlist.Id)
 	if err != nil {
 		return playlistErr.Wrap("delete: db delete", err)
+	}
+
+	err = tx.ReorderPlaylistsAfterDelete(ctx, playlist.OwnerId, playlist.Position)
+	if err != nil {
+		return playlistErr.Wrap("delete: db reorder playlists", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return playlistErr.Wrap("delete: db commit", err)
 	}
 
 	err = s.filesystem.RemovePlaylistDir(playlist.Id)
@@ -676,6 +699,105 @@ func (s *PlaylistService) ReorderPlaylistItems(
 	err = tx.Commit()
 	if err != nil {
 		return playlistErr.Wrap("reorder items: db commit", err)
+	}
+
+	return nil
+}
+
+type ReorderPlaylistsParams struct {
+	UserId string
+
+	Before           bool
+	AnchorPlaylistId string
+	PlaylistIds      []string
+}
+
+func (s *PlaylistService) ReorderPlaylists(
+	ctx context.Context,
+	params ReorderPlaylistsParams,
+) error {
+	current, err := s.db.GetUserPlaylists(ctx, params.UserId)
+	if err != nil {
+		return playlistErr.Wrap("reorder playlists: db get playlists", err)
+	}
+
+	index := make(map[string]database.Playlist, len(current))
+	for _, playlist := range current {
+		index[playlist.Id] = playlist
+	}
+
+	playlists := make([]database.Playlist, 0, len(params.PlaylistIds))
+	for _, id := range params.PlaylistIds {
+		playlist, ok := index[id]
+		if !ok {
+			continue
+		}
+
+		playlists = append(playlists, playlist)
+	}
+
+	if len(playlists) == 0 {
+		return nil
+	}
+
+	if params.AnchorPlaylistId != "" {
+		if _, ok := index[params.AnchorPlaylistId]; !ok {
+			return ErrPlaylistServiceAnchorPlaylistNotFound
+		}
+	}
+
+	moveSet := make(map[string]bool, len(playlists))
+	for _, playlist := range playlists {
+		moveSet[playlist.Id] = true
+	}
+
+	stationary := make([]database.Playlist, 0, len(current))
+	for _, playlist := range current {
+		if !moveSet[playlist.Id] {
+			stationary = append(stationary, playlist)
+		}
+	}
+
+	insertAt := 0
+	if params.AnchorPlaylistId != "" {
+		for i, playlist := range stationary {
+			if playlist.Id == params.AnchorPlaylistId {
+				insertAt = i + 1
+				break
+			}
+		}
+	}
+
+	spliced := make([]database.Playlist, 0, len(current))
+	spliced = append(spliced, stationary[:insertAt]...)
+	spliced = append(spliced, playlists...)
+	spliced = append(spliced, stationary[insertAt:]...)
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return playlistErr.Wrap("reorder playlists: db begin", err)
+	}
+	defer tx.Rollback()
+
+	for i, playlist := range spliced {
+		err := tx.UpdatePlaylist(
+			ctx,
+			playlist.Id,
+			database.PlaylistChanges{
+				Position: database.Change[int]{
+					Value:   i,
+					Changed: i != playlist.Position,
+				},
+			},
+		)
+		if err != nil {
+			return playlistErr.Wrap("reorder playlists: db update playlist", err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return playlistErr.Wrap("reorder playlists: db commit", err)
 	}
 
 	return nil

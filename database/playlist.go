@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -25,6 +26,8 @@ type Playlist struct {
 	CoverArt sql.NullString `db:"cover_art"`
 
 	OwnerId string `db:"owner_id"`
+
+	Position int `db:"position"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -50,6 +53,7 @@ func PlaylistSchema() *schema.Schema {
 			schema.Column("playlists.cover_art"),
 			schema.Nullable(),
 		).
+		AddField("position", query.TypeInt, schema.Column("playlists.position")).
 		AddField(
 			"ownerDisplayName",
 			query.TypeString,
@@ -86,6 +90,8 @@ func PlaylistQuery() *goqu.SelectDataset {
 
 			playlistsTbl.Col("owner_id"),
 
+			playlistsTbl.Col("position"),
+
 			playlistsTbl.Col("created"),
 			playlistsTbl.Col("updated"),
 
@@ -113,6 +119,8 @@ type CreatePlaylistParams struct {
 
 	OwnerId string
 
+	Position int
+
 	Created int64
 	Updated int64
 }
@@ -138,6 +146,8 @@ func (db DB) CreatePlaylist(
 
 		"owner_id": params.OwnerId,
 
+		"position": params.Position,
+
 		"created": params.Created,
 		"updated": params.Updated,
 	})
@@ -157,6 +167,8 @@ type PlaylistChanges struct {
 
 	CoverArt Change[sql.NullString]
 
+	Position Change[int]
+
 	Created Change[int64]
 }
 
@@ -172,6 +184,8 @@ func (db DB) UpdatePlaylist(
 	addToRecord(record, "owner_id", changes.OwnerId)
 
 	addToRecord(record, "cover_art", changes.CoverArt)
+
+	addToRecord(record, "position", changes.Position)
 
 	addToRecord(record, "created", changes.Created)
 
@@ -264,6 +278,17 @@ func (db DB) GetPlaylistById(
 	return Single[Playlist](db, ctx, query)
 }
 
+func (db DB) GetUserPlaylists(
+	ctx context.Context,
+	userId string,
+) ([]Playlist, error) {
+	query := PlaylistQuery().
+		Where(playlistsTbl.Col("owner_id").Eq(userId)).
+		Order(playlistsTbl.Col("position").Asc())
+
+	return Multiple[Playlist](db, ctx, query)
+}
+
 func (db DB) GetUserPlaylistCount(
 	ctx context.Context,
 	userId string,
@@ -276,4 +301,48 @@ func (db DB) GetUserPlaylistCount(
 		GroupBy(playlistsTbl.Col("owner_id"))
 
 	return Single[int](db, ctx, query)
+}
+
+func (db DB) GetNextPlaylistPosition(
+	ctx context.Context,
+	ownerId string,
+) (int, error) {
+	query := dialect.From(playlistsTbl).
+		Select(playlistsTbl.Col("position")).
+		Where(playlistsTbl.Col("owner_id").Eq(ownerId)).
+		Order(playlistsTbl.Col("position").Desc()).
+		Limit(1)
+
+	res, err := Single[int](db, ctx, query)
+	if err != nil {
+		if errors.Is(err, ErrItemNotFound) {
+			return 0, nil
+		}
+
+		return 0, err
+	}
+
+	return res + 1, nil
+}
+
+func (db DB) ReorderPlaylistsAfterDelete(
+	ctx context.Context,
+	ownerId string,
+	deletedPosition int,
+) error {
+	query := dialect.Update(playlistsTbl).
+		Set(goqu.Record{
+			"position": goqu.L("position - 1"),
+		}).
+		Where(
+			playlistsTbl.Col("owner_id").Eq(ownerId),
+			playlistsTbl.Col("position").Gt(deletedPosition),
+		)
+
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
