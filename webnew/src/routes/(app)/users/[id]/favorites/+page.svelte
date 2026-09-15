@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { Button, Separator } from "$lib/components/ui";
-	import { Play, Shuffle, X } from "@lucide/svelte";
+	import { EllipsisVertical, Play, Shuffle, X } from "@lucide/svelte";
+	import { Button, buttonVariants, DropdownMenu, Separator } from "$lib/components/ui";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import Pagination from "$lib/components/Pagination.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
@@ -33,41 +33,65 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-6">
 	<div
-		class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+		class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
 	>
-		<div class="flex items-baseline gap-2">
-			<h1 class="text-xl font-bold">Favorites</h1>
-			{#if data.page}
-				<span class="text-sm text-muted-foreground"
-					>{data.page.totalItems}</span
-				>
-			{/if}
-		</div>
-
-		<div class="flex items-center gap-2">
-			<Button size="sm" onclick={() => playAll()}>
-				<Play size={14} />
-				Play All
-			</Button>
-			<Button
-				variant="outline"
-				size="sm"
-				onclick={async () => {
-					await musicManager.queueRequest(
-						{
-							type: "addFavorites",
-							userId: data.userData.id,
-							filterId: filterId ?? undefined,
-						},
-						{ shuffle: true },
-					);
-				}}
+		<div class="flex min-w-0 flex-col gap-2">
+			<p
+				class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
 			>
-				<Shuffle size={14} />
-				Shuffle
-			</Button>
+				Favorites
+			</p>
+
+			<h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
+				{data.userData.displayName}
+			</h1>
+
+			<p class="text-sm text-muted-foreground">
+				{data.page.totalItems}
+				{data.page.totalItems === 1 ? "track" : "tracks"}
+			</p>
+
+			<div class="flex gap-2 pt-2">
+				<Button onclick={() => playAll()}>
+					<Play />
+					Play
+				</Button>
+				<Button
+					variant="ghost"
+					size="icon"
+					onclick={async () => {
+						await musicManager.queueRequest(
+							{
+								type: "addFavorites",
+								userId: data.userData.id,
+								filterId: filterId ?? undefined,
+							},
+							{ shuffle: true },
+						);
+					}}
+				>
+					<Shuffle />
+				</Button>
+				{#if filterId}
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger
+							class={buttonVariants({ variant: "ghost", size: "icon" })}
+						>
+							<EllipsisVertical />
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="start">
+							<DropdownMenu.Group>
+								<DropdownMenu.Item onSelect={clearFilter}>
+									<X />
+									Clear filter
+								</DropdownMenu.Item>
+							</DropdownMenu.Group>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				{/if}
+			</div>
 		</div>
 	</div>
 
@@ -76,13 +100,6 @@
 			<!-- {#each data.filters as filter (filter.filterId)} -->
 			<!--   <FilterButton {filter} /> -->
 			<!-- {/each} -->
-
-			{#if filterId}
-				<Button variant="ghost" size="sm" onclick={clearFilter}>
-					<X size={14} />
-					Clear
-				</Button>
-			{/if}
 		</div>
 	{/if}
 </div>

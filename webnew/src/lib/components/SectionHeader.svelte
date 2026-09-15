@@ -6,14 +6,16 @@
 		children,
 		count,
 		viewAllHref,
+		actions,
 	}: {
 		children: Snippet;
 		count?: number;
 		viewAllHref?: string;
+		actions?: Snippet;
 	} = $props();
 </script>
 
-<div class="mb-3 flex items-baseline justify-between px-2">
+<div class="mb-3 flex items-center justify-between px-2">
 	<div class="flex items-baseline gap-2">
 		<h2
 			class="text-lg font-bold [&_svg:not([class*='size-'])]:size-4 [&_svg]:mr-1.5 [&_svg]:inline [&_svg]:shrink-0 [&_svg]:text-muted-foreground [&_svg]:align-[-0.125em]"
@@ -24,7 +26,11 @@
 			<span class="text-sm text-muted-foreground">{count}</span>
 		{/if}
 	</div>
-	{#if viewAllHref}
+	{#if actions}
+		<div class="flex items-center gap-2">
+			{@render actions()}
+		</div>
+	{:else if viewAllHref}
 		<a
 			href={viewAllHref}
 			class="flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
