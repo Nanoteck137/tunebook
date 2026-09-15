@@ -531,6 +531,11 @@ func (s *PlaylistService) AddItemToPlaylist(
 		return playlistErr.Wrap("add item: db create item", err)
 	}
 
+	err = s.db.MarkPlaylistUpdated(ctx, playlist.Id)
+	if err != nil {
+		return playlistErr.Wrap("add item: db mark playlist updated", err)
+	}
+
 	return nil
 }
 
@@ -581,6 +586,11 @@ func (s *PlaylistService) RemovePlaylistItem(
 	err = tx.ReorderPlaylistItemsAfterDelete(ctx, playlist.Id, item.Position)
 	if err != nil {
 		return playlistErr.Wrap("remove item: db reorder items", err)
+	}
+
+	err = tx.MarkPlaylistUpdated(ctx, playlist.Id)
+	if err != nil {
+		return playlistErr.Wrap("remove item: db mark playlist updated", err)
 	}
 
 	err = tx.Commit()
@@ -694,6 +704,11 @@ func (s *PlaylistService) ReorderPlaylistItems(
 		if err != nil {
 			return playlistErr.Wrap("reorder items: db update item", err)
 		}
+	}
+
+	err = tx.MarkPlaylistUpdated(ctx, playlist.Id)
+	if err != nil {
+		return playlistErr.Wrap("reorder items: db mark playlist updated", err)
 	}
 
 	err = tx.Commit()

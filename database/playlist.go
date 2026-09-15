@@ -207,6 +207,24 @@ func (db DB) UpdatePlaylist(
 	return nil
 }
 
+func (db DB) MarkPlaylistUpdated(
+	ctx context.Context,
+	playlistId string,
+) error {
+	query := dialect.Update(playlistsTbl).
+		Set(goqu.Record{
+			"updated": time.Now().UnixMilli(),
+		}).
+		Where(playlistsTbl.Col("id").Eq(playlistId))
+
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (db DB) DeletePlaylist(ctx context.Context, playlistId string) error {
 	query := dialect.Delete(playlistsTbl).
 		Where(playlistsTbl.Col("id").Eq(playlistId))
