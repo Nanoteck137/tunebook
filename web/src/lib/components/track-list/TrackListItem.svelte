@@ -77,7 +77,7 @@
         <Star size={12} class="mr-0.5 inline fill-primary text-primary sm:hidden" />
       {/if}
       {#if displayOrder}
-        {track.order}.
+        {track.displayNumber}.
       {/if}
       {track.name}
     </p>

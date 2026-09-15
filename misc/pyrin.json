@@ -1430,7 +1430,7 @@
           "omitEmpty": false
         },
         {
-          "name": "order",
+          "name": "displayNumber",
           "type": "*int",
           "omitEmpty": false
         },

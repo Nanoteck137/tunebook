@@ -56,7 +56,7 @@
 		return {
 			id,
 			name,
-			order: null,
+			displayNumber: null,
 			duration: 240,
 			number: null,
 			year: data.year,

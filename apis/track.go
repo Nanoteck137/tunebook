@@ -16,7 +16,7 @@ type Track struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 
-	Order *int `json:"order"`
+	DisplayNumber *int `json:"displayNumber"`
 
 	Duration int64  `json:"duration"`
 	Number   *int64 `json:"number"`
@@ -51,19 +51,19 @@ func ConvertDBTrack(c pyrin.Context, track database.Track) Track {
 	}
 
 	return Track{
-		Id:        track.Id,
-		Name:      track.Name,
-		Order:     track.Order,
-		Duration:  track.Duration,
-		Number:    utils.SqlNullToInt64Ptr(track.Number),
-		Year:      utils.SqlNullToInt64Ptr(track.Year),
-		CoverArt:  ConvertAlbumCoverURL(c, track.AlbumId),
-		AlbumId:   track.AlbumId,
-		AlbumName: track.AlbumName,
-		Artists:   artists,
-		Tags:      utils.SplitTagString(track.Tags.String),
-		Created:   formatTime(track.Created),
-		Updated:   formatTime(track.Updated),
+		Id:            track.Id,
+		Name:          track.Name,
+		DisplayNumber: track.Order,
+		Duration:      track.Duration,
+		Number:        utils.SqlNullToInt64Ptr(track.Number),
+		Year:          utils.SqlNullToInt64Ptr(track.Year),
+		CoverArt:      ConvertAlbumCoverURL(c, track.AlbumId),
+		AlbumId:       track.AlbumId,
+		AlbumName:     track.AlbumName,
+		Artists:       artists,
+		Tags:          utils.SplitTagString(track.Tags.String),
+		Created:       formatTime(track.Created),
+		Updated:       formatTime(track.Updated),
 	}
 }
 

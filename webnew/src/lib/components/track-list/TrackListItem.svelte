@@ -91,7 +91,7 @@
 				/>
 			{/if}
 			{#if displayOrder}
-				{track.order}.
+				{track.displayNumber}.
 			{/if}
 			{track.name}
 		</p>
