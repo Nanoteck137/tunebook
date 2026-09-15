@@ -10,12 +10,15 @@
 		Separator,
 	} from "$lib/components/ui";
 	import {
-		ChevronRight,
+		Disc,
 		EllipsisVertical,
 		ListPlus,
+		Music,
 		Play,
 		Shuffle,
+		Users,
 	} from "@lucide/svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 
 	const { data } = $props();
 	const musicManager = getMusicManager();
@@ -146,24 +149,15 @@
 <div class="flex flex-col gap-10">
 	{#if data.tracks.length > 0}
 		<section>
-			<div class="mb-3 flex items-center justify-between gap-2 px-2">
-				<div class="flex items-baseline gap-2">
-					<h2 class="text-lg font-bold">Songs</h2>
-					<span class="text-sm text-muted-foreground"
-						>{data.trackPage.totalItems}</span
-					>
-				</div>
-				{#if data.trackPage.totalItems > data.tracks.length}
-					<Button
-						href="/artists/{data.artist.id}/tracks"
-						variant="outline"
-						size="sm"
-					>
-						Show All
-						<ChevronRight class="h-4 w-4" />
-					</Button>
-				{/if}
-			</div>
+			<SectionHeader
+				count={data.trackPage.totalItems}
+				viewAllHref={data.trackPage.totalItems > data.tracks.length
+					? `/artists/${data.artist.id}/tracks`
+					: undefined}
+			>
+				<Music />
+				Songs
+			</SectionHeader>
 
 			<div class="flex flex-col">
 				{#each data.tracks as track, i (track.id)}
@@ -178,24 +172,15 @@
 
 	{#if data.albums.length > 0}
 		<section>
-			<div class="mb-3 flex items-center justify-between gap-2 px-2">
-				<div class="flex items-baseline gap-2">
-					<h2 class="text-lg font-bold">Albums</h2>
-					<span class="text-sm text-muted-foreground"
-						>{data.albumPage.totalItems}</span
-					>
-				</div>
-				{#if data.albumPage.totalItems > data.albums.length}
-					<Button
-						href="/artists/{data.artist.id}/albums"
-						variant="outline"
-						size="sm"
-					>
-						Show All
-						<ChevronRight class="h-4 w-4" />
-					</Button>
-				{/if}
-			</div>
+			<SectionHeader
+				count={data.albumPage.totalItems}
+				viewAllHref={data.albumPage.totalItems > data.albums.length
+					? `/artists/${data.artist.id}/albums`
+					: undefined}
+			>
+				<Disc />
+				Albums
+			</SectionHeader>
 
 			<div
 				class="grid grid-cols-2 gap-3 px-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
@@ -241,14 +226,10 @@
 		<Separator />
 
 		<section>
-			<div class="mb-3 flex items-baseline justify-between gap-2 px-2">
-				<div class="flex items-baseline gap-2">
-					<h2 class="text-lg font-bold">Appears on</h2>
-					<span class="text-sm text-muted-foreground"
-						>{featuredCount}</span
-					>
-				</div>
-			</div>
+			<SectionHeader count={featuredCount}>
+				<Users />
+				Appears on
+			</SectionHeader>
 
 			{#if data.featuredAlbums.length > 0}
 				<div

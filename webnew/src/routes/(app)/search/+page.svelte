@@ -1,12 +1,13 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { ChevronRight } from "@lucide/svelte";
+  import { Disc, Mic, Music } from "@lucide/svelte";
   import { onMount } from "svelte";
   import TrackList from "$lib/components/track-list/TrackList.svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
   import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
   import ArtistTile from "$lib/components/tiles/ArtistTile.svelte";
   import SearchBarHeader from "./SearchBarHeader.svelte";
+  import SectionHeader from "$lib/components/SectionHeader.svelte";
 
   const { data } = $props();
   const musicManager = getMusicManager();
@@ -85,21 +86,13 @@
 
   {#if topTracks.length > 0}
     <section>
-      <div class="mb-3 flex items-center justify-between px-2">
-        <div class="flex items-baseline gap-2">
-          <h2 class="text-lg font-bold">Tracks</h2>
-          <span class="text-sm text-muted-foreground"
-            >{data.tracks.length}</span
-          >
-        </div>
-        <a
-          href="/search/tracks?query={data.query}"
-          class="flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
-        >
-          View all
-          <ChevronRight class="h-4 w-4" />
-        </a>
-      </div>
+      <SectionHeader
+        count={data.tracks.length}
+        viewAllHref="/search/tracks?query={data.query}"
+      >
+        <Music />
+        Tracks
+      </SectionHeader>
 
       <TrackList
         totalTracks={topTracks.length}
@@ -111,21 +104,13 @@
 
   {#if data.artists.length > 0}
     <section>
-      <div class="mb-3 flex items-center justify-between px-2">
-        <div class="flex items-baseline gap-2">
-          <h2 class="text-lg font-bold">Artists</h2>
-          <span class="text-sm text-muted-foreground"
-            >{data.artists.length}</span
-          >
-        </div>
-        <a
-          href="/search/artists?query={data.query}"
-          class="flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
-        >
-          View all
-          <ChevronRight class="h-4 w-4" />
-        </a>
-      </div>
+      <SectionHeader
+        count={data.artists.length}
+        viewAllHref="/search/artists?query={data.query}"
+      >
+        <Mic />
+        Artists
+      </SectionHeader>
 
       <div class="flex flex-wrap gap-3 px-2">
         {#each data.artists.slice(0, 6) as artist (artist.id)}
@@ -141,21 +126,13 @@
 
   {#if data.albums.length > 0}
     <section>
-      <div class="mb-3 flex items-center justify-between px-2">
-        <div class="flex items-baseline gap-2">
-          <h2 class="text-lg font-bold">Albums</h2>
-          <span class="text-sm text-muted-foreground"
-            >{data.albums.length}</span
-          >
-        </div>
-        <a
-          href="/search/albums?query={data.query}"
-          class="flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
-        >
-          View all
-          <ChevronRight class="h-4 w-4" />
-        </a>
-      </div>
+      <SectionHeader
+        count={data.albums.length}
+        viewAllHref="/search/albums?query={data.query}"
+      >
+        <Disc />
+        Albums
+      </SectionHeader>
 
       <div class="flex flex-wrap gap-3 px-2">
         {#each data.albums.slice(0, 6) as album (album.id)}

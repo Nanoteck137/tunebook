@@ -1,0 +1,16 @@
+import { error } from "@sveltejs/kit";
+import type { PageLoad } from "./$types";
+
+export const load: PageLoad = async ({ parent, params }) => {
+	const data = await parent();
+
+	const topTracks = await data.apiClient.getUserTopTracks(params.id);
+	if (!topTracks.success) {
+		throw error(topTracks.error.code, { message: topTracks.error.message });
+	}
+
+	return {
+		...data,
+		topTracks: topTracks.data.tracks,
+	};
+};
