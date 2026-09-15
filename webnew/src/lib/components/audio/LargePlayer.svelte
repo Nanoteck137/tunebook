@@ -47,26 +47,45 @@
 		<Sheet.Trigger>
 			<ListMusic size="20" />
 		</Sheet.Trigger>
-		<Sheet.Content side="right">
-			<div class="flex items-center justify-between pb-4">
-				<p class="text-base font-semibold">Queue</p>
-				<div class="flex items-center">
+		<Sheet.Content side="right" class="gap-0" showCloseButton={false}>
+			<Sheet.Title class="sr-only">Queue</Sheet.Title>
+			<div
+				class="flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3"
+			>
+				<p class="text-sm font-semibold">Queue</p>
+				<div class="flex items-center gap-1">
 					<Button variant="ghost" size="sm" href="/queue">View all</Button>
 					<Button
 						class="rounded-full"
 						variant="ghost"
 						size="icon"
+						title="Clear queue"
+						aria-label="Clear queue"
 						onclick={async () => {
 							await musicManager.clearQueue();
 						}}
 					>
 						<ListX />
 					</Button>
+					<Sheet.Close>
+						{#snippet child({ props })}
+							<Button
+								class="rounded-full"
+								variant="ghost"
+								size="icon"
+								title="Close queue"
+								aria-label="Close queue"
+								{...props}
+							>
+								<X size={18} />
+							</Button>
+						{/snippet}
+					</Sheet.Close>
 				</div>
 			</div>
 
-			<ScrollArea class="h-full pb-6">
-				<div class="mr-3 flex flex-col gap-3">
+			<ScrollArea class="min-h-0 flex-1">
+				<div class="flex flex-col gap-4 px-4 py-4 pr-3">
 					<!-- Played -->
 					{#if previousItems.length > 0}
 						<div>
