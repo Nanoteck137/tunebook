@@ -54,10 +54,6 @@ github.com/meilisearch/meilisearch-go v0.36.1 h1:mJTCJE5g7tRvaqKco6DfqOuJEjX+rRl
 github.com/meilisearch/meilisearch-go v0.36.1/go.mod h1:hWcR0MuWLSzHfbz9GGzIr3s9rnXLm1jqkmHkJPbUSvM=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
-github.com/nanoteck137/pyrin v0.19.0 h1:LF4muViSMte5f+y51H7USAjXTdILF8pGqGbGpCYqS5c=
-github.com/nanoteck137/pyrin v0.19.0/go.mod h1:SdbUtd8sAnofz2D4Xr87s8dH6Xkf+5KgSFf2EidQi2k=
-github.com/nanoteck137/pyrin v0.20.0 h1:plggEmbW00lSPJGke/Yg7uCsarZ1Tjyl753DVBG4ExE=
-github.com/nanoteck137/pyrin v0.20.0/go.mod h1:SdbUtd8sAnofz2D4Xr87s8dH6Xkf+5KgSFf2EidQi2k=
 github.com/nanoteck137/pyrin v0.20.1 h1:NNkAs9KsX4sDU03i9u4ZP8BJyemoqonou2xtBrwn2kc=
 github.com/nanoteck137/pyrin v0.20.1/go.mod h1:SdbUtd8sAnofz2D4Xr87s8dH6Xkf+5KgSFf2EidQi2k=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343 h1:EjWdC/+BXfC4YTKxdslWV8rFZXlZ48VAKpDTQs4Lo2U=
