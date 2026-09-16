@@ -19,8 +19,9 @@ import {
 	import { getApiAddress, handleApiError, setApiClient } from "$lib";
 	import { setMusicManager } from "$lib/music-manager.svelte";
 	import { goto, invalidateAll } from "$app/navigation";
-	import { setQuickPlaylist } from "$lib/quick-playlist.svelte";
-	import { setFavorites } from "$lib/favorites.svelte";
+	import { setQuickPlaylist, getQuickPlaylist } from "$lib/quick-playlist.svelte";
+	import { setFavorites, getFavorites } from "$lib/favorites.svelte";
+	import { setSseConnection } from "$lib/sse.svelte";
 	import {
 		initPlaylistModalManager,
 		showPlaylistModal,
@@ -52,6 +53,28 @@ import {
 	initPlaylistModalManager(apiClient);
 
 	let quickPlaylist = setQuickPlaylist(apiClient);
+
+	const sse = setSseConnection(apiClient);
+
+	const favorites = getFavorites()
+
+	sse.on("favorites-changed", () => {
+		favorites.fetchIds();
+	});
+
+	sse.on("quick-playlist-changed", (data) => {
+		const { playlistId } = data as { playlistId: string | null };
+		quickPlaylist.applyQuickPlaylistChanged(playlistId);
+	});
+
+	onMount(() => {
+		if (data.user) {
+			musicManager.initQueue();
+			sse.start();
+		}
+
+		return () => sse.stop();
+	});
 
 	$effect(() => {
 		quickPlaylist.setPlaylistId(data.user?.quickPlaylist ?? null);

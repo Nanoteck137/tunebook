@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/tools/broker"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -28,6 +29,8 @@ type UserService struct {
 
 	filesystem   *FilesystemService
 	imageService *ImageService
+
+	emitter broker.EventEmitter
 }
 
 func NewUserService(
@@ -35,12 +38,14 @@ func NewUserService(
 	db *database.Database,
 	filesystem *FilesystemService,
 	imageService *ImageService,
+	emitter broker.EventEmitter,
 ) *UserService {
 	return &UserService{
 		logger:       logger,
 		db:           db,
 		filesystem:   filesystem,
 		imageService: imageService,
+		emitter:      emitter,
 	}
 }
 
@@ -1334,6 +1339,13 @@ func (s *UserService) SetQuickPlaylist(
 	if err != nil {
 		return userErr.Wrap("set quick playlist: db update settings", err)
 	}
+
+	s.emitter.EmitEventToUser(
+		params.UserId,
+		broker.QuickPlaylistChangedEvent{
+			PlaylistId: params.PlaylistId,
+		},
+	)
 
 	return nil
 }

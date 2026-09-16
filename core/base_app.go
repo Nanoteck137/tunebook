@@ -186,6 +186,7 @@ func (app *BaseApp) Bootstrap() error {
 		app.db,
 		app.filesystemService,
 		app.imageService,
+		app.broker,
 	)
 
 	app.searchService = service.NewSearchService(
@@ -228,6 +229,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.trackService = service.NewTrackService(
 		newServiceLogger("track"),
 		app.db,
+		app.broker,
 	)
 
 	app.playlistService = service.NewPlaylistService(
@@ -235,6 +237,7 @@ func (app *BaseApp) Bootstrap() error {
 		app.db,
 		app.filesystemService,
 		app.imageService,
+		app.broker,
 	)
 
 	app.historyService = service.NewHistoryService(

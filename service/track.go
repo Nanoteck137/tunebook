@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/tools/broker"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
 )
@@ -22,15 +23,19 @@ var (
 type TrackService struct {
 	logger *slog.Logger
 	db     *database.Database
+
+	emitter broker.EventEmitter
 }
 
 func NewTrackService(
 	logger *slog.Logger,
 	db *database.Database,
+	emitter broker.EventEmitter,
 ) *TrackService {
 	return &TrackService{
-		logger: logger,
-		db:     db,
+		logger:  logger,
+		db:      db,
+		emitter: emitter,
 	}
 }
 
@@ -170,6 +175,9 @@ func (s *TrackService) FavoriteTrack(
 		return trackErr.Wrap("favorite track: db create", err)
 	}
 
+	s.emitter.EmitEventToUser(
+		params.UserId, broker.FavoritesChangedEvent{})
+
 	return nil
 }
 
@@ -186,6 +194,9 @@ func (s *TrackService) UnfavoriteTrack(
 	if err != nil {
 		return trackErr.Wrap("unfavorite track: db delete", err)
 	}
+
+	s.emitter.EmitEventToUser(
+		params.UserId, broker.FavoritesChangedEvent{})
 
 	return nil
 }

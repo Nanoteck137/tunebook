@@ -74,6 +74,21 @@ class QuickPlaylist {
 		await this.fetchIds();
 	}
 
+	async applyQuickPlaylistChanged(playlistId: string | null) {
+		if (playlistId === "" || playlistId === null) {
+			this.playlist = null;
+			this.ids = [];
+			return;
+		}
+
+		if (this.playlist === null || this.playlist.id !== playlistId) {
+			await this.setPlaylistId(playlistId);
+			return;
+		}
+
+		await this.fetchIds();
+	}
+
 	hasTrack(trackId: string) {
 		return !!this.ids.find((v) => v === trackId);
 	}

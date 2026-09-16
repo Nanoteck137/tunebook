@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/tools/broker"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
 )
@@ -33,6 +34,8 @@ type PlaylistService struct {
 
 	filesystem   *FilesystemService
 	imageService *ImageService
+
+	emitter broker.EventEmitter
 }
 
 func NewPlaylistService(
@@ -40,12 +43,14 @@ func NewPlaylistService(
 	db *database.Database,
 	filesystem *FilesystemService,
 	imageService *ImageService,
+	emitter broker.EventEmitter,
 ) *PlaylistService {
 	return &PlaylistService{
 		logger:       logger,
 		db:           db,
 		filesystem:   filesystem,
 		imageService: imageService,
+		emitter:      emitter,
 	}
 }
 
@@ -536,6 +541,8 @@ func (s *PlaylistService) AddItemToPlaylist(
 		return playlistErr.Wrap("add item: db mark playlist updated", err)
 	}
 
+	s.emitQuickPlaylistChanged(ctx, params.UserId, playlist.Id)
+
 	return nil
 }
 
@@ -598,7 +605,31 @@ func (s *PlaylistService) RemovePlaylistItem(
 		return playlistErr.Wrap("remove item: db commit", err)
 	}
 
+	s.emitQuickPlaylistChanged(ctx, params.UserId, playlist.Id)
+
 	return nil
+}
+
+func (s *PlaylistService) emitQuickPlaylistChanged(
+	ctx context.Context,
+	userId string,
+	playlistId string,
+) {
+	settings, err := s.db.GetUserSettingsById(ctx, userId)
+	if err != nil || !settings.QuickPlaylist.Valid {
+		return
+	}
+
+	if settings.QuickPlaylist.String != playlistId {
+		return
+	}
+
+	s.emitter.EmitEventToUser(
+		userId,
+		broker.QuickPlaylistChangedEvent{
+			PlaylistId: playlistId,
+		},
+	)
 }
 
 type ReorderPlaylistItemsParams struct {

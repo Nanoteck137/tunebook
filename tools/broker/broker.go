@@ -17,6 +17,7 @@ type Event interface {
 
 type EventEmitter interface {
 	EmitEvent(event Event)
+	EmitEventToUser(userId string, event Event)
 }
 
 type EventProducer interface {
@@ -31,9 +32,14 @@ type client struct {
 	events chan Event
 }
 
+type eventMessage struct {
+	userId string
+	event  Event
+}
+
 // NOTE(patrik): Based on: https://gist.github.com/Ananto30/8af841f250e89c07e122e2a838698246
 type Broker struct {
-	notifier chan Event
+	notifier chan eventMessage
 
 	newClients     chan *client
 	closingClients chan *client
@@ -44,7 +50,7 @@ type Broker struct {
 
 func NewBroker() *Broker {
 	return &Broker{
-		notifier:       make(chan Event, 1024),
+		notifier:       make(chan eventMessage, 1024),
 		newClients:     make(chan *client),
 		closingClients: make(chan *client),
 		clients:        make(map[*client]struct{}),
@@ -70,8 +76,12 @@ func (broker *Broker) Listen() {
 			}
 		case event := <-broker.notifier:
 			for c := range broker.clients {
+				if event.userId != "" && c.userId != event.userId {
+					continue
+				}
+
 				select {
-				case c.events <- event:
+				case c.events <- event.event:
 				default:
 					// Drop event for slow client instead of blocking
 				}
@@ -85,7 +95,11 @@ func (broker *Broker) Start() {
 }
 
 func (broker *Broker) EmitEvent(event Event) {
-	broker.notifier <- event
+	broker.notifier <- eventMessage{event: event}
+}
+
+func (broker *Broker) EmitEventToUser(userId string, event Event) {
+	broker.notifier <- eventMessage{userId: userId, event: event}
 }
 
 var _ (Event) = (*ConnectedEvent)(nil)
@@ -94,6 +108,20 @@ type ConnectedEvent struct{}
 
 func (c ConnectedEvent) GetEventType() string {
 	return "connected"
+}
+
+type FavoritesChangedEvent struct{}
+
+func (c FavoritesChangedEvent) GetEventType() string {
+	return "favorites-changed"
+}
+
+type QuickPlaylistChangedEvent struct {
+	PlaylistId string `json:"playlistId"`
+}
+
+func (c QuickPlaylistChangedEvent) GetEventType() string {
+	return "quick-playlist-changed"
 }
 
 func (broker *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request, userId string) {
