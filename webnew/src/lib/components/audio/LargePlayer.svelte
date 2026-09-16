@@ -22,6 +22,9 @@
 
 	const musicManager = getMusicManager();
 
+	const iconButton =
+		"flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
+
 	let currentMediaItem = $state<MediaItem | null>(null);
 	let previousItems = $state<MediaItem[]>([]);
 	let previousStartIndex = $state(0);
@@ -44,7 +47,7 @@
 
 {#snippet queueSheet()}
 	<Sheet.Root>
-		<Sheet.Trigger>
+		<Sheet.Trigger class={iconButton} title="Queue" aria-label="Queue">
 			<ListMusic size="20" />
 		</Sheet.Trigger>
 		<Sheet.Content side="right" class="gap-0" showCloseButton={false}>
@@ -243,9 +246,11 @@
 {/snippet}
 
 <div
-	class="old-container relative z-30 hidden h-18 border-t bg-background md:block"
+	class="relative hidden h-20 border-t border-border/60 bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80 md:block"
 >
-	<div class="absolute -top-1.5 right-0 left-0 px-0">
+	<div
+		class="old-container absolute inset-x-0 -top-2 z-10 max-w-screen-2xl px-4 sm:px-8"
+	>
 		<SeekSlider
 			value={Number.isNaN(musicManager.duration)
 				? 0
@@ -259,27 +264,31 @@
 		/>
 	</div>
 
-	<div class="flex h-full items-center justify-between gap-4">
-		<!-- Left: Track info -->
-		<div class="flex min-w-0 basis-1/4 items-center gap-3">
+	<div
+		class="old-container flex h-full max-w-screen-2xl items-center gap-6 px-4 sm:px-8"
+	>
+		<!-- Left: Now playing -->
+		<div class="flex min-w-0 flex-1 basis-1/3 items-center gap-3">
 			<a
 				href={currentMediaItem ? `/albums/${currentMediaItem.album.id}` : "#"}
 				class="shrink-0"
+				title={currentMediaItem?.album.name ?? ""}
 			>
 				<Image
-					class="w-12 min-w-12"
+					class="size-14 min-w-14 rounded-lg border border-border/60 shadow-sm transition-transform duration-200 hover:scale-105"
 					src={currentMediaItem?.coverArt}
 					alt="cover"
 					loading="eager"
 				/>
 			</a>
-			<div class="flex min-w-0 flex-col">
+
+			<div class="flex min-w-0 flex-1 flex-col">
 				<a
 					href={currentMediaItem
 						? `/albums/${currentMediaItem.album.id}`
 						: "#"}
-					class="truncate text-sm font-medium hover:underline"
-					title={currentMediaItem?.name}
+					class="truncate text-sm font-semibold hover:underline"
+					title={currentMediaItem?.name ?? ""}
 				>
 					{currentMediaItem?.name ?? "No track playing"}
 				</a>
@@ -297,35 +306,41 @@
 			</div>
 
 			{#if currentMediaItem}
-				<div class="flex items-center gap-0.5">
+				<div class="flex shrink-0 items-center gap-0.5">
 					<FavoriteButton show trackId={currentMediaItem.trackId} />
 					<QuickAddButton trackId={currentMediaItem.trackId} />
 				</div>
 			{/if}
 		</div>
 
-		<!-- Center: Controls + time -->
-		<div class="flex flex-col items-center gap-0.5">
+		<!-- Center: Transport -->
+		<div class="flex shrink-0 flex-col items-center gap-1">
 			<div class="flex items-center gap-3">
 				<button
-					class="text-muted-foreground transition-colors hover:text-foreground"
+					class={iconButton}
+					title="Previous track"
+					aria-label="Previous track"
 					onclick={() => musicManager.previousTrack()}
 				>
-					<SkipBack size="20" />
+					<SkipBack size="18" />
 				</button>
 
 				{#if musicManager.loading}
 					<Spinner class="h-8 w-8" />
 				{:else if musicManager.playing}
 					<button
-						class="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background transition-colors hover:scale-105"
+						class="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:scale-105 hover:bg-primary/90 active:scale-95"
+						title="Pause"
+						aria-label="Pause"
 						onclick={() => musicManager.pause()}
 					>
 						<Pause size="18" />
 					</button>
 				{:else}
 					<button
-						class="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background transition-colors hover:scale-105"
+						class="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:scale-105 hover:bg-primary/90 active:scale-95"
+						title="Play"
+						aria-label="Play"
 						onclick={() => musicManager.play()}
 					>
 						<Play size="18" />
@@ -333,19 +348,23 @@
 				{/if}
 
 				<button
-					class="text-muted-foreground transition-colors hover:text-foreground"
+					class={iconButton}
+					title="Next track"
+					aria-label="Next track"
 					onclick={() => musicManager.nextTrack()}
 				>
-					<SkipForward size="20" />
+					<SkipForward size="18" />
 				</button>
 			</div>
 
-			<div class="flex items-center gap-1 text-xs text-muted-foreground">
-				<span class="min-w-[32px] text-right tabular-nums"
+			<div
+				class="text-[11px] leading-none tracking-tight text-muted-foreground tabular-nums"
+			>
+				<span class="inline-block min-w-8 text-right"
 					>{formatTime(musicManager.currentTime)}</span
 				>
-				<span class="text-[10px]">/</span>
-				<span class="min-w-[32px] text-left tabular-nums"
+				<span class="px-0.5 text-muted-foreground/60">/</span>
+				<span class="inline-block min-w-8 text-left"
 					>{formatTime(
 						Number.isNaN(musicManager.duration) ? 0 : musicManager.duration,
 					)}</span
@@ -354,22 +373,26 @@
 		</div>
 
 		<!-- Right: Volume + Queue -->
-		<div class="flex basis-1/4 items-center justify-end gap-2">
+		<div class="flex flex-1 basis-1/3 items-center justify-end gap-2">
 			<button
-				class="text-muted-foreground transition-colors hover:text-foreground"
+				class={iconButton}
+				title={musicManager.muted || musicManager.volume === 0
+					? "Unmute"
+					: "Mute"}
+				aria-label="Toggle mute"
 				onclick={() => {
 					musicManager.muted = !musicManager.muted;
 				}}
 			>
 				{#if musicManager.muted || musicManager.volume === 0}
-					<VolumeX size="20" />
+					<VolumeX size="18" />
 				{:else}
-					<Volume2 size="20" />
+					<Volume2 size="18" />
 				{/if}
 			</button>
 
 			<SeekSlider
-				class="w-24"
+				class="w-28"
 				growOnHover={false}
 				tooltip
 				value={musicManager.muted ? 0 : musicManager.volume}

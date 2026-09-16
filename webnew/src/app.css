@@ -179,24 +179,24 @@
 		@apply font-sans;
 	}
 
-  body[data-player="true"] main {
-    padding-bottom: 5.5rem !important;
-  }
+	body[data-player="true"] main {
+		padding-bottom: 6rem !important;
+	}
 
-  .bottom-popup {
-    bottom: 0.5rem;
-  }
+	.bottom-popup {
+		bottom: 0.5rem;
+	}
 
-  body[data-player="true"] .bottom-popup {
-    bottom: calc(64px + 1rem);
-  }
+	body[data-player="true"] .bottom-popup {
+		bottom: calc(64px + 1rem);
+	}
 
-  body[data-hero="true"] header {
-    border-bottom-width: 0 !important;
-  }
+	body[data-hero="true"] header {
+		border-bottom-width: 0 !important;
+	}
 
 	.old-container {
-		@apply w-full mx-auto px-2;
+		@apply mx-auto w-full px-2;
 	}
 
 	@media (min-width: 1400px) {
@@ -205,5 +205,3 @@
 		}
 	}
 }
-
-
