@@ -33,7 +33,7 @@
             "-X github.com/nanoteck137/tunebook.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
-          vendorHash = "sha256-kJ3IE+5zyzXAoXfZ2ebTKbKFsPVSEnp3WSCMKp0/2zU=";
+          vendorHash = null;
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
 
