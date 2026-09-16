@@ -368,6 +368,10 @@ export class MusicManager {
 		});
 
 		this.#audio.addEventListener("ended", async () => {
+			if (this.queue.isEndOfQueue()) {
+				await this.#checkSendTrackEvent();
+				return;
+			}
 			await this.nextTrack();
 		});
 	}
@@ -474,6 +478,8 @@ export class MusicManager {
 	async setQueueIndex(index: number) {
 		await this.#checkSendTrackEvent();
 
+		if (index < 0 || index >= this.queue.totalItems) return;
+
 		const res = await this.apiClient.setQueuePosition(this.#deviceId, {
 			index,
 		});
@@ -520,6 +526,7 @@ export class MusicManager {
 	}
 
 	async nextTrack() {
+		if (this.queue.isEndOfQueue()) return;
 		await this.setQueueIndex(this.queue.index + 1);
 		this.play();
 	}
