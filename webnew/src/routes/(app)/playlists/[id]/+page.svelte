@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
 	import { getApiClient, handleApiError } from "$lib";
+	import { formatPlayTime } from "$lib/utils";
 	import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
 	import Image from "$lib/components/Image.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
@@ -166,6 +167,9 @@
 				{data.playlist.ownerDisplayName}
 			</a>
 			<span>&middot; {data.playlist.trackCount} tracks</span>
+			{#if data.playlist.playTime > 0}
+				<span>&middot; {formatPlayTime(data.playlist.playTime)}</span>
+			{/if}
 		</div>
 
 		<div class="flex gap-2 pt-2">

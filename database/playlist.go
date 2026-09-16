@@ -36,6 +36,7 @@ type Playlist struct {
 	OwnerPicture     sql.NullString `db:"owner_picture"`
 
 	TrackCount int64 `db:"track_count"`
+	PlayTime   int64 `db:"play_time"`
 }
 
 func PlaylistSchema() *schema.Schema {
@@ -61,6 +62,7 @@ func PlaylistSchema() *schema.Schema {
 		).
 		// TODO(patrik): Is this correct? I need to test this later
 		AddField("trackCount", query.TypeInt, schema.Column("track_count.data")).
+		AddField("playTime", query.TypeInt, schema.Column("play_time.data")).
 		AddField("created", query.TypeInt, schema.Column("playlists.created")).
 		AddField("updated", query.TypeInt, schema.Column("playlists.updated")).
 		SetDefaultSort(
@@ -78,6 +80,17 @@ func PlaylistQuery() *goqu.SelectDataset {
 		Select(
 			playlistItemsTbl.Col("playlist_id").As("id"),
 			goqu.COUNT(playlistItemsTbl.Col("track_id")).As("data"),
+		).
+		GroupBy(playlistItemsTbl.Col("playlist_id"))
+
+	playTimeQuery := dialect.From(playlistItemsTbl).
+		Join(
+			tracksTbl,
+			goqu.On(playlistItemsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
+		).
+		Select(
+			playlistItemsTbl.Col("playlist_id").As("id"),
+			goqu.SUM(tracksTbl.Col("duration")).As("data"),
 		).
 		GroupBy(playlistItemsTbl.Col("playlist_id"))
 
@@ -99,6 +112,7 @@ func PlaylistQuery() *goqu.SelectDataset {
 			goqu.I("owner.picture").As("owner_picture"),
 
 			goqu.COALESCE(goqu.I("track_count.data"), 0).As("track_count"),
+			goqu.COALESCE(goqu.I("play_time.data"), 0).As("play_time"),
 		).
 		Join(
 			UserQuery().As("owner"),
@@ -107,6 +121,10 @@ func PlaylistQuery() *goqu.SelectDataset {
 		LeftJoin(
 			trackCountQuery.As("track_count"),
 			goqu.On(idCol.Eq(goqu.I("track_count.id"))),
+		).
+		LeftJoin(
+			playTimeQuery.As("play_time"),
+			goqu.On(idCol.Eq(goqu.I("play_time.id"))),
 		)
 
 	return query

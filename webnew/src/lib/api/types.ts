@@ -559,6 +559,8 @@ export const Playlist = z.object({
   "ownerPicture": Images,
   // Name: Playlist.trackCount
   "trackCount": z.number(),
+  // Name: Playlist.playTime
+  "playTime": z.number(),
   // Name: Playlist.created
   "created": z.string(),
   // Name: Playlist.updated

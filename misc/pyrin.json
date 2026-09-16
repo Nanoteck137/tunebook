@@ -1300,6 +1300,11 @@
           "omitEmpty": false
         },
         {
+          "name": "playTime",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
           "name": "created",
           "type": "string",
           "omitEmpty": false

@@ -21,7 +21,7 @@
 		Star,
 		X,
 	} from "@lucide/svelte";
-	import { cn } from "$lib/utils";
+	import { cn, formatPlayTime } from "$lib/utils";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Playlist } from "$lib/api/types";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
@@ -402,9 +402,12 @@
 							{/if}
 						</div>
 
-						<p class="truncate text-xs text-muted-foreground">
-							{playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
-						</p>
+<p class="truncate text-xs text-muted-foreground">
+						{playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
+						{#if playlist.playTime > 0}
+							&middot; {formatPlayTime(playlist.playTime)}
+						{/if}
+					</p>
 					</div>
 				</div>
 			{/each}

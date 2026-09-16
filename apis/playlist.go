@@ -27,6 +27,7 @@ type Playlist struct {
 	OwnerPicture     types.Images `json:"ownerPicture"`
 
 	TrackCount int64 `json:"trackCount"`
+	PlayTime   int64 `json:"playTime"`
 
 	Created string `json:"created"`
 	Updated string `json:"updated"`
@@ -41,6 +42,7 @@ func ConvertDBPlaylist(c pyrin.Context, playlist database.Playlist) Playlist {
 		OwnerDisplayName: playlist.OwnerDisplayName,
 		OwnerPicture:     ConvertUserPictureURL(c, playlist.OwnerId),
 		TrackCount:       playlist.TrackCount,
+		PlayTime:         playlist.PlayTime,
 		Created:          formatTime(playlist.Created),
 		Updated:          formatTime(playlist.Updated),
 	}
