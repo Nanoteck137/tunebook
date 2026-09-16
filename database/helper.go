@@ -5,7 +5,6 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
-	"github.com/nanoteck137/tunebook/tools/filter"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
 	"github.com/nrednav/cuid2"
@@ -42,48 +41,6 @@ func createIdGenerator(length int) func() string {
 
 func SqlGroupConcat(col any, seperator string) exp.SQLFunctionExpression {
 	return goqu.Func("group_concat", col, seperator)
-}
-
-func applyFilterParams(
-	params types.QueryParams,
-	adapter filter.ResolverAdapter,
-	query *goqu.SelectDataset,
-) (*goqu.SelectDataset, error) {
-	resolver := filter.New(adapter)
-
-	query, err := applyFilter(query, resolver, params.Filter)
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = applySort(query, resolver, params.Sort)
-	if err != nil {
-		return nil, err
-	}
-
-	return query, nil
-}
-
-func applyFilterParamsCustom(
-	params types.QueryParams,
-	adapter filter.ResolverAdapter,
-	query *goqu.SelectDataset,
-	customWhere exp.Expression,
-) (*goqu.SelectDataset, error) {
-	resolver := filter.New(adapter)
-
-	query, err := applyFilterCustom(
-		query, resolver, params.Filter, customWhere)
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = applySort(query, resolver, params.Sort)
-	if err != nil {
-		return nil, err
-	}
-
-	return query, nil
 }
 
 func buildPage(
