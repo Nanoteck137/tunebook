@@ -1,14 +1,16 @@
 <script lang="ts">
-  import { Play } from "@lucide/svelte";
+  import { ChevronDown, Play } from "@lucide/svelte";
   import { getMusicManager } from "$lib/music-manager.svelte";
 
   type Props = {
     id: string;
     cover: string;
     name: string;
+    expanded?: boolean;
+    onToggle?: () => void;
   };
 
-  const { id, cover, name }: Props = $props();
+  const { id, cover, name, expanded = false, onToggle }: Props = $props();
   const musicManager = getMusicManager();
 
   async function play() {
@@ -44,4 +46,18 @@
   >
     {name}
   </a>
+
+  {#if onToggle}
+    <button
+      class="mt-1 flex w-40 cursor-pointer items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+      onclick={onToggle}
+      aria-expanded={expanded}
+    >
+      <ChevronDown
+        size={14}
+        class="transition-transform {expanded ? 'rotate-180' : ''}"
+      />
+      {expanded ? "Hide tracks" : "Show tracks"}
+    </button>
+  {/if}
 </div>

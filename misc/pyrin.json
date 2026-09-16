@@ -1002,6 +1002,146 @@
       ]
     },
     {
+      "name": "GetUserYearReview",
+      "fields": [
+        {
+          "name": "review",
+          "type": "YearStat",
+          "omitEmpty": false
+        },
+        {
+          "name": "tracks",
+          "type": "[]ReviewTrack",
+          "omitEmpty": false
+        },
+        {
+          "name": "albums",
+          "type": "[]ReviewAlbum",
+          "omitEmpty": false
+        },
+        {
+          "name": "artists",
+          "type": "[]ReviewArtist",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "albumCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "artistCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "artistTracks",
+          "type": "[]ReviewArtistTracks",
+          "omitEmpty": false
+        },
+        {
+          "name": "albumTracks",
+          "type": "[]ReviewAlbumTracks",
+          "omitEmpty": false
+        },
+        {
+          "name": "months",
+          "type": "[]ReviewMonth",
+          "omitEmpty": false
+        },
+        {
+          "name": "day",
+          "type": "*ReviewDay",
+          "omitEmpty": false
+        },
+        {
+          "name": "hours",
+          "type": "[]ReviewHour",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]ReviewTag",
+          "omitEmpty": false
+        },
+        {
+          "name": "decades",
+          "type": "[]ReviewDecade",
+          "omitEmpty": false
+        },
+        {
+          "name": "milestones",
+          "type": "*ReviewMilestones",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthTopAlbums",
+      "fields": [
+        {
+          "name": "albums",
+          "type": "[]ReviewAlbum",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthTopArtists",
+      "fields": [
+        {
+          "name": "artists",
+          "type": "[]ReviewArtist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthTopTracks",
+      "fields": [
+        {
+          "name": "tracks",
+          "type": "[]ReviewTrack",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewTopAlbums",
+      "fields": [
+        {
+          "name": "albums",
+          "type": "[]ReviewAlbum",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewTopArtists",
+      "fields": [
+        {
+          "name": "artists",
+          "type": "[]ReviewArtist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewTopTracks",
+      "fields": [
+        {
+          "name": "tracks",
+          "type": "[]ReviewTrack",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetUserYearStats",
       "fields": [
         {
@@ -1297,6 +1437,301 @@
         {
           "name": "filterIds",
           "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewAlbum",
+      "fields": [
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "album",
+          "type": "Album",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewAlbumTracks",
+      "fields": [
+        {
+          "name": "album",
+          "type": "Album",
+          "omitEmpty": false
+        },
+        {
+          "name": "tracks",
+          "type": "[]ReviewInnerTrack",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewArtist",
+      "fields": [
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "artist",
+          "type": "Artist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewArtistTracks",
+      "fields": [
+        {
+          "name": "artist",
+          "type": "Artist",
+          "omitEmpty": false
+        },
+        {
+          "name": "tracks",
+          "type": "[]ReviewInnerTrack",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewDay",
+      "fields": [
+        {
+          "name": "day",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewDecade",
+      "fields": [
+        {
+          "name": "decade",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewHour",
+      "fields": [
+        {
+          "name": "hour",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewInnerTrack",
+      "fields": [
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playTime",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "track",
+          "type": "Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewMilestones",
+      "fields": [
+        {
+          "name": "firstTrack",
+          "type": "*Track",
+          "omitEmpty": false
+        },
+        {
+          "name": "lastTrack",
+          "type": "*Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewMonth",
+      "fields": [
+        {
+          "name": "month",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playTime",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "daysActive",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "longestStreak",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "avgCompletion",
+          "type": "float",
+          "omitEmpty": false
+        },
+        {
+          "name": "skipCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "uniqueTracks",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "favoritePlays",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "albumCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "artistCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "tracks",
+          "type": "[]ReviewTrack",
+          "omitEmpty": false
+        },
+        {
+          "name": "albums",
+          "type": "[]ReviewAlbum",
+          "omitEmpty": false
+        },
+        {
+          "name": "artists",
+          "type": "[]ReviewArtist",
+          "omitEmpty": false
+        },
+        {
+          "name": "hours",
+          "type": "[]ReviewHour",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]ReviewTag",
+          "omitEmpty": false
+        },
+        {
+          "name": "decades",
+          "type": "[]ReviewDecade",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewTag",
+      "fields": [
+        {
+          "name": "tagSlug",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ReviewTrack",
+      "fields": [
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "track",
+          "type": "Track",
           "omitEmpty": false
         }
       ]
@@ -1648,6 +2083,46 @@
           "name": "listeningTime",
           "type": "int",
           "omitEmpty": false
+        },
+        {
+          "name": "daysActive",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "longestStreak",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "avgCompletion",
+          "type": "float",
+          "omitEmpty": false
+        },
+        {
+          "name": "skipCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "uniqueTracks",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "favoritePlays",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "prevTrackCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "prevListeningTime",
+          "type": "int",
+          "omitEmpty": false
         }
       ]
     }
@@ -1835,6 +2310,12 @@
       "name": "GeneratePlaylistImage",
       "method": "POST",
       "path": "/api/v1/playlists/:playlistId/images/generate"
+    },
+    {
+      "type": "api",
+      "name": "GenerateUserReview",
+      "method": "POST",
+      "path": "/api/v1/users/:userId/reviews/:year"
     },
     {
       "type": "api",
@@ -2062,6 +2543,55 @@
       "method": "GET",
       "path": "/api/v1/favorites/users/:userId/tracks",
       "response": "GetUserFavorites"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReview",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/reviews/:year",
+      "response": "GetUserYearReview"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthTopAlbums",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/reviews/:year/months/:month/top-albums",
+      "response": "GetUserYearReviewMonthTopAlbums"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthTopArtists",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/reviews/:year/months/:month/top-artists",
+      "response": "GetUserYearReviewMonthTopArtists"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthTopTracks",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/reviews/:year/months/:month/top-tracks",
+      "response": "GetUserYearReviewMonthTopTracks"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewTopAlbums",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/reviews/:year/top-albums",
+      "response": "GetUserYearReviewTopAlbums"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewTopArtists",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/reviews/:year/top-artists",
+      "response": "GetUserYearReviewTopArtists"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewTopTracks",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/reviews/:year/top-tracks",
+      "response": "GetUserYearReviewTopTracks"
     },
     {
       "type": "api",

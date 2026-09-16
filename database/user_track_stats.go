@@ -101,32 +101,6 @@ func (db DB) GetUserTopTracks(
 	return Multiple[UserTopTrack](db, ctx, query)
 }
 
-type UserYearStats struct {
-	Year          int   `db:"year"`
-	TrackCount    int   `db:"track_count"`
-	ListeningTime int64 `db:"listening_time"`
-}
-
-func (db DB) GetUserYearStats(
-	ctx context.Context,
-	userId string,
-) ([]UserYearStats, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			userTrackStatsTbl.Col("year"),
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("track_count"),
-			goqu.SUM(userTrackStatsTbl.Col("play_time")).As("listening_time"),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("year"),
-		).
-		GroupBy(userTrackStatsTbl.Col("year")).
-		Order(userTrackStatsTbl.Col("year").Desc())
-
-	return Multiple[UserYearStats](db, ctx, query)
-}
-
 func (db DB) UpsertUserTrackStats(
 	ctx context.Context,
 	params UpsertUserTrackStatsParams,

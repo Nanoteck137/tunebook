@@ -2,13 +2,9 @@
 	import { BarChart3, ChevronRight } from "@lucide/svelte";
 	import type { YearStat } from "$lib/api/types";
 
-	// TODO(api): add `generatedAt` (ISO timestamp of when the report was
-	// generated) to the GetUserYearStats response.
-	type ReviewStat = YearStat & { generatedAt?: string };
-
 	let { data } = $props();
 
-	let yearStats = $derived((data.yearStats as ReviewStat[] | null) ?? []);
+	let yearStats = $derived((data.yearStats as YearStat[] | null) ?? []);
 
 	let currentYear = $derived(new Date().getFullYear());
 
@@ -20,15 +16,6 @@
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);
 		return `${hours}h ${minutes}m`;
-	}
-
-	function formatReportDate(iso?: string): string {
-		const d = iso ? new Date(iso) : new Date();
-		return d.toLocaleDateString(undefined, {
-			month: "short",
-			day: "numeric",
-			year: "numeric",
-		});
 	}
 </script>
 
@@ -72,9 +59,6 @@
 						<span class="text-sm text-muted-foreground">
 							{stat.trackCount.toLocaleString()} tracks &middot;
 							{formatListeningTime(stat.listeningTime)}
-						</span>
-						<span class="text-xs text-muted-foreground/80">
-							Report generated {formatReportDate(stat.generatedAt)}
 						</span>
 					</div>
 

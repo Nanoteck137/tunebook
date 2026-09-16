@@ -129,10 +129,154 @@ type YearStat struct {
 	Year          int   `json:"year"`
 	TrackCount    int   `json:"trackCount"`
 	ListeningTime int64 `json:"listeningTime"`
+
+	DaysActive    int     `json:"daysActive"`
+	LongestStreak int     `json:"longestStreak"`
+	AvgCompletion float64 `json:"avgCompletion"`
+	SkipCount     int     `json:"skipCount"`
+	UniqueTracks  int     `json:"uniqueTracks"`
+	FavoritePlays int     `json:"favoritePlays"`
+
+	PrevTrackCount    int   `json:"prevTrackCount"`
+	PrevListeningTime int64 `json:"prevListeningTime"`
 }
 
 type GetUserYearStats struct {
 	Stats []YearStat `json:"stats"`
+}
+
+type ReviewTrack struct {
+	Rank      int   `json:"rank"`
+	PlayCount int   `json:"playCount"`
+	Track     Track `json:"track"`
+}
+
+type ReviewAlbum struct {
+	Rank      int   `json:"rank"`
+	PlayCount int   `json:"playCount"`
+	Album     Album `json:"album"`
+}
+
+type ReviewArtist struct {
+	Rank      int    `json:"rank"`
+	PlayCount int    `json:"playCount"`
+	Artist    Artist `json:"artist"`
+}
+
+type ReviewInnerTrack struct {
+	Rank      int   `json:"rank"`
+	PlayCount int   `json:"playCount"`
+	PlayTime  int64 `json:"playTime"`
+	Track     Track `json:"track"`
+}
+
+type ReviewArtistTracks struct {
+	Artist Artist             `json:"artist"`
+	Tracks []ReviewInnerTrack `json:"tracks"`
+}
+
+type ReviewAlbumTracks struct {
+	Album  Album              `json:"album"`
+	Tracks []ReviewInnerTrack `json:"tracks"`
+}
+
+type ReviewMonth struct {
+	Month     int   `json:"month"`
+	PlayCount int   `json:"playCount"`
+	PlayTime  int64 `json:"playTime"`
+
+	DaysActive    int     `json:"daysActive"`
+	LongestStreak int     `json:"longestStreak"`
+	AvgCompletion float64 `json:"avgCompletion"`
+	SkipCount     int     `json:"skipCount"`
+	UniqueTracks  int     `json:"uniqueTracks"`
+	FavoritePlays int     `json:"favoritePlays"`
+
+	TrackCount  int `json:"trackCount"`
+	AlbumCount  int `json:"albumCount"`
+	ArtistCount int `json:"artistCount"`
+
+	Tracks  []ReviewTrack  `json:"tracks"`
+	Albums  []ReviewAlbum  `json:"albums"`
+	Artists []ReviewArtist `json:"artists"`
+
+	Hours   []ReviewHour   `json:"hours"`
+	Tags    []ReviewTag    `json:"tags"`
+	Decades []ReviewDecade `json:"decades"`
+}
+
+type ReviewDay struct {
+	Day       string `json:"day"`
+	PlayCount int    `json:"playCount"`
+}
+
+type ReviewHour struct {
+	Hour      int `json:"hour"`
+	PlayCount int `json:"playCount"`
+}
+
+type ReviewTag struct {
+	TagSlug   string `json:"tagSlug"`
+	Rank      int    `json:"rank"`
+	PlayCount int    `json:"playCount"`
+}
+
+type ReviewDecade struct {
+	Decade    int `json:"decade"`
+	Rank      int `json:"rank"`
+	PlayCount int `json:"playCount"`
+}
+
+type ReviewMilestones struct {
+	FirstTrack *Track `json:"firstTrack"`
+	LastTrack  *Track `json:"lastTrack"`
+}
+
+type GetUserYearReview struct {
+	Review YearStat `json:"review"`
+
+	Tracks  []ReviewTrack  `json:"tracks"`
+	Albums  []ReviewAlbum  `json:"albums"`
+	Artists []ReviewArtist `json:"artists"`
+
+	TrackCount  int `json:"trackCount"`
+	AlbumCount  int `json:"albumCount"`
+	ArtistCount int `json:"artistCount"`
+
+	ArtistTracks []ReviewArtistTracks `json:"artistTracks"`
+	AlbumTracks  []ReviewAlbumTracks  `json:"albumTracks"`
+
+	Months []ReviewMonth `json:"months"`
+	Day    *ReviewDay    `json:"day"`
+
+	Hours      []ReviewHour      `json:"hours"`
+	Tags       []ReviewTag       `json:"tags"`
+	Decades    []ReviewDecade    `json:"decades"`
+	Milestones *ReviewMilestones `json:"milestones"`
+}
+
+type GetUserYearReviewTopTracks struct {
+	Tracks []ReviewTrack `json:"tracks"`
+}
+
+type GetUserYearReviewTopAlbums struct {
+	Albums []ReviewAlbum `json:"albums"`
+}
+
+type GetUserYearReviewTopArtists struct {
+	Artists []ReviewArtist `json:"artists"`
+}
+
+type GetUserYearReviewMonthTopTracks struct {
+	Tracks []ReviewTrack `json:"tracks"`
+}
+
+type GetUserYearReviewMonthTopAlbums struct {
+	Albums []ReviewAlbum `json:"albums"`
+}
+
+type GetUserYearReviewMonthTopArtists struct {
+	Artists []ReviewArtist `json:"artists"`
 }
 
 func InstallUserHandlers(app core.App, group pyrin.Group) {
@@ -265,6 +409,539 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReview",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/reviews/:year",
+			ResponseType: GetUserYearReview{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				review, err := app.UserService().GetUserYearReview(
+					ctx,
+					service.GetUserYearReviewParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReview{
+					Review: YearStat{
+						Year:          review.Review.Year,
+						TrackCount:    review.Review.TrackCount,
+						ListeningTime: review.Review.ListeningTime,
+
+						DaysActive:    review.Review.DaysActive,
+						LongestStreak: review.Review.LongestStreak,
+						AvgCompletion: review.Review.AvgCompletion,
+						SkipCount:     review.Review.SkipCount,
+						UniqueTracks:  review.Review.UniqueTracks,
+						FavoritePlays: review.Review.FavoritePlays,
+
+						PrevTrackCount:    review.Review.PrevTrackCount,
+						PrevListeningTime: review.Review.PrevListeningTime,
+					},
+
+					Tracks:  make([]ReviewTrack, len(review.Tracks)),
+					Albums:  make([]ReviewAlbum, len(review.Albums)),
+					Artists: make([]ReviewArtist, len(review.Artists)),
+
+					TrackCount:  review.TrackCount,
+					AlbumCount:  review.AlbumCount,
+					ArtistCount: review.ArtistCount,
+
+					Months: make([]ReviewMonth, len(review.MonthDetails)),
+				}
+
+				for i, t := range review.Tracks {
+					res.Tracks[i] = ReviewTrack{
+						Rank:      t.Rank,
+						PlayCount: t.PlayCount,
+						Track:     ConvertDBTrack(c, t.Track),
+					}
+				}
+
+				for i, a := range review.Albums {
+					res.Albums[i] = ReviewAlbum{
+						Rank:      a.Rank,
+						PlayCount: a.PlayCount,
+						Album:     ConvertDBAlbum(c, a.Album),
+					}
+				}
+
+				for i, a := range review.Artists {
+					res.Artists[i] = ReviewArtist{
+						Rank:      a.Rank,
+						PlayCount: a.PlayCount,
+						Artist:    ConvertDBArtist(c, a.Artist),
+					}
+				}
+
+				res.ArtistTracks = make([]ReviewArtistTracks, 0, len(review.Artists))
+				for _, a := range review.Artists {
+					inner := review.ArtistTracks[a.Artist.Id]
+
+					tracks := make([]ReviewInnerTrack, len(inner))
+					for i, t := range inner {
+						tracks[i] = ReviewInnerTrack{
+							Rank:      t.Rank,
+							PlayCount: t.PlayCount,
+							PlayTime:  t.PlayTime,
+							Track:     ConvertDBTrack(c, t.Track),
+						}
+					}
+
+					res.ArtistTracks = append(res.ArtistTracks, ReviewArtistTracks{
+						Artist: ConvertDBArtist(c, a.Artist),
+						Tracks: tracks,
+					})
+				}
+
+				res.AlbumTracks = make([]ReviewAlbumTracks, 0, len(review.Albums))
+				for _, a := range review.Albums {
+					inner := review.AlbumTracks[a.Album.Id]
+
+					tracks := make([]ReviewInnerTrack, len(inner))
+					for i, t := range inner {
+						tracks[i] = ReviewInnerTrack{
+							Rank:      t.Rank,
+							PlayCount: t.PlayCount,
+							PlayTime:  t.PlayTime,
+							Track:     ConvertDBTrack(c, t.Track),
+						}
+					}
+
+					res.AlbumTracks = append(res.AlbumTracks, ReviewAlbumTracks{
+						Album:  ConvertDBAlbum(c, a.Album),
+						Tracks: tracks,
+					})
+				}
+
+				for i, m := range review.MonthDetails {
+					tracks := make([]ReviewTrack, len(m.Tracks))
+					for j, t := range m.Tracks {
+						tracks[j] = ReviewTrack{
+							Rank:      t.Rank,
+							PlayCount: t.PlayCount,
+							Track:     ConvertDBTrack(c, t.Track),
+						}
+					}
+
+					albums := make([]ReviewAlbum, len(m.Albums))
+					for j, a := range m.Albums {
+						albums[j] = ReviewAlbum{
+							Rank:      a.Rank,
+							PlayCount: a.PlayCount,
+							Album:     ConvertDBAlbum(c, a.Album),
+						}
+					}
+
+					artists := make([]ReviewArtist, len(m.Artists))
+					for j, a := range m.Artists {
+						artists[j] = ReviewArtist{
+							Rank:      a.Rank,
+							PlayCount: a.PlayCount,
+							Artist:    ConvertDBArtist(c, a.Artist),
+						}
+					}
+
+					hours := make([]ReviewHour, len(m.Hours))
+					for j, h := range m.Hours {
+						hours[j] = ReviewHour{
+							Hour:      h.Hour,
+							PlayCount: h.PlayCount,
+						}
+					}
+
+					tags := make([]ReviewTag, len(m.Tags))
+					for j, t := range m.Tags {
+						tags[j] = ReviewTag{
+							TagSlug:   t.TagSlug,
+							Rank:      t.Rank,
+							PlayCount: t.PlayCount,
+						}
+					}
+
+					decades := make([]ReviewDecade, len(m.Decades))
+					for j, d := range m.Decades {
+						decades[j] = ReviewDecade{
+							Decade:    d.Decade,
+							Rank:      d.Rank,
+							PlayCount: d.PlayCount,
+						}
+					}
+
+					res.Months[i] = ReviewMonth{
+						Month:     m.Month,
+						PlayCount: m.PlayCount,
+						PlayTime:  m.PlayTime,
+
+						DaysActive:    m.DaysActive,
+						LongestStreak: m.LongestStreak,
+						AvgCompletion: m.AvgCompletion,
+						SkipCount:     m.SkipCount,
+						UniqueTracks:  m.UniqueTracks,
+						FavoritePlays: m.FavoritePlays,
+
+						TrackCount:  m.TrackCount,
+						AlbumCount:  m.AlbumCount,
+						ArtistCount: m.ArtistCount,
+
+						Tracks:  tracks,
+						Albums:  albums,
+						Artists: artists,
+
+						Hours:   hours,
+						Tags:    tags,
+						Decades: decades,
+					}
+				}
+
+				if review.Day != nil {
+					res.Day = &ReviewDay{
+						Day:       review.Day.Day,
+						PlayCount: review.Day.PlayCount,
+					}
+				}
+
+				res.Hours = make([]ReviewHour, len(review.Hours))
+				for i, h := range review.Hours {
+					res.Hours[i] = ReviewHour{
+						Hour:      h.Hour,
+						PlayCount: h.PlayCount,
+					}
+				}
+
+				res.Tags = make([]ReviewTag, len(review.Tags))
+				for i, t := range review.Tags {
+					res.Tags[i] = ReviewTag{
+						TagSlug:   t.TagSlug,
+						Rank:      t.Rank,
+						PlayCount: t.PlayCount,
+					}
+				}
+
+				res.Decades = make([]ReviewDecade, len(review.Decades))
+				for i, d := range review.Decades {
+					res.Decades[i] = ReviewDecade{
+						Decade:    d.Decade,
+						Rank:      d.Rank,
+						PlayCount: d.PlayCount,
+					}
+				}
+
+				if review.Milestones != nil {
+					res.Milestones = &ReviewMilestones{}
+					if review.Milestones.First != nil {
+						first := ConvertDBTrack(c, *review.Milestones.First)
+						res.Milestones.FirstTrack = &first
+					}
+					if review.Milestones.Last != nil {
+						last := ConvertDBTrack(c, *review.Milestones.Last)
+						res.Milestones.LastTrack = &last
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewTopTracks",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/reviews/:year/top-tracks",
+			ResponseType: GetUserYearReviewTopTracks{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				top, err := app.UserService().GetUserYearReviewTopTracks(
+					ctx,
+					service.GetUserYearReviewTopTracksParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewTopTracks{
+					Tracks: make([]ReviewTrack, len(top.Tracks)),
+				}
+				for i, t := range top.Tracks {
+					res.Tracks[i] = ReviewTrack{
+						Rank:      t.Rank,
+						PlayCount: t.PlayCount,
+						Track:     ConvertDBTrack(c, t.Track),
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewTopAlbums",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/reviews/:year/top-albums",
+			ResponseType: GetUserYearReviewTopAlbums{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				top, err := app.UserService().GetUserYearReviewTopAlbums(
+					ctx,
+					service.GetUserYearReviewTopAlbumsParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewTopAlbums{
+					Albums: make([]ReviewAlbum, len(top.Albums)),
+				}
+				for i, a := range top.Albums {
+					res.Albums[i] = ReviewAlbum{
+						Rank:      a.Rank,
+						PlayCount: a.PlayCount,
+						Album:     ConvertDBAlbum(c, a.Album),
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewTopArtists",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/reviews/:year/top-artists",
+			ResponseType: GetUserYearReviewTopArtists{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				top, err := app.UserService().GetUserYearReviewTopArtists(
+					ctx,
+					service.GetUserYearReviewTopArtistsParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewTopArtists{
+					Artists: make([]ReviewArtist, len(top.Artists)),
+				}
+				for i, a := range top.Artists {
+					res.Artists[i] = ReviewArtist{
+						Rank:      a.Rank,
+						PlayCount: a.PlayCount,
+						Artist:    ConvertDBArtist(c, a.Artist),
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewMonthTopTracks",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/reviews/:year/months/:month/top-tracks",
+			ResponseType: GetUserYearReviewMonthTopTracks{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				month, err := parseIntParam(c, "month")
+				if err != nil {
+					return nil, err
+				}
+				if month < 1 || month > 12 {
+					return nil, InvalidParam("month")
+				}
+
+				top, err := app.UserService().GetUserYearReviewMonthTopTracks(
+					ctx,
+					service.GetUserYearReviewMonthTopTracksParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+						Month:  month,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewMonthTopTracks{
+					Tracks: make([]ReviewTrack, len(top.Tracks)),
+				}
+				for i, t := range top.Tracks {
+					res.Tracks[i] = ReviewTrack{
+						Rank:      t.Rank,
+						PlayCount: t.PlayCount,
+						Track:     ConvertDBTrack(c, t.Track),
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewMonthTopAlbums",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/reviews/:year/months/:month/top-albums",
+			ResponseType: GetUserYearReviewMonthTopAlbums{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				month, err := parseIntParam(c, "month")
+				if err != nil {
+					return nil, err
+				}
+				if month < 1 || month > 12 {
+					return nil, InvalidParam("month")
+				}
+
+				top, err := app.UserService().GetUserYearReviewMonthTopAlbums(
+					ctx,
+					service.GetUserYearReviewMonthTopAlbumsParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+						Month:  month,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewMonthTopAlbums{
+					Albums: make([]ReviewAlbum, len(top.Albums)),
+				}
+				for i, a := range top.Albums {
+					res.Albums[i] = ReviewAlbum{
+						Rank:      a.Rank,
+						PlayCount: a.PlayCount,
+						Album:     ConvertDBAlbum(c, a.Album),
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewMonthTopArtists",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/reviews/:year/months/:month/top-artists",
+			ResponseType: GetUserYearReviewMonthTopArtists{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				month, err := parseIntParam(c, "month")
+				if err != nil {
+					return nil, err
+				}
+				if month < 1 || month > 12 {
+					return nil, InvalidParam("month")
+				}
+
+				top, err := app.UserService().GetUserYearReviewMonthTopArtists(
+					ctx,
+					service.GetUserYearReviewMonthTopArtistsParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+						Month:  month,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewMonthTopArtists{
+					Artists: make([]ReviewArtist, len(top.Artists)),
+				}
+				for i, a := range top.Artists {
+					res.Artists[i] = ReviewArtist{
+						Rank:      a.Rank,
+						PlayCount: a.PlayCount,
+						Artist:    ConvertDBArtist(c, a.Artist),
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "GenerateUserReview",
+			Method: http.MethodPost,
+			Path:   "/users/:userId/reviews/:year",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.UserService().GenerateUserReview(
+					ctx,
+					service.GenerateUserReviewParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				return nil, nil
 			},
 		},
 	)

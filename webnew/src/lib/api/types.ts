@@ -782,8 +782,255 @@ export const YearStat = z.object({
   "trackCount": z.number(),
   // Name: YearStat.listeningTime
   "listeningTime": z.number(),
+  // Name: YearStat.daysActive
+  "daysActive": z.number(),
+  // Name: YearStat.longestStreak
+  "longestStreak": z.number(),
+  // Name: YearStat.avgCompletion
+  "avgCompletion": z.number(),
+  // Name: YearStat.skipCount
+  "skipCount": z.number(),
+  // Name: YearStat.uniqueTracks
+  "uniqueTracks": z.number(),
+  // Name: YearStat.favoritePlays
+  "favoritePlays": z.number(),
+  // Name: YearStat.prevTrackCount
+  "prevTrackCount": z.number(),
+  // Name: YearStat.prevListeningTime
+  "prevListeningTime": z.number(),
 });
 export type YearStat = z.infer<typeof YearStat>;
+
+// Name: ReviewTrack
+export const ReviewTrack = z.object({
+  // Name: ReviewTrack.rank
+  "rank": z.number(),
+  // Name: ReviewTrack.playCount
+  "playCount": z.number(),
+  // Name: ReviewTrack.track
+  "track": Track,
+});
+export type ReviewTrack = z.infer<typeof ReviewTrack>;
+
+// Name: ReviewAlbum
+export const ReviewAlbum = z.object({
+  // Name: ReviewAlbum.rank
+  "rank": z.number(),
+  // Name: ReviewAlbum.playCount
+  "playCount": z.number(),
+  // Name: ReviewAlbum.album
+  "album": Album,
+});
+export type ReviewAlbum = z.infer<typeof ReviewAlbum>;
+
+// Name: ReviewArtist
+export const ReviewArtist = z.object({
+  // Name: ReviewArtist.rank
+  "rank": z.number(),
+  // Name: ReviewArtist.playCount
+  "playCount": z.number(),
+  // Name: ReviewArtist.artist
+  "artist": Artist,
+});
+export type ReviewArtist = z.infer<typeof ReviewArtist>;
+
+// Name: ReviewInnerTrack
+export const ReviewInnerTrack = z.object({
+  // Name: ReviewInnerTrack.rank
+  "rank": z.number(),
+  // Name: ReviewInnerTrack.playCount
+  "playCount": z.number(),
+  // Name: ReviewInnerTrack.playTime
+  "playTime": z.number(),
+  // Name: ReviewInnerTrack.track
+  "track": Track,
+});
+export type ReviewInnerTrack = z.infer<typeof ReviewInnerTrack>;
+
+// Name: ReviewArtistTracks
+export const ReviewArtistTracks = z.object({
+  // Name: ReviewArtistTracks.artist
+  "artist": Artist,
+  // Name: ReviewArtistTracks.tracks
+  "tracks": z.array(ReviewInnerTrack),
+});
+export type ReviewArtistTracks = z.infer<typeof ReviewArtistTracks>;
+
+// Name: ReviewAlbumTracks
+export const ReviewAlbumTracks = z.object({
+  // Name: ReviewAlbumTracks.album
+  "album": Album,
+  // Name: ReviewAlbumTracks.tracks
+  "tracks": z.array(ReviewInnerTrack),
+});
+export type ReviewAlbumTracks = z.infer<typeof ReviewAlbumTracks>;
+
+// Name: ReviewHour
+export const ReviewHour = z.object({
+  // Name: ReviewHour.hour
+  "hour": z.number(),
+  // Name: ReviewHour.playCount
+  "playCount": z.number(),
+});
+export type ReviewHour = z.infer<typeof ReviewHour>;
+
+// Name: ReviewTag
+export const ReviewTag = z.object({
+  // Name: ReviewTag.tagSlug
+  "tagSlug": z.string(),
+  // Name: ReviewTag.rank
+  "rank": z.number(),
+  // Name: ReviewTag.playCount
+  "playCount": z.number(),
+});
+export type ReviewTag = z.infer<typeof ReviewTag>;
+
+// Name: ReviewDecade
+export const ReviewDecade = z.object({
+  // Name: ReviewDecade.decade
+  "decade": z.number(),
+  // Name: ReviewDecade.rank
+  "rank": z.number(),
+  // Name: ReviewDecade.playCount
+  "playCount": z.number(),
+});
+export type ReviewDecade = z.infer<typeof ReviewDecade>;
+
+// Name: ReviewMonth
+export const ReviewMonth = z.object({
+  // Name: ReviewMonth.month
+  "month": z.number(),
+  // Name: ReviewMonth.playCount
+  "playCount": z.number(),
+  // Name: ReviewMonth.playTime
+  "playTime": z.number(),
+  // Name: ReviewMonth.daysActive
+  "daysActive": z.number(),
+  // Name: ReviewMonth.longestStreak
+  "longestStreak": z.number(),
+  // Name: ReviewMonth.avgCompletion
+  "avgCompletion": z.number(),
+  // Name: ReviewMonth.skipCount
+  "skipCount": z.number(),
+  // Name: ReviewMonth.uniqueTracks
+  "uniqueTracks": z.number(),
+  // Name: ReviewMonth.favoritePlays
+  "favoritePlays": z.number(),
+  // Name: ReviewMonth.trackCount
+  "trackCount": z.number(),
+  // Name: ReviewMonth.albumCount
+  "albumCount": z.number(),
+  // Name: ReviewMonth.artistCount
+  "artistCount": z.number(),
+  // Name: ReviewMonth.tracks
+  "tracks": z.array(ReviewTrack),
+  // Name: ReviewMonth.albums
+  "albums": z.array(ReviewAlbum),
+  // Name: ReviewMonth.artists
+  "artists": z.array(ReviewArtist),
+  // Name: ReviewMonth.hours
+  "hours": z.array(ReviewHour),
+  // Name: ReviewMonth.tags
+  "tags": z.array(ReviewTag),
+  // Name: ReviewMonth.decades
+  "decades": z.array(ReviewDecade),
+});
+export type ReviewMonth = z.infer<typeof ReviewMonth>;
+
+// Name: ReviewDay
+export const ReviewDay = z.object({
+  // Name: ReviewDay.day
+  "day": z.string(),
+  // Name: ReviewDay.playCount
+  "playCount": z.number(),
+});
+export type ReviewDay = z.infer<typeof ReviewDay>;
+
+// Name: ReviewMilestones
+export const ReviewMilestones = z.object({
+  // Name: ReviewMilestones.firstTrack
+  "firstTrack": Track.nullable(),
+  // Name: ReviewMilestones.lastTrack
+  "lastTrack": Track.nullable(),
+});
+export type ReviewMilestones = z.infer<typeof ReviewMilestones>;
+
+// Name: GetUserYearReview
+export const GetUserYearReview = z.object({
+  // Name: GetUserYearReview.review
+  "review": YearStat,
+  // Name: GetUserYearReview.tracks
+  "tracks": z.array(ReviewTrack),
+  // Name: GetUserYearReview.albums
+  "albums": z.array(ReviewAlbum),
+  // Name: GetUserYearReview.artists
+  "artists": z.array(ReviewArtist),
+  // Name: GetUserYearReview.trackCount
+  "trackCount": z.number(),
+  // Name: GetUserYearReview.albumCount
+  "albumCount": z.number(),
+  // Name: GetUserYearReview.artistCount
+  "artistCount": z.number(),
+  // Name: GetUserYearReview.artistTracks
+  "artistTracks": z.array(ReviewArtistTracks),
+  // Name: GetUserYearReview.albumTracks
+  "albumTracks": z.array(ReviewAlbumTracks),
+  // Name: GetUserYearReview.months
+  "months": z.array(ReviewMonth),
+  // Name: GetUserYearReview.day
+  "day": ReviewDay.nullable(),
+  // Name: GetUserYearReview.hours
+  "hours": z.array(ReviewHour),
+  // Name: GetUserYearReview.tags
+  "tags": z.array(ReviewTag),
+  // Name: GetUserYearReview.decades
+  "decades": z.array(ReviewDecade),
+  // Name: GetUserYearReview.milestones
+  "milestones": ReviewMilestones.nullable(),
+});
+export type GetUserYearReview = z.infer<typeof GetUserYearReview>;
+
+// Name: GetUserYearReviewMonthTopAlbums
+export const GetUserYearReviewMonthTopAlbums = z.object({
+  // Name: GetUserYearReviewMonthTopAlbums.albums
+  "albums": z.array(ReviewAlbum),
+});
+export type GetUserYearReviewMonthTopAlbums = z.infer<typeof GetUserYearReviewMonthTopAlbums>;
+
+// Name: GetUserYearReviewMonthTopArtists
+export const GetUserYearReviewMonthTopArtists = z.object({
+  // Name: GetUserYearReviewMonthTopArtists.artists
+  "artists": z.array(ReviewArtist),
+});
+export type GetUserYearReviewMonthTopArtists = z.infer<typeof GetUserYearReviewMonthTopArtists>;
+
+// Name: GetUserYearReviewMonthTopTracks
+export const GetUserYearReviewMonthTopTracks = z.object({
+  // Name: GetUserYearReviewMonthTopTracks.tracks
+  "tracks": z.array(ReviewTrack),
+});
+export type GetUserYearReviewMonthTopTracks = z.infer<typeof GetUserYearReviewMonthTopTracks>;
+
+// Name: GetUserYearReviewTopAlbums
+export const GetUserYearReviewTopAlbums = z.object({
+  // Name: GetUserYearReviewTopAlbums.albums
+  "albums": z.array(ReviewAlbum),
+});
+export type GetUserYearReviewTopAlbums = z.infer<typeof GetUserYearReviewTopAlbums>;
+
+// Name: GetUserYearReviewTopArtists
+export const GetUserYearReviewTopArtists = z.object({
+  // Name: GetUserYearReviewTopArtists.artists
+  "artists": z.array(ReviewArtist),
+});
+export type GetUserYearReviewTopArtists = z.infer<typeof GetUserYearReviewTopArtists>;
+
+// Name: GetUserYearReviewTopTracks
+export const GetUserYearReviewTopTracks = z.object({
+  // Name: GetUserYearReviewTopTracks.tracks
+  "tracks": z.array(ReviewTrack),
+});
+export type GetUserYearReviewTopTracks = z.infer<typeof GetUserYearReviewTopTracks>;
 
 // Name: GetUserYearStats
 export const GetUserYearStats = z.object({
