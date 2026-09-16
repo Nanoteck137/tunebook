@@ -135,12 +135,32 @@ func (s *UserService) GetUserStats(
 	stats, err := s.db.GetUserStats(ctx, params.UserId)
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
-			return database.UserStats{
+			stats = database.UserStats{
 				UserId: params.UserId,
-			}, nil
+			}
+		} else {
+			return database.UserStats{}, userErr.Wrap("get user stats", err)
 		}
+	}
 
-		return database.UserStats{}, userErr.Wrap("get user stats", err)
+	numFavoriteTracks, err := s.db.GetUserFavoriteCount(ctx, params.UserId)
+	if err != nil {
+		if !errors.Is(err, database.ErrItemNotFound) {
+			return database.UserStats{}, userErr.Wrap(
+				"get user stats: favorite tracks", err)
+		}
+	} else {
+		stats.NumFavoriteTracks = numFavoriteTracks
+	}
+
+	numPlaylistsCreated, err := s.db.GetUserPlaylistCount(ctx, params.UserId)
+	if err != nil {
+		if !errors.Is(err, database.ErrItemNotFound) {
+			return database.UserStats{}, userErr.Wrap(
+				"get user stats: playlists created", err)
+		}
+	} else {
+		stats.NumPlaylistsCreated = numPlaylistsCreated
 	}
 
 	return stats, nil
