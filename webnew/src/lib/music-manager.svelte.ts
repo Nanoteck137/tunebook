@@ -557,6 +557,12 @@ export class MusicManager {
 			queueIndexToTrackId?: string;
 		} = {},
 	) {
+		// Report the currently playing track before the queue is replaced so
+		// that its history isn't lost.
+		if (options.append !== "back") {
+			await this.#checkSendTrackEvent();
+		}
+
 		const position = options.append === "back" ? "end" : "replace";
 		const body = {
 			position,
@@ -640,6 +646,10 @@ export class MusicManager {
 		if (!params.trackIds || params.trackIds.length === 0) {
 			return;
 		}
+
+		// Report the currently playing track before the queue is replaced so
+		// that its history isn't lost.
+		await this.#checkSendTrackEvent();
 
 		const res = await this.apiClient.addTracksToQueue(this.#deviceId, {
 			trackIds: params.trackIds,
