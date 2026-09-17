@@ -411,16 +411,16 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				res := GetUserYearReview{
-Review: YearStat{
-					Year:          review.Review.Year,
-					TrackCount:    review.Review.TrackCount,
-					ListeningTime: review.Review.ListeningTime,
+					Review: YearStat{
+						Year:          review.Review.Year,
+						TrackCount:    review.Review.TrackCount,
+						ListeningTime: review.Review.ListeningTime,
 
-					AvgCompletion: review.Review.AvgCompletion,
-					SkipCount:     review.Review.SkipCount,
-					UniqueTracks:  review.Review.UniqueTracks,
-					FavoritePlays: review.Review.FavoritePlays,
-				},
+						AvgCompletion: review.Review.AvgCompletion,
+						SkipCount:     review.Review.SkipCount,
+						UniqueTracks:  review.Review.UniqueTracks,
+						FavoritePlays: review.Review.FavoritePlays,
+					},
 
 					Tracks:  make([]ReviewTrack, len(review.Tracks)),
 					Albums:  make([]ReviewAlbum, len(review.Albums)),
@@ -543,30 +543,30 @@ Review: YearStat{
 						}
 					}
 
-res.Months[i] = ReviewMonth{
-					Month:     m.Month,
-					PlayCount: m.PlayCount,
-					PlayTime:  m.PlayTime,
+					res.Months[i] = ReviewMonth{
+						Month:     m.Month,
+						PlayCount: m.PlayCount,
+						PlayTime:  m.PlayTime,
 
-					AvgCompletion: m.AvgCompletion,
-					SkipCount:     m.SkipCount,
-					UniqueTracks:  m.UniqueTracks,
-					FavoritePlays: m.FavoritePlays,
+						AvgCompletion: m.AvgCompletion,
+						SkipCount:     m.SkipCount,
+						UniqueTracks:  m.UniqueTracks,
+						FavoritePlays: m.FavoritePlays,
 
-					TrackCount:  m.TrackCount,
-					AlbumCount:  m.AlbumCount,
-					ArtistCount: m.ArtistCount,
+						TrackCount:  m.TrackCount,
+						AlbumCount:  m.AlbumCount,
+						ArtistCount: m.ArtistCount,
 
-					Tracks:  tracks,
-					Albums:  albums,
-					Artists: artists,
+						Tracks:  tracks,
+						Albums:  albums,
+						Artists: artists,
 
-					Tags:    tags,
-					Decades: decades,
+						Tags:    tags,
+						Decades: decades,
+					}
 				}
-			}
 
-			res.Tags = make([]ReviewTag, len(review.Tags))
+				res.Tags = make([]ReviewTag, len(review.Tags))
 				for i, t := range review.Tags {
 					res.Tags[i] = ReviewTag{
 						TagSlug:   t.TagSlug,

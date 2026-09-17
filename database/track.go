@@ -58,21 +58,21 @@ func TrackSchema() *schema.Schema {
 		AddField("id", query.TypeString, schema.Column("tracks.id")).
 		AddField("name", query.TypeString, schema.Column("tracks.name")).
 		AddField(
-			"number", 
-			query.TypeInt, 
-			schema.Column("tracks.number"), 
+			"number",
+			query.TypeInt,
+			schema.Column("tracks.number"),
 			schema.Nullable(),
 		).
 		AddField(
-			"duration", 
-			query.TypeInt, 
-			schema.Column("tracks.duration"), 
+			"duration",
+			query.TypeInt,
+			schema.Column("tracks.duration"),
 			schema.Nullable(),
 		).
 		AddField(
-			"year", 
-			query.TypeInt, 
-			schema.Column("tracks.year"), 
+			"year",
+			query.TypeInt,
+			schema.Column("tracks.year"),
 			schema.Nullable(),
 		).
 		AddField(
@@ -84,24 +84,24 @@ func TrackSchema() *schema.Schema {
 		AddField(
 			"artistName", query.TypeString, schema.Column("artists.name")).
 		AddField(
-			"tags", 
-			query.TypeRelation, 
+			"tags",
+			query.TypeRelation,
 			schema.Relation(
-				"tracks_tags", 
-				"track_id", 
-				"tag_slug", 
-				query.TypeString, 
+				"tracks_tags",
+				"track_id",
+				"tag_slug",
+				query.TypeString,
 				"tracks.id",
 			),
 		).
 		AddField(
-			"featuringArtists", 
-			query.TypeRelation, 
+			"featuringArtists",
+			query.TypeRelation,
 			schema.Relation(
-				"tracks_featuring_artists", 
-				"track_id", 
-				"artist_id", 
-				query.TypeString, 
+				"tracks_featuring_artists",
+				"track_id",
+				"artist_id",
+				query.TypeString,
 				"tracks.id",
 			),
 		).

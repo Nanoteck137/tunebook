@@ -70,10 +70,10 @@ func AlbumSchema() *schema.Schema {
 			"tags",
 			query.TypeRelation,
 			schema.Relation(
-				"albums_tags", 
-				"album_id", 
-				"tag_slug", 
-				query.TypeString, 
+				"albums_tags",
+				"album_id",
+				"tag_slug",
+				query.TypeString,
 				"albums.id",
 			),
 		).
