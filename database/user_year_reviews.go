@@ -2,20 +2,21 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
 )
 
 var (
-	userYearReviewsTbl            = goqu.T("user_year_reviews")
+	userYearReviewsTbl = goqu.T("user_year_reviews")
 
-	userYearReviewTracksTbl       = goqu.T("user_year_review_tracks")
-	userYearReviewAlbumsTbl       = goqu.T("user_year_review_albums")
-	userYearReviewArtistsTbl      = goqu.T("user_year_review_artists")
-	userYearReviewMonthsTbl       = goqu.T("user_year_review_months")
-	userYearReviewTagsTbl         = goqu.T("user_year_review_tags")
-	userYearReviewDecadesTbl      = goqu.T("user_year_review_decades")
+	userYearReviewTracksTbl  = goqu.T("user_year_review_tracks")
+	userYearReviewAlbumsTbl  = goqu.T("user_year_review_albums")
+	userYearReviewArtistsTbl = goqu.T("user_year_review_artists")
+	userYearReviewMonthsTbl  = goqu.T("user_year_review_months")
+	userYearReviewTagsTbl    = goqu.T("user_year_review_tags")
+	userYearReviewDecadesTbl = goqu.T("user_year_review_decades")
 
 	userYearReviewMonthTracksTbl  = goqu.T("user_year_review_month_tracks")
 	userYearReviewMonthAlbumsTbl  = goqu.T("user_year_review_month_albums")
@@ -27,9 +28,6 @@ var (
 const (
 	// TODO(patrik): Rename
 	TopYearReviewItems = 5
-
-	// TODO(patrik): Rename
-	TopYearTags = 6
 )
 
 type UserYearReview struct {
@@ -245,106 +243,201 @@ func (db DB) GetUserYearSummary(
 	return Single[UserYearSummary](db, ctx, query)
 }
 
-type UserYearTopTrack struct {
-	TrackId   string `db:"track_id"`
-	PlayCount int    `db:"play_count"`
-}
-
-func (db DB) GetUserYearTopTracks(
-	ctx context.Context,
+func userYearReviewTracksInsertQuery(
 	userId string,
 	year int,
-) ([]UserYearTopTrack, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			userTrackStatsTbl.Col("track_id"),
-			userTrackStatsTbl.Col("play_count"),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("year"),
-			userTrackStatsTbl.Col("year").Eq(year),
-		).
-		Order(
-			userTrackStatsTbl.Col("play_count").Desc(),
-			userTrackStatsTbl.Col("track_id").Asc(),
-		)
+	month int,
+	now int64,
+) RawQuery {
+	table := "user_year_review_tracks"
+	monthCol := ""
+	monthSelect := ""
+	periodType := "year"
+	periodClause := ""
+	periodParams := []any{}
+	if month != 0 {
+		table = "user_year_review_month_tracks"
+		monthCol = ", month"
+		monthSelect = ", ?"
+		periodType = "month"
+		periodClause = " AND user_track_stats.period_value = ?"
+		periodParams = []any{month}
+	}
 
-	return Multiple[UserYearTopTrack](db, ctx, query)
+	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, track_id, rank, play_count, created_at, updated_at)
+SELECT ?, ?%s, user_track_stats.track_id,
+       ROW_NUMBER() OVER (ORDER BY user_track_stats.play_count DESC, user_track_stats.track_id ASC),
+       user_track_stats.play_count, ?, ?
+FROM user_track_stats
+WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s`,
+		table, monthCol, monthSelect, periodType, periodClause)
+
+	params := []any{userId, year}
+	params = append(params, periodParams...)
+	params = append(params, now, now, userId, year)
+	params = append(params, periodParams...)
+
+	return RawQuery{Query: q, Params: params}
 }
 
-type UserYearTopAlbum struct {
-	AlbumId   string `db:"album_id"`
-	PlayCount int    `db:"play_count"`
-}
-
-func (db DB) GetUserYearTopAlbums(
-	ctx context.Context,
+func userYearReviewAlbumsInsertQuery(
 	userId string,
 	year int,
-) ([]UserYearTopAlbum, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			albumsTbl.Col("id").As("album_id"),
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
-		).
-		Join(
-			tracksTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
-		).
-		Join(
-			albumsTbl,
-			goqu.On(tracksTbl.Col("album_id").Eq(albumsTbl.Col("id"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("year"),
-			userTrackStatsTbl.Col("year").Eq(year),
-		).
-		GroupBy(albumsTbl.Col("id")).
-		Order(
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
-			albumsTbl.Col("id").Asc(),
-		)
+	month int,
+	now int64,
+) RawQuery {
+	table := "user_year_review_albums"
+	monthCol := ""
+	monthSelect := ""
+	periodType := "year"
+	periodClause := ""
+	periodParams := []any{}
+	if month != 0 {
+		table = "user_year_review_month_albums"
+		monthCol = ", month"
+		monthSelect = ", ?"
+		periodType = "month"
+		periodClause = " AND user_track_stats.period_value = ?"
+		periodParams = []any{month}
+	}
 
-	return Multiple[UserYearTopAlbum](db, ctx, query)
+	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, album_id, rank, play_count, created_at, updated_at)
+SELECT ?, ?%s, albums.id,
+       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, albums.id ASC),
+       SUM(user_track_stats.play_count), ?, ?
+FROM user_track_stats
+JOIN tracks ON tracks.id = user_track_stats.track_id
+JOIN albums ON albums.id = tracks.album_id
+WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
+GROUP BY albums.id`,
+		table, monthCol, monthSelect, periodType, periodClause)
+
+	params := []any{userId, year}
+	params = append(params, periodParams...)
+	params = append(params, now, now, userId, year)
+	params = append(params, periodParams...)
+
+	return RawQuery{Query: q, Params: params}
 }
 
-type UserYearTopArtist struct {
-	ArtistId  string `db:"artist_id"`
-	PlayCount int    `db:"play_count"`
-}
-
-func (db DB) GetUserYearTopArtists(
-	ctx context.Context,
+func userYearReviewTagsInsertQuery(
 	userId string,
 	year int,
-) ([]UserYearTopArtist, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			artistsTbl.Col("id").As("artist_id"),
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
-		).
-		Join(
-			tracksTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
-		).
-		Join(
-			artistsTbl,
-			goqu.On(tracksTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("year"),
-			userTrackStatsTbl.Col("year").Eq(year),
-		).
-		GroupBy(artistsTbl.Col("id")).
-		Order(
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
-			artistsTbl.Col("id").Asc(),
-		)
+	month int,
+	now int64,
+) RawQuery {
+	table := "user_year_review_tags"
+	monthCol := ""
+	monthSelect := ""
+	periodType := "year"
+	periodClause := ""
+	periodParams := []any{}
+	if month != 0 {
+		table = "user_year_review_month_tags"
+		monthCol = ", month"
+		monthSelect = ", ?"
+		periodType = "month"
+		periodClause = " AND user_track_stats.period_value = ?"
+		periodParams = []any{month}
+	}
 
-	return Multiple[UserYearTopArtist](db, ctx, query)
+	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, tag_slug, rank, play_count, created_at, updated_at)
+SELECT ?, ?%s, tags.slug,
+       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, tags.slug ASC),
+       SUM(user_track_stats.play_count), ?, ?
+FROM user_track_stats
+JOIN tracks_tags ON tracks_tags.track_id = user_track_stats.track_id
+JOIN tags ON tags.slug = tracks_tags.tag_slug
+WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
+GROUP BY tags.slug`,
+		table, monthCol, monthSelect, periodType, periodClause)
+
+	params := []any{userId, year}
+	params = append(params, periodParams...)
+	params = append(params, now, now, userId, year)
+	params = append(params, periodParams...)
+
+	return RawQuery{Query: q, Params: params}
+}
+
+func userYearReviewDecadesInsertQuery(
+	userId string,
+	year int,
+	month int,
+	now int64,
+) RawQuery {
+	table := "user_year_review_decades"
+	monthCol := ""
+	monthSelect := ""
+	periodType := "year"
+	periodClause := ""
+	periodParams := []any{}
+	if month != 0 {
+		table = "user_year_review_month_decades"
+		monthCol = ", month"
+		monthSelect = ", ?"
+		periodType = "month"
+		periodClause = " AND user_track_stats.period_value = ?"
+		periodParams = []any{month}
+	}
+
+	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, decade, rank, play_count, created_at, updated_at)
+SELECT ?, ?%s, tracks.year - tracks.year %% 10,
+       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, tracks.year - tracks.year %% 10 ASC),
+       SUM(user_track_stats.play_count), ?, ?
+FROM user_track_stats
+JOIN tracks ON tracks.id = user_track_stats.track_id
+WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
+  AND tracks.year IS NOT NULL
+GROUP BY tracks.year - tracks.year %% 10`,
+		table, monthCol, monthSelect, periodType, periodClause)
+
+	params := []any{userId, year}
+	params = append(params, periodParams...)
+	params = append(params, now, now, userId, year)
+	params = append(params, periodParams...)
+
+	return RawQuery{Query: q, Params: params}
+}
+
+func userYearReviewArtistsInsertQuery(
+	userId string,
+	year int,
+	month int,
+	now int64,
+) RawQuery {
+	table := "user_year_review_artists"
+	monthCol := ""
+	monthSelect := ""
+	periodType := "year"
+	periodClause := ""
+	periodParams := []any{}
+	if month != 0 {
+		table = "user_year_review_month_artists"
+		monthCol = ", month"
+		monthSelect = ", ?"
+		periodType = "month"
+		periodClause = " AND user_track_stats.period_value = ?"
+		periodParams = []any{month}
+	}
+
+	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, artist_id, rank, play_count, created_at, updated_at)
+SELECT ?, ?%s, artists.id,
+       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, artists.id ASC),
+       SUM(user_track_stats.play_count), ?, ?
+FROM user_track_stats
+JOIN tracks ON tracks.id = user_track_stats.track_id
+JOIN artists ON artists.id = tracks.artist_id
+WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
+GROUP BY artists.id`,
+		table, monthCol, monthSelect, periodType, periodClause)
+
+	params := []any{userId, year}
+	params = append(params, periodParams...)
+	params = append(params, now, now, userId, year)
+	params = append(params, periodParams...)
+
+	return RawQuery{Query: q, Params: params}
 }
 
 func GetUserYearMonthsQuery(userId string, year int) *goqu.SelectDataset {
@@ -500,73 +593,6 @@ WHERE h.user_id = ?
 	})
 }
 
-type UserYearDecade struct {
-	Decade    int `db:"decade"`
-	PlayCount int `db:"play_count"`
-}
-
-func (db DB) GetUserYearDecades(
-	ctx context.Context,
-	userId string,
-	year int,
-) ([]UserYearDecade, error) {
-	query := `
-SELECT (tracks.year - tracks.year % 10) AS decade,
-       SUM(uts.play_count) AS play_count
-FROM user_track_stats uts
-JOIN tracks ON tracks.id = uts.track_id
-WHERE uts.user_id = ?
-  AND uts.period_type = 'year'
-  AND uts.year = ?
-  AND tracks.year IS NOT NULL
-GROUP BY decade
-ORDER BY play_count DESC, decade ASC`
-
-	return Multiple[UserYearDecade](db, ctx, RawQuery{
-		Query:  query,
-		Params: []any{userId, year},
-	})
-}
-
-type UserYearTag struct {
-	TagSlug   string `db:"tag_slug"`
-	PlayCount int    `db:"play_count"`
-}
-
-func (db DB) GetUserYearTags(
-	ctx context.Context,
-	userId string,
-	year int,
-	limit int,
-) ([]UserYearTag, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			tagsTbl.Col("slug").As("tag_slug"),
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
-		).
-		Join(
-			tracksTagsTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTagsTbl.Col("track_id"))),
-		).
-		Join(
-			tagsTbl,
-			goqu.On(tracksTagsTbl.Col("tag_slug").Eq(tagsTbl.Col("slug"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("year"),
-			userTrackStatsTbl.Col("year").Eq(year),
-		).
-		GroupBy(tagsTbl.Col("slug")).
-		Order(
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
-			tagsTbl.Col("slug").Asc(),
-		).
-		Limit(uint(limit))
-
-	return Multiple[UserYearTag](db, ctx, query)
-}
-
 func (db DB) GetUserYearMonthSummary(
 	ctx context.Context,
 	userId string,
@@ -590,99 +616,6 @@ func (db DB) GetUserYearMonthSummary(
 		)
 
 	return Single[UserYearSummary](db, ctx, query)
-}
-
-func (db DB) GetUserYearMonthTopTracks(
-	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearTopTrack, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			userTrackStatsTbl.Col("track_id"),
-			userTrackStatsTbl.Col("play_count"),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("month"),
-			userTrackStatsTbl.Col("year").Eq(year),
-			userTrackStatsTbl.Col("period_value").Eq(month),
-		).
-		Order(
-			userTrackStatsTbl.Col("play_count").Desc(),
-			userTrackStatsTbl.Col("track_id").Asc(),
-		)
-
-	return Multiple[UserYearTopTrack](db, ctx, query)
-}
-
-func (db DB) GetUserYearMonthTopAlbums(
-	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearTopAlbum, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			albumsTbl.Col("id").As("album_id"),
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
-		).
-		Join(
-			tracksTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
-		).
-		Join(
-			albumsTbl,
-			goqu.On(tracksTbl.Col("album_id").Eq(albumsTbl.Col("id"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("month"),
-			userTrackStatsTbl.Col("year").Eq(year),
-			userTrackStatsTbl.Col("period_value").Eq(month),
-		).
-		GroupBy(albumsTbl.Col("id")).
-		Order(
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
-			albumsTbl.Col("id").Asc(),
-		)
-
-	return Multiple[UserYearTopAlbum](db, ctx, query)
-}
-
-func (db DB) GetUserYearMonthTopArtists(
-	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearTopArtist, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			artistsTbl.Col("id").As("artist_id"),
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
-		).
-		Join(
-			tracksTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
-		).
-		Join(
-			artistsTbl,
-			goqu.On(tracksTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("month"),
-			userTrackStatsTbl.Col("year").Eq(year),
-			userTrackStatsTbl.Col("period_value").Eq(month),
-		).
-		GroupBy(artistsTbl.Col("id")).
-		Order(
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
-			artistsTbl.Col("id").Asc(),
-		)
-
-	return Multiple[UserYearTopArtist](db, ctx, query)
 }
 
 func (db DB) GetUserYearMonthHistorySummary(
@@ -730,81 +663,6 @@ WHERE h.user_id = ?
 	})
 }
 
-func (db DB) GetUserYearMonthTags(
-	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-	limit int,
-) ([]UserYearTag, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			tagsTbl.Col("slug").As("tag_slug"),
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
-		).
-		Join(
-			tracksTagsTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTagsTbl.Col("track_id"))),
-		).
-		Join(
-			tagsTbl,
-			goqu.On(tracksTagsTbl.Col("tag_slug").Eq(tagsTbl.Col("slug"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("month"),
-			userTrackStatsTbl.Col("year").Eq(year),
-			userTrackStatsTbl.Col("period_value").Eq(month),
-		).
-		GroupBy(tagsTbl.Col("slug")).
-		Order(
-			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
-			tagsTbl.Col("slug").Asc(),
-		).
-		Limit(uint(limit))
-
-	return Multiple[UserYearTag](db, ctx, query)
-}
-
-func (db DB) GetUserYearMonthDecades(
-	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearDecade, error) {
-	query := `
-SELECT (tracks.year - tracks.year % 10) AS decade,
-       SUM(uts.play_count) AS play_count
-FROM user_track_stats uts
-JOIN tracks ON tracks.id = uts.track_id
-WHERE uts.user_id = ?
-  AND uts.period_type = 'month'
-  AND uts.year = ?
-  AND uts.period_value = ?
-  AND tracks.year IS NOT NULL
-GROUP BY decade
-ORDER BY play_count DESC, decade ASC`
-
-	return Multiple[UserYearDecade](db, ctx, RawQuery{
-		Query:  query,
-		Params: []any{userId, year, month},
-	})
-}
-
-func insertUserYearReviewRows(
-	tx DB,
-	ctx context.Context,
-	table any,
-	rows []goqu.Record,
-) error {
-	if len(rows) == 0 {
-		return nil
-	}
-
-	_, err := tx.Exec(ctx, dialect.Insert(table).Rows(rows))
-	return err
-}
-
 // TODO(patrik): This should be moved to the service package, UserService or ReviewService
 func processUserYearMonth(
 	tx DB,
@@ -847,127 +705,27 @@ func processUserYearMonth(
 		return err
 	}
 
-	monthTopTracks, err := tx.GetUserYearMonthTopTracks(ctx, userId, year, month)
+	_, err = tx.Exec(ctx, userYearReviewTracksInsertQuery(userId, year, month, now))
 	if err != nil {
 		return err
 	}
 
-	trackRows := make([]goqu.Record, len(monthTopTracks))
-	for i, t := range monthTopTracks {
-		trackRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"month":      month,
-			"track_id":   t.TrackId,
-			"rank":       i + 1,
-			"play_count": t.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-
-	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthTracksTbl, trackRows)
+	_, err = tx.Exec(ctx, userYearReviewAlbumsInsertQuery(userId, year, month, now))
 	if err != nil {
 		return err
 	}
 
-	monthTopAlbums, err := tx.GetUserYearMonthTopAlbums(ctx, userId, year, month)
+	_, err = tx.Exec(ctx, userYearReviewArtistsInsertQuery(userId, year, month, now))
 	if err != nil {
 		return err
 	}
 
-	albumRows := make([]goqu.Record, len(monthTopAlbums))
-	for i, a := range monthTopAlbums {
-		albumRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"month":      month,
-			"album_id":   a.AlbumId,
-			"rank":       i + 1,
-			"play_count": a.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-
-	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthAlbumsTbl, albumRows)
+	_, err = tx.Exec(ctx, userYearReviewTagsInsertQuery(userId, year, month, now))
 	if err != nil {
 		return err
 	}
 
-	monthTopArtists, err := tx.GetUserYearMonthTopArtists(ctx, userId, year, month)
-	if err != nil {
-		return err
-	}
-
-	artistRows := make([]goqu.Record, len(monthTopArtists))
-	for i, a := range monthTopArtists {
-		artistRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"month":      month,
-			"artist_id":  a.ArtistId,
-			"rank":       i + 1,
-			"play_count": a.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-
-	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthArtistsTbl, artistRows)
-	if err != nil {
-		return err
-	}
-
-	monthTags, err := tx.GetUserYearMonthTags(ctx, userId, year, month, TopYearTags)
-	if err != nil {
-		return err
-	}
-
-	tagRows := make([]goqu.Record, len(monthTags))
-	for i, t := range monthTags {
-		tagRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"month":      month,
-			"tag_slug":   t.TagSlug,
-			"rank":       i + 1,
-			"play_count": t.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-
-	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthTagsTbl, tagRows)
-	if err != nil {
-		return err
-	}
-
-	monthDecades, err := tx.GetUserYearMonthDecades(ctx, userId, year, month)
-	if err != nil {
-		return err
-	}
-
-	decadeRows := make([]goqu.Record, len(monthDecades))
-	for i, d := range monthDecades {
-		decadeRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"month":      month,
-			"decade":     d.Decade,
-			"rank":       i + 1,
-			"play_count": d.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-
-	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthDecadesTbl, decadeRows)
+	_, err = tx.Exec(ctx, userYearReviewDecadesInsertQuery(userId, year, month, now))
 	if err != nil {
 		return err
 	}
@@ -1053,139 +811,29 @@ func (db *Database) GenerateUserReview(
 		return err
 	}
 
-	{
-		topTracks, err := tx.GetUserYearTopTracks(ctx, userId, year)
-		if err != nil {
-			return err
-		}
-
-		trackRows := make([]goqu.Record, len(topTracks))
-		for i, t := range topTracks {
-			trackRows[i] = goqu.Record{
-				"user_id":    userId,
-				"year":       year,
-				"track_id":   t.TrackId,
-				"rank":       i + 1,
-				"play_count": t.PlayCount,
-
-				"created_at": now,
-				"updated_at": now,
-			}
-		}
-		if len(trackRows) > 0 {
-			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewTracksTbl).Rows(trackRows))
-			if err != nil {
-				return err
-			}
-		}
+	_, err = tx.Exec(ctx, userYearReviewTracksInsertQuery(userId, year, 0, now))
+	if err != nil {
+		return err
 	}
 
-	{
-		topAlbums, err := tx.GetUserYearTopAlbums(ctx, userId, year)
-		if err != nil {
-			return err
-		}
-
-		albumRows := make([]goqu.Record, len(topAlbums))
-		for i, a := range topAlbums {
-			albumRows[i] = goqu.Record{
-				"user_id":    userId,
-				"year":       year,
-				"album_id":   a.AlbumId,
-				"rank":       i + 1,
-				"play_count": a.PlayCount,
-
-				"created_at": now,
-				"updated_at": now,
-			}
-		}
-		if len(albumRows) > 0 {
-			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewAlbumsTbl).Rows(albumRows))
-			if err != nil {
-				return err
-			}
-		}
+	_, err = tx.Exec(ctx, userYearReviewAlbumsInsertQuery(userId, year, 0, now))
+	if err != nil {
+		return err
 	}
 
-	{
-		topArtists, err := tx.GetUserYearTopArtists(ctx, userId, year)
-		if err != nil {
-			return err
-		}
-
-		artistRows := make([]goqu.Record, len(topArtists))
-		for i, a := range topArtists {
-			artistRows[i] = goqu.Record{
-				"user_id":    userId,
-				"year":       year,
-				"artist_id":  a.ArtistId,
-				"rank":       i + 1,
-				"play_count": a.PlayCount,
-
-				"created_at": now,
-				"updated_at": now,
-			}
-		}
-		if len(artistRows) > 0 {
-			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewArtistsTbl).Rows(artistRows))
-			if err != nil {
-				return err
-			}
-		}
+	_, err = tx.Exec(ctx, userYearReviewArtistsInsertQuery(userId, year, 0, now))
+	if err != nil {
+		return err
 	}
 
-	{
-		tags, err := tx.GetUserYearTags(ctx, userId, year, TopYearTags)
-		if err != nil {
-			return err
-		}
-
-		tagRows := make([]goqu.Record, len(tags))
-		for i, t := range tags {
-			tagRows[i] = goqu.Record{
-				"user_id":    userId,
-				"year":       year,
-				"tag_slug":   t.TagSlug,
-				"rank":       i + 1,
-				"play_count": t.PlayCount,
-
-				"created_at": now,
-				"updated_at": now,
-			}
-		}
-		if len(tagRows) > 0 {
-			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewTagsTbl).Rows(tagRows))
-			if err != nil {
-				return err
-			}
-		}
+	_, err = tx.Exec(ctx, userYearReviewTagsInsertQuery(userId, year, 0, now))
+	if err != nil {
+		return err
 	}
 
-	{
-		decades, err := tx.GetUserYearDecades(ctx, userId, year)
-		if err != nil {
-			return err
-		}
-
-		decadeRows := make([]goqu.Record, len(decades))
-		for i, d := range decades {
-			decadeRows[i] = goqu.Record{
-				"user_id":    userId,
-				"year":       year,
-				"decade":     d.Decade,
-				"rank":       i + 1,
-				"play_count": d.PlayCount,
-
-				"created_at": now,
-				"updated_at": now,
-			}
-		}
-		if len(decadeRows) > 0 {
-			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewDecadesTbl).Rows(decadeRows))
-			if err != nil {
-				return err
-			}
-		}
+	_, err = tx.Exec(ctx, userYearReviewDecadesInsertQuery(userId, year, 0, now))
+	if err != nil {
+		return err
 	}
 
 	for m := 1; m <= 12; m++ {
