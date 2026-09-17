@@ -49,6 +49,28 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	console.log("artists", topArtists)
 
+	const topTags = await data.apiClient.getUserYearReviewTags(params.id, String(year), {
+		query: {
+			"perPage": "10",
+		}
+	});
+	if (!topTags.success) {
+		throw error(topTags.error.code, { message: topTags.error.message });
+	}
+
+	console.log("tags", topTags)
+
+	const topDecades = await data.apiClient.getUserYearReviewDecades(params.id, String(year), {
+		query: {
+			"perPage": "10",
+		}
+	});
+	if (!topDecades.success) {
+		throw error(topDecades.error.code, { message: topDecades.error.message });
+	}
+
+	console.log("decades", topDecades)
+
 	return {
 		...data,
 		year,
@@ -63,5 +85,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 		topArtistCount: topArtists.data.page.totalItems,
 		topArtists: topArtists.data.artists,
+
+		topTagCount: topTags.data.page.totalItems,
+		topTags: topTags.data.tags,
+
+		topDecadeCount: topDecades.data.page.totalItems,
+		topDecades: topDecades.data.decades,
 	};
 };

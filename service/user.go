@@ -392,6 +392,88 @@ func (s *UserService) GetUserYearReviewArtists(
 	return artists, page, nil
 }
 
+type GetUserYearReviewTagsParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserYearReviewTags(
+	ctx context.Context,
+	params GetUserYearReviewTagsParams,
+) ([]database.UserYearReviewTag, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{}, userErr.Wrap("get user year review tags: user", err)
+	}
+
+	tags, page, err := s.db.GetUserYearReviewTags(
+		ctx,
+		database.GetUserYearReviewTagsParams{
+			UserId: params.UserId,
+			Year:   params.Year,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user year review tags: reviews", err)
+	}
+
+	pretty.Println(tags)
+	pretty.Println(page)
+
+	return tags, page, nil
+}
+
+type GetUserYearReviewDecadesParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserYearReviewDecades(
+	ctx context.Context,
+	params GetUserYearReviewDecadesParams,
+) ([]database.UserYearReviewDecade, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{}, userErr.Wrap("get user year review decades: user", err)
+	}
+
+	decades, page, err := s.db.GetUserYearReviewDecades(
+		ctx,
+		database.GetUserYearReviewDecadesParams{
+			UserId: params.UserId,
+			Year:   params.Year,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user year review decades: reviews", err)
+	}
+
+	pretty.Println(decades)
+	pretty.Println(page)
+
+	return decades, page, nil
+}
+
 type GetUserYearStatsParams struct {
 	UserId string
 }

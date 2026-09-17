@@ -248,6 +248,14 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/${userId}/year-reviews/${year}/artists`, "GET", api.GetUserYearReviewArtists, z.any().optional(), undefined, options)
   }
   
+  getUserYearReviewDecades(userId: string, year: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/decades`, "GET", api.GetUserYearReviewDecades, z.any().optional(), undefined, options)
+  }
+  
+  getUserYearReviewTags(userId: string, year: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/tags`, "GET", api.GetUserYearReviewTags, z.any().optional(), undefined, options)
+  }
+  
   getUserYearReviewTracks(userId: string, year: string, options?: ExtraOptions) {
     return this.request(`/api/v1/users/${userId}/year-reviews/${year}/tracks`, "GET", api.GetUserYearReviewTracks, z.any().optional(), undefined, options)
   }
@@ -592,6 +600,14 @@ export class ClientUrls {
   
   getUserYearReviewArtists(userId: string, year: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/artists`)
+  }
+  
+  getUserYearReviewDecades(userId: string, year: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/decades`)
+  }
+  
+  getUserYearReviewTags(userId: string, year: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/tags`)
   }
   
   getUserYearReviewTracks(userId: string, year: string) {

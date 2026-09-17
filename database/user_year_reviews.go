@@ -27,9 +27,11 @@ var (
 	userYearReviewMonthTagsTbl    = goqu.T("user_year_review_month_tags")
 	userYearReviewMonthDecadesTbl = goqu.T("user_year_review_month_decades")
 
-	userYearReviewTrackSchema = UserYearReviewTrackSchema()
-	userYearReviewAlbumSchema = UserYearReviewAlbumSchema()
+	userYearReviewTrackSchema  = UserYearReviewTrackSchema()
+	userYearReviewAlbumSchema  = UserYearReviewAlbumSchema()
 	userYearReviewArtistSchema = UserYearReviewArtistSchema()
+	userYearReviewTagSchema    = UserYearReviewTagSchema()
+	userYearReviewDecadeSchema = UserYearReviewDecadeSchema()
 )
 
 const (
@@ -100,6 +102,48 @@ func UserYearReviewArtistSchema() *schema.Schema {
 		)
 }
 
+func UserYearReviewDecadeSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_decades?
+	return schema.New().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_decades.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_decades.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
+func UserYearReviewTagSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_tags?
+	return schema.New().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_tags.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_tags.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
 type UserYearReview struct {
 	UserId string `db:"user_id"`
 	Year   int    `db:"year"`
@@ -117,29 +161,21 @@ type UserYearReview struct {
 }
 
 type UserYearReviewTag struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
 	TagSlug string `db:"tag_slug"`
-	Rank    int    `db:"rank"`
 
+	Rank      int `db:"rank"`
 	PlayCount int `db:"play_count"`
-
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
 }
 
 type UserYearReviewDecade struct {
 	UserId string `db:"user_id"`
 	Year   int    `db:"year"`
+	Decade int    `db:"decade"`
 
-	Decade int `db:"decade"`
-	Rank   int `db:"rank"`
-
+	Rank      int `db:"rank"`
 	PlayCount int `db:"play_count"`
-
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
 }
 
 type UserYearReviewTrack struct {
@@ -1115,6 +1151,102 @@ func (db DB) GetUserYearReviewArtists(
 	return items, page, nil
 }
 
+type GetUserYearReviewTagsParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (db DB) GetUserYearReviewTags(
+	ctx context.Context,
+	params GetUserYearReviewTagsParams,
+) ([]UserYearReviewTag, types.Page, error) {
+	var err error
+
+	query := dialect.From(userYearReviewTagsTbl).
+		Select(
+			userYearReviewTagsTbl.Col("user_id"),
+			userYearReviewTagsTbl.Col("year"),
+			userYearReviewTagsTbl.Col("tag_slug"),
+
+			userYearReviewTagsTbl.Col("rank"),
+			userYearReviewTagsTbl.Col("play_count"),
+		).
+		Where(
+			userYearReviewTagsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewTagsTbl.Col("year").Eq(params.Year),
+		)
+
+	query, err = ApplyQuery(query, userYearReviewTagSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, userYearReviewTagsTbl.Col("tag_slug"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewTag](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+type GetUserYearReviewDecadesParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (db DB) GetUserYearReviewDecades(
+	ctx context.Context,
+	params GetUserYearReviewDecadesParams,
+) ([]UserYearReviewDecade, types.Page, error) {
+	var err error
+
+	query := dialect.From(userYearReviewDecadesTbl).
+		Select(
+			userYearReviewDecadesTbl.Col("user_id"),
+			userYearReviewDecadesTbl.Col("year"),
+			userYearReviewDecadesTbl.Col("decade"),
+
+			userYearReviewDecadesTbl.Col("rank"),
+			userYearReviewDecadesTbl.Col("play_count"),
+		).
+		Where(
+			userYearReviewDecadesTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewDecadesTbl.Col("year").Eq(params.Year),
+		)
+
+	query, err = ApplyQuery(query, userYearReviewDecadeSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, userYearReviewDecadesTbl.Col("decade"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewDecade](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
 func (db DB) GetUserYearReviewMonths(
 	ctx context.Context,
 	userId string,
@@ -1296,52 +1428,4 @@ func (db DB) GetUserYearAlbumTracks(
 ) ([]UserYearAlbumTrack, error) {
 	return Multiple[UserYearAlbumTrack](
 		db, ctx, GetUserYearAlbumTracksQuery(userId, year, albumId))
-}
-
-func (db DB) GetUserYearReviewTags(
-	ctx context.Context,
-	userId string,
-	year int,
-) ([]UserYearReviewTag, error) {
-	query := dialect.From(userYearReviewTagsTbl).
-		Select(
-			userYearReviewTagsTbl.Col("user_id"),
-			userYearReviewTagsTbl.Col("year"),
-			userYearReviewTagsTbl.Col("tag_slug"),
-			userYearReviewTagsTbl.Col("rank"),
-			userYearReviewTagsTbl.Col("play_count"),
-			userYearReviewTagsTbl.Col("created_at"),
-			userYearReviewTagsTbl.Col("updated_at"),
-		).
-		Where(
-			userYearReviewTagsTbl.Col("user_id").Eq(userId),
-			userYearReviewTagsTbl.Col("year").Eq(year),
-		).
-		Order(userYearReviewTagsTbl.Col("rank").Asc())
-
-	return Multiple[UserYearReviewTag](db, ctx, query)
-}
-
-func (db DB) GetUserYearReviewDecades(
-	ctx context.Context,
-	userId string,
-	year int,
-) ([]UserYearReviewDecade, error) {
-	query := dialect.From(userYearReviewDecadesTbl).
-		Select(
-			userYearReviewDecadesTbl.Col("user_id"),
-			userYearReviewDecadesTbl.Col("year"),
-			userYearReviewDecadesTbl.Col("decade"),
-			userYearReviewDecadesTbl.Col("rank"),
-			userYearReviewDecadesTbl.Col("play_count"),
-			userYearReviewDecadesTbl.Col("created_at"),
-			userYearReviewDecadesTbl.Col("updated_at"),
-		).
-		Where(
-			userYearReviewDecadesTbl.Col("user_id").Eq(userId),
-			userYearReviewDecadesTbl.Col("year").Eq(year),
-		).
-		Order(userYearReviewDecadesTbl.Col("rank").Asc())
-
-	return Multiple[UserYearReviewDecade](db, ctx, query)
 }

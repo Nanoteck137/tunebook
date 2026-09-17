@@ -875,6 +875,46 @@ export const GetUserYearReviewArtists = z.object({
 });
 export type GetUserYearReviewArtists = z.infer<typeof GetUserYearReviewArtists>;
 
+// Name: RankedDecade
+export const RankedDecade = z.object({
+  // Name: RankedDecade.decade
+  "decade": z.number(),
+  // Name: RankedDecade.rank
+  "rank": z.number(),
+  // Name: RankedDecade.playCount
+  "playCount": z.number(),
+});
+export type RankedDecade = z.infer<typeof RankedDecade>;
+
+// Name: GetUserYearReviewDecades
+export const GetUserYearReviewDecades = z.object({
+  // Name: GetUserYearReviewDecades.page
+  "page": Page,
+  // Name: GetUserYearReviewDecades.decades
+  "decades": z.array(RankedDecade),
+});
+export type GetUserYearReviewDecades = z.infer<typeof GetUserYearReviewDecades>;
+
+// Name: RankedTag
+export const RankedTag = z.object({
+  // Name: RankedTag.tagSlug
+  "tagSlug": z.string(),
+  // Name: RankedTag.rank
+  "rank": z.number(),
+  // Name: RankedTag.playCount
+  "playCount": z.number(),
+});
+export type RankedTag = z.infer<typeof RankedTag>;
+
+// Name: GetUserYearReviewTags
+export const GetUserYearReviewTags = z.object({
+  // Name: GetUserYearReviewTags.page
+  "page": Page,
+  // Name: GetUserYearReviewTags.tags
+  "tags": z.array(RankedTag),
+});
+export type GetUserYearReviewTags = z.infer<typeof GetUserYearReviewTags>;
+
 // Name: RankedTrack
 export const RankedTrack = z.object({
   // Name: RankedTrack.id

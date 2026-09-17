@@ -504,52 +504,52 @@
 	</section>
 
 	<section>
-		<!-- <SectionHeader count={review.tags.length}> -->
-		<!-- 	<Tags /> -->
-		<!-- 	Top Tags -->
-		<!-- </SectionHeader> -->
+		<SectionHeader count={data.topTagCount}>
+			<Tags />
+			Top Tags
+		</SectionHeader>
 
 		<div class="flex flex-wrap gap-2">
-			<!-- {#each review.tags as tag, i (tag.tagSlug)} -->
-			<!-- 	<div -->
-			<!-- 		class="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5" -->
-			<!-- 	> -->
-			<!-- 		<span class="text-sm"> -->
-			<!-- 			{i + 1}. {formatTagSlug(tag.tagSlug)} -->
-			<!-- 		</span> -->
-			<!-- 		<span class="text-xs text-muted-foreground"> -->
-			<!-- 			{tag.playCount.toLocaleString()} plays -->
-			<!-- 		</span> -->
-			<!-- 	</div> -->
-			<!-- {/each} -->
+			{#each data.topTags as tag (tag.tagSlug)}
+				<div
+					class="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5"
+				>
+					<span class="text-sm">
+						{tag.rank}. {formatTagSlug(tag.tagSlug)}
+					</span>
+					<span class="text-xs text-muted-foreground">
+						{tag.playCount.toLocaleString()} plays
+					</span>
+				</div>
+			{/each}
 		</div>
 	</section>
 
 	<section>
-		<!-- <SectionHeader count={review.decades.length}> -->
-		<!-- 	<DiscAlbum /> -->
-		<!-- 	Decades -->
-		<!-- </SectionHeader> -->
+		<SectionHeader count={data.topDecadeCount}>
+			<DiscAlbum />
+			Decades
+		</SectionHeader>
 
 		<div class="flex flex-col gap-2">
-			<!-- {#each review.decades as decade (decade.decade)} -->
-			<!-- 	{@const count = decade.playCount} -->
-			<!-- 	{@const maxDecadeCount = review.decades[0]?.playCount ?? 1} -->
-			<!-- 	<div class="flex items-center gap-3"> -->
-			<!-- 		<span class="w-14 shrink-0 text-sm font-medium"> -->
-			<!-- 			{formatDecade(decade.decade)} -->
-			<!-- 		</span> -->
-			<!-- 		<div class="h-6 flex-1 overflow-hidden rounded bg-muted"> -->
-			<!-- 			<div -->
-			<!-- 				class="h-full bg-linear-to-r from-logo-3 to-logo-1" -->
-			<!-- 				style="width: {Math.max((count / maxDecadeCount) * 100, 4)}%" -->
-			<!-- 			></div> -->
-			<!-- 		</div> -->
-			<!-- 		<span class="w-20 shrink-0 text-right text-xs text-muted-foreground"> -->
-			<!-- 			{count.toLocaleString()} plays -->
-			<!-- 		</span> -->
-			<!-- 	</div> -->
-			<!-- {/each} -->
+			{#each data.topDecades as decade (decade.decade)}
+				{@const count = decade.playCount}
+				{@const maxDecadeCount = data.topDecades[0]?.playCount ?? 1}
+				<div class="flex items-center gap-3">
+					<span class="w-14 shrink-0 text-sm font-medium">
+						{formatDecade(decade.decade)}
+					</span>
+					<div class="h-6 flex-1 overflow-hidden rounded bg-muted">
+						<div
+							class="h-full bg-linear-to-r from-logo-3 to-logo-1"
+							style="width: {Math.max((count / maxDecadeCount) * 100, 4)}%"
+						></div>
+					</div>
+					<span class="w-20 shrink-0 text-right text-xs text-muted-foreground">
+						{count.toLocaleString()} plays
+					</span>
+				</div>
+			{/each}
 		</div>
 	</section>
 </div>

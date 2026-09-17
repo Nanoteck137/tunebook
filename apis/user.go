@@ -182,18 +182,6 @@ type GetUserTopTracks struct {
 // 	Decades []ReviewDecade `json:"decades"`
 // }
 
-// type ReviewTag struct {
-// 	TagSlug   string `json:"tagSlug"`
-// 	Rank      int    `json:"rank"`
-// 	PlayCount int    `json:"playCount"`
-// }
-//
-// type ReviewDecade struct {
-// 	Decade    int `json:"decade"`
-// 	Rank      int `json:"rank"`
-// 	PlayCount int `json:"playCount"`
-// }
-
 // type GetUserYearReview struct {
 // 	Review YearStat `json:"review"`
 //
@@ -256,10 +244,6 @@ type GetAllUserYearReviews struct {
 type GetUserYearReview struct {
 	Review UserYearReview `json:"review"`
 
-	// Artists []ReviewArtist `json:"artists"`
-	//
-	// ArtistCount int `json:"artistCount"`
-	//
 	// ArtistTracks []ReviewArtistTracks `json:"artistTracks"`
 	// AlbumTracks  []ReviewAlbumTracks  `json:"albumTracks"`
 	//
@@ -303,6 +287,30 @@ type RankedArtist struct {
 type GetUserYearReviewArtists struct {
 	Page    types.Page     `json:"page"`
 	Artists []RankedArtist `json:"artists"`
+}
+
+type RankedTag struct {
+	TagSlug string `json:"tagSlug"`
+
+	Rank      int `json:"rank"`
+	PlayCount int `json:"playCount"`
+}
+
+type GetUserYearReviewTags struct {
+	Page types.Page  `json:"page"`
+	Tags []RankedTag `json:"tags"`
+}
+
+type RankedDecade struct {
+	Decade int `json:"decade"`
+
+	Rank      int `json:"rank"`
+	PlayCount int `json:"playCount"`
+}
+
+type GetUserYearReviewDecades struct {
+	Page    types.Page     `json:"page"`
+	Decades []RankedDecade `json:"decades"`
 }
 
 func InstallUserHandlers(app core.App, group pyrin.Group) {
@@ -517,6 +525,100 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 						Artist:    ConvertDBArtist(c, artist.Artist),
 						Rank:      artist.Rank,
 						PlayCount: artist.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewTags",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/year-reviews/:year/tags",
+			ResponseType: GetUserYearReviewTags{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				tags, page, err := app.UserService().GetUserYearReviewTags(
+					ctx,
+					service.GetUserYearReviewTagsParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+						Page:   pageParams,
+						Query:  queryParams,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewTags{
+					Page: page,
+					Tags: make([]RankedTag, len(tags)),
+				}
+
+				for i, tag := range tags {
+					res.Tags[i] = RankedTag{
+						TagSlug:   tag.TagSlug,
+						Rank:      tag.Rank,
+						PlayCount: tag.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewDecades",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/year-reviews/:year/decades",
+			ResponseType: GetUserYearReviewDecades{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				decades, page, err := app.UserService().GetUserYearReviewDecades(
+					ctx,
+					service.GetUserYearReviewDecadesParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+						Page:   pageParams,
+						Query:  queryParams,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewDecades{
+					Page: page,
+					Decades: make([]RankedDecade, len(decades)),
+				}
+
+				for i, decade := range decades {
+					res.Decades[i] = RankedDecade{
+						Decade:   decade.Decade,
+						Rank:      decade.Rank,
+						PlayCount: decade.PlayCount,
 					}
 				}
 

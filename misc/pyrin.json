@@ -1052,6 +1052,36 @@
       ]
     },
     {
+      "name": "GetUserYearReviewDecades",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "decades",
+          "type": "[]RankedDecade",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewTags",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]RankedTag",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetUserYearReviewTracks",
       "fields": [
         {
@@ -1381,6 +1411,46 @@
         },
         {
           "name": "updated",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "RankedDecade",
+      "fields": [
+        {
+          "name": "decade",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "RankedTag",
+      "fields": [
+        {
+          "name": "tagSlug",
           "type": "string",
           "omitEmpty": false
         },
@@ -2355,6 +2425,20 @@
       "method": "GET",
       "path": "/api/v1/users/:userId/year-reviews/:year/artists",
       "response": "GetUserYearReviewArtists"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewDecades",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/decades",
+      "response": "GetUserYearReviewDecades"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewTags",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/tags",
+      "response": "GetUserYearReviewTags"
     },
     {
       "type": "api",
