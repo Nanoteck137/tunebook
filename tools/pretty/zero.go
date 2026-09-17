@@ -1,6 +1,6 @@
 // Based on github.com/kr/pretty/zero.go
 // Original source: https://github.com/kr/pretty/blob/master/zero.go
-package dev
+package pretty
 
 import (
 	"reflect"

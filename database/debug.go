@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	"github.com/nanoteck137/tunebook/dev"
+	"github.com/nanoteck137/tunebook/tools/pretty"
 )
 
 func DebugSQL(query Query) string {
@@ -12,5 +12,5 @@ func DebugSQL(query Query) string {
 		return fmt.Sprintf("ERROR: %v", err)
 	}
 
-	return dev.PrettyPrintSQL(sql, params)
+	return pretty.PrettyPrintSQL(sql, params)
 }

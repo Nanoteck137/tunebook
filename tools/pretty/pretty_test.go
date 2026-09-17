@@ -1,4 +1,4 @@
-package dev
+package pretty
 
 import (
 	"testing"
