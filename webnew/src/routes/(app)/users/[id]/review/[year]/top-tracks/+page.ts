@@ -9,17 +9,18 @@ export const load: PageLoad = async ({ parent, params }) => {
 		throw error(400, { message: "Invalid year" });
 	}
 
-	const top = await data.apiClient.getUserYearReviewTopTracks(
+	const tracks = await data.apiClient.getUserYearReviewTracks(
 		params.id,
 		String(year),
 	);
-	if (!top.success) {
-		throw error(top.error.code, { message: top.error.message });
+	if (!tracks.success) {
+		throw error(tracks.error.code, { message: tracks.error.message });
 	}
 
 	return {
 		...data,
 		year,
-		tracks: top.data.tracks,
+		page: tracks.data.page,
+		tracks: tracks.data.tracks,
 	};
 };

@@ -112,10 +112,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/playlists/${playlistId}/images/generate`, "POST", z.undefined().optional(), z.any().optional(), undefined, options)
   }
   
-  generateUserReview(userId: string, year: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}`, "POST", z.undefined().optional(), z.any().optional(), undefined, options)
-  }
-  
   getAlbumById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/albums/${id}`, "GET", api.GetAlbumById, z.any().optional(), undefined, options)
   }
@@ -127,6 +123,10 @@ export class ApiClient extends BaseApiClient {
   
   getAlbums(options?: ExtraOptions) {
     return this.request("/api/v1/albums", "GET", api.GetAlbums, z.any().optional(), undefined, options)
+  }
+  
+  getAllUserYearReviews(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews`, "GET", api.GetAllUserYearReviews, z.any().optional(), undefined, options)
   }
   
   getApiTokens(options?: ExtraOptions) {
@@ -237,35 +237,11 @@ export class ApiClient extends BaseApiClient {
   }
   
   getUserYearReview(userId: string, year: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}`, "GET", api.GetUserYearReview, z.any().optional(), undefined, options)
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}`, "GET", api.GetUserYearReview, z.any().optional(), undefined, options)
   }
   
-  getUserYearReviewMonthTopAlbums(userId: string, year: string, month: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}/months/${month}/top-albums`, "GET", api.GetUserYearReviewMonthTopAlbums, z.any().optional(), undefined, options)
-  }
-  
-  getUserYearReviewMonthTopArtists(userId: string, year: string, month: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}/months/${month}/top-artists`, "GET", api.GetUserYearReviewMonthTopArtists, z.any().optional(), undefined, options)
-  }
-  
-  getUserYearReviewMonthTopTracks(userId: string, year: string, month: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}/months/${month}/top-tracks`, "GET", api.GetUserYearReviewMonthTopTracks, z.any().optional(), undefined, options)
-  }
-  
-  getUserYearReviewTopAlbums(userId: string, year: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}/top-albums`, "GET", api.GetUserYearReviewTopAlbums, z.any().optional(), undefined, options)
-  }
-  
-  getUserYearReviewTopArtists(userId: string, year: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}/top-artists`, "GET", api.GetUserYearReviewTopArtists, z.any().optional(), undefined, options)
-  }
-  
-  getUserYearReviewTopTracks(userId: string, year: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/reviews/${year}/top-tracks`, "GET", api.GetUserYearReviewTopTracks, z.any().optional(), undefined, options)
-  }
-  
-  getUserYearStats(userId: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/users/${userId}/year-stats`, "GET", api.GetUserYearStats, z.any().optional(), undefined, options)
+  getUserYearReviewTracks(userId: string, year: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/tracks`, "GET", api.GetUserYearReviewTracks, z.any().optional(), undefined, options)
   }
   
   pushTrackHistory(body: api.PushTrackHistoryBody, options?: ExtraOptions) {
@@ -462,10 +438,6 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/playlists/${playlistId}/images/generate`)
   }
   
-  generateUserReview(userId: string, year: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}`)
-  }
-  
   getAlbumById(id: string) {
     return createUrl(this.baseUrl, `/api/v1/albums/${id}`)
   }
@@ -480,6 +452,10 @@ export class ClientUrls {
   
   getAlbums() {
     return createUrl(this.baseUrl, "/api/v1/albums")
+  }
+  
+  getAllUserYearReviews(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews`)
   }
   
   getApiTokens() {
@@ -599,35 +575,11 @@ export class ClientUrls {
   }
   
   getUserYearReview(userId: string, year: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}`)
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}`)
   }
   
-  getUserYearReviewMonthTopAlbums(userId: string, year: string, month: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}/months/${month}/top-albums`)
-  }
-  
-  getUserYearReviewMonthTopArtists(userId: string, year: string, month: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}/months/${month}/top-artists`)
-  }
-  
-  getUserYearReviewMonthTopTracks(userId: string, year: string, month: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}/months/${month}/top-tracks`)
-  }
-  
-  getUserYearReviewTopAlbums(userId: string, year: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}/top-albums`)
-  }
-  
-  getUserYearReviewTopArtists(userId: string, year: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}/top-artists`)
-  }
-  
-  getUserYearReviewTopTracks(userId: string, year: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/reviews/${year}/top-tracks`)
-  }
-  
-  getUserYearStats(userId: string) {
-    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-stats`)
+  getUserYearReviewTracks(userId: string, year: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/tracks`)
   }
   
   pushTrackHistory() {

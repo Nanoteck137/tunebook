@@ -1,15 +1,19 @@
 <script lang="ts">
+	import type { UserYearReview } from "$lib/api/types.js";
 	import { BarChart3, ChevronRight } from "@lucide/svelte";
-	import type { YearStat } from "$lib/api/types";
 
 	let { data } = $props();
 
-	let yearStats = $derived((data.yearStats as YearStat[] | null) ?? []);
+	let reviews = $derived((data.reviews as UserYearReview[] | null) ?? []);
+
+	$effect(() => {
+		console.log(data);
+	});
 
 	let currentYear = $derived(new Date().getFullYear());
 
 	let maxTrackCount = $derived(
-		Math.max(...data.yearStats.map((s) => s.trackCount), 0),
+		Math.max(...data.reviews.map((s) => s.trackCount), 0),
 	);
 
 	function formatListeningTime(seconds: number): string {
@@ -28,21 +32,21 @@
 		</p>
 	</div>
 
-	{#if data.yearStats.length === 0}
+	{#if data.reviews.length === 0}
 		<div class="flex flex-col items-center gap-2 rounded-lg border py-16">
 			<BarChart3 size={32} class="text-muted-foreground/40" />
 			<p class="text-sm text-muted-foreground">No listening data yet</p>
 		</div>
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-			{#each yearStats as stat (stat.year)}
+			{#each reviews as review (review.year)}
 				<a
-					href="/users/{data.userData.id}/review/{stat.year}"
+					href="/users/{data.userData.id}/review/{review.year}"
 					class="group flex flex-col gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-accent hover:text-accent-foreground"
 				>
 					<div class="flex items-center gap-2">
-						<span class="text-3xl font-bold">{stat.year}</span>
-						{#if stat.year === currentYear}
+						<span class="text-3xl font-bold">{review.year}</span>
+						{#if review.year === currentYear}
 							<span
 								class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary ring-1 ring-primary/25"
 							>
@@ -57,8 +61,8 @@
 
 					<div class="flex flex-col gap-0.5">
 						<span class="text-sm text-muted-foreground">
-							{stat.trackCount.toLocaleString()} tracks &middot;
-							{formatListeningTime(stat.listeningTime)}
+							{review.trackCount.toLocaleString()} tracks &middot;
+							{formatListeningTime(review.listeningTime)}
 						</span>
 					</div>
 
@@ -66,7 +70,7 @@
 						<div
 							class="h-full rounded-full bg-linear-to-r from-logo-1 to-logo-3"
 							style="width: {maxTrackCount > 0
-								? (stat.trackCount / maxTrackCount) * 100
+								? (review.trackCount / maxTrackCount) * 100
 								: 0}%"
 						></div>
 					</div>
@@ -75,3 +79,4 @@
 		</div>
 	{/if}
 </div>
+

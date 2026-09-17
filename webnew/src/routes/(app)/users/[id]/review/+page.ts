@@ -4,13 +4,13 @@ import type { PageLoad } from "./$types";
 export const load: PageLoad = async ({ parent, params }) => {
 	const data = await parent();
 
-	const yearStats = await data.apiClient.getUserYearStats(params.id);
-	if (!yearStats.success) {
-		throw error(yearStats.error.code, { message: yearStats.error.message });
+	const reviews = await data.apiClient.getAllUserYearReviews(params.id);
+	if (!reviews.success) {
+		throw error(reviews.error.code, { message: reviews.error.message });
 	}
 
 	return {
 		...data,
-		yearStats: yearStats.data.stats,
+		reviews: reviews.data.reviews,
 	};
 };

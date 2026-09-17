@@ -413,6 +413,32 @@ export const GetAlbums = z.object({
 });
 export type GetAlbums = z.infer<typeof GetAlbums>;
 
+// Name: UserYearReview
+export const UserYearReview = z.object({
+  // Name: UserYearReview.year
+  "year": z.number(),
+  // Name: UserYearReview.trackCount
+  "trackCount": z.number(),
+  // Name: UserYearReview.listeningTime
+  "listeningTime": z.number(),
+  // Name: UserYearReview.avgCompletion
+  "avgCompletion": z.number(),
+  // Name: UserYearReview.skipCount
+  "skipCount": z.number(),
+  // Name: UserYearReview.uniqueTracks
+  "uniqueTracks": z.number(),
+  // Name: UserYearReview.favoritePlays
+  "favoritePlays": z.number(),
+});
+export type UserYearReview = z.infer<typeof UserYearReview>;
+
+// Name: GetAllUserYearReviews
+export const GetAllUserYearReviews = z.object({
+  // Name: GetAllUserYearReviews.reviews
+  "reviews": z.array(UserYearReview),
+});
+export type GetAllUserYearReviews = z.infer<typeof GetAllUserYearReviews>;
+
 // Name: GetApiTokens
 export const GetApiTokens = z.object({
   // Name: GetApiTokens.tokens
@@ -776,223 +802,56 @@ export const GetUserTopTracks = z.object({
 });
 export type GetUserTopTracks = z.infer<typeof GetUserTopTracks>;
 
-// Name: YearStat
-export const YearStat = z.object({
-  // Name: YearStat.year
-  "year": z.number(),
-  // Name: YearStat.trackCount
-  "trackCount": z.number(),
-  // Name: YearStat.listeningTime
-  "listeningTime": z.number(),
-  // Name: YearStat.avgCompletion
-  "avgCompletion": z.number(),
-  // Name: YearStat.skipCount
-  "skipCount": z.number(),
-  // Name: YearStat.uniqueTracks
-  "uniqueTracks": z.number(),
-  // Name: YearStat.favoritePlays
-  "favoritePlays": z.number(),
-});
-export type YearStat = z.infer<typeof YearStat>;
-
-// Name: ReviewTrack
-export const ReviewTrack = z.object({
-  // Name: ReviewTrack.rank
-  "rank": z.number(),
-  // Name: ReviewTrack.playCount
-  "playCount": z.number(),
-  // Name: ReviewTrack.track
-  "track": Track,
-});
-export type ReviewTrack = z.infer<typeof ReviewTrack>;
-
-// Name: ReviewAlbum
-export const ReviewAlbum = z.object({
-  // Name: ReviewAlbum.rank
-  "rank": z.number(),
-  // Name: ReviewAlbum.playCount
-  "playCount": z.number(),
-  // Name: ReviewAlbum.album
-  "album": Album,
-});
-export type ReviewAlbum = z.infer<typeof ReviewAlbum>;
-
-// Name: ReviewArtist
-export const ReviewArtist = z.object({
-  // Name: ReviewArtist.rank
-  "rank": z.number(),
-  // Name: ReviewArtist.playCount
-  "playCount": z.number(),
-  // Name: ReviewArtist.artist
-  "artist": Artist,
-});
-export type ReviewArtist = z.infer<typeof ReviewArtist>;
-
-// Name: ReviewInnerTrack
-export const ReviewInnerTrack = z.object({
-  // Name: ReviewInnerTrack.rank
-  "rank": z.number(),
-  // Name: ReviewInnerTrack.playCount
-  "playCount": z.number(),
-  // Name: ReviewInnerTrack.playTime
-  "playTime": z.number(),
-  // Name: ReviewInnerTrack.track
-  "track": Track,
-});
-export type ReviewInnerTrack = z.infer<typeof ReviewInnerTrack>;
-
-// Name: ReviewArtistTracks
-export const ReviewArtistTracks = z.object({
-  // Name: ReviewArtistTracks.artist
-  "artist": Artist,
-  // Name: ReviewArtistTracks.tracks
-  "tracks": z.array(ReviewInnerTrack),
-});
-export type ReviewArtistTracks = z.infer<typeof ReviewArtistTracks>;
-
-// Name: ReviewAlbumTracks
-export const ReviewAlbumTracks = z.object({
-  // Name: ReviewAlbumTracks.album
-  "album": Album,
-  // Name: ReviewAlbumTracks.tracks
-  "tracks": z.array(ReviewInnerTrack),
-});
-export type ReviewAlbumTracks = z.infer<typeof ReviewAlbumTracks>;
-
-// Name: ReviewTag
-export const ReviewTag = z.object({
-  // Name: ReviewTag.tagSlug
-  "tagSlug": z.string(),
-  // Name: ReviewTag.rank
-  "rank": z.number(),
-  // Name: ReviewTag.playCount
-  "playCount": z.number(),
-});
-export type ReviewTag = z.infer<typeof ReviewTag>;
-
-// Name: ReviewDecade
-export const ReviewDecade = z.object({
-  // Name: ReviewDecade.decade
-  "decade": z.number(),
-  // Name: ReviewDecade.rank
-  "rank": z.number(),
-  // Name: ReviewDecade.playCount
-  "playCount": z.number(),
-});
-export type ReviewDecade = z.infer<typeof ReviewDecade>;
-
-// Name: ReviewMonth
-export const ReviewMonth = z.object({
-  // Name: ReviewMonth.month
-  "month": z.number(),
-  // Name: ReviewMonth.playCount
-  "playCount": z.number(),
-  // Name: ReviewMonth.playTime
-  "playTime": z.number(),
-  // Name: ReviewMonth.avgCompletion
-  "avgCompletion": z.number(),
-  // Name: ReviewMonth.skipCount
-  "skipCount": z.number(),
-  // Name: ReviewMonth.uniqueTracks
-  "uniqueTracks": z.number(),
-  // Name: ReviewMonth.favoritePlays
-  "favoritePlays": z.number(),
-  // Name: ReviewMonth.trackCount
-  "trackCount": z.number(),
-  // Name: ReviewMonth.albumCount
-  "albumCount": z.number(),
-  // Name: ReviewMonth.artistCount
-  "artistCount": z.number(),
-  // Name: ReviewMonth.tracks
-  "tracks": z.array(ReviewTrack),
-  // Name: ReviewMonth.albums
-  "albums": z.array(ReviewAlbum),
-  // Name: ReviewMonth.artists
-  "artists": z.array(ReviewArtist),
-  // Name: ReviewMonth.tags
-  "tags": z.array(ReviewTag),
-  // Name: ReviewMonth.decades
-  "decades": z.array(ReviewDecade),
-});
-export type ReviewMonth = z.infer<typeof ReviewMonth>;
-
 // Name: GetUserYearReview
 export const GetUserYearReview = z.object({
   // Name: GetUserYearReview.review
-  "review": YearStat,
-  // Name: GetUserYearReview.tracks
-  "tracks": z.array(ReviewTrack),
-  // Name: GetUserYearReview.albums
-  "albums": z.array(ReviewAlbum),
-  // Name: GetUserYearReview.artists
-  "artists": z.array(ReviewArtist),
-  // Name: GetUserYearReview.trackCount
-  "trackCount": z.number(),
-  // Name: GetUserYearReview.albumCount
-  "albumCount": z.number(),
-  // Name: GetUserYearReview.artistCount
-  "artistCount": z.number(),
-  // Name: GetUserYearReview.artistTracks
-  "artistTracks": z.array(ReviewArtistTracks),
-  // Name: GetUserYearReview.albumTracks
-  "albumTracks": z.array(ReviewAlbumTracks),
-  // Name: GetUserYearReview.months
-  "months": z.array(ReviewMonth),
-  // Name: GetUserYearReview.tags
-  "tags": z.array(ReviewTag),
-  // Name: GetUserYearReview.decades
-  "decades": z.array(ReviewDecade),
+  "review": UserYearReview,
 });
 export type GetUserYearReview = z.infer<typeof GetUserYearReview>;
 
-// Name: GetUserYearReviewMonthTopAlbums
-export const GetUserYearReviewMonthTopAlbums = z.object({
-  // Name: GetUserYearReviewMonthTopAlbums.albums
-  "albums": z.array(ReviewAlbum),
+// Name: RankedTrack
+export const RankedTrack = z.object({
+  // Name: RankedTrack.id
+  "id": z.string(),
+  // Name: RankedTrack.name
+  "name": z.string(),
+  // Name: RankedTrack.displayNumber
+  "displayNumber": z.number().nullable(),
+  // Name: RankedTrack.duration
+  "duration": z.number(),
+  // Name: RankedTrack.number
+  "number": z.number().nullable(),
+  // Name: RankedTrack.year
+  "year": z.number().nullable(),
+  // Name: RankedTrack.coverArt
+  "coverArt": Images,
+  // Name: RankedTrack.albumId
+  "albumId": z.string(),
+  // Name: RankedTrack.albumName
+  "albumName": z.string(),
+  // Name: RankedTrack.artists
+  "artists": z.array(ArtistInfo),
+  // Name: RankedTrack.tags
+  "tags": z.array(z.string()),
+  // Name: RankedTrack.created
+  "created": z.string(),
+  // Name: RankedTrack.updated
+  "updated": z.string(),
+  // Name: RankedTrack.rank
+  "rank": z.number(),
+  // Name: RankedTrack.playCount
+  "playCount": z.number(),
 });
-export type GetUserYearReviewMonthTopAlbums = z.infer<typeof GetUserYearReviewMonthTopAlbums>;
+export type RankedTrack = z.infer<typeof RankedTrack>;
 
-// Name: GetUserYearReviewMonthTopArtists
-export const GetUserYearReviewMonthTopArtists = z.object({
-  // Name: GetUserYearReviewMonthTopArtists.artists
-  "artists": z.array(ReviewArtist),
+// Name: GetUserYearReviewTracks
+export const GetUserYearReviewTracks = z.object({
+  // Name: GetUserYearReviewTracks.page
+  "page": Page,
+  // Name: GetUserYearReviewTracks.tracks
+  "tracks": z.array(RankedTrack),
 });
-export type GetUserYearReviewMonthTopArtists = z.infer<typeof GetUserYearReviewMonthTopArtists>;
-
-// Name: GetUserYearReviewMonthTopTracks
-export const GetUserYearReviewMonthTopTracks = z.object({
-  // Name: GetUserYearReviewMonthTopTracks.tracks
-  "tracks": z.array(ReviewTrack),
-});
-export type GetUserYearReviewMonthTopTracks = z.infer<typeof GetUserYearReviewMonthTopTracks>;
-
-// Name: GetUserYearReviewTopAlbums
-export const GetUserYearReviewTopAlbums = z.object({
-  // Name: GetUserYearReviewTopAlbums.albums
-  "albums": z.array(ReviewAlbum),
-});
-export type GetUserYearReviewTopAlbums = z.infer<typeof GetUserYearReviewTopAlbums>;
-
-// Name: GetUserYearReviewTopArtists
-export const GetUserYearReviewTopArtists = z.object({
-  // Name: GetUserYearReviewTopArtists.artists
-  "artists": z.array(ReviewArtist),
-});
-export type GetUserYearReviewTopArtists = z.infer<typeof GetUserYearReviewTopArtists>;
-
-// Name: GetUserYearReviewTopTracks
-export const GetUserYearReviewTopTracks = z.object({
-  // Name: GetUserYearReviewTopTracks.tracks
-  "tracks": z.array(ReviewTrack),
-});
-export type GetUserYearReviewTopTracks = z.infer<typeof GetUserYearReviewTopTracks>;
-
-// Name: GetUserYearStats
-export const GetUserYearStats = z.object({
-  // Name: GetUserYearStats.stats
-  "stats": z.array(YearStat),
-});
-export type GetUserYearStats = z.infer<typeof GetUserYearStats>;
+export type GetUserYearReviewTracks = z.infer<typeof GetUserYearReviewTracks>;
 
 // Name: PushTrackHistory
 export const PushTrackHistory = z.object({

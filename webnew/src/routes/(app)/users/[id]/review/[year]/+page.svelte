@@ -29,44 +29,49 @@
 
 	let currentYear = $derived(new Date().getFullYear());
 	let review = $derived(data.review);
+	let topTracks = $derived(data.topTracks);
 
-	let topArtist = $derived(review.artists[0] ?? null);
-	let topAlbum = $derived(review.albums[0] ?? null);
-	let topTrack = $derived(review.tracks[0] ?? null);
+	// let topArtist = $derived(review.artists[0] ?? null);
+	// let topAlbum = $derived(review.albums[0] ?? null);
+	let topTrack = $derived(topTracks[0] ?? null);
 
-	let monthlyHours = $derived(review.months.map((m) => m.playTime / 3600));
-	let monthLabels = $derived([
-		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-	]);
-	let maxMonthlyHours = $derived(Math.max(...monthlyHours, 1 / 60));
+	$effect(() => {
+		console.log("top track", topTrack);
+	});
 
-	let barHeights = $derived(
-		monthlyHours.map((h) =>
-			h > 0 ? Math.max((h / maxMonthlyHours) * 100, 4) : 0,
-		),
-	);
+	// let monthlyHours = $derived(review.months.map((m) => m.playTime / 3600));
+	// let monthLabels = $derived([
+	// 	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	// 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+	// ]);
+	// let maxMonthlyHours = $derived(Math.max(...monthlyHours, 1 / 60));
 
-	let hoveredMonth = $state(-1);
+	// let barHeights = $derived(
+	// 	monthlyHours.map((h) =>
+	// 		h > 0 ? Math.max((h / maxMonthlyHours) * 100, 4) : 0,
+	// 	),
+	// );
 
-	let expandedArtist = $state<string | null>(null);
-	let expandedAlbum = $state<string | null>(null);
+	// let hoveredMonth = $state(-1);
+	//
+	// let expandedArtist = $state<string | null>(null);
+	// let expandedAlbum = $state<string | null>(null);
+	//
+	// function artistTracksFor(id: string) {
+	// 	return review.artistTracks.find((a) => a.artist.id === id)?.tracks ?? [];
+	// }
+	//
+	// function albumTracksFor(id: string) {
+	// 	return review.albumTracks.find((a) => a.album.id === id)?.tracks ?? [];
+	// }
 
-	function artistTracksFor(id: string) {
-		return review.artistTracks.find((a) => a.artist.id === id)?.tracks ?? [];
-	}
-
-	function albumTracksFor(id: string) {
-		return review.albumTracks.find((a) => a.album.id === id)?.tracks ?? [];
-	}
-
-	function toggleArtist(id: string) {
-		expandedArtist = expandedArtist === id ? null : id;
-	}
-
-	function toggleAlbum(id: string) {
-		expandedAlbum = expandedAlbum === id ? null : id;
-	}
+	// function toggleArtist(id: string) {
+	// 	expandedArtist = expandedArtist === id ? null : id;
+	// }
+	//
+	// function toggleAlbum(id: string) {
+	// 	expandedAlbum = expandedAlbum === id ? null : id;
+	// }
 
 	function formatMonthlyHours(hours: number): string {
 		if (hours >= 1) {
@@ -87,18 +92,14 @@
 	}
 
 	let repeatRate = $derived(
-		review.review.uniqueTracks > 0
-			? review.review.trackCount / review.review.uniqueTracks
-			: 0,
+		review.uniqueTracks > 0 ? review.trackCount / review.uniqueTracks : 0,
 	);
 	let skipRate = $derived(
-		review.review.trackCount > 0
-			? (review.review.skipCount / review.review.trackCount) * 100
-			: 0,
+		review.trackCount > 0 ? (review.skipCount / review.trackCount) * 100 : 0,
 	);
 	let favoritesOverlap = $derived(
-		review.review.trackCount > 0
-			? Math.round((review.review.favoritePlays / review.review.trackCount) * 100)
+		review.trackCount > 0
+			? Math.round((review.favoritePlays / review.trackCount) * 100)
 			: 0,
 	);
 
@@ -117,7 +118,9 @@
 	<div
 		class="flex flex-col gap-2 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-6 sm:p-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
 	>
-		<p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+		<p
+			class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+		>
 			Year in Review
 		</p>
 
@@ -132,16 +135,16 @@
 			{/if}
 		</div>
 
-		{#if review.review.trackCount > 0}
-			<div class="flex flex-col gap-0.5">
-				<p class="text-sm text-muted-foreground">
-					{review.review.trackCount.toLocaleString()} plays &middot;
-					{formatListeningTime(review.review.listeningTime)}
-				</p>
-			</div>
-		{:else}
-			<p class="text-sm text-muted-foreground">No listening data this year.</p>
-		{/if}
+		<!-- {#if review.review.trackCount > 0} -->
+		<!-- 	<div class="flex flex-col gap-0.5"> -->
+		<!-- 		<p class="text-sm text-muted-foreground"> -->
+		<!-- 			{review.review.trackCount.toLocaleString()} plays &middot; -->
+		<!-- 			{formatListeningTime(review.review.listeningTime)} -->
+		<!-- 		</p> -->
+		<!-- 	</div> -->
+		<!-- {:else} -->
+		<!-- 	<p class="text-sm text-muted-foreground">No listening data this year.</p> -->
+		<!-- {/if} -->
 	</div>
 
 	<section>
@@ -153,42 +156,42 @@
 		<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Top Artist</span>
-				{#if topArtist}
-					<a href="/artists/{topArtist.artist.id}" class="flex items-center gap-2">
-						<img
-							src={topArtist.artist.coverArt.small}
-							alt=""
-							class="h-10 w-10 rounded object-cover"
-						/>
-						<span class="truncate text-sm font-medium">
-							{topArtist.artist.name}
-						</span>
-					</a>
-				{:else}
-					<span class="truncate text-sm font-medium text-muted-foreground">
-						—
-					</span>
-				{/if}
+				<!-- {#if topArtist} -->
+				<!-- 	<a href="/artists/{topArtist.artist.id}" class="flex items-center gap-2"> -->
+				<!-- 		<img -->
+				<!-- 			src={topArtist.artist.coverArt.small} -->
+				<!-- 			alt="" -->
+				<!-- 			class="h-10 w-10 rounded object-cover" -->
+				<!-- 		/> -->
+				<!-- 		<span class="truncate text-sm font-medium"> -->
+				<!-- 			{topArtist.artist.name} -->
+				<!-- 		</span> -->
+				<!-- 	</a> -->
+				<!-- {:else} -->
+				<!-- 	<span class="truncate text-sm font-medium text-muted-foreground"> -->
+				<!-- 		— -->
+				<!-- 	</span> -->
+				<!-- {/if} -->
 			</div>
 
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Top Album</span>
-				{#if topAlbum}
-					<a href="/albums/{topAlbum.album.id}" class="flex items-center gap-2">
-						<img
-							src={topAlbum.album.coverArt.small}
-							alt=""
-							class="h-10 w-10 rounded object-cover"
-						/>
-						<span class="truncate text-sm font-medium">
-							{topAlbum.album.name}
-						</span>
-					</a>
-				{:else}
-					<span class="truncate text-sm font-medium text-muted-foreground">
-						—
-					</span>
-				{/if}
+				<!-- {#if topAlbum} -->
+				<!-- 	<a href="/albums/{topAlbum.album.id}" class="flex items-center gap-2"> -->
+				<!-- 		<img -->
+				<!-- 			src={topAlbum.album.coverArt.small} -->
+				<!-- 			alt="" -->
+				<!-- 			class="h-10 w-10 rounded object-cover" -->
+				<!-- 		/> -->
+				<!-- 		<span class="truncate text-sm font-medium"> -->
+				<!-- 			{topAlbum.album.name} -->
+				<!-- 		</span> -->
+				<!-- 	</a> -->
+				<!-- {:else} -->
+				<!-- 	<span class="truncate text-sm font-medium text-muted-foreground"> -->
+				<!-- 		— -->
+				<!-- 	</span> -->
+				<!-- {/if} -->
 			</div>
 
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
@@ -196,12 +199,12 @@
 				{#if topTrack}
 					<span class="flex items-center gap-2">
 						<img
-							src={topTrack.track.coverArt.small}
+							src={topTrack.coverArt.small}
 							alt=""
 							class="h-10 w-10 rounded object-cover"
 						/>
 						<span class="truncate text-sm font-medium">
-							{topTrack.track.name}
+							{topTrack.name}
 						</span>
 					</span>
 				{:else}
@@ -223,7 +226,7 @@
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Avg Completion</span>
 				<span class="text-2xl font-bold">
-					{formatPercent(review.review.avgCompletion)}
+					{formatPercent(review.avgCompletion)}
 				</span>
 			</div>
 
@@ -235,7 +238,7 @@
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Unique Tracks</span>
 				<span class="text-2xl font-bold">
-					{review.review.uniqueTracks.toLocaleString()}
+					{review.uniqueTracks.toLocaleString()}
 				</span>
 			</div>
 
@@ -256,7 +259,7 @@
 
 	<section>
 		<SectionHeader
-			count={review.trackCount}
+			count={data.topTrackCount}
 			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-tracks"
 		>
 			<Music />
@@ -264,8 +267,8 @@
 		</SectionHeader>
 
 		<div class="flex flex-col">
-			{#each review.tracks as item (item.track.id)}
-				<TopTrackItem rank={item.rank} track={item.track} playCount={item.playCount}>
+			{#each topTracks as item (item.id)}
+				<TopTrackItem rank={item.rank} track={item} playCount={item.playCount}>
 					{#snippet menuItems()}
 						<DropdownMenu.Group>
 							<DropdownMenu.Item>
@@ -294,7 +297,7 @@
 								Go to artist
 							</DropdownMenu.SubTrigger>
 							<DropdownMenu.SubContent>
-								{#each item.track.artists as artist (artist.id)}
+								{#each item.artists as artist (artist.id)}
 									<a
 										href="/artists/{artist.id}"
 										class="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
@@ -311,8 +314,8 @@
 						</DropdownMenu.Item>
 						<DropdownMenu.Item
 							onSelect={async () => {
-								const wasFav = favoritesManager.hasTrack(item.track.id);
-								await favoritesManager.toggleTrack(item.track.id);
+								const wasFav = favoritesManager.hasTrack(item.id);
+								await favoritesManager.toggleTrack(item.id);
 								toast.success(
 									wasFav
 										? "Removed from favorites"
@@ -320,7 +323,7 @@
 								);
 							}}
 						>
-							{#if favoritesManager.hasTrack(item.track.id)}
+							{#if favoritesManager.hasTrack(item.id)}
 								<Heart class="fill-primary stroke-primary" />
 								Unfavorite
 							{:else}
@@ -335,105 +338,105 @@
 	</section>
 
 	<section>
-		<SectionHeader
-			count={review.albumCount}
-			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-albums"
-		>
-			<DiscAlbum />
-			Top Albums
-		</SectionHeader>
+		<!-- <SectionHeader -->
+		<!-- 	count={review.albumCount} -->
+		<!-- 	viewAllHref="/users/{data.userData.id}/review/{data.year}/top-albums" -->
+		<!-- > -->
+		<!-- 	<DiscAlbum /> -->
+		<!-- 	Top Albums -->
+		<!-- </SectionHeader> -->
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
-			{#each review.albums as item (item.album.id)}
-				{@const expanded = expandedAlbum === item.album.id}
-				<div
-					class="flex w-40 shrink-0 flex-col transition-all"
-					class:w-80={expanded}
-				>
-					<AlbumTile
-						id={item.album.id}
-						cover={item.album.coverArt.small}
-						name={item.album.name}
-						artists={item.album.artists}
-						{expanded}
-						onToggle={() => toggleAlbum(item.album.id)}
-					/>
-
-					{#if expanded}
-						<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2">
-							{#each albumTracksFor(item.album.id) as entry (entry.track.id)}
-								<a
-									href="/tracks/{entry.track.id}"
-									class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent"
-								>
-									<img
-										src={entry.track.coverArt.small}
-										alt=""
-										class="h-8 w-8 shrink-0 rounded object-cover"
-									/>
-									<span class="min-w-0 flex-1 truncate text-sm">
-										{entry.track.name}
-									</span>
-									<span class="shrink-0 text-xs text-muted-foreground">
-										{entry.playCount.toLocaleString()} plays
-									</span>
-								</a>
-							{/each}
-						</div>
-					{/if}
-				</div>
-			{/each}
+			<!-- {#each review.albums as item (item.album.id)} -->
+			<!-- 	{@const expanded = expandedAlbum === item.album.id} -->
+			<!-- 	<div -->
+			<!-- 		class="flex w-40 shrink-0 flex-col transition-all" -->
+			<!-- 		class:w-80={expanded} -->
+			<!-- 	> -->
+			<!-- 		<AlbumTile -->
+			<!-- 			id={item.album.id} -->
+			<!-- 			cover={item.album.coverArt.small} -->
+			<!-- 			name={item.album.name} -->
+			<!-- 			artists={item.album.artists} -->
+			<!-- 			{expanded} -->
+			<!-- 			onToggle={() => toggleAlbum(item.album.id)} -->
+			<!-- 		/> -->
+			<!---->
+			<!-- 		{#if expanded} -->
+			<!-- 			<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
+			<!-- 				{#each albumTracksFor(item.album.id) as entry (entry.track.id)} -->
+			<!-- 					<a -->
+			<!-- 						href="/tracks/{entry.track.id}" -->
+			<!-- 						class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
+			<!-- 					> -->
+			<!-- 						<img -->
+			<!-- 							src={entry.track.coverArt.small} -->
+			<!-- 							alt="" -->
+			<!-- 							class="h-8 w-8 shrink-0 rounded object-cover" -->
+			<!-- 						/> -->
+			<!-- 						<span class="min-w-0 flex-1 truncate text-sm"> -->
+			<!-- 							{entry.track.name} -->
+			<!-- 						</span> -->
+			<!-- 						<span class="shrink-0 text-xs text-muted-foreground"> -->
+			<!-- 							{entry.playCount.toLocaleString()} plays -->
+			<!-- 						</span> -->
+			<!-- 					</a> -->
+			<!-- 				{/each} -->
+			<!-- 			</div> -->
+			<!-- 		{/if} -->
+			<!-- 	</div> -->
+			<!-- {/each} -->
 		</div>
 	</section>
 
 	<section>
-		<SectionHeader
-			count={review.artistCount}
-			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-artists"
-		>
-			<Users />
-			Top Artists
-		</SectionHeader>
+		<!-- <SectionHeader -->
+		<!-- 	count={review.artistCount} -->
+		<!-- 	viewAllHref="/users/{data.userData.id}/review/{data.year}/top-artists" -->
+		<!-- > -->
+		<!-- 	<Users /> -->
+		<!-- 	Top Artists -->
+		<!-- </SectionHeader> -->
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
-			{#each review.artists as item (item.artist.id)}
-				{@const expanded = expandedArtist === item.artist.id}
-				<div
-					class="flex w-40 shrink-0 flex-col transition-all"
-					class:w-80={expanded}
-				>
-					<ArtistTile
-						id={item.artist.id}
-						cover={item.artist.coverArt.small}
-						name={item.artist.name}
-						{expanded}
-						onToggle={() => toggleArtist(item.artist.id)}
-					/>
-
-					{#if expanded}
-						<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2">
-							{#each artistTracksFor(item.artist.id) as entry (entry.track.id)}
-								<a
-									href="/tracks/{entry.track.id}"
-									class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent"
-								>
-									<img
-										src={entry.track.coverArt.small}
-										alt=""
-										class="h-8 w-8 shrink-0 rounded object-cover"
-									/>
-									<span class="min-w-0 flex-1 truncate text-sm">
-										{entry.track.name}
-									</span>
-									<span class="shrink-0 text-xs text-muted-foreground">
-										{entry.playCount.toLocaleString()} plays
-									</span>
-								</a>
-							{/each}
-						</div>
-					{/if}
-				</div>
-			{/each}
+			<!-- {#each review.artists as item (item.artist.id)} -->
+			<!-- 	{@const expanded = expandedArtist === item.artist.id} -->
+			<!-- 	<div -->
+			<!-- 		class="flex w-40 shrink-0 flex-col transition-all" -->
+			<!-- 		class:w-80={expanded} -->
+			<!-- 	> -->
+			<!-- 		<ArtistTile -->
+			<!-- 			id={item.artist.id} -->
+			<!-- 			cover={item.artist.coverArt.small} -->
+			<!-- 			name={item.artist.name} -->
+			<!-- 			{expanded} -->
+			<!-- 			onToggle={() => toggleArtist(item.artist.id)} -->
+			<!-- 		/> -->
+			<!---->
+			<!-- 		{#if expanded} -->
+			<!-- 			<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
+			<!-- 				{#each artistTracksFor(item.artist.id) as entry (entry.track.id)} -->
+			<!-- 					<a -->
+			<!-- 						href="/tracks/{entry.track.id}" -->
+			<!-- 						class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
+			<!-- 					> -->
+			<!-- 						<img -->
+			<!-- 							src={entry.track.coverArt.small} -->
+			<!-- 							alt="" -->
+			<!-- 							class="h-8 w-8 shrink-0 rounded object-cover" -->
+			<!-- 						/> -->
+			<!-- 						<span class="min-w-0 flex-1 truncate text-sm"> -->
+			<!-- 							{entry.track.name} -->
+			<!-- 						</span> -->
+			<!-- 						<span class="shrink-0 text-xs text-muted-foreground"> -->
+			<!-- 							{entry.playCount.toLocaleString()} plays -->
+			<!-- 						</span> -->
+			<!-- 					</a> -->
+			<!-- 				{/each} -->
+			<!-- 			</div> -->
+			<!-- 		{/if} -->
+			<!-- 	</div> -->
+			<!-- {/each} -->
 		</div>
 	</section>
 
@@ -444,38 +447,38 @@
 		</SectionHeader>
 
 		<div class="flex h-56 items-end gap-2 sm:h-48">
-			{#each monthLabels as label, i}
-				<div class="flex h-full flex-1 flex-col items-center gap-1.5">
-					<span class="text-[10px] text-muted-foreground">
-						{formatMonthlyHours(monthlyHours[i])}
-					</span>
-					<div
-						class="flex w-full flex-1 items-end"
-						role="button"
-						tabindex="-1"
-						onpointerenter={() => (hoveredMonth = i)}
-						onpointerleave={() => (hoveredMonth = -1)}
-					>
-						<div class="relative w-full" style="height: {barHeights[i]}%">
-							{#if hoveredMonth === i && monthlyHours[i] > 0}
-								<div
-									class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs font-medium whitespace-nowrap text-background shadow-md"
-								>
-									{label}: {formatMonthlyHours(monthlyHours[i])}
-									&middot;
-									{review.months[i].playCount.toLocaleString()} plays
-								</div>
-							{/if}
-							<div
-								class="h-full w-full rounded-t bg-linear-to-t from-logo-3 to-logo-1 transition-all hover:opacity-80"
-							></div>
-						</div>
-					</div>
-					<span class="text-[10px] text-muted-foreground">
-						{label}
-					</span>
-				</div>
-			{/each}
+			<!-- {#each monthLabels as label, i} -->
+			<!-- 	<div class="flex h-full flex-1 flex-col items-center gap-1.5"> -->
+			<!-- 		<span class="text-[10px] text-muted-foreground"> -->
+			<!-- 			{formatMonthlyHours(monthlyHours[i])} -->
+			<!-- 		</span> -->
+			<!-- 		<div -->
+			<!-- 			class="flex w-full flex-1 items-end" -->
+			<!-- 			role="button" -->
+			<!-- 			tabindex="-1" -->
+			<!-- 			onpointerenter={() => (hoveredMonth = i)} -->
+			<!-- 			onpointerleave={() => (hoveredMonth = -1)} -->
+			<!-- 		> -->
+			<!-- 			<div class="relative w-full" style="height: {barHeights[i]}%"> -->
+			<!-- 				{#if hoveredMonth === i && monthlyHours[i] > 0} -->
+			<!-- 					<div -->
+			<!-- 						class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs font-medium whitespace-nowrap text-background shadow-md" -->
+			<!-- 					> -->
+			<!-- 						{label}: {formatMonthlyHours(monthlyHours[i])} -->
+			<!-- 						&middot; -->
+			<!-- 						{review.months[i].playCount.toLocaleString()} plays -->
+			<!-- 					</div> -->
+			<!-- 				{/if} -->
+			<!-- 				<div -->
+			<!-- 					class="h-full w-full rounded-t bg-linear-to-t from-logo-3 to-logo-1 transition-all hover:opacity-80" -->
+			<!-- 				></div> -->
+			<!-- 			</div> -->
+			<!-- 		</div> -->
+			<!-- 		<span class="text-[10px] text-muted-foreground"> -->
+			<!-- 			{label} -->
+			<!-- 		</span> -->
+			<!-- 	</div> -->
+			<!-- {/each} -->
 		</div>
 	</section>
 
@@ -486,71 +489,72 @@
 		</SectionHeader>
 
 		<div class="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
-			{#each monthLabels as label, i (label)}
-				{@const count = review.months[i]?.playCount ?? 0}
-				<a
-					href="/users/{data.userData.id}/review/{data.year}/months/{i + 1}"
-					class="flex min-w-0 flex-col items-center gap-0.5 rounded-lg border bg-card px-2 py-2 transition-colors hover:bg-accent sm:min-w-[88px] sm:flex-none"
-					class:pointer-events-none={count === 0}
-					class:opacity-40={count === 0}
-					aria-disabled={count === 0}
-				>
-					<span class="text-sm font-medium">{label}</span>
-					<span class="text-xs text-muted-foreground">
-						{count.toLocaleString()}
-					</span>
-				</a>
-			{/each}
+			<!-- {#each monthLabels as label, i (label)} -->
+			<!-- 	{@const count = review.months[i]?.playCount ?? 0} -->
+			<!-- 	<a -->
+			<!-- 		href="/users/{data.userData.id}/review/{data.year}/months/{i + 1}" -->
+			<!-- 		class="flex min-w-0 flex-col items-center gap-0.5 rounded-lg border bg-card px-2 py-2 transition-colors hover:bg-accent sm:min-w-[88px] sm:flex-none" -->
+			<!-- 		class:pointer-events-none={count === 0} -->
+			<!-- 		class:opacity-40={count === 0} -->
+			<!-- 		aria-disabled={count === 0} -->
+			<!-- 	> -->
+			<!-- 		<span class="text-sm font-medium">{label}</span> -->
+			<!-- 		<span class="text-xs text-muted-foreground"> -->
+			<!-- 			{count.toLocaleString()} -->
+			<!-- 		</span> -->
+			<!-- 	</a> -->
+			<!-- {/each} -->
 		</div>
 	</section>
 
 	<section>
-		<SectionHeader count={review.tags.length}>
-			<Tags />
-			Top Tags
-		</SectionHeader>
+		<!-- <SectionHeader count={review.tags.length}> -->
+		<!-- 	<Tags /> -->
+		<!-- 	Top Tags -->
+		<!-- </SectionHeader> -->
 
 		<div class="flex flex-wrap gap-2">
-			{#each review.tags as tag, i (tag.tagSlug)}
-				<div
-					class="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5"
-				>
-					<span class="text-sm">
-						{i + 1}. {formatTagSlug(tag.tagSlug)}
-					</span>
-					<span class="text-xs text-muted-foreground">
-						{tag.playCount.toLocaleString()} plays
-					</span>
-				</div>
-			{/each}
+			<!-- {#each review.tags as tag, i (tag.tagSlug)} -->
+			<!-- 	<div -->
+			<!-- 		class="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5" -->
+			<!-- 	> -->
+			<!-- 		<span class="text-sm"> -->
+			<!-- 			{i + 1}. {formatTagSlug(tag.tagSlug)} -->
+			<!-- 		</span> -->
+			<!-- 		<span class="text-xs text-muted-foreground"> -->
+			<!-- 			{tag.playCount.toLocaleString()} plays -->
+			<!-- 		</span> -->
+			<!-- 	</div> -->
+			<!-- {/each} -->
 		</div>
 	</section>
 
 	<section>
-		<SectionHeader count={review.decades.length}>
-			<DiscAlbum />
-			Decades
-		</SectionHeader>
+		<!-- <SectionHeader count={review.decades.length}> -->
+		<!-- 	<DiscAlbum /> -->
+		<!-- 	Decades -->
+		<!-- </SectionHeader> -->
 
 		<div class="flex flex-col gap-2">
-			{#each review.decades as decade (decade.decade)}
-				{@const count = decade.playCount}
-				{@const maxDecadeCount = review.decades[0]?.playCount ?? 1}
-				<div class="flex items-center gap-3">
-					<span class="w-14 shrink-0 text-sm font-medium">
-						{formatDecade(decade.decade)}
-					</span>
-					<div class="h-6 flex-1 overflow-hidden rounded bg-muted">
-						<div
-							class="h-full bg-linear-to-r from-logo-3 to-logo-1"
-							style="width: {Math.max((count / maxDecadeCount) * 100, 4)}%"
-						></div>
-					</div>
-					<span class="w-20 shrink-0 text-right text-xs text-muted-foreground">
-						{count.toLocaleString()} plays
-					</span>
-				</div>
-			{/each}
+			<!-- {#each review.decades as decade (decade.decade)} -->
+			<!-- 	{@const count = decade.playCount} -->
+			<!-- 	{@const maxDecadeCount = review.decades[0]?.playCount ?? 1} -->
+			<!-- 	<div class="flex items-center gap-3"> -->
+			<!-- 		<span class="w-14 shrink-0 text-sm font-medium"> -->
+			<!-- 			{formatDecade(decade.decade)} -->
+			<!-- 		</span> -->
+			<!-- 		<div class="h-6 flex-1 overflow-hidden rounded bg-muted"> -->
+			<!-- 			<div -->
+			<!-- 				class="h-full bg-linear-to-r from-logo-3 to-logo-1" -->
+			<!-- 				style="width: {Math.max((count / maxDecadeCount) * 100, 4)}%" -->
+			<!-- 			></div> -->
+			<!-- 		</div> -->
+			<!-- 		<span class="w-20 shrink-0 text-right text-xs text-muted-foreground"> -->
+			<!-- 			{count.toLocaleString()} plays -->
+			<!-- 		</span> -->
+			<!-- 	</div> -->
+			<!-- {/each} -->
 		</div>
 	</section>
 </div>
+

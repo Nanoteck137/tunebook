@@ -4,6 +4,8 @@
 
 	let { data } = $props();
 
+	// TODO(patrik): Infinite scroll 
+
 	function trackArtistNames(track: Track): string {
 		return track.artists.map((a) => a.name).join(", ");
 	}
@@ -25,7 +27,7 @@
 		</div>
 
 		<p class="text-sm text-muted-foreground">
-			{data.tracks.length.toLocaleString()}
+			{data.page.totalItems.toLocaleString()}
 			{data.tracks.length === 1 ? "track" : "tracks"} ranked by plays
 		</p>
 	</div>
@@ -33,9 +35,9 @@
 	<section>
 		<div class="flex flex-col gap-2">
 			{#if data.tracks.length > 0}
-				{#each data.tracks as item (item.track.id)}
+				{#each data.tracks as item (item.id)}
 					<a
-						href="/tracks/{item.track.id}"
+						href="/tracks/{item.id}"
 						class="flex items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:bg-accent"
 					>
 						<span
@@ -44,16 +46,16 @@
 							{item.rank}
 						</span>
 						<img
-							src={item.track.coverArt.small}
+							src={item.coverArt.small}
 							alt=""
 							class="h-10 w-10 shrink-0 rounded object-cover"
 						/>
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">
-								{item.track.name}
+								{item.name}
 							</span>
 							<span class="block truncate text-xs text-muted-foreground">
-								{trackArtistNames(item.track)}
+								{trackArtistNames(item)}
 							</span>
 						</span>
 						<span class="shrink-0 text-xs text-muted-foreground">

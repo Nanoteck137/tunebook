@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/tunebook/tools/query"
+	"github.com/nanoteck137/tunebook/tools/query/schema"
+	"github.com/nanoteck137/tunebook/types"
 )
 
 var (
@@ -23,12 +26,35 @@ var (
 	userYearReviewMonthArtistsTbl = goqu.T("user_year_review_month_artists")
 	userYearReviewMonthTagsTbl    = goqu.T("user_year_review_month_tags")
 	userYearReviewMonthDecadesTbl = goqu.T("user_year_review_month_decades")
+
+	userYearReviewTrackSchema = UserYearReviewTrackSchema()
 )
 
 const (
 	// TODO(patrik): Remove
 	TopYearReviewItems = 5
 )
+
+func UserYearReviewTrackSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_tracks?
+	return TrackSchema().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_tracks.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_tracks.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
 
 type UserYearReview struct {
 	UserId string `db:"user_id"`
@@ -73,15 +99,14 @@ type UserYearReviewDecade struct {
 }
 
 type UserYearReviewTrack struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Rank   int    `db:"rank"`
+	Track
 
-	TrackId   string `db:"track_id"`
-	PlayCount int    `db:"play_count"`
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	TrackId string `db:"track_id"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type UserYearReviewAlbum struct {
@@ -892,28 +917,56 @@ func (db DB) GetUserYearReview(
 	return Single[UserYearReview](db, ctx, query)
 }
 
+type GetUserYearReviewTracksParams struct {
+	UserId string
+	Year int
+
+	Page       types.PageParams
+	Query      types.QueryParams
+}
+
 func (db DB) GetUserYearReviewTracks(
 	ctx context.Context,
-	userId string,
-	year int,
-) ([]UserYearReviewTrack, error) {
-	query := dialect.From(userYearReviewTracksTbl).
-		Select(
+	params GetUserYearReviewTracksParams,
+) ([]UserYearReviewTrack, types.Page, error) {
+	var err error
+
+	query := TrackQuery().
+		SelectAppend(
 			userYearReviewTracksTbl.Col("user_id"),
 			userYearReviewTracksTbl.Col("year"),
-			userYearReviewTracksTbl.Col("rank"),
 			userYearReviewTracksTbl.Col("track_id"),
+
+			userYearReviewTracksTbl.Col("rank"),
 			userYearReviewTracksTbl.Col("play_count"),
-			userYearReviewTracksTbl.Col("created_at"),
-			userYearReviewTracksTbl.Col("updated_at"),
+		).
+		Join(
+			userYearReviewTracksTbl,
+			goqu.On(userYearReviewTracksTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
 		).
 		Where(
-			userYearReviewTracksTbl.Col("user_id").Eq(userId),
-			userYearReviewTracksTbl.Col("year").Eq(year),
-		).
-		Order(userYearReviewTracksTbl.Col("rank").Asc())
+			userYearReviewTracksTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewTracksTbl.Col("year").Eq(params.Year),
+		)
 
-	return Multiple[UserYearReviewTrack](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewTrackSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, tracksTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewTrack](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
 }
 
 func (db DB) GetUserYearReviewAlbums(

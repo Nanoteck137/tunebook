@@ -45,7 +45,7 @@ func Server(app core.App) (*pyrin.Server, error) {
 			)
 		},
 		Middlewares: []pyrin.MiddlewareFunc{
-			loggerMiddleware("server route"),
+			// loggerMiddleware("server route"),
 			corsMiddleware,
 			middleware.Recoverer,
 		},
