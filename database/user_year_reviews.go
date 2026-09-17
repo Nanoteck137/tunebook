@@ -31,8 +31,11 @@ var (
 )
 
 const (
+	// TODO(patrik): Rename
 	TopYearReviewItems = 5
-	TopYearTags        = 6
+
+	// TODO(patrik): Rename
+	TopYearTags = 6
 )
 
 type UserYearReview struct {
@@ -282,35 +285,10 @@ type UserYear struct {
 	Year int `db:"year"`
 }
 
-type userYearSummary struct {
-	TrackCount    int   `db:"track_count"`
-	ListeningTime int64 `db:"listening_time"`
-}
-
-type userYearTopTrack struct {
-	TrackId   string `db:"track_id"`
-	PlayCount int    `db:"play_count"`
-}
-
-type userYearTopAlbum struct {
-	AlbumId   string `db:"album_id"`
-	PlayCount int    `db:"play_count"`
-}
-
-type userYearTopArtist struct {
-	ArtistId  string `db:"artist_id"`
-	PlayCount int    `db:"play_count"`
-}
-
 type userYearMonth struct {
 	Month     int   `db:"month"`
 	PlayCount int   `db:"play_count"`
 	PlayTime  int64 `db:"play_time"`
-}
-
-type userYearMostPlayedDay struct {
-	DayOfWeek int `db:"day_of_week"`
-	PlayCount int `db:"play_count"`
 }
 
 type userYearArtistTrack struct {
@@ -325,40 +303,6 @@ type userYearAlbumTrack struct {
 	PlayTime  int64  `db:"play_time"`
 }
 
-type userYearHistorySummary struct {
-	AvgCompletion float64 `db:"avg_completion"`
-	SkipCount     int     `db:"skip_count"`
-	UniqueTracks  int     `db:"unique_tracks"`
-}
-
-type userYearActiveDay struct {
-	Day string `db:"day"`
-}
-
-type userYearHour struct {
-	Hour      int `db:"hour"`
-	PlayCount int `db:"play_count"`
-}
-
-type userYearDecade struct {
-	Decade    int `db:"decade"`
-	PlayCount int `db:"play_count"`
-}
-
-type userYearTag struct {
-	TagSlug   string `db:"tag_slug"`
-	PlayCount int    `db:"play_count"`
-}
-
-type userYearFavoritePlays struct {
-	PlayCount int `db:"play_count"`
-}
-
-type userYearPrevSummary struct {
-	TrackCount    int   `db:"track_count"`
-	ListeningTime int64 `db:"listening_time"`
-}
-
 var yearDays = []string{
 	"Monday",
 	"Tuesday",
@@ -369,7 +313,7 @@ var yearDays = []string{
 	"Sunday",
 }
 
-func longestRun(days []userYearActiveDay) int {
+func longestRun(days []UserYearActiveDay) int {
 	best := 0
 	run := 0
 	var prev time.Time
@@ -397,8 +341,18 @@ func longestRun(days []userYearActiveDay) int {
 	return best
 }
 
-func GetUserYearSummaryQuery(userId string, year int) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+type UserYearSummary struct {
+	TrackCount    int   `db:"track_count"`
+	ListeningTime int64 `db:"listening_time"`
+}
+
+// TODO(patrik): Move to user_track_stats
+func (db DB) GetUserYearSummary(
+	ctx context.Context,
+	userId string,
+	year int,
+) (UserYearSummary, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			goqu.COALESCE(
 				goqu.SUM(userTrackStatsTbl.Col("play_count")), 0,
@@ -412,13 +366,21 @@ func GetUserYearSummaryQuery(userId string, year int) *goqu.SelectDataset {
 			userTrackStatsTbl.Col("period_type").Eq("year"),
 			userTrackStatsTbl.Col("year").Eq(year),
 		)
+
+	return Single[UserYearSummary](db, ctx, query)
 }
 
-func GetUserYearTopTracksQuery(
+type UserYearTopTrack struct {
+	TrackId   string `db:"track_id"`
+	PlayCount int    `db:"play_count"`
+}
+
+func (db DB) GetUserYearTopTracks(
+	ctx context.Context,
 	userId string,
 	year int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) ([]UserYearTopTrack, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			userTrackStatsTbl.Col("track_id"),
 			userTrackStatsTbl.Col("play_count"),
@@ -432,13 +394,21 @@ func GetUserYearTopTracksQuery(
 			userTrackStatsTbl.Col("play_count").Desc(),
 			userTrackStatsTbl.Col("track_id").Asc(),
 		)
+
+	return Multiple[UserYearTopTrack](db, ctx, query)
 }
 
-func GetUserYearTopAlbumsQuery(
+type UserYearTopAlbum struct {
+	AlbumId   string `db:"album_id"`
+	PlayCount int    `db:"play_count"`
+}
+
+func (db DB) GetUserYearTopAlbums(
+	ctx context.Context,
 	userId string,
 	year int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) ([]UserYearTopAlbum, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			albumsTbl.Col("id").As("album_id"),
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
@@ -461,13 +431,21 @@ func GetUserYearTopAlbumsQuery(
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
 			albumsTbl.Col("id").Asc(),
 		)
+
+	return Multiple[UserYearTopAlbum](db, ctx, query)
 }
 
-func GetUserYearTopArtistsQuery(
+type UserYearTopArtist struct {
+	ArtistId  string `db:"artist_id"`
+	PlayCount int    `db:"play_count"`
+}
+
+func (db DB) GetUserYearTopArtists(
+	ctx context.Context,
 	userId string,
 	year int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) ([]UserYearTopArtist, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			artistsTbl.Col("id").As("artist_id"),
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
@@ -490,6 +468,8 @@ func GetUserYearTopArtistsQuery(
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
 			artistsTbl.Col("id").Asc(),
 		)
+
+	return Multiple[UserYearTopArtist](db, ctx, query)
 }
 
 func GetUserYearMonthsQuery(userId string, year int) *goqu.SelectDataset {
@@ -566,10 +546,16 @@ func GetUserYearAlbumTracksQuery(
 		)
 }
 
-func GetUserYearMostPlayedDayQuery(
+type UserYearMostPlayedDay struct {
+	DayOfWeek int `db:"day_of_week"`
+	PlayCount int `db:"play_count"`
+}
+
+func (db DB) GetUserYearMostPlayedDay(
+	ctx context.Context,
 	userId string,
 	year int,
-) RawQuery {
+) (UserYearMostPlayedDay, error) {
 	start, end := yearRange(year)
 
 	query := `
@@ -583,10 +569,10 @@ GROUP BY day_of_week
 ORDER BY play_count DESC
 LIMIT 1`
 
-	return RawQuery{
+	return Single[UserYearMostPlayedDay](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
 func yearRange(year int) (int64, int64) {
@@ -615,7 +601,17 @@ func monthRange(year int, month int) (int64, int64) {
 	return start, end
 }
 
-func GetUserYearHistorySummaryQuery(userId string, year int) RawQuery {
+type UserYearHistorySummary struct {
+	AvgCompletion float64 `db:"avg_completion"`
+	SkipCount     int     `db:"skip_count"`
+	UniqueTracks  int     `db:"unique_tracks"`
+}
+
+func (db DB) GetUserYearHistorySummary(
+	ctx context.Context,
+	userId string,
+	year int,
+) (UserYearHistorySummary, error) {
 	start, end := yearRange(year)
 
 	query := `
@@ -627,13 +623,21 @@ WHERE user_id = ?
   AND listened_at >= ?
   AND listened_at < ?`
 
-	return RawQuery{
+	return Single[UserYearHistorySummary](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearActiveDaysQuery(userId string, year int) RawQuery {
+type UserYearActiveDay struct {
+	Day string `db:"day"`
+}
+
+func (db DB) GetUserYearActiveDays(
+	ctx context.Context,
+	userId string,
+	year int,
+) ([]UserYearActiveDay, error) {
 	start, end := yearRange(year)
 
 	query := `
@@ -644,13 +648,17 @@ WHERE user_id = ?
   AND listened_at < ?
 ORDER BY day ASC`
 
-	return RawQuery{
+	return Multiple[UserYearActiveDay](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearFirstTrackQuery(userId string, year int) RawQuery {
+func (db DB) GetUserYearFirstTrack(
+	ctx context.Context,
+	userId string,
+	year int,
+) (string, error) {
 	start, end := yearRange(year)
 
 	query := `
@@ -662,13 +670,17 @@ WHERE user_id = ?
 ORDER BY listened_at ASC
 LIMIT 1`
 
-	return RawQuery{
+	return Single[string](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearLastTrackQuery(userId string, year int) RawQuery {
+func (db DB) GetUserYearLastTrack(
+	ctx context.Context,
+	userId string,
+	year int,
+) (string, error) {
 	start, end := yearRange(year)
 
 	query := `
@@ -680,13 +692,22 @@ WHERE user_id = ?
 ORDER BY listened_at DESC
 LIMIT 1`
 
-	return RawQuery{
+	return Single[string](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearHoursQuery(userId string, year int) RawQuery {
+type UserYearHour struct {
+	Hour      int `db:"hour"`
+	PlayCount int `db:"play_count"`
+}
+
+func (db DB) GetUserYearHours(
+	ctx context.Context,
+	userId string,
+	year int,
+) ([]UserYearHour, error) {
 	start, end := yearRange(year)
 
 	query := `
@@ -698,13 +719,21 @@ WHERE user_id = ?
   AND listened_at < ?
 GROUP BY hour`
 
-	return RawQuery{
+	return Multiple[UserYearHour](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearFavoritePlaysQuery(userId string, year int) RawQuery {
+type UserYearFavoritePlays struct {
+	PlayCount int `db:"play_count"`
+}
+
+func (db DB) GetUserYearFavoritePlays(
+	ctx context.Context,
+	userId string,
+	year int,
+) (UserYearFavoritePlays, error) {
 	start, end := yearRange(year)
 
 	query := `
@@ -715,13 +744,22 @@ WHERE h.user_id = ?
   AND h.listened_at >= ?
   AND h.listened_at < ?`
 
-	return RawQuery{
+	return Single[UserYearFavoritePlays](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearPrevSummaryQuery(userId string, year int) RawQuery {
+type UserYearPrevSummary struct {
+	TrackCount    int   `db:"track_count"`
+	ListeningTime int64 `db:"listening_time"`
+}
+
+func (db DB) GetUserYearPrevSummary(
+	ctx context.Context,
+	userId string,
+	year int,
+) (UserYearPrevSummary, error) {
 	query := `
 SELECT COALESCE(SUM(play_count), 0) AS track_count,
        COALESCE(SUM(play_time), 0) AS listening_time
@@ -730,13 +768,22 @@ WHERE user_id = ?
   AND period_type = 'year'
   AND year = ?`
 
-	return RawQuery{
+	return Single[UserYearPrevSummary](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, year - 1},
-	}
+	})
 }
 
-func GetUserYearDecadesQuery(userId string, year int) RawQuery {
+type UserYearDecade struct {
+	Decade    int `db:"decade"`
+	PlayCount int `db:"play_count"`
+}
+
+func (db DB) GetUserYearDecades(
+	ctx context.Context,
+	userId string,
+	year int,
+) ([]UserYearDecade, error) {
 	query := `
 SELECT (tracks.year - tracks.year % 10) AS decade,
        SUM(uts.play_count) AS play_count
@@ -749,14 +796,24 @@ WHERE uts.user_id = ?
 GROUP BY decade
 ORDER BY play_count DESC, decade ASC`
 
-	return RawQuery{
+	return Multiple[UserYearDecade](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, year},
-	}
+	})
 }
 
-func GetUserYearTagsQuery(userId string, year int, limit int) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+type UserYearTag struct {
+	TagSlug   string `db:"tag_slug"`
+	PlayCount int    `db:"play_count"`
+}
+
+func (db DB) GetUserYearTags(
+	ctx context.Context,
+	userId string,
+	year int,
+	limit int,
+) ([]UserYearTag, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			tagsTbl.Col("slug").As("tag_slug"),
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
@@ -780,14 +837,17 @@ func GetUserYearTagsQuery(userId string, year int, limit int) *goqu.SelectDatase
 			tagsTbl.Col("slug").Asc(),
 		).
 		Limit(uint(limit))
+
+	return Multiple[UserYearTag](db, ctx, query)
 }
 
-func GetUserYearMonthSummaryQuery(
+func (db DB) GetUserYearMonthSummary(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) (UserYearSummary, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			goqu.COALESCE(
 				goqu.SUM(userTrackStatsTbl.Col("play_count")), 0,
@@ -802,14 +862,17 @@ func GetUserYearMonthSummaryQuery(
 			userTrackStatsTbl.Col("year").Eq(year),
 			userTrackStatsTbl.Col("period_value").Eq(month),
 		)
+
+	return Single[UserYearSummary](db, ctx, query)
 }
 
-func GetUserYearMonthTopTracksQuery(
+func (db DB) GetUserYearMonthTopTracks(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) ([]UserYearTopTrack, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			userTrackStatsTbl.Col("track_id"),
 			userTrackStatsTbl.Col("play_count"),
@@ -824,14 +887,17 @@ func GetUserYearMonthTopTracksQuery(
 			userTrackStatsTbl.Col("play_count").Desc(),
 			userTrackStatsTbl.Col("track_id").Asc(),
 		)
+
+	return Multiple[UserYearTopTrack](db, ctx, query)
 }
 
-func GetUserYearMonthTopAlbumsQuery(
+func (db DB) GetUserYearMonthTopAlbums(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) ([]UserYearTopAlbum, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			albumsTbl.Col("id").As("album_id"),
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
@@ -855,14 +921,17 @@ func GetUserYearMonthTopAlbumsQuery(
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
 			albumsTbl.Col("id").Asc(),
 		)
+
+	return Multiple[UserYearTopAlbum](db, ctx, query)
 }
 
-func GetUserYearMonthTopArtistsQuery(
+func (db DB) GetUserYearMonthTopArtists(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) ([]UserYearTopArtist, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			artistsTbl.Col("id").As("artist_id"),
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
@@ -886,13 +955,16 @@ func GetUserYearMonthTopArtistsQuery(
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).Desc(),
 			artistsTbl.Col("id").Asc(),
 		)
+
+	return Multiple[UserYearTopArtist](db, ctx, query)
 }
 
-func GetUserYearMonthHistorySummaryQuery(
+func (db DB) GetUserYearMonthHistorySummary(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) RawQuery {
+) (UserYearHistorySummary, error) {
 	start, end := monthRange(year, month)
 
 	query := `
@@ -904,17 +976,18 @@ WHERE user_id = ?
   AND listened_at >= ?
   AND listened_at < ?`
 
-	return RawQuery{
+	return Single[UserYearHistorySummary](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearMonthActiveDaysQuery(
+func (db DB) GetUserYearMonthActiveDays(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) RawQuery {
+) ([]UserYearActiveDay, error) {
 	start, end := monthRange(year, month)
 
 	query := `
@@ -925,17 +998,18 @@ WHERE user_id = ?
   AND listened_at < ?
 ORDER BY day ASC`
 
-	return RawQuery{
+	return Multiple[UserYearActiveDay](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearMonthFavoritePlaysQuery(
+func (db DB) GetUserYearMonthFavoritePlays(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) RawQuery {
+) (UserYearFavoritePlays, error) {
 	start, end := monthRange(year, month)
 
 	query := `
@@ -946,17 +1020,18 @@ WHERE h.user_id = ?
   AND h.listened_at >= ?
   AND h.listened_at < ?`
 
-	return RawQuery{
+	return Single[UserYearFavoritePlays](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearMonthHoursQuery(
+func (db DB) GetUserYearMonthHours(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) RawQuery {
+) ([]UserYearHour, error) {
 	start, end := monthRange(year, month)
 
 	query := `
@@ -968,19 +1043,20 @@ WHERE user_id = ?
   AND listened_at < ?
 GROUP BY hour`
 
-	return RawQuery{
+	return Multiple[UserYearHour](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, start, end},
-	}
+	})
 }
 
-func GetUserYearMonthTagsQuery(
+func (db DB) GetUserYearMonthTags(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
 	limit int,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
+) ([]UserYearTag, error) {
+	query := dialect.From(userTrackStatsTbl).
 		Select(
 			tagsTbl.Col("slug").As("tag_slug"),
 			goqu.SUM(userTrackStatsTbl.Col("play_count")).As("play_count"),
@@ -1005,13 +1081,16 @@ func GetUserYearMonthTagsQuery(
 			tagsTbl.Col("slug").Asc(),
 		).
 		Limit(uint(limit))
+
+	return Multiple[UserYearTag](db, ctx, query)
 }
 
-func GetUserYearMonthDecadesQuery(
+func (db DB) GetUserYearMonthDecades(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
-) RawQuery {
+) ([]UserYearDecade, error) {
 	query := `
 SELECT (tracks.year - tracks.year % 10) AS decade,
        SUM(uts.play_count) AS play_count
@@ -1025,10 +1104,228 @@ WHERE uts.user_id = ?
 GROUP BY decade
 ORDER BY play_count DESC, decade ASC`
 
-	return RawQuery{
+	return Multiple[UserYearDecade](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, year, month},
+	})
+}
+
+func insertUserYearReviewRows(
+	tx DB,
+	ctx context.Context,
+	table any,
+	rows []goqu.Record,
+) error {
+	if len(rows) == 0 {
+		return nil
 	}
+
+	_, err := tx.Exec(ctx, dialect.Insert(table).Rows(rows))
+	return err
+}
+
+func processUserYearMonth(
+	tx DB,
+	ctx context.Context,
+	userId string,
+	year int,
+	month int,
+	now int64,
+) error {
+	monthSummary, err := tx.GetUserYearMonthSummary(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	monthActiveDays, err := tx.GetUserYearMonthActiveDays(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	monthHistory, err := tx.GetUserYearMonthHistorySummary(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	monthFavorites, err := tx.GetUserYearMonthFavoritePlays(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthsTbl).Rows(goqu.Record{
+		"user_id":        userId,
+		"year":           year,
+		"month":          month,
+		"play_count":     monthSummary.TrackCount,
+		"play_time":      monthSummary.ListeningTime,
+		"days_active":    len(monthActiveDays),
+		"longest_streak": longestRun(monthActiveDays),
+		"avg_completion": monthHistory.AvgCompletion,
+		"skip_count":     monthHistory.SkipCount,
+		"unique_tracks":  monthHistory.UniqueTracks,
+		"favorite_plays": monthFavorites.PlayCount,
+
+		"created_at": now,
+		"updated_at": now,
+	}))
+	if err != nil {
+		return err
+	}
+
+	monthTopTracks, err := tx.GetUserYearMonthTopTracks(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	trackRows := make([]goqu.Record, len(monthTopTracks))
+	for i, t := range monthTopTracks {
+		trackRows[i] = goqu.Record{
+			"user_id":    userId,
+			"year":       year,
+			"month":      month,
+			"track_id":   t.TrackId,
+			"rank":       i + 1,
+			"play_count": t.PlayCount,
+
+			"created_at": now,
+			"updated_at": now,
+		}
+	}
+
+	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthTracksTbl, trackRows)
+	if err != nil {
+		return err
+	}
+
+	monthTopAlbums, err := tx.GetUserYearMonthTopAlbums(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	albumRows := make([]goqu.Record, len(monthTopAlbums))
+	for i, a := range monthTopAlbums {
+		albumRows[i] = goqu.Record{
+			"user_id":    userId,
+			"year":       year,
+			"month":      month,
+			"album_id":   a.AlbumId,
+			"rank":       i + 1,
+			"play_count": a.PlayCount,
+
+			"created_at": now,
+			"updated_at": now,
+		}
+	}
+
+	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthAlbumsTbl, albumRows)
+	if err != nil {
+		return err
+	}
+
+	monthTopArtists, err := tx.GetUserYearMonthTopArtists(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	artistRows := make([]goqu.Record, len(monthTopArtists))
+	for i, a := range monthTopArtists {
+		artistRows[i] = goqu.Record{
+			"user_id":    userId,
+			"year":       year,
+			"month":      month,
+			"artist_id":  a.ArtistId,
+			"rank":       i + 1,
+			"play_count": a.PlayCount,
+
+			"created_at": now,
+			"updated_at": now,
+		}
+	}
+
+	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthArtistsTbl, artistRows)
+	if err != nil {
+		return err
+	}
+
+	monthHours, err := tx.GetUserYearMonthHours(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	hourRows := make([]goqu.Record, len(monthHours))
+	for i, h := range monthHours {
+		if h.Hour < 0 || h.Hour > 23 {
+			return fmt.Errorf("invalid hour: %d", h.Hour)
+		}
+
+		hourRows[i] = goqu.Record{
+			"user_id":    userId,
+			"year":       year,
+			"month":      month,
+			"hour":       h.Hour,
+			"play_count": h.PlayCount,
+
+			"created_at": now,
+			"updated_at": now,
+		}
+	}
+
+	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthHoursTbl, hourRows)
+	if err != nil {
+		return err
+	}
+
+	monthTags, err := tx.GetUserYearMonthTags(ctx, userId, year, month, TopYearTags)
+	if err != nil {
+		return err
+	}
+
+	tagRows := make([]goqu.Record, len(monthTags))
+	for i, t := range monthTags {
+		tagRows[i] = goqu.Record{
+			"user_id":    userId,
+			"year":       year,
+			"month":      month,
+			"tag_slug":   t.TagSlug,
+			"rank":       i + 1,
+			"play_count": t.PlayCount,
+
+			"created_at": now,
+			"updated_at": now,
+		}
+	}
+
+	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthTagsTbl, tagRows)
+	if err != nil {
+		return err
+	}
+
+	monthDecades, err := tx.GetUserYearMonthDecades(ctx, userId, year, month)
+	if err != nil {
+		return err
+	}
+
+	decadeRows := make([]goqu.Record, len(monthDecades))
+	for i, d := range monthDecades {
+		decadeRows[i] = goqu.Record{
+			"user_id":    userId,
+			"year":       year,
+			"month":      month,
+			"decade":     d.Decade,
+			"rank":       i + 1,
+			"play_count": d.PlayCount,
+
+			"created_at": now,
+			"updated_at": now,
+		}
+	}
+
+	err = insertUserYearReviewRows(tx, ctx, userYearReviewMonthDecadesTbl, decadeRows)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (db *Database) GenerateUserReview(
@@ -1044,97 +1341,51 @@ func (db *Database) GenerateUserReview(
 	}
 	defer tx.Rollback()
 
-	summary, err := Single[userYearSummary](tx, ctx, GetUserYearSummaryQuery(userId, year))
+	// Clean up any previously generated review for this year.
+	_, err = tx.Exec(ctx, dialect.Delete(userYearReviewsTbl).Where(goqu.Ex{
+		"user_id": userId,
+		"year":    year,
+	}))
 	if err != nil {
 		return err
 	}
 
-	topTracks, err := Multiple[userYearTopTrack](
-		tx, ctx, GetUserYearTopTracksQuery(userId, year))
+	// TODO(patrik): Use this if we don't have the foreign keys.
+	// for _, tbl := range []any{
+	// 	userYearReviewArtistTracksTbl,
+	// 	userYearReviewAlbumTracksTbl,
+	// 	userYearReviewTracksTbl,
+	// 	userYearReviewAlbumsTbl,
+	// 	userYearReviewArtistsTbl,
+	// 	userYearReviewMonthsTbl,
+	// 	userYearReviewMonthTracksTbl,
+	// 	userYearReviewMonthAlbumsTbl,
+	// 	userYearReviewMonthArtistsTbl,
+	// 	userYearReviewMonthHoursTbl,
+	// 	userYearReviewMonthTagsTbl,
+	// 	userYearReviewMonthDecadesTbl,
+	// 	userYearReviewDayTbl,
+	// 	userYearReviewHoursTbl,
+	// 	userYearReviewTagsTbl,
+	// 	userYearReviewDecadesTbl,
+	// 	userYearReviewMilestonesTbl,
+	// 	userYearReviewsTbl,
+	// } {
+	// 	_, err := tx.Exec(ctx, dialect.Delete(tbl).Where(goqu.Ex{
+	// 		"user_id": userId,
+	// 		"year":    year,
+	// 	}))
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	summary, err := tx.GetUserYearSummary(ctx, userId, year)
 	if err != nil {
 		return err
 	}
 
-	topAlbums, err := Multiple[userYearTopAlbum](
-		tx, ctx, GetUserYearTopAlbumsQuery(userId, year))
-	if err != nil {
-		return err
-	}
-
-	topArtists, err := Multiple[userYearTopArtist](
-		tx, ctx, GetUserYearTopArtistsQuery(userId, year))
-	if err != nil {
-		return err
-	}
-
-	day, err := Single[userYearMostPlayedDay](
-		tx, ctx, GetUserYearMostPlayedDayQuery(userId, year))
-	if err != nil {
-		if !errors.Is(err, ErrItemNotFound) {
-			return err
-		}
-
-		day = userYearMostPlayedDay{}
-	}
-
-	historySummary, err := Single[userYearHistorySummary](
-		tx, ctx, GetUserYearHistorySummaryQuery(userId, year))
-	if err != nil {
-		return err
-	}
-
-	activeDays, err := Multiple[userYearActiveDay](
-		tx, ctx, GetUserYearActiveDaysQuery(userId, year))
-	if err != nil {
-		return err
-	}
-
-	hours, err := Multiple[userYearHour](
-		tx, ctx, GetUserYearHoursQuery(userId, year))
-	if err != nil {
-		return err
-	}
-
-	favorites, err := Single[userYearFavoritePlays](
-		tx, ctx, GetUserYearFavoritePlaysQuery(userId, year))
-	if err != nil {
-		return err
-	}
-
-	firstTrackId, err := Single[string](
-		tx, ctx, GetUserYearFirstTrackQuery(userId, year))
-	if err != nil {
-		if !errors.Is(err, ErrItemNotFound) {
-			return err
-		}
-
-		firstTrackId = ""
-	}
-
-	lastTrackId, err := Single[string](
-		tx, ctx, GetUserYearLastTrackQuery(userId, year))
-	if err != nil {
-		if !errors.Is(err, ErrItemNotFound) {
-			return err
-		}
-
-		lastTrackId = ""
-	}
-
-	tags, err := Multiple[userYearTag](
-		tx, ctx, GetUserYearTagsQuery(userId, year, TopYearTags))
-	if err != nil {
-		return err
-	}
-
-	decades, err := Multiple[userYearDecade](
-		tx, ctx, GetUserYearDecadesQuery(userId, year))
-	if err != nil {
-		return err
-	}
-
-	prevSummary, err := Single[userYearPrevSummary](
-		tx, ctx, GetUserYearPrevSummaryQuery(userId, year))
+	activeDays, err := tx.GetUserYearActiveDays(ctx, userId, year)
 	if err != nil {
 		return err
 	}
@@ -1142,48 +1393,38 @@ func (db *Database) GenerateUserReview(
 	daysActive := len(activeDays)
 	longestStreak := longestRun(activeDays)
 
-	// Clean up any previously generated review for this year.
-	for _, tbl := range []any{
-		userYearReviewArtistTracksTbl,
-		userYearReviewAlbumTracksTbl,
-		userYearReviewTracksTbl,
-		userYearReviewAlbumsTbl,
-		userYearReviewArtistsTbl,
-		userYearReviewMonthsTbl,
-		userYearReviewMonthTracksTbl,
-		userYearReviewMonthAlbumsTbl,
-		userYearReviewMonthArtistsTbl,
-		userYearReviewMonthHoursTbl,
-		userYearReviewMonthTagsTbl,
-		userYearReviewMonthDecadesTbl,
-		userYearReviewDayTbl,
-		userYearReviewHoursTbl,
-		userYearReviewTagsTbl,
-		userYearReviewDecadesTbl,
-		userYearReviewMilestonesTbl,
-		userYearReviewsTbl,
-	} {
-		_, err := tx.Exec(ctx, dialect.Delete(tbl).Where(goqu.Ex{
-			"user_id": userId,
-			"year":    year,
-		}))
-		if err != nil {
-			return err
-		}
+	historySummary, err := tx.GetUserYearHistorySummary(ctx, userId, year)
+	if err != nil {
+		return err
+	}
+
+	favorites, err := tx.GetUserYearFavoritePlays(ctx, userId, year)
+	if err != nil {
+		return err
+	}
+
+	prevSummary, err := tx.GetUserYearPrevSummary(ctx, userId, year)
+	if err != nil {
+		return err
 	}
 
 	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewsTbl).Rows(goqu.Record{
-		"user_id":             userId,
-		"year":                year,
-		"track_count":         summary.TrackCount,
-		"listening_time":      summary.ListeningTime,
-		"days_active":         daysActive,
-		"longest_streak":      longestStreak,
-		"avg_completion":      historySummary.AvgCompletion,
-		"skip_count":          historySummary.SkipCount,
-		"unique_tracks":       historySummary.UniqueTracks,
-		"favorite_plays":      favorites.PlayCount,
-		"prev_track_count":    prevSummary.TrackCount,
+		"user_id":        userId,
+		"year":           year,
+		"track_count":    summary.TrackCount,
+		"listening_time": summary.ListeningTime,
+		// TODO(patrik): I think we should remove this, I don't I want this
+		"days_active": daysActive,
+		// TODO(patrik): I think we should remove this, I don't I want this
+		"longest_streak": longestStreak,
+		"avg_completion": historySummary.AvgCompletion,
+		"skip_count":     historySummary.SkipCount,
+		"unique_tracks":  historySummary.UniqueTracks,
+		"favorite_plays": favorites.PlayCount,
+
+		// TODO(patrik): I think we should remove this, I don't I want this
+		"prev_track_count": prevSummary.TrackCount,
+		// TODO(patrik): I think we should remove this, I don't I want this
 		"prev_listening_time": prevSummary.ListeningTime,
 
 		"created_at": now,
@@ -1193,159 +1434,17 @@ func (db *Database) GenerateUserReview(
 		return err
 	}
 
-	trackRows := make([]goqu.Record, len(topTracks))
-	for i, t := range topTracks {
-		trackRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"track_id":   t.TrackId,
-			"rank":       i + 1,
-			"play_count": t.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-	if len(trackRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewTracksTbl).Rows(trackRows))
-		if err != nil {
-			return err
-		}
-	}
-
-	albumRows := make([]goqu.Record, len(topAlbums))
-	for i, a := range topAlbums {
-		albumRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"album_id":   a.AlbumId,
-			"rank":       i + 1,
-			"play_count": a.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-	if len(albumRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewAlbumsTbl).Rows(albumRows))
-		if err != nil {
-			return err
-		}
-	}
-
-	artistRows := make([]goqu.Record, len(topArtists))
-	for i, a := range topArtists {
-		artistRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"artist_id":  a.ArtistId,
-			"rank":       i + 1,
-			"play_count": a.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-	if len(artistRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewArtistsTbl).Rows(artistRows))
-		if err != nil {
-			return err
-		}
-	}
-
-	monthRows := make([]goqu.Record, 12)
-	monthPlayCount := make([]int, 12)
-	monthPlayTime := make([]int64, 12)
-	monthDaysActive := make([]int, 12)
-	monthLongestStreak := make([]int, 12)
-	monthAvgCompletion := make([]float64, 12)
-	monthSkipCount := make([]int, 12)
-	monthUniqueTracks := make([]int, 12)
-	monthFavoritePlays := make([]int, 12)
-
-	monthTrackRows := make([][]goqu.Record, 12)
-	monthAlbumRows := make([][]goqu.Record, 12)
-	monthArtistRows := make([][]goqu.Record, 12)
-	monthHourRows := make([][]goqu.Record, 12)
-	monthTagRows := make([][]goqu.Record, 12)
-	monthDecadeRows := make([][]goqu.Record, 12)
-
-	for m := 1; m <= 12; m++ {
-		monthSummary, err := Single[userYearSummary](
-			tx, ctx, GetUserYearMonthSummaryQuery(userId, year, m))
+	{
+		topTracks, err := tx.GetUserYearTopTracks(ctx, userId, year)
 		if err != nil {
 			return err
 		}
 
-		monthTopTracks, err := Multiple[userYearTopTrack](
-			tx, ctx, GetUserYearMonthTopTracksQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthTopAlbums, err := Multiple[userYearTopAlbum](
-			tx, ctx, GetUserYearMonthTopAlbumsQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthTopArtists, err := Multiple[userYearTopArtist](
-			tx, ctx, GetUserYearMonthTopArtistsQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthHistory, err := Single[userYearHistorySummary](
-			tx, ctx, GetUserYearMonthHistorySummaryQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthActiveDays, err := Multiple[userYearActiveDay](
-			tx, ctx, GetUserYearMonthActiveDaysQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthFavorites, err := Single[userYearFavoritePlays](
-			tx, ctx, GetUserYearMonthFavoritePlaysQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthHours, err := Multiple[userYearHour](
-			tx, ctx, GetUserYearMonthHoursQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthTags, err := Multiple[userYearTag](
-			tx, ctx, GetUserYearMonthTagsQuery(userId, year, m, TopYearTags))
-		if err != nil {
-			return err
-		}
-
-		monthDecades, err := Multiple[userYearDecade](
-			tx, ctx, GetUserYearMonthDecadesQuery(userId, year, m))
-		if err != nil {
-			return err
-		}
-
-		monthPlayCount[m-1] = monthSummary.TrackCount
-		monthPlayTime[m-1] = monthSummary.ListeningTime
-		monthDaysActive[m-1] = len(monthActiveDays)
-		monthLongestStreak[m-1] = longestRun(monthActiveDays)
-		monthAvgCompletion[m-1] = monthHistory.AvgCompletion
-		monthSkipCount[m-1] = monthHistory.SkipCount
-		monthUniqueTracks[m-1] = monthHistory.UniqueTracks
-		monthFavoritePlays[m-1] = monthFavorites.PlayCount
-
-		trackRows := make([]goqu.Record, len(monthTopTracks))
-		for i, t := range monthTopTracks {
+		trackRows := make([]goqu.Record, len(topTracks))
+		for i, t := range topTracks {
 			trackRows[i] = goqu.Record{
 				"user_id":    userId,
 				"year":       year,
-				"month":      m,
 				"track_id":   t.TrackId,
 				"rank":       i + 1,
 				"play_count": t.PlayCount,
@@ -1354,14 +1453,25 @@ func (db *Database) GenerateUserReview(
 				"updated_at": now,
 			}
 		}
-		monthTrackRows[m-1] = trackRows
+		if len(trackRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewTracksTbl).Rows(trackRows))
+			if err != nil {
+				return err
+			}
+		}
+	}
 
-		albumRows := make([]goqu.Record, len(monthTopAlbums))
-		for i, a := range monthTopAlbums {
+	{
+		topAlbums, err := tx.GetUserYearTopAlbums(ctx, userId, year)
+		if err != nil {
+			return err
+		}
+
+		albumRows := make([]goqu.Record, len(topAlbums))
+		for i, a := range topAlbums {
 			albumRows[i] = goqu.Record{
 				"user_id":    userId,
 				"year":       year,
-				"month":      m,
 				"album_id":   a.AlbumId,
 				"rank":       i + 1,
 				"play_count": a.PlayCount,
@@ -1370,14 +1480,55 @@ func (db *Database) GenerateUserReview(
 				"updated_at": now,
 			}
 		}
-		monthAlbumRows[m-1] = albumRows
+		if len(albumRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewAlbumsTbl).Rows(albumRows))
+			if err != nil {
+				return err
+			}
+		}
 
-		artistRows := make([]goqu.Record, len(monthTopArtists))
-		for i, a := range monthTopArtists {
+		albumTrackRows := make([]goqu.Record, 0, TopYearReviewItems)
+		for _, a := range topAlbums[:min(len(topAlbums), TopYearReviewItems)] {
+			tracks, err := Multiple[userYearAlbumTrack](
+				tx, ctx, GetUserYearAlbumTracksQuery(userId, year, a.AlbumId))
+			if err != nil {
+				return err
+			}
+
+			for i, t := range tracks {
+				albumTrackRows = append(albumTrackRows, goqu.Record{
+					"user_id":    userId,
+					"year":       year,
+					"album_id":   a.AlbumId,
+					"track_id":   t.TrackId,
+					"rank":       i + 1,
+					"play_count": t.PlayCount,
+					"play_time":  t.PlayTime,
+
+					"created_at": now,
+					"updated_at": now,
+				})
+			}
+		}
+		if len(albumTrackRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewAlbumTracksTbl).Rows(albumTrackRows))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	{
+		topArtists, err := tx.GetUserYearTopArtists(ctx, userId, year)
+		if err != nil {
+			return err
+		}
+
+		artistRows := make([]goqu.Record, len(topArtists))
+		for i, a := range topArtists {
 			artistRows[i] = goqu.Record{
 				"user_id":    userId,
 				"year":       year,
-				"month":      m,
 				"artist_id":  a.ArtistId,
 				"rank":       i + 1,
 				"play_count": a.PlayCount,
@@ -1386,10 +1537,78 @@ func (db *Database) GenerateUserReview(
 				"updated_at": now,
 			}
 		}
-		monthArtistRows[m-1] = artistRows
+		if len(artistRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewArtistsTbl).Rows(artistRows))
+			if err != nil {
+				return err
+			}
+		}
 
-		hourRows := make([]goqu.Record, len(monthHours))
-		for i, h := range monthHours {
+		artistTrackRows := make([]goqu.Record, 0, TopYearReviewItems)
+		for _, a := range topArtists[:min(len(topArtists), TopYearReviewItems)] {
+			tracks, err := Multiple[userYearArtistTrack](
+				tx, ctx, GetUserYearArtistTracksQuery(userId, year, a.ArtistId))
+			if err != nil {
+				return err
+			}
+
+			for i, t := range tracks {
+				artistTrackRows = append(artistTrackRows, goqu.Record{
+					"user_id":    userId,
+					"year":       year,
+					"artist_id":  a.ArtistId,
+					"track_id":   t.TrackId,
+					"rank":       i + 1,
+					"play_count": t.PlayCount,
+					"play_time":  t.PlayTime,
+
+					"created_at": now,
+					"updated_at": now,
+				})
+			}
+		}
+		if len(artistTrackRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewArtistTracksTbl).Rows(artistTrackRows))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	{
+		day, err := tx.GetUserYearMostPlayedDay(ctx, userId, year)
+		if err != nil {
+			if !errors.Is(err, ErrItemNotFound) {
+				return err
+			}
+
+			day = UserYearMostPlayedDay{}
+		}
+
+		if day.PlayCount > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewDayTbl).Rows(goqu.Record{
+				"user_id":    userId,
+				"year":       year,
+				"day":        yearDays[day.DayOfWeek],
+				"play_count": day.PlayCount,
+
+				"created_at": now,
+				"updated_at": now,
+			}))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	{
+		hours, err := tx.GetUserYearHours(ctx, userId, year)
+		if err != nil {
+			return err
+		}
+
+		hourRows := make([]goqu.Record, len(hours))
+		for i, h := range hours {
 			if h.Hour < 0 || h.Hour > 23 {
 				return fmt.Errorf("invalid hour: %d", h.Hour)
 			}
@@ -1397,7 +1616,6 @@ func (db *Database) GenerateUserReview(
 			hourRows[i] = goqu.Record{
 				"user_id":    userId,
 				"year":       year,
-				"month":      m,
 				"hour":       h.Hour,
 				"play_count": h.PlayCount,
 
@@ -1405,14 +1623,25 @@ func (db *Database) GenerateUserReview(
 				"updated_at": now,
 			}
 		}
-		monthHourRows[m-1] = hourRows
+		if len(hourRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewHoursTbl).Rows(hourRows))
+			if err != nil {
+				return err
+			}
+		}
+	}
 
-		tagRows := make([]goqu.Record, len(monthTags))
-		for i, t := range monthTags {
+	{
+		tags, err := tx.GetUserYearTags(ctx, userId, year, TopYearTags)
+		if err != nil {
+			return err
+		}
+
+		tagRows := make([]goqu.Record, len(tags))
+		for i, t := range tags {
 			tagRows[i] = goqu.Record{
 				"user_id":    userId,
 				"year":       year,
-				"month":      m,
 				"tag_slug":   t.TagSlug,
 				"rank":       i + 1,
 				"play_count": t.PlayCount,
@@ -1421,14 +1650,25 @@ func (db *Database) GenerateUserReview(
 				"updated_at": now,
 			}
 		}
-		monthTagRows[m-1] = tagRows
+		if len(tagRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewTagsTbl).Rows(tagRows))
+			if err != nil {
+				return err
+			}
+		}
+	}
 
-		decadeRows := make([]goqu.Record, len(monthDecades))
-		for i, d := range monthDecades {
+	{
+		decades, err := tx.GetUserYearDecades(ctx, userId, year)
+		if err != nil {
+			return err
+		}
+
+		decadeRows := make([]goqu.Record, len(decades))
+		for i, d := range decades {
 			decadeRows[i] = goqu.Record{
 				"user_id":    userId,
 				"year":       year,
-				"month":      m,
 				"decade":     d.Decade,
 				"rank":       i + 1,
 				"play_count": d.PlayCount,
@@ -1437,246 +1677,52 @@ func (db *Database) GenerateUserReview(
 				"updated_at": now,
 			}
 		}
-		monthDecadeRows[m-1] = decadeRows
-	}
-
-	for i, playTime := range monthPlayTime {
-		monthRows[i] = goqu.Record{
-			"user_id":        userId,
-			"year":           year,
-			"month":          i + 1,
-			"play_count":     monthPlayCount[i],
-			"play_time":      playTime,
-			"days_active":    monthDaysActive[i],
-			"longest_streak": monthLongestStreak[i],
-			"avg_completion": monthAvgCompletion[i],
-			"skip_count":     monthSkipCount[i],
-			"unique_tracks":  monthUniqueTracks[i],
-			"favorite_plays": monthFavoritePlays[i],
-
-			"created_at": now,
-			"updated_at": now,
+		if len(decadeRows) > 0 {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewDecadesTbl).Rows(decadeRows))
+			if err != nil {
+				return err
+			}
 		}
 	}
-	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthsTbl).Rows(monthRows))
-	if err != nil {
-		return err
-	}
 
-	for _, rows := range monthTrackRows {
-		if len(rows) == 0 {
-			continue
-		}
-
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthTracksTbl).Rows(rows))
+	// TODO(patrik): Remove?
+	{
+		firstTrackId, err := tx.GetUserYearFirstTrack(ctx, userId, year)
 		if err != nil {
-			return err
-		}
-	}
+			if !errors.Is(err, ErrItemNotFound) {
+				return err
+			}
 
-	for _, rows := range monthAlbumRows {
-		if len(rows) == 0 {
-			continue
+			firstTrackId = ""
 		}
 
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthAlbumsTbl).Rows(rows))
+		lastTrackId, err := tx.GetUserYearLastTrack(ctx, userId, year)
 		if err != nil {
-			return err
-		}
-	}
+			if !errors.Is(err, ErrItemNotFound) {
+				return err
+			}
 
-	for _, rows := range monthArtistRows {
-		if len(rows) == 0 {
-			continue
+			lastTrackId = ""
 		}
 
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthArtistsTbl).Rows(rows))
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, rows := range monthHourRows {
-		if len(rows) == 0 {
-			continue
-		}
-
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthHoursTbl).Rows(rows))
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, rows := range monthTagRows {
-		if len(rows) == 0 {
-			continue
-		}
-
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthTagsTbl).Rows(rows))
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, rows := range monthDecadeRows {
-		if len(rows) == 0 {
-			continue
-		}
-
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthDecadesTbl).Rows(rows))
-		if err != nil {
-			return err
-		}
-	}
-
-	if day.PlayCount > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewDayTbl).Rows(goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"day":        yearDays[day.DayOfWeek],
-			"play_count": day.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}))
-		if err != nil {
-			return err
-		}
-	}
-
-	artistTrackRows := make([]goqu.Record, 0, TopYearReviewItems)
-	for _, a := range topArtists[:min(len(topArtists), TopYearReviewItems)] {
-		tracks, err := Multiple[userYearArtistTrack](
-			tx, ctx, GetUserYearArtistTracksQuery(userId, year, a.ArtistId))
-		if err != nil {
-			return err
-		}
-
-		for i, t := range tracks {
-			artistTrackRows = append(artistTrackRows, goqu.Record{
-				"user_id":    userId,
-				"year":       year,
-				"artist_id":  a.ArtistId,
-				"track_id":   t.TrackId,
-				"rank":       i + 1,
-				"play_count": t.PlayCount,
-				"play_time":  t.PlayTime,
+		if firstTrackId != "" || lastTrackId != "" {
+			_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMilestonesTbl).Rows(goqu.Record{
+				"user_id":        userId,
+				"year":           year,
+				"first_track_id": firstTrackId,
+				"last_track_id":  lastTrackId,
 
 				"created_at": now,
 				"updated_at": now,
-			})
-		}
-	}
-	if len(artistTrackRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewArtistTracksTbl).Rows(artistTrackRows))
-		if err != nil {
-			return err
+			}))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	albumTrackRows := make([]goqu.Record, 0, TopYearReviewItems)
-	for _, a := range topAlbums[:min(len(topAlbums), TopYearReviewItems)] {
-		tracks, err := Multiple[userYearAlbumTrack](
-			tx, ctx, GetUserYearAlbumTracksQuery(userId, year, a.AlbumId))
-		if err != nil {
-			return err
-		}
-
-		for i, t := range tracks {
-			albumTrackRows = append(albumTrackRows, goqu.Record{
-				"user_id":    userId,
-				"year":       year,
-				"album_id":   a.AlbumId,
-				"track_id":   t.TrackId,
-				"rank":       i + 1,
-				"play_count": t.PlayCount,
-				"play_time":  t.PlayTime,
-
-				"created_at": now,
-				"updated_at": now,
-			})
-		}
-	}
-	if len(albumTrackRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewAlbumTracksTbl).Rows(albumTrackRows))
-		if err != nil {
-			return err
-		}
-	}
-
-	hourRows := make([]goqu.Record, len(hours))
-	for i, h := range hours {
-		if h.Hour < 0 || h.Hour > 23 {
-			return fmt.Errorf("invalid hour: %d", h.Hour)
-		}
-
-		hourRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"hour":       h.Hour,
-			"play_count": h.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-	if len(hourRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewHoursTbl).Rows(hourRows))
-		if err != nil {
-			return err
-		}
-	}
-
-	tagRows := make([]goqu.Record, len(tags))
-	for i, t := range tags {
-		tagRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"tag_slug":   t.TagSlug,
-			"rank":       i + 1,
-			"play_count": t.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-	if len(tagRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewTagsTbl).Rows(tagRows))
-		if err != nil {
-			return err
-		}
-	}
-
-	decadeRows := make([]goqu.Record, len(decades))
-	for i, d := range decades {
-		decadeRows[i] = goqu.Record{
-			"user_id":    userId,
-			"year":       year,
-			"decade":     d.Decade,
-			"rank":       i + 1,
-			"play_count": d.PlayCount,
-
-			"created_at": now,
-			"updated_at": now,
-		}
-	}
-	if len(decadeRows) > 0 {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewDecadesTbl).Rows(decadeRows))
-		if err != nil {
-			return err
-		}
-	}
-
-	if firstTrackId != "" || lastTrackId != "" {
-		_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMilestonesTbl).Rows(goqu.Record{
-			"user_id":        userId,
-			"year":           year,
-			"first_track_id": firstTrackId,
-			"last_track_id":  lastTrackId,
-
-			"created_at": now,
-			"updated_at": now,
-		}))
+	for m := 1; m <= 12; m++ {
+		err := processUserYearMonth(tx.DB, ctx, userId, year, m, now)
 		if err != nil {
 			return err
 		}
