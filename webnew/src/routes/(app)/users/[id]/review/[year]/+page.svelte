@@ -3,11 +3,8 @@
 	import {
 		Activity,
 		BarChart3,
-		CalendarCheck,
 		CalendarDays,
-		Clock3,
 		DiscAlbum,
-		Flag,
 		Heart,
 		ListPlus,
 		Music,
@@ -19,7 +16,6 @@
 		Tags,
 		Users,
 	} from "@lucide/svelte";
-	import type { Track } from "$lib/api/types";
 	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 	import ArtistTile from "$lib/components/tiles/ArtistTile.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
@@ -37,7 +33,6 @@
 	let topArtist = $derived(review.artists[0] ?? null);
 	let topAlbum = $derived(review.albums[0] ?? null);
 	let topTrack = $derived(review.tracks[0] ?? null);
-	let mostPlayedDay = $derived(review.day);
 
 	let monthlyHours = $derived(review.months.map((m) => m.playTime / 3600));
 	let monthLabels = $derived([
@@ -87,24 +82,6 @@
 		return `${hours}h ${minutes}m`;
 	}
 
-	let prevYear = $derived(data.year - 1);
-	let playsDelta = $derived(
-		review.review.trackCount - review.review.prevTrackCount,
-	);
-	let playsPct = $derived(
-		review.review.prevTrackCount > 0
-			? Math.round((playsDelta / review.review.prevTrackCount) * 100)
-			: null,
-	);
-	let timeDelta = $derived(
-		review.review.listeningTime - review.review.prevListeningTime,
-	);
-
-	function formatSigned(value: number): string {
-		const sign = value > 0 ? "+" : "";
-		return `${sign}${value.toLocaleString()}`;
-	}
-
 	function formatPercent(rate: number): string {
 		return `${rate.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
 	}
@@ -125,21 +102,6 @@
 			: 0,
 	);
 
-	let hourCounts = $derived(
-		Array.from(
-			{ length: 24 },
-			(_, h) => review.hours.find((x) => x.hour === h)?.playCount ?? 0,
-		),
-	);
-	let maxHour = $derived(Math.max(...hourCounts, 1));
-	let peakHour = $derived(hourCounts.indexOf(Math.max(...hourCounts)));
-
-	function formatHour(hour: number): string {
-		const ampm = hour < 12 ? "AM" : "PM";
-		const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-		return `${hour12} ${ampm}`;
-	}
-
 	function formatTagSlug(slug: string): string {
 		const words = slug.split("-");
 		const sentence = words.join(" ");
@@ -148,10 +110,6 @@
 
 	function formatDecade(decade: number): string {
 		return `${decade}s`;
-	}
-
-	function trackArtistNames(track: Track): string {
-		return track.artists.map((a) => a.name).join(", ");
 	}
 </script>
 
@@ -180,14 +138,6 @@
 					{review.review.trackCount.toLocaleString()} plays &middot;
 					{formatListeningTime(review.review.listeningTime)}
 				</p>
-
-				{#if review.review.prevTrackCount > 0}
-					<p class="text-xs text-muted-foreground">
-						vs {prevYear}: {formatSigned(playsDelta)} plays
-						({formatSigned(playsPct ?? 0)}%)
-						&middot; {formatSigned(Math.round(timeDelta / 3600))}h listening
-					</p>
-				{/if}
 			</div>
 		{:else}
 			<p class="text-sm text-muted-foreground">No listening data this year.</p>
@@ -260,25 +210,6 @@
 					</span>
 				{/if}
 			</div>
-
-			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-				<span class="text-xs text-muted-foreground">Most Played Day</span>
-				{#if mostPlayedDay}
-					<div class="flex items-center gap-2">
-						<CalendarCheck size={20} class="shrink-0 text-muted-foreground" />
-						<span class="truncate text-sm font-medium">
-							{mostPlayedDay.day}
-						</span>
-					</div>
-					<span class="text-xs text-muted-foreground">
-						{mostPlayedDay.playCount.toLocaleString()} plays
-					</span>
-				{:else}
-					<span class="truncate text-sm font-medium text-muted-foreground">
-						—
-					</span>
-				{/if}
-			</div>
 		</div>
 	</section>
 
@@ -289,20 +220,6 @@
 		</SectionHeader>
 
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-				<span class="text-xs text-muted-foreground">Days Active</span>
-				<span class="text-2xl font-bold">
-					{review.review.daysActive.toLocaleString()}
-				</span>
-			</div>
-
-			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-				<span class="text-xs text-muted-foreground">Longest Streak</span>
-				<span class="text-2xl font-bold">
-					{review.review.longestStreak} days
-				</span>
-			</div>
-
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Avg Completion</span>
 				<span class="text-2xl font-bold">
@@ -334,76 +251,8 @@
 					<Heart size={16} class="shrink-0 fill-primary stroke-primary" />
 				</div>
 			</div>
-
-			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-				<span class="text-xs text-muted-foreground">Peak Hour</span>
-				<span class="text-2xl font-bold">{formatHour(peakHour)}</span>
-			</div>
 		</div>
 	</section>
-
-	{#if review.milestones?.firstTrack || review.milestones?.lastTrack}
-		<section>
-			<SectionHeader>
-				<Flag />
-				Milestones
-			</SectionHeader>
-
-			<div class="grid gap-4 sm:grid-cols-2">
-				{#if review.milestones?.firstTrack}
-					<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-						<span class="text-xs text-muted-foreground">
-							First song of {data.year}
-						</span>
-						<a
-							href="/tracks/{review.milestones.firstTrack.id}"
-							class="flex items-center gap-2"
-						>
-							<img
-								src={review.milestones.firstTrack.coverArt.small}
-								alt=""
-								class="h-10 w-10 rounded object-cover"
-							/>
-							<span class="flex min-w-0 flex-col">
-								<span class="truncate text-sm font-medium">
-									{review.milestones.firstTrack.name}
-								</span>
-								<span class="truncate text-xs text-muted-foreground">
-									{trackArtistNames(review.milestones.firstTrack)}
-								</span>
-							</span>
-						</a>
-					</div>
-				{/if}
-
-				{#if review.milestones?.lastTrack}
-					<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-						<span class="text-xs text-muted-foreground">
-							Last song of {data.year}
-						</span>
-						<a
-							href="/tracks/{review.milestones.lastTrack.id}"
-							class="flex items-center gap-2"
-						>
-							<img
-								src={review.milestones.lastTrack.coverArt.small}
-								alt=""
-								class="h-10 w-10 rounded object-cover"
-							/>
-							<span class="flex min-w-0 flex-col">
-								<span class="truncate text-sm font-medium">
-									{review.milestones.lastTrack.name}
-								</span>
-								<span class="truncate text-xs text-muted-foreground">
-									{trackArtistNames(review.milestones.lastTrack)}
-								</span>
-							</span>
-						</a>
-					</div>
-				{/if}
-			</div>
-		</section>
-	{/if}
 
 	<section>
 		<SectionHeader
@@ -651,38 +500,6 @@
 						{count.toLocaleString()}
 					</span>
 				</a>
-			{/each}
-		</div>
-	</section>
-
-	<section>
-		<SectionHeader>
-			<Clock3 />
-			Listening Hours
-		</SectionHeader>
-
-		<p class="mb-2 text-sm text-muted-foreground">
-			Your peak listening hour is
-			<span class="font-medium text-foreground">{formatHour(peakHour)}</span>.
-		</p>
-
-		<div class="flex h-36 items-end gap-[3px] sm:h-32">
-			{#each hourCounts as count, hour}
-				<div class="flex h-full flex-1 flex-col items-center justify-end gap-1">
-					<div
-						class="w-full rounded-t bg-primary"
-						class:opacity-20={hour !== peakHour}
-						title="{formatHour(hour)}: {count.toLocaleString()} plays"
-						style="height: {count > 0
-							? Math.max((count / maxHour) * 100, 4)
-							: 0}%"
-					></div>
-					{#if hour % 3 === 0}
-						<span class="text-[8px] text-muted-foreground">
-							{formatHour(hour)}
-						</span>
-					{/if}
-				</div>
 			{/each}
 		</div>
 	</section>

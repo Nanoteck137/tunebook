@@ -1055,16 +1055,6 @@
           "omitEmpty": false
         },
         {
-          "name": "day",
-          "type": "*ReviewDay",
-          "omitEmpty": false
-        },
-        {
-          "name": "hours",
-          "type": "[]ReviewHour",
-          "omitEmpty": false
-        },
-        {
           "name": "tags",
           "type": "[]ReviewTag",
           "omitEmpty": false
@@ -1072,11 +1062,6 @@
         {
           "name": "decades",
           "type": "[]ReviewDecade",
-          "omitEmpty": false
-        },
-        {
-          "name": "milestones",
-          "type": "*ReviewMilestones",
           "omitEmpty": false
         }
       ]
@@ -1517,21 +1502,6 @@
       ]
     },
     {
-      "name": "ReviewDay",
-      "fields": [
-        {
-          "name": "day",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "playCount",
-          "type": "int",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "ReviewDecade",
       "fields": [
         {
@@ -1541,21 +1511,6 @@
         },
         {
           "name": "rank",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "playCount",
-          "type": "int",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "ReviewHour",
-      "fields": [
-        {
-          "name": "hour",
           "type": "int",
           "omitEmpty": false
         },
@@ -1592,21 +1547,6 @@
       ]
     },
     {
-      "name": "ReviewMilestones",
-      "fields": [
-        {
-          "name": "firstTrack",
-          "type": "*Track",
-          "omitEmpty": false
-        },
-        {
-          "name": "lastTrack",
-          "type": "*Track",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "ReviewMonth",
       "fields": [
         {
@@ -1621,16 +1561,6 @@
         },
         {
           "name": "playTime",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "daysActive",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "longestStreak",
           "type": "int",
           "omitEmpty": false
         },
@@ -1682,11 +1612,6 @@
         {
           "name": "artists",
           "type": "[]ReviewArtist",
-          "omitEmpty": false
-        },
-        {
-          "name": "hours",
-          "type": "[]ReviewHour",
           "omitEmpty": false
         },
         {
@@ -2090,16 +2015,6 @@
           "omitEmpty": false
         },
         {
-          "name": "daysActive",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "longestStreak",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
           "name": "avgCompletion",
           "type": "float",
           "omitEmpty": false
@@ -2116,16 +2031,6 @@
         },
         {
           "name": "favoritePlays",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "prevTrackCount",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "prevListeningTime",
           "type": "int",
           "omitEmpty": false
         }

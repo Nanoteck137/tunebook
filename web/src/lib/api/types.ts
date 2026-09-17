@@ -784,10 +784,6 @@ export const YearStat = z.object({
   "trackCount": z.number(),
   // Name: YearStat.listeningTime
   "listeningTime": z.number(),
-  // Name: YearStat.daysActive
-  "daysActive": z.number(),
-  // Name: YearStat.longestStreak
-  "longestStreak": z.number(),
   // Name: YearStat.avgCompletion
   "avgCompletion": z.number(),
   // Name: YearStat.skipCount
@@ -796,10 +792,6 @@ export const YearStat = z.object({
   "uniqueTracks": z.number(),
   // Name: YearStat.favoritePlays
   "favoritePlays": z.number(),
-  // Name: YearStat.prevTrackCount
-  "prevTrackCount": z.number(),
-  // Name: YearStat.prevListeningTime
-  "prevListeningTime": z.number(),
 });
 export type YearStat = z.infer<typeof YearStat>;
 
@@ -867,15 +859,6 @@ export const ReviewAlbumTracks = z.object({
 });
 export type ReviewAlbumTracks = z.infer<typeof ReviewAlbumTracks>;
 
-// Name: ReviewHour
-export const ReviewHour = z.object({
-  // Name: ReviewHour.hour
-  "hour": z.number(),
-  // Name: ReviewHour.playCount
-  "playCount": z.number(),
-});
-export type ReviewHour = z.infer<typeof ReviewHour>;
-
 // Name: ReviewTag
 export const ReviewTag = z.object({
   // Name: ReviewTag.tagSlug
@@ -906,10 +889,6 @@ export const ReviewMonth = z.object({
   "playCount": z.number(),
   // Name: ReviewMonth.playTime
   "playTime": z.number(),
-  // Name: ReviewMonth.daysActive
-  "daysActive": z.number(),
-  // Name: ReviewMonth.longestStreak
-  "longestStreak": z.number(),
   // Name: ReviewMonth.avgCompletion
   "avgCompletion": z.number(),
   // Name: ReviewMonth.skipCount
@@ -930,32 +909,12 @@ export const ReviewMonth = z.object({
   "albums": z.array(ReviewAlbum),
   // Name: ReviewMonth.artists
   "artists": z.array(ReviewArtist),
-  // Name: ReviewMonth.hours
-  "hours": z.array(ReviewHour),
   // Name: ReviewMonth.tags
   "tags": z.array(ReviewTag),
   // Name: ReviewMonth.decades
   "decades": z.array(ReviewDecade),
 });
 export type ReviewMonth = z.infer<typeof ReviewMonth>;
-
-// Name: ReviewDay
-export const ReviewDay = z.object({
-  // Name: ReviewDay.day
-  "day": z.string(),
-  // Name: ReviewDay.playCount
-  "playCount": z.number(),
-});
-export type ReviewDay = z.infer<typeof ReviewDay>;
-
-// Name: ReviewMilestones
-export const ReviewMilestones = z.object({
-  // Name: ReviewMilestones.firstTrack
-  "firstTrack": Track.nullable(),
-  // Name: ReviewMilestones.lastTrack
-  "lastTrack": Track.nullable(),
-});
-export type ReviewMilestones = z.infer<typeof ReviewMilestones>;
 
 // Name: GetUserYearReview
 export const GetUserYearReview = z.object({
@@ -979,16 +938,10 @@ export const GetUserYearReview = z.object({
   "albumTracks": z.array(ReviewAlbumTracks),
   // Name: GetUserYearReview.months
   "months": z.array(ReviewMonth),
-  // Name: GetUserYearReview.day
-  "day": ReviewDay.nullable(),
-  // Name: GetUserYearReview.hours
-  "hours": z.array(ReviewHour),
   // Name: GetUserYearReview.tags
   "tags": z.array(ReviewTag),
   // Name: GetUserYearReview.decades
   "decades": z.array(ReviewDecade),
-  // Name: GetUserYearReview.milestones
-  "milestones": ReviewMilestones.nullable(),
 });
 export type GetUserYearReview = z.infer<typeof GetUserYearReview>;
 

@@ -130,15 +130,10 @@ type YearStat struct {
 	TrackCount    int   `json:"trackCount"`
 	ListeningTime int64 `json:"listeningTime"`
 
-	DaysActive    int     `json:"daysActive"`
-	LongestStreak int     `json:"longestStreak"`
 	AvgCompletion float64 `json:"avgCompletion"`
 	SkipCount     int     `json:"skipCount"`
 	UniqueTracks  int     `json:"uniqueTracks"`
 	FavoritePlays int     `json:"favoritePlays"`
-
-	PrevTrackCount    int   `json:"prevTrackCount"`
-	PrevListeningTime int64 `json:"prevListeningTime"`
 }
 
 type GetUserYearStats struct {
@@ -185,8 +180,6 @@ type ReviewMonth struct {
 	PlayCount int   `json:"playCount"`
 	PlayTime  int64 `json:"playTime"`
 
-	DaysActive    int     `json:"daysActive"`
-	LongestStreak int     `json:"longestStreak"`
 	AvgCompletion float64 `json:"avgCompletion"`
 	SkipCount     int     `json:"skipCount"`
 	UniqueTracks  int     `json:"uniqueTracks"`
@@ -200,19 +193,8 @@ type ReviewMonth struct {
 	Albums  []ReviewAlbum  `json:"albums"`
 	Artists []ReviewArtist `json:"artists"`
 
-	Hours   []ReviewHour   `json:"hours"`
 	Tags    []ReviewTag    `json:"tags"`
 	Decades []ReviewDecade `json:"decades"`
-}
-
-type ReviewDay struct {
-	Day       string `json:"day"`
-	PlayCount int    `json:"playCount"`
-}
-
-type ReviewHour struct {
-	Hour      int `json:"hour"`
-	PlayCount int `json:"playCount"`
 }
 
 type ReviewTag struct {
@@ -225,11 +207,6 @@ type ReviewDecade struct {
 	Decade    int `json:"decade"`
 	Rank      int `json:"rank"`
 	PlayCount int `json:"playCount"`
-}
-
-type ReviewMilestones struct {
-	FirstTrack *Track `json:"firstTrack"`
-	LastTrack  *Track `json:"lastTrack"`
 }
 
 type GetUserYearReview struct {
@@ -247,12 +224,9 @@ type GetUserYearReview struct {
 	AlbumTracks  []ReviewAlbumTracks  `json:"albumTracks"`
 
 	Months []ReviewMonth `json:"months"`
-	Day    *ReviewDay    `json:"day"`
 
-	Hours      []ReviewHour      `json:"hours"`
-	Tags       []ReviewTag       `json:"tags"`
-	Decades    []ReviewDecade    `json:"decades"`
-	Milestones *ReviewMilestones `json:"milestones"`
+	Tags    []ReviewTag    `json:"tags"`
+	Decades []ReviewDecade `json:"decades"`
 }
 
 type GetUserYearReviewTopTracks struct {
@@ -437,21 +411,16 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				res := GetUserYearReview{
-					Review: YearStat{
-						Year:          review.Review.Year,
-						TrackCount:    review.Review.TrackCount,
-						ListeningTime: review.Review.ListeningTime,
+Review: YearStat{
+					Year:          review.Review.Year,
+					TrackCount:    review.Review.TrackCount,
+					ListeningTime: review.Review.ListeningTime,
 
-						DaysActive:    review.Review.DaysActive,
-						LongestStreak: review.Review.LongestStreak,
-						AvgCompletion: review.Review.AvgCompletion,
-						SkipCount:     review.Review.SkipCount,
-						UniqueTracks:  review.Review.UniqueTracks,
-						FavoritePlays: review.Review.FavoritePlays,
-
-						PrevTrackCount:    review.Review.PrevTrackCount,
-						PrevListeningTime: review.Review.PrevListeningTime,
-					},
+					AvgCompletion: review.Review.AvgCompletion,
+					SkipCount:     review.Review.SkipCount,
+					UniqueTracks:  review.Review.UniqueTracks,
+					FavoritePlays: review.Review.FavoritePlays,
+				},
 
 					Tracks:  make([]ReviewTrack, len(review.Tracks)),
 					Albums:  make([]ReviewAlbum, len(review.Albums)),
@@ -556,14 +525,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 						}
 					}
 
-					hours := make([]ReviewHour, len(m.Hours))
-					for j, h := range m.Hours {
-						hours[j] = ReviewHour{
-							Hour:      h.Hour,
-							PlayCount: h.PlayCount,
-						}
-					}
-
 					tags := make([]ReviewTag, len(m.Tags))
 					for j, t := range m.Tags {
 						tags[j] = ReviewTag{
@@ -582,48 +543,30 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 						}
 					}
 
-					res.Months[i] = ReviewMonth{
-						Month:     m.Month,
-						PlayCount: m.PlayCount,
-						PlayTime:  m.PlayTime,
+res.Months[i] = ReviewMonth{
+					Month:     m.Month,
+					PlayCount: m.PlayCount,
+					PlayTime:  m.PlayTime,
 
-						DaysActive:    m.DaysActive,
-						LongestStreak: m.LongestStreak,
-						AvgCompletion: m.AvgCompletion,
-						SkipCount:     m.SkipCount,
-						UniqueTracks:  m.UniqueTracks,
-						FavoritePlays: m.FavoritePlays,
+					AvgCompletion: m.AvgCompletion,
+					SkipCount:     m.SkipCount,
+					UniqueTracks:  m.UniqueTracks,
+					FavoritePlays: m.FavoritePlays,
 
-						TrackCount:  m.TrackCount,
-						AlbumCount:  m.AlbumCount,
-						ArtistCount: m.ArtistCount,
+					TrackCount:  m.TrackCount,
+					AlbumCount:  m.AlbumCount,
+					ArtistCount: m.ArtistCount,
 
-						Tracks:  tracks,
-						Albums:  albums,
-						Artists: artists,
+					Tracks:  tracks,
+					Albums:  albums,
+					Artists: artists,
 
-						Hours:   hours,
-						Tags:    tags,
-						Decades: decades,
-					}
+					Tags:    tags,
+					Decades: decades,
 				}
+			}
 
-				if review.Day != nil {
-					res.Day = &ReviewDay{
-						Day:       review.Day.Day,
-						PlayCount: review.Day.PlayCount,
-					}
-				}
-
-				res.Hours = make([]ReviewHour, len(review.Hours))
-				for i, h := range review.Hours {
-					res.Hours[i] = ReviewHour{
-						Hour:      h.Hour,
-						PlayCount: h.PlayCount,
-					}
-				}
-
-				res.Tags = make([]ReviewTag, len(review.Tags))
+			res.Tags = make([]ReviewTag, len(review.Tags))
 				for i, t := range review.Tags {
 					res.Tags[i] = ReviewTag{
 						TagSlug:   t.TagSlug,
@@ -638,18 +581,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 						Decade:    d.Decade,
 						Rank:      d.Rank,
 						PlayCount: d.PlayCount,
-					}
-				}
-
-				if review.Milestones != nil {
-					res.Milestones = &ReviewMilestones{}
-					if review.Milestones.First != nil {
-						first := ConvertDBTrack(c, *review.Milestones.First)
-						res.Milestones.FirstTrack = &first
-					}
-					if review.Milestones.Last != nil {
-						last := ConvertDBTrack(c, *review.Milestones.Last)
-						res.Milestones.LastTrack = &last
 					}
 				}
 

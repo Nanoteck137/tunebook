@@ -310,18 +310,11 @@ type UserYearReviewInnerTrack struct {
 	Track database.Track
 }
 
-type UserYearReviewMilestone struct {
-	First *database.Track
-	Last  *database.Track
-}
-
 type UserYearReviewMonthDetail struct {
 	Month     int
 	PlayCount int
 	PlayTime  int64
 
-	DaysActive    int
-	LongestStreak int
 	AvgCompletion float64
 	SkipCount     int
 	UniqueTracks  int
@@ -335,7 +328,6 @@ type UserYearReviewMonthDetail struct {
 	Albums  []UserYearReviewAlbum
 	Artists []UserYearReviewArtist
 
-	Hours   []database.UserYearReviewMonthHour
 	Tags    []database.UserYearReviewMonthTag
 	Decades []database.UserYearReviewMonthDecade
 }
@@ -359,16 +351,11 @@ type GetUserYearReviewResult struct {
 	ArtistTracks map[string][]UserYearReviewInnerTrack
 	AlbumTracks  map[string][]UserYearReviewInnerTrack
 
-	Hours   []database.UserYearReviewHour
 	Tags    []database.UserYearReviewTag
 	Decades []database.UserYearReviewDecade
 
-	Milestones *UserYearReviewMilestone
-
 	Months       []database.UserYearReviewMonth
 	MonthDetails []UserYearReviewMonthDetail
-
-	Day *database.UserYearReviewDay
 }
 
 func (s *UserService) ensureUserYearReview(
@@ -454,34 +441,26 @@ func (s *UserService) GetUserYearReview(
 			"get user year review: months", err)
 	}
 
-	day, err := s.db.GetUserYearReviewDay(ctx, params.UserId, params.Year)
-	if err != nil {
-		if !errors.Is(err, database.ErrItemNotFound) {
+	artistTracks := make(map[string][]database.UserYearArtistTrack, len(artists))
+	for _, a := range artists {
+		rows, err := s.db.GetUserYearArtistTracks(
+			ctx, params.UserId, params.Year, a.ArtistId)
+		if err != nil {
 			return GetUserYearReviewResult{}, userErr.Wrap(
-				"get user year review: day", err)
+				"get user year review: artist tracks", err)
 		}
-
-		day = database.UserYearReviewDay{}
+		artistTracks[a.ArtistId] = rows
 	}
 
-	artistTracks, err := s.db.GetUserYearReviewArtistTracks(
-		ctx, params.UserId, params.Year)
-	if err != nil {
-		return GetUserYearReviewResult{}, userErr.Wrap(
-			"get user year review: artist tracks", err)
-	}
-
-	albumTracks, err := s.db.GetUserYearReviewAlbumTracks(
-		ctx, params.UserId, params.Year)
-	if err != nil {
-		return GetUserYearReviewResult{}, userErr.Wrap(
-			"get user year review: album tracks", err)
-	}
-
-	hours, err := s.db.GetUserYearReviewHours(ctx, params.UserId, params.Year)
-	if err != nil {
-		return GetUserYearReviewResult{}, userErr.Wrap(
-			"get user year review: hours", err)
+	albumTracks := make(map[string][]database.UserYearAlbumTrack, len(albums))
+	for _, a := range albums {
+		rows, err := s.db.GetUserYearAlbumTracks(
+			ctx, params.UserId, params.Year, a.AlbumId)
+		if err != nil {
+			return GetUserYearReviewResult{}, userErr.Wrap(
+				"get user year review: album tracks", err)
+		}
+		albumTracks[a.AlbumId] = rows
 	}
 
 	tags, err := s.db.GetUserYearReviewTags(ctx, params.UserId, params.Year)
@@ -496,17 +475,6 @@ func (s *UserService) GetUserYearReview(
 			"get user year review: decades", err)
 	}
 
-	milestone, err := s.db.GetUserYearReviewMilestones(
-		ctx, params.UserId, params.Year)
-	if err != nil {
-		if !errors.Is(err, database.ErrItemNotFound) {
-			return GetUserYearReviewResult{}, userErr.Wrap(
-				"get user year review: milestones", err)
-		}
-
-		milestone = database.UserYearReviewMilestone{}
-	}
-
 	monthDetails := make([]UserYearReviewMonthDetail, 12)
 	for i := range monthDetails {
 		monthDetails[i].Month = i + 1
@@ -517,8 +485,6 @@ func (s *UserService) GetUserYearReview(
 			detail := &monthDetails[m.Month-1]
 			detail.PlayCount = m.PlayCount
 			detail.PlayTime = m.PlayTime
-			detail.DaysActive = m.DaysActive
-			detail.LongestStreak = m.LongestStreak
 			detail.AvgCompletion = m.AvgCompletion
 			detail.SkipCount = m.SkipCount
 			detail.UniqueTracks = m.UniqueTracks
@@ -529,7 +495,6 @@ func (s *UserService) GetUserYearReview(
 	monthDetailTracks := make([][]database.UserYearReviewMonthTrack, 12)
 	monthDetailAlbums := make([][]database.UserYearReviewMonthAlbum, 12)
 	monthDetailArtists := make([][]database.UserYearReviewMonthArtist, 12)
-	monthDetailHours := make([][]database.UserYearReviewMonthHour, 12)
 	monthDetailTags := make([][]database.UserYearReviewMonthTag, 12)
 	monthDetailDecades := make([][]database.UserYearReviewMonthDecade, 12)
 
@@ -577,14 +542,6 @@ func (s *UserService) GetUserYearReview(
 		for _, a := range artists {
 			recordDetailId(a.ArtistId, &monthArtistIds)
 		}
-
-		hours, err := s.db.GetUserYearReviewMonthHours(
-			ctx, params.UserId, params.Year, m)
-		if err != nil {
-			return GetUserYearReviewResult{}, userErr.Wrap(
-				"get user year review: month hours", err)
-		}
-		monthDetailHours[m-1] = hours
 
 		tags, err := s.db.GetUserYearReviewMonthTags(
 			ctx, params.UserId, params.Year, m)
@@ -675,7 +632,6 @@ func (s *UserService) GetUserYearReview(
 			})
 		}
 
-		detail.Hours = monthDetailHours[m-1]
 		detail.Tags = monthDetailTags[m-1]
 		detail.Decades = monthDetailDecades[m-1]
 
@@ -708,16 +664,11 @@ func (s *UserService) GetUserYearReview(
 		ArtistTracks: make(map[string][]UserYearReviewInnerTrack),
 		AlbumTracks:  make(map[string][]UserYearReviewInnerTrack),
 
-		Hours:   hours,
 		Tags:    tags,
 		Decades: decades,
 
 		Months:       months,
 		MonthDetails: monthDetails,
-	}
-
-	if day.PlayCount > 0 || day.Day != "" {
-		res.Day = &day
 	}
 
 	for _, t := range tracks {
@@ -762,7 +713,7 @@ func (s *UserService) GetUserYearReview(
 		})
 	}
 
-	trackIds := make([]string, 0, len(artistTracks)+len(albumTracks))
+	trackIds := make([]string, 0)
 	seen := make(map[string]bool)
 	recordId := func(id string) {
 		if !seen[id] {
@@ -770,12 +721,15 @@ func (s *UserService) GetUserYearReview(
 			trackIds = append(trackIds, id)
 		}
 	}
-
-	for _, t := range artistTracks {
-		recordId(t.TrackId)
+	for _, rows := range artistTracks {
+		for _, t := range rows {
+			recordId(t.TrackId)
+		}
 	}
-	for _, t := range albumTracks {
-		recordId(t.TrackId)
+	for _, rows := range albumTracks {
+		for _, t := range rows {
+			recordId(t.TrackId)
+		}
 	}
 
 	loadedTracks, err := s.db.GetTracksByIds(ctx, trackIds)
@@ -788,61 +742,39 @@ func (s *UserService) GetUserYearReview(
 		loadedTracksById[t.Id] = t
 	}
 
-	for _, t := range artistTracks {
-		track, ok := loadedTracksById[t.TrackId]
-		if !ok {
-			continue
+	for artistId, rows := range artistTracks {
+		for i, t := range rows {
+			track, ok := loadedTracksById[t.TrackId]
+			if !ok {
+				continue
+			}
+			res.ArtistTracks[artistId] = append(
+				res.ArtistTracks[artistId],
+				UserYearReviewInnerTrack{
+					Rank:      i + 1,
+					PlayCount: t.PlayCount,
+					PlayTime:  t.PlayTime,
+					Track:     track,
+				},
+			)
 		}
-
-		res.ArtistTracks[t.ArtistId] = append(
-			res.ArtistTracks[t.ArtistId],
-			UserYearReviewInnerTrack{
-				Rank:      t.Rank,
-				PlayCount: t.PlayCount,
-				PlayTime:  t.PlayTime,
-				Track:     track,
-			},
-		)
 	}
 
-	for _, t := range albumTracks {
-		track, ok := loadedTracksById[t.TrackId]
-		if !ok {
-			continue
-		}
-
-		res.AlbumTracks[t.AlbumId] = append(
-			res.AlbumTracks[t.AlbumId],
-			UserYearReviewInnerTrack{
-				Rank:      t.Rank,
-				PlayCount: t.PlayCount,
-				PlayTime:  t.PlayTime,
-				Track:     track,
-			},
-		)
-	}
-
-	if milestone.FirstTrackId != "" || milestone.LastTrackId != "" {
-		res.Milestones = &UserYearReviewMilestone{}
-
-		if milestone.FirstTrackId != "" {
-			track, err := s.db.GetTrackById(ctx, milestone.FirstTrackId)
-			if err == nil {
-				res.Milestones.First = &track
-			} else if !errors.Is(err, database.ErrItemNotFound) {
-				return GetUserYearReviewResult{}, userErr.Wrap(
-					"get user year review: first track", err)
+	for albumId, rows := range albumTracks {
+		for i, t := range rows {
+			track, ok := loadedTracksById[t.TrackId]
+			if !ok {
+				continue
 			}
-		}
-
-		if milestone.LastTrackId != "" {
-			track, err := s.db.GetTrackById(ctx, milestone.LastTrackId)
-			if err == nil {
-				res.Milestones.Last = &track
-			} else if !errors.Is(err, database.ErrItemNotFound) {
-				return GetUserYearReviewResult{}, userErr.Wrap(
-					"get user year review: last track", err)
-			}
+			res.AlbumTracks[albumId] = append(
+				res.AlbumTracks[albumId],
+				UserYearReviewInnerTrack{
+					Rank:      i + 1,
+					PlayCount: t.PlayCount,
+					PlayTime:  t.PlayTime,
+					Track:     track,
+				},
+			)
 		}
 	}
 

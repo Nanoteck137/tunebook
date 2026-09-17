@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { ChevronLeft, ChevronRight, DiscAlbum } from "@lucide/svelte";
-	import { Clock3, Heart, Music, Tags, Users } from "@lucide/svelte";
+	import { Heart, Music, Tags, Users } from "@lucide/svelte";
 	import type { Track } from "$lib/api/types";
 	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 	import ArtistTile from "$lib/components/tiles/ArtistTile.svelte";
@@ -51,19 +51,8 @@
 		goto(`/users/${data.userData.id}/review/${data.year}/months/${target}`);
 	}
 
-	let hourCounts = $derived(
-		Array.from(
-			{ length: 24 },
-			(_, h) => monthData.hours.find((x) => x.hour === h)?.playCount ?? 0,
-		),
-	);
-	let maxHour = $derived(Math.max(...hourCounts, 1));
-	let peakHour = $derived(hourCounts.indexOf(Math.max(...hourCounts)));
-
-	function formatHour(hour: number): string {
-		const ampm = hour < 12 ? "AM" : "PM";
-		const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-		return `${hour12} ${ampm}`;
+	function formatPercent(rate: number): string {
+		return `${rate.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
 	}
 
 	function formatTagSlug(slug: string): string {
@@ -74,10 +63,6 @@
 
 	function formatDecade(decade: number): string {
 		return `${decade}s`;
-	}
-
-	function formatPercent(rate: number): string {
-		return `${rate.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
 	}
 </script>
 
@@ -141,16 +126,6 @@
 		</SectionHeader>
 
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-				<span class="text-xs text-muted-foreground">Days Active</span>
-				<span class="text-2xl font-bold">{monthData.daysActive.toLocaleString()}</span>
-			</div>
-
-			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
-				<span class="text-xs text-muted-foreground">Longest Streak</span>
-				<span class="text-2xl font-bold">{monthData.longestStreak} days</span>
-			</div>
-
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Avg Completion</span>
 				<span class="text-2xl font-bold">{formatPercent(monthData.avgCompletion)}</span>
@@ -276,42 +251,6 @@
 							cover={item.artist.coverArt.small}
 							name={item.artist.name}
 						/>
-					</div>
-				{/each}
-			</div>
-		</section>
-	{/if}
-
-	{#if monthData.hours.length > 0}
-		<section>
-			<SectionHeader>
-				<Clock3 />
-				Listening Hours
-			</SectionHeader>
-
-			<p class="mb-2 text-sm text-muted-foreground">
-				Your peak listening hour is
-				<span class="font-medium text-foreground">{formatHour(peakHour)}</span>.
-			</p>
-
-			<div class="flex h-36 items-end gap-[3px] sm:h-32">
-				{#each hourCounts as count, hour}
-					<div
-						class="flex h-full flex-1 flex-col items-center justify-end gap-1"
-					>
-						<div
-							class="w-full rounded-t bg-primary"
-							class:opacity-20={hour !== peakHour}
-							title="{formatHour(hour)}: {count.toLocaleString()} plays"
-							style="height: {count > 0
-								? Math.max((count / maxHour) * 100, 4)
-								: 0}%"
-						></div>
-						{#if hour % 3 === 0}
-							<span class="text-[8px] text-muted-foreground">
-								{formatHour(hour)}
-							</span>
-						{/if}
 					</div>
 				{/each}
 			</div>
