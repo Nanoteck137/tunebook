@@ -14,19 +14,21 @@ export const load: PageLoad = async ({ parent, params }) => {
 		throw error(400, { message: "Invalid month" });
 	}
 
-	const top = await data.apiClient.getUserYearReviewMonthTopAlbums(
+	const albums = await data.apiClient.getUserYearReviewMonthAlbums(
 		params.id,
 		String(year),
 		String(month),
 	);
-	if (!top.success) {
-		throw error(top.error.code, { message: top.error.message });
+	if (!albums.success) {
+		throw error(albums.error.code, { message: albums.error.message });
 	}
 
 	return {
 		...data,
 		year,
 		month,
-		albums: top.data.albums,
+
+		page: albums.data.page,
+		albums: albums.data.albums,
 	};
 };

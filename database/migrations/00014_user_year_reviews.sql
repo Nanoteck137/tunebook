@@ -97,6 +97,7 @@ CREATE TABLE user_year_review_months (
 
     play_count INTEGER NOT NULL DEFAULT 0,
     play_time INTEGER NOT NULL,
+
     avg_completion INTEGER NOT NULL DEFAULT 0,
     skip_count INTEGER NOT NULL DEFAULT 0,
     unique_tracks INTEGER NOT NULL DEFAULT 0,

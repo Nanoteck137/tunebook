@@ -627,6 +627,16 @@
       ]
     },
     {
+      "name": "GetAllUserYearReviewMonths",
+      "fields": [
+        {
+          "name": "months",
+          "type": "[]UserYearReviewMonth",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetAllUserYearReviews",
       "fields": [
         {
@@ -1062,6 +1072,91 @@
         {
           "name": "decades",
           "type": "[]RankedDecade",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonth",
+      "fields": [
+        {
+          "name": "month",
+          "type": "UserYearReviewMonth",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthAlbums",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "albums",
+          "type": "[]RankedAlbum",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthArtists",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "artists",
+          "type": "[]RankedArtist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthDecades",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "decades",
+          "type": "[]RankedDecade",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthTags",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]RankedTag",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewMonthTracks",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "tracks",
+          "type": "[]RankedTrack",
           "omitEmpty": false
         }
       ]
@@ -1985,6 +2080,46 @@
           "omitEmpty": false
         }
       ]
+    },
+    {
+      "name": "UserYearReviewMonth",
+      "fields": [
+        {
+          "name": "month",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playTime",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "avgCompletion",
+          "type": "float",
+          "omitEmpty": false
+        },
+        {
+          "name": "skipCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "uniqueTracks",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "favoritePlays",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
     }
   ],
   "endpoints": [
@@ -2197,6 +2332,13 @@
       "method": "GET",
       "path": "/api/v1/albums",
       "response": "GetAlbums"
+    },
+    {
+      "type": "api",
+      "name": "GetAllUserYearReviewMonths",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/months",
+      "response": "GetAllUserYearReviewMonths"
     },
     {
       "type": "api",
@@ -2432,6 +2574,48 @@
       "method": "GET",
       "path": "/api/v1/users/:userId/year-reviews/:year/decades",
       "response": "GetUserYearReviewDecades"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonth",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/months/:month",
+      "response": "GetUserYearReviewMonth"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthAlbums",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/months/:month/albums",
+      "response": "GetUserYearReviewMonthAlbums"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthArtists",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/months/:month/artists",
+      "response": "GetUserYearReviewMonthArtists"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthDecades",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/months/:month/decades",
+      "response": "GetUserYearReviewMonthDecades"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthTags",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/months/:month/tags",
+      "response": "GetUserYearReviewMonthTags"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewMonthTracks",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/months/:month/tracks",
+      "response": "GetUserYearReviewMonthTracks"
     },
     {
       "type": "api",

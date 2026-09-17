@@ -32,6 +32,12 @@ var (
 	userYearReviewArtistSchema = UserYearReviewArtistSchema()
 	userYearReviewTagSchema    = UserYearReviewTagSchema()
 	userYearReviewDecadeSchema = UserYearReviewDecadeSchema()
+
+	userYearReviewMonthTrackSchema  = UserYearReviewMonthTrackSchema()
+	userYearReviewMonthAlbumSchema  = UserYearReviewMonthAlbumSchema()
+	userYearReviewMonthArtistSchema = UserYearReviewMonthArtistSchema()
+	userYearReviewMonthTagSchema    = UserYearReviewMonthTagSchema()
+	userYearReviewMonthDecadeSchema = UserYearReviewMonthDecadeSchema()
 )
 
 const (
@@ -144,6 +150,111 @@ func UserYearReviewTagSchema() *schema.Schema {
 		)
 }
 
+func UserYearReviewMonthTrackSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_month_tracks?
+	return TrackSchema().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_month_tracks.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_month_tracks.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
+func UserYearReviewMonthAlbumSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_month_albums?
+	return AlbumSchema().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_month_albums.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_month_albums.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
+func UserYearReviewMonthArtistSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_month_artists?
+	return ArtistSchema().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_month_artists.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_month_artists.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
+func UserYearReviewMonthTagSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_month_tags?
+	return schema.New().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_month_tags.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_month_tags.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
+func UserYearReviewMonthDecadeSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_month_decades?
+	return schema.New().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_month_decades.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_month_decades.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
 type UserYearReview struct {
 	UserId string `db:"user_id"`
 	Year   int    `db:"year"`
@@ -229,72 +340,62 @@ type UserYearReviewMonth struct {
 }
 
 type UserYearReviewMonthTrack struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Month  int    `db:"month"`
-	Rank   int    `db:"rank"`
+	Track
 
-	TrackId   string `db:"track_id"`
-	PlayCount int    `db:"play_count"`
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	Month   int    `db:"month"`
+	TrackId string `db:"track_id"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type UserYearReviewMonthAlbum struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Month  int    `db:"month"`
-	Rank   int    `db:"rank"`
+	Album
 
-	AlbumId   string `db:"album_id"`
-	PlayCount int    `db:"play_count"`
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	Month   int    `db:"month"`
+	AlbumId string `db:"album_id"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type UserYearReviewMonthArtist struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Month  int    `db:"month"`
-	Rank   int    `db:"rank"`
+	Artist
 
-	ArtistId  string `db:"artist_id"`
-	PlayCount int    `db:"play_count"`
+	UserId   string `db:"user_id"`
+	Year     int    `db:"year"`
+	Month    int    `db:"month"`
+	ArtistId string `db:"artist_id"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type UserYearReviewMonthTag struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Month  int    `db:"month"`
-
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	Month   int    `db:"month"`
 	TagSlug string `db:"tag_slug"`
-	Rank    int    `db:"rank"`
 
+	Rank      int `db:"rank"`
 	PlayCount int `db:"play_count"`
-
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
 }
 
 type UserYearReviewMonthDecade struct {
 	UserId string `db:"user_id"`
 	Year   int    `db:"year"`
 	Month  int    `db:"month"`
+	Decade int    `db:"decade"`
 
-	Decade int `db:"decade"`
-	Rank   int `db:"rank"`
-
+	Rank      int `db:"rank"`
 	PlayCount int `db:"play_count"`
-
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
 }
 
+// TODO(patrik): Remove
 type UserYear struct {
 	Year int `db:"year"`
 }
@@ -1247,167 +1348,359 @@ func (db DB) GetUserYearReviewDecades(
 	return items, page, nil
 }
 
+type GetUserYearReviewMonthsParams struct {
+	UserId string
+	Year   int
+}
+
 func (db DB) GetUserYearReviewMonths(
 	ctx context.Context,
-	userId string,
-	year int,
+	params GetUserYearReviewMonthsParams,
 ) ([]UserYearReviewMonth, error) {
 	query := dialect.From(userYearReviewMonthsTbl).
 		Select(
 			userYearReviewMonthsTbl.Col("user_id"),
 			userYearReviewMonthsTbl.Col("year"),
 			userYearReviewMonthsTbl.Col("month"),
+
 			userYearReviewMonthsTbl.Col("play_count"),
 			userYearReviewMonthsTbl.Col("play_time"),
+
 			userYearReviewMonthsTbl.Col("avg_completion"),
 			userYearReviewMonthsTbl.Col("skip_count"),
 			userYearReviewMonthsTbl.Col("unique_tracks"),
 			userYearReviewMonthsTbl.Col("favorite_plays"),
+
 			userYearReviewMonthsTbl.Col("created_at"),
 			userYearReviewMonthsTbl.Col("updated_at"),
 		).
 		Where(
-			userYearReviewMonthsTbl.Col("user_id").Eq(userId),
-			userYearReviewMonthsTbl.Col("year").Eq(year),
+			userYearReviewMonthsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewMonthsTbl.Col("year").Eq(params.Year),
 		).
-		Order(userYearReviewMonthsTbl.Col("month").Asc())
+		Order(
+			userYearReviewMonthsTbl.Col("month").Asc(),
+		)
 
 	return Multiple[UserYearReviewMonth](db, ctx, query)
 }
 
+type GetUserYearReviewMonthParams struct {
+	UserId string
+	Year   int
+	Month  int
+}
+
+func (db DB) GetUserYearReviewMonth(
+	ctx context.Context,
+	params GetUserYearReviewMonthParams,
+) (UserYearReviewMonth, error) {
+	query := dialect.From(userYearReviewMonthsTbl).
+		Select(
+			userYearReviewMonthsTbl.Col("user_id"),
+			userYearReviewMonthsTbl.Col("year"),
+			userYearReviewMonthsTbl.Col("month"),
+
+			userYearReviewMonthsTbl.Col("play_count"),
+			userYearReviewMonthsTbl.Col("play_time"),
+
+			userYearReviewMonthsTbl.Col("avg_completion"),
+			userYearReviewMonthsTbl.Col("skip_count"),
+			userYearReviewMonthsTbl.Col("unique_tracks"),
+			userYearReviewMonthsTbl.Col("favorite_plays"),
+
+			userYearReviewMonthsTbl.Col("created_at"),
+			userYearReviewMonthsTbl.Col("updated_at"),
+		).
+		Where(
+			userYearReviewMonthsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewMonthsTbl.Col("year").Eq(params.Year),
+			userYearReviewMonthsTbl.Col("month").Eq(params.Month),
+		).
+		Order(
+			userYearReviewMonthsTbl.Col("month").Asc(),
+		)
+
+	return Single[UserYearReviewMonth](db, ctx, query)
+}
+
+type GetUserYearReviewMonthTracksParams struct {
+	UserId string
+	Year   int
+	Month  int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
 func (db DB) GetUserYearReviewMonthTracks(
 	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearReviewMonthTrack, error) {
-	query := dialect.From(userYearReviewMonthTracksTbl).
-		Select(
+	params GetUserYearReviewMonthTracksParams,
+) ([]UserYearReviewMonthTrack, types.Page, error) {
+	var err error
+
+	query := TrackQuery().
+		SelectAppend(
 			userYearReviewMonthTracksTbl.Col("user_id"),
 			userYearReviewMonthTracksTbl.Col("year"),
 			userYearReviewMonthTracksTbl.Col("month"),
-			userYearReviewMonthTracksTbl.Col("rank"),
 			userYearReviewMonthTracksTbl.Col("track_id"),
+
+			userYearReviewMonthTracksTbl.Col("rank"),
 			userYearReviewMonthTracksTbl.Col("play_count"),
-			userYearReviewMonthTracksTbl.Col("created_at"),
-			userYearReviewMonthTracksTbl.Col("updated_at"),
+		).
+		Join(
+			userYearReviewMonthTracksTbl,
+			goqu.On(userYearReviewMonthTracksTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
 		).
 		Where(
-			userYearReviewMonthTracksTbl.Col("user_id").Eq(userId),
-			userYearReviewMonthTracksTbl.Col("year").Eq(year),
-			userYearReviewMonthTracksTbl.Col("month").Eq(month),
-		).
-		Order(userYearReviewMonthTracksTbl.Col("rank").Asc())
+			userYearReviewMonthTracksTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewMonthTracksTbl.Col("year").Eq(params.Year),
+			userYearReviewMonthTracksTbl.Col("month").Eq(params.Month),
+		)
 
-	return Multiple[UserYearReviewMonthTrack](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewMonthTrackSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, tracksTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewMonthTrack](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+type GetUserYearReviewMonthAlbumsParams struct {
+	UserId string
+	Year   int
+	Month  int
+
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetUserYearReviewMonthAlbums(
 	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearReviewMonthAlbum, error) {
-	query := dialect.From(userYearReviewMonthAlbumsTbl).
-		Select(
+	params GetUserYearReviewMonthAlbumsParams,
+) ([]UserYearReviewMonthAlbum, types.Page, error) {
+	var err error
+
+	query := AlbumQuery().
+		SelectAppend(
 			userYearReviewMonthAlbumsTbl.Col("user_id"),
 			userYearReviewMonthAlbumsTbl.Col("year"),
 			userYearReviewMonthAlbumsTbl.Col("month"),
-			userYearReviewMonthAlbumsTbl.Col("rank"),
 			userYearReviewMonthAlbumsTbl.Col("album_id"),
+
+			userYearReviewMonthAlbumsTbl.Col("rank"),
 			userYearReviewMonthAlbumsTbl.Col("play_count"),
-			userYearReviewMonthAlbumsTbl.Col("created_at"),
-			userYearReviewMonthAlbumsTbl.Col("updated_at"),
+		).
+		Join(
+			userYearReviewMonthAlbumsTbl,
+			goqu.On(userYearReviewMonthAlbumsTbl.Col("album_id").Eq(albumsTbl.Col("id"))),
 		).
 		Where(
-			userYearReviewMonthAlbumsTbl.Col("user_id").Eq(userId),
-			userYearReviewMonthAlbumsTbl.Col("year").Eq(year),
-			userYearReviewMonthAlbumsTbl.Col("month").Eq(month),
-		).
-		Order(userYearReviewMonthAlbumsTbl.Col("rank").Asc())
+			userYearReviewMonthAlbumsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewMonthAlbumsTbl.Col("year").Eq(params.Year),
+			userYearReviewMonthAlbumsTbl.Col("month").Eq(params.Month),
+		)
 
-	return Multiple[UserYearReviewMonthAlbum](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewMonthAlbumSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, albumsTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewMonthAlbum](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+type GetUserYearReviewMonthArtistsParams struct {
+	UserId string
+	Year   int
+	Month  int
+
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetUserYearReviewMonthArtists(
 	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearReviewMonthArtist, error) {
-	query := dialect.From(userYearReviewMonthArtistsTbl).
-		Select(
+	params GetUserYearReviewMonthArtistsParams,
+) ([]UserYearReviewMonthArtist, types.Page, error) {
+	var err error
+
+	query := ArtistQuery().
+		SelectAppend(
 			userYearReviewMonthArtistsTbl.Col("user_id"),
 			userYearReviewMonthArtistsTbl.Col("year"),
 			userYearReviewMonthArtistsTbl.Col("month"),
-			userYearReviewMonthArtistsTbl.Col("rank"),
 			userYearReviewMonthArtistsTbl.Col("artist_id"),
+
+			userYearReviewMonthArtistsTbl.Col("rank"),
 			userYearReviewMonthArtistsTbl.Col("play_count"),
-			userYearReviewMonthArtistsTbl.Col("created_at"),
-			userYearReviewMonthArtistsTbl.Col("updated_at"),
+		).
+		Join(
+			userYearReviewMonthArtistsTbl,
+			goqu.On(userYearReviewMonthArtistsTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
 		).
 		Where(
-			userYearReviewMonthArtistsTbl.Col("user_id").Eq(userId),
-			userYearReviewMonthArtistsTbl.Col("year").Eq(year),
-			userYearReviewMonthArtistsTbl.Col("month").Eq(month),
-		).
-		Order(userYearReviewMonthArtistsTbl.Col("rank").Asc())
+			userYearReviewMonthArtistsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewMonthArtistsTbl.Col("year").Eq(params.Year),
+			userYearReviewMonthArtistsTbl.Col("month").Eq(params.Month),
+		)
 
-	return Multiple[UserYearReviewMonthArtist](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewMonthArtistSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, artistsTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewMonthArtist](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+type GetUserYearReviewMonthTagsParams struct {
+	UserId string
+	Year   int
+	Month  int
+
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetUserYearReviewMonthTags(
 	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearReviewMonthTag, error) {
+	params GetUserYearReviewMonthTagsParams,
+) ([]UserYearReviewMonthTag, types.Page, error) {
+	var err error
+
 	query := dialect.From(userYearReviewMonthTagsTbl).
 		Select(
 			userYearReviewMonthTagsTbl.Col("user_id"),
 			userYearReviewMonthTagsTbl.Col("year"),
 			userYearReviewMonthTagsTbl.Col("month"),
 			userYearReviewMonthTagsTbl.Col("tag_slug"),
+
 			userYearReviewMonthTagsTbl.Col("rank"),
 			userYearReviewMonthTagsTbl.Col("play_count"),
-			userYearReviewMonthTagsTbl.Col("created_at"),
-			userYearReviewMonthTagsTbl.Col("updated_at"),
 		).
 		Where(
-			userYearReviewMonthTagsTbl.Col("user_id").Eq(userId),
-			userYearReviewMonthTagsTbl.Col("year").Eq(year),
-			userYearReviewMonthTagsTbl.Col("month").Eq(month),
-		).
-		Order(userYearReviewMonthTagsTbl.Col("rank").Asc())
+			userYearReviewMonthTagsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewMonthTagsTbl.Col("year").Eq(params.Year),
+			userYearReviewMonthTagsTbl.Col("month").Eq(params.Month),
+		)
 
-	return Multiple[UserYearReviewMonthTag](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewMonthTagSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(
+		ctx,
+		db,
+		params.Page,
+		query,
+		userYearReviewMonthTagsTbl.Col("tag_slug"),
+	)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewMonthTag](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+type GetUserYearReviewMonthDecadesParams struct {
+	UserId string
+	Year   int
+	Month  int
+
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetUserYearReviewMonthDecades(
 	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-) ([]UserYearReviewMonthDecade, error) {
+	params GetUserYearReviewMonthDecadesParams,
+) ([]UserYearReviewMonthDecade, types.Page, error) {
+	var err error
+
 	query := dialect.From(userYearReviewMonthDecadesTbl).
 		Select(
 			userYearReviewMonthDecadesTbl.Col("user_id"),
 			userYearReviewMonthDecadesTbl.Col("year"),
 			userYearReviewMonthDecadesTbl.Col("month"),
 			userYearReviewMonthDecadesTbl.Col("decade"),
+
 			userYearReviewMonthDecadesTbl.Col("rank"),
 			userYearReviewMonthDecadesTbl.Col("play_count"),
-			userYearReviewMonthDecadesTbl.Col("created_at"),
-			userYearReviewMonthDecadesTbl.Col("updated_at"),
 		).
 		Where(
-			userYearReviewMonthDecadesTbl.Col("user_id").Eq(userId),
-			userYearReviewMonthDecadesTbl.Col("year").Eq(year),
-			userYearReviewMonthDecadesTbl.Col("month").Eq(month),
-		).
-		Order(userYearReviewMonthDecadesTbl.Col("rank").Asc())
+			userYearReviewMonthDecadesTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewMonthDecadesTbl.Col("year").Eq(params.Year),
+			userYearReviewMonthDecadesTbl.Col("month").Eq(params.Month),
+		)
 
-	return Multiple[UserYearReviewMonthDecade](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewMonthDecadeSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(
+		ctx,
+		db,
+		params.Page,
+		query,
+		userYearReviewMonthDecadesTbl.Col("decade"),
+	)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewMonthDecade](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
 }
 
 func (db DB) GetUserYearArtistTracks(

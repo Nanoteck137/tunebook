@@ -71,6 +71,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	console.log("decades", topDecades)
 
+	const months = await data.apiClient.getAllUserYearReviewMonths(params.id, String(year), {
+		query: {
+			"perPage": "10",
+		}
+	});
+	if (!months.success) {
+		throw error(months.error.code, { message: months.error.message });
+	}
+
+	console.log("months", months)
+
 	return {
 		...data,
 		year,
@@ -91,5 +102,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 		topDecadeCount: topDecades.data.page.totalItems,
 		topDecades: topDecades.data.decades,
+
+		months: months.data.months,
 	};
 };

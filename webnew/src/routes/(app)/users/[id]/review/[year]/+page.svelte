@@ -35,18 +35,18 @@
 	let topAlbum = $derived(data.topAlbums[0] ?? null);
 	let topTrack = $derived(topTracks[0] ?? null);
 
-	// let monthlyHours = $derived(review.months.map((m) => m.playTime / 3600));
-	// let monthLabels = $derived([
-	// 	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-	// 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-	// ]);
-	// let maxMonthlyHours = $derived(Math.max(...monthlyHours, 1 / 60));
+	let monthlyHours = $derived(data.months.map((m) => m.playTime / 3600));
+	let monthLabels = $derived([
+		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+	]);
+	let maxMonthlyHours = $derived(Math.max(...monthlyHours, 1 / 60));
 
-	// let barHeights = $derived(
-	// 	monthlyHours.map((h) =>
-	// 		h > 0 ? Math.max((h / maxMonthlyHours) * 100, 4) : 0,
-	// 	),
-	// );
+	let barHeights = $derived(
+		monthlyHours.map((h) =>
+			h > 0 ? Math.max((h / maxMonthlyHours) * 100, 4) : 0,
+		),
+	);
 
 	let hoveredMonth = $state(-1);
 
@@ -443,38 +443,38 @@
 		</SectionHeader>
 
 		<div class="flex h-56 items-end gap-2 sm:h-48">
-			<!-- {#each monthLabels as label, i} -->
-			<!-- 	<div class="flex h-full flex-1 flex-col items-center gap-1.5"> -->
-			<!-- 		<span class="text-[10px] text-muted-foreground"> -->
-			<!-- 			{formatMonthlyHours(monthlyHours[i])} -->
-			<!-- 		</span> -->
-			<!-- 		<div -->
-			<!-- 			class="flex w-full flex-1 items-end" -->
-			<!-- 			role="button" -->
-			<!-- 			tabindex="-1" -->
-			<!-- 			onpointerenter={() => (hoveredMonth = i)} -->
-			<!-- 			onpointerleave={() => (hoveredMonth = -1)} -->
-			<!-- 		> -->
-			<!-- 			<div class="relative w-full" style="height: {barHeights[i]}%"> -->
-			<!-- 				{#if hoveredMonth === i && monthlyHours[i] > 0} -->
-			<!-- 					<div -->
-			<!-- 						class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs font-medium whitespace-nowrap text-background shadow-md" -->
-			<!-- 					> -->
-			<!-- 						{label}: {formatMonthlyHours(monthlyHours[i])} -->
-			<!-- 						&middot; -->
-			<!-- 						{review.months[i].playCount.toLocaleString()} plays -->
-			<!-- 					</div> -->
-			<!-- 				{/if} -->
-			<!-- 				<div -->
-			<!-- 					class="h-full w-full rounded-t bg-linear-to-t from-logo-3 to-logo-1 transition-all hover:opacity-80" -->
-			<!-- 				></div> -->
-			<!-- 			</div> -->
-			<!-- 		</div> -->
-			<!-- 		<span class="text-[10px] text-muted-foreground"> -->
-			<!-- 			{label} -->
-			<!-- 		</span> -->
-			<!-- 	</div> -->
-			<!-- {/each} -->
+			{#each monthLabels as label, i}
+				<div class="flex h-full flex-1 flex-col items-center gap-1.5">
+					<span class="text-[10px] text-muted-foreground">
+						{formatMonthlyHours(monthlyHours[i])}
+					</span>
+					<div
+						class="flex w-full flex-1 items-end"
+						role="button"
+						tabindex="-1"
+						onpointerenter={() => (hoveredMonth = i)}
+						onpointerleave={() => (hoveredMonth = -1)}
+					>
+						<div class="relative w-full" style="height: {barHeights[i]}%">
+							{#if hoveredMonth === i && monthlyHours[i] > 0}
+								<div
+									class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-xs font-medium whitespace-nowrap text-background shadow-md"
+								>
+									{label}: {formatMonthlyHours(monthlyHours[i])}
+									&middot;
+									{data.months[i].playCount.toLocaleString()} plays
+								</div>
+							{/if}
+							<div
+								class="h-full w-full rounded-t bg-linear-to-t from-logo-3 to-logo-1 transition-all hover:opacity-80"
+							></div>
+						</div>
+					</div>
+					<span class="text-[10px] text-muted-foreground">
+						{label}
+					</span>
+				</div>
+			{/each}
 		</div>
 	</section>
 
@@ -485,21 +485,21 @@
 		</SectionHeader>
 
 		<div class="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
-			<!-- {#each monthLabels as label, i (label)} -->
-			<!-- 	{@const count = review.months[i]?.playCount ?? 0} -->
-			<!-- 	<a -->
-			<!-- 		href="/users/{data.userData.id}/review/{data.year}/months/{i + 1}" -->
-			<!-- 		class="flex min-w-0 flex-col items-center gap-0.5 rounded-lg border bg-card px-2 py-2 transition-colors hover:bg-accent sm:min-w-[88px] sm:flex-none" -->
-			<!-- 		class:pointer-events-none={count === 0} -->
-			<!-- 		class:opacity-40={count === 0} -->
-			<!-- 		aria-disabled={count === 0} -->
-			<!-- 	> -->
-			<!-- 		<span class="text-sm font-medium">{label}</span> -->
-			<!-- 		<span class="text-xs text-muted-foreground"> -->
-			<!-- 			{count.toLocaleString()} -->
-			<!-- 		</span> -->
-			<!-- 	</a> -->
-			<!-- {/each} -->
+			{#each monthLabels as label, i (label)}
+				{@const count = data.months[i]?.playCount ?? 0}
+				<a
+					href="/users/{data.userData.id}/review/{data.year}/months/{i + 1}"
+					class="flex min-w-0 flex-col items-center gap-0.5 rounded-lg border bg-card px-2 py-2 transition-colors hover:bg-accent sm:min-w-[88px] sm:flex-none"
+					class:pointer-events-none={count === 0}
+					class:opacity-40={count === 0}
+					aria-disabled={count === 0}
+				>
+					<span class="text-sm font-medium">{label}</span>
+					<span class="text-xs text-muted-foreground">
+						{count.toLocaleString()}
+					</span>
+				</a>
+			{/each}
 		</div>
 	</section>
 

@@ -19,21 +19,19 @@
 	];
 
 	let currentYear = $derived(new Date().getFullYear());
-	let month = $derived(data.month);
-	let monthData = $derived(data.monthData);
 
 	let skipRate = $derived(
-		monthData.playCount > 0
-			? (monthData.skipCount / monthData.playCount) * 100
+		data.month.playCount > 0
+			? (data.month.skipCount / data.month.playCount) * 100
 			: 0,
 	);
 	let favoritesOverlap = $derived(
-		monthData.playCount > 0
-			? Math.round((monthData.favoritePlays / monthData.playCount) * 100)
+		data.month.playCount > 0
+			? Math.round((data.month.favoritePlays / data.month.playCount) * 100)
 			: 0,
 	);
 	let repeatRate = $derived(
-		monthData.uniqueTracks > 0 ? monthData.playCount / monthData.uniqueTracks : 0,
+		data.month.uniqueTracks > 0 ? data.month.playCount / data.month.uniqueTracks : 0,
 	);
 
 	function formatListeningTime(seconds: number): string {
@@ -79,10 +77,10 @@
 		<div class="flex items-center justify-between gap-3">
 			<div class="flex items-center gap-3">
 				<h1 class="text-4xl font-bold md:text-5xl">
-					{monthNames[month - 1]}
+					{monthNames[data.monthNum - 1]}
 				</h1>
 				<span class="text-2xl font-bold text-muted-foreground">{data.year}</span>
-				{#if data.year === currentYear && month === new Date().getMonth() + 1}
+				{#if data.year === currentYear && data.monthNum === new Date().getMonth() + 1}
 					<span
 						class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary ring-1 ring-primary/25"
 					>
@@ -95,8 +93,8 @@
 				<button
 					type="button"
 					class="rounded-md border bg-card p-2 transition-colors hover:bg-accent disabled:opacity-40"
-					disabled={month <= 1}
-					onclick={() => goMonth(month - 1)}
+					disabled={data.monthNum <= 1}
+					onclick={() => goMonth(data.monthNum - 1)}
 					aria-label="Previous month"
 				>
 					<ChevronLeft size={18} />
@@ -104,8 +102,8 @@
 				<button
 					type="button"
 					class="rounded-md border bg-card p-2 transition-colors hover:bg-accent disabled:opacity-40"
-					disabled={month >= 12}
-					onclick={() => goMonth(month + 1)}
+					disabled={data.monthNum >= 12}
+					onclick={() => goMonth(data.monthNum + 1)}
 					aria-label="Next month"
 				>
 					<ChevronRight size={18} />
@@ -114,8 +112,8 @@
 		</div>
 
 		<p class="text-sm text-muted-foreground">
-			{monthData.playCount.toLocaleString()} plays &middot;
-			{formatListeningTime(monthData.playTime)}
+			{data.month.playCount.toLocaleString()} plays &middot;
+			{formatListeningTime(data.month.playTime)}
 		</p>
 	</div>
 
@@ -128,7 +126,7 @@
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Avg Completion</span>
-				<span class="text-2xl font-bold">{formatPercent(monthData.avgCompletion)}</span>
+				<span class="text-2xl font-bold">{formatPercent(data.month.avgCompletion)}</span>
 			</div>
 
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
@@ -138,7 +136,7 @@
 
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Unique Tracks</span>
-				<span class="text-2xl font-bold">{monthData.uniqueTracks.toLocaleString()}</span>
+				<span class="text-2xl font-bold">{data.month.uniqueTracks.toLocaleString()}</span>
 			</div>
 
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
@@ -157,9 +155,9 @@
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Annual Share</span>
 				<span class="text-2xl font-bold">
-					{monthData.playCount > 0
+					{data.month.playCount > 0
 						? Math.round(
-								(monthData.playCount / data.review.review.trackCount) * 100,
+								(data.month.playCount / data.review.review.trackCount) * 100,
 							)
 						: 0}%
 				</span>
@@ -167,36 +165,36 @@
 		</div>
 	</section>
 
-	{#if monthData.tracks.length > 0}
+	{#if data.topTracks.length > 0}
 		<section>
 			<SectionHeader
-				count={monthData.trackCount}
-				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{month}/top-tracks"
+				count={data.topTrackCount}
+				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{data.monthNum}/top-tracks"
 			>
 				<Music />
 				Top Tracks
 			</SectionHeader>
 
 			<div class="flex flex-col gap-2">
-				{#each monthData.tracks as item (item.track.id)}
+				{#each data.topTracks as item (item.id)}
 					<a
-						href="/tracks/{item.track.id}"
+						href="/tracks/{item.id}"
 						class="flex items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:bg-accent"
 					>
 						<span class="w-6 shrink-0 text-center text-sm font-bold text-muted-foreground">
 							{item.rank}
 						</span>
 						<img
-							src={item.track.coverArt.small}
+							src={item.coverArt.small}
 							alt=""
 							class="h-10 w-10 shrink-0 rounded object-cover"
 						/>
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">
-								{item.track.name}
+								{item.name}
 							</span>
 							<span class="block truncate text-xs text-muted-foreground">
-								{trackArtistNames(item.track)}
+								{trackArtistNames(item)}
 							</span>
 						</span>
 						<span class="shrink-0 text-xs text-muted-foreground">
@@ -208,24 +206,24 @@
 		</section>
 	{/if}
 
-	{#if monthData.albums.length > 0}
+	{#if data.topAlbums.length > 0}
 		<section>
 			<SectionHeader
-				count={monthData.albumCount}
-				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{month}/top-albums"
+				count={data.topAlbumCount}
+				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{data.monthNum}/top-albums"
 			>
 				<DiscAlbum />
 				Top Albums
 			</SectionHeader>
 
 			<div class="flex items-start gap-4 overflow-x-auto pb-2">
-				{#each monthData.albums as item (item.album.id)}
+				{#each data.topAlbums as item (item.id)}
 					<div class="w-40 shrink-0">
 						<AlbumTile
-							id={item.album.id}
-							cover={item.album.coverArt.small}
-							name={item.album.name}
-							artists={item.album.artists}
+							id={item.id}
+							cover={item.coverArt.small}
+							name={item.name}
+							artists={item.artists}
 						/>
 					</div>
 				{/each}
@@ -233,23 +231,23 @@
 		</section>
 	{/if}
 
-	{#if monthData.artists.length > 0}
+	{#if data.topArtists.length > 0}
 		<section>
 			<SectionHeader
-				count={monthData.artistCount}
-				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{month}/top-artists"
+				count={data.topArtistCount}
+				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{data.monthNum}/top-artists"
 			>
 				<Users />
 				Top Artists
 			</SectionHeader>
 
 			<div class="flex items-start gap-4 overflow-x-auto pb-2">
-				{#each monthData.artists as item (item.artist.id)}
+				{#each data.topArtists as item (item.id)}
 					<div class="w-40 shrink-0">
 						<ArtistTile
-							id={item.artist.id}
-							cover={item.artist.coverArt.small}
-							name={item.artist.name}
+							id={item.id}
+							cover={item.coverArt.small}
+							name={item.name}
 						/>
 					</div>
 				{/each}
@@ -257,20 +255,20 @@
 		</section>
 	{/if}
 
-	{#if monthData.tags.length > 0}
+	{#if data.topTags.length > 0}
 		<section>
-			<SectionHeader count={monthData.tags.length}>
+			<SectionHeader count={data.topTagCount}>
 				<Tags />
 				Top Tags
 			</SectionHeader>
 
 			<div class="flex flex-wrap gap-2">
-				{#each monthData.tags as tag, i (tag.tagSlug)}
+				{#each data.topTags as tag (tag.tagSlug)}
 					<div
 						class="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5"
 					>
 						<span class="text-sm">
-							{i + 1}. {formatTagSlug(tag.tagSlug)}
+							{tag.rank}. {formatTagSlug(tag.tagSlug)}
 						</span>
 						<span class="text-xs text-muted-foreground">
 							{tag.playCount.toLocaleString()} plays
@@ -281,17 +279,17 @@
 		</section>
 	{/if}
 
-	{#if monthData.decades.length > 0}
+	{#if data.topDecades.length > 0}
 		<section>
-			<SectionHeader count={monthData.decades.length}>
+			<SectionHeader count={data.topDecadeCount}>
 				<DiscAlbum />
 				Decades
 			</SectionHeader>
 
 			<div class="flex flex-col gap-2">
-				{#each monthData.decades as decade (decade.decade)}
+				{#each data.topDecades as decade (decade.decade)}
 					{@const count = decade.playCount}
-					{@const maxDecadeCount = monthData.decades[0]?.playCount ?? 1}
+					{@const maxDecadeCount = data.topDecades[0]?.playCount ?? 1}
 					<div class="flex items-center gap-3">
 						<span class="w-14 shrink-0 text-sm font-medium">
 							{formatDecade(decade.decade)}

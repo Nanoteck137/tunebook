@@ -125,6 +125,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/albums", "GET", api.GetAlbums, z.any().optional(), undefined, options)
   }
   
+  getAllUserYearReviewMonths(userId: string, year: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/months`, "GET", api.GetAllUserYearReviewMonths, z.any().optional(), undefined, options)
+  }
+  
   getAllUserYearReviews(userId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/users/${userId}/year-reviews`, "GET", api.GetAllUserYearReviews, z.any().optional(), undefined, options)
   }
@@ -250,6 +254,30 @@ export class ApiClient extends BaseApiClient {
   
   getUserYearReviewDecades(userId: string, year: string, options?: ExtraOptions) {
     return this.request(`/api/v1/users/${userId}/year-reviews/${year}/decades`, "GET", api.GetUserYearReviewDecades, z.any().optional(), undefined, options)
+  }
+  
+  getUserYearReviewMonth(userId: string, year: string, month: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/months/${month}`, "GET", api.GetUserYearReviewMonth, z.any().optional(), undefined, options)
+  }
+  
+  getUserYearReviewMonthAlbums(userId: string, year: string, month: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/months/${month}/albums`, "GET", api.GetUserYearReviewMonthAlbums, z.any().optional(), undefined, options)
+  }
+  
+  getUserYearReviewMonthArtists(userId: string, year: string, month: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/months/${month}/artists`, "GET", api.GetUserYearReviewMonthArtists, z.any().optional(), undefined, options)
+  }
+  
+  getUserYearReviewMonthDecades(userId: string, year: string, month: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/months/${month}/decades`, "GET", api.GetUserYearReviewMonthDecades, z.any().optional(), undefined, options)
+  }
+  
+  getUserYearReviewMonthTags(userId: string, year: string, month: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/months/${month}/tags`, "GET", api.GetUserYearReviewMonthTags, z.any().optional(), undefined, options)
+  }
+  
+  getUserYearReviewMonthTracks(userId: string, year: string, month: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/year-reviews/${year}/months/${month}/tracks`, "GET", api.GetUserYearReviewMonthTracks, z.any().optional(), undefined, options)
   }
   
   getUserYearReviewTags(userId: string, year: string, options?: ExtraOptions) {
@@ -470,6 +498,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/albums")
   }
   
+  getAllUserYearReviewMonths(userId: string, year: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/months`)
+  }
+  
   getAllUserYearReviews(userId: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews`)
   }
@@ -604,6 +636,30 @@ export class ClientUrls {
   
   getUserYearReviewDecades(userId: string, year: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/decades`)
+  }
+  
+  getUserYearReviewMonth(userId: string, year: string, month: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/months/${month}`)
+  }
+  
+  getUserYearReviewMonthAlbums(userId: string, year: string, month: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/months/${month}/albums`)
+  }
+  
+  getUserYearReviewMonthArtists(userId: string, year: string, month: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/months/${month}/artists`)
+  }
+  
+  getUserYearReviewMonthDecades(userId: string, year: string, month: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/months/${month}/decades`)
+  }
+  
+  getUserYearReviewMonthTags(userId: string, year: string, month: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/months/${month}/tags`)
+  }
+  
+  getUserYearReviewMonthTracks(userId: string, year: string, month: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/year-reviews/${year}/months/${month}/tracks`)
   }
   
   getUserYearReviewTags(userId: string, year: string) {
