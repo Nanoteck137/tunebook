@@ -1,6 +1,6 @@
 // Based on github.com/rogpeppe/go-internal/fmtsort/sort.go
 // Original source: https://github.com/rogpeppe/go-internal/blob/master/fmtsort/sort.go
-package dev
+package pretty
 
 import (
 	"reflect"

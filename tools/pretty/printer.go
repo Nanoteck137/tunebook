@@ -1,6 +1,6 @@
 // Based on github.com/kr/pretty/formatter.go
 // Original source: https://github.com/kr/pretty/blob/master/formatter.go
-package dev
+package pretty
 
 import (
 	"fmt"
