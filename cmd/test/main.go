@@ -2,1225 +2,852 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"flag"
 	"fmt"
+	"math"
+	"math/rand"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nanoteck137/tunebook/database"
-	"github.com/nanoteck137/tunebook/dev"
-	"github.com/nanoteck137/tunebook/tools/query"
-	"github.com/nanoteck137/tunebook/tools/query/lexer"
-	"github.com/nanoteck137/tunebook/tools/query/parser"
-	"github.com/nanoteck137/tunebook/tools/query/planner"
-	"github.com/nanoteck137/tunebook/tools/query/schema"
-	"github.com/nanoteck137/tunebook/tools/query/sort"
-	querysql "github.com/nanoteck137/tunebook/tools/query/sql"
 )
 
-func main() {
-	dbTesting()
+const insertBatchSize = 400
 
-	return
-	fmt.Println("=== Query Package Test ===\n")
+var dialect = database.SqliteDialect()
 
-	testLexer()
-	testParser()
-	testPlanner()
-	testSQLCompiler()
-	testSort()
-	testFullPipeline()
-	testDatabaseIntegration()
-	testErrorMessages()
-
-	fmt.Println("\n=== All tests completed ===")
+type userRow struct {
+	Id string `db:"id"`
 }
 
-func dbTesting() {
-	db, err := database.Open("work/data.db")
+type trackRow struct {
+	Id       string `db:"id"`
+	Duration int64  `db:"duration"`
+}
+
+type countRow struct {
+	Count int `db:"count"`
+}
+
+type yearStatRow struct {
+	TrackId   string `db:"track_id"`
+	PlayCount int    `db:"play_count"`
+	SkipCount int    `db:"skip_count"`
+	PlayTime  int64  `db:"play_time"`
+}
+
+type aggregate struct {
+	playCount int
+	skipCount int
+	playTime  int64
+}
+
+func (a *aggregate) add(playTime int64, skipped bool) {
+	a.playCount++
+	a.playTime += playTime
+	if skipped {
+		a.skipCount++
+	}
+}
+
+type yearSummaryRow struct {
+	Year          int     `db:"year"`
+	TrackCount    int     `db:"track_count"`
+	ListeningTime int64   `db:"listening_time"`
+	AvgCompletion float64 `db:"avg_completion"`
+	SkipCount     int     `db:"skip_count"`
+	UniqueTracks  int     `db:"unique_tracks"`
+	FavoritePlays int     `db:"favorite_plays"`
+}
+
+type statsAggRow struct {
+	PlayCount int   `db:"play_count"`
+	SkipCount int   `db:"skip_count"`
+	PlayTime  int64 `db:"play_time"`
+}
+
+func main() {
+	var (
+		dbPath    = flag.String("db", "work/data.db", "path to the database file")
+		userId    = flag.String("user", "", "target user id (default: user with the most stats)")
+		from      = flag.Int("from", time.Now().Year()-5, "first year to generate")
+		to        = flag.Int("to", time.Now().Year()-1, "last year to generate")
+		tracks    = flag.Int("tracks", 300, "number of tracks to simulate per year")
+		plays     = flag.Int("plays", 12000, "target total number of plays per year")
+		favorites = flag.Int("favorites", 50, "number of simulated tracks to mark as favorites (0 disables)")
+		gen       = flag.Bool("generate", true, "generate the user year reviews after inserting data")
+		force     = flag.Bool("force", false, "overwrite existing data for the given years")
+		seed      = flag.Int64("seed", 1, "random seed used for reproducible data")
+	)
+	flag.Parse()
+
+	ctx := context.Background()
+
+	db, err := database.Open(*dbPath)
 	if err != nil {
-		fmt.Printf("ERROR opening database: %v\n\n", err)
+		fmt.Printf("ERROR opening database: %v\n", err)
 		return
 	}
 	defer db.Close()
 
-	fmt.Println("Connected to work/data.db\n")
-
-	playlistId := "nuf8abaigiryew64"
-
-	// query := dialect.From("playlist_items").
-	// 	Select("tracks.*", "playlist_items.position").
-	// 	Join(
-	// 		tracks.As("tracks"),
-	// 		goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-	// 	)
-
-	q := database.TrackQuery().
-		SelectAppend(
-			goqu.I("playlist_items.position").As("position"),
-		).
-		Join(
-			goqu.I("playlist_items"),
-			goqu.On(goqu.I("playlist_items.track_id").Eq(goqu.I("tracks.id"))),
-		).Order(goqu.I("playlist_items.position").Desc())
-
-	q = q.Where(goqu.I("playlist_items.playlist_id").Eq(playlistId))
-
-	q, err = database.ApplyQuery(q, database.TrackSchema(), database.QueryParams{
-		Filter: "tags has \"metal\"",
-		Sort:   "",
-	})
-	if err != nil {
-		fmt.Printf("ERROR apply query: %v\n\n", err)
+	if *from > *to {
+		fmt.Println("ERROR: -from must be <= -to")
 		return
 	}
 
-	sql, params, _ := q.ToSQL()
-	fmt.Printf("sql: %v\n", sql)
-	fmt.Printf("params: %v\n", params)
-
-	fmt.Printf("%v\n", database.DebugSQL(q))
-
-	tracks, err := database.Multiple[database.PlaylistItemTrack](db, context.Background(), q)
-	if err != nil {
-		fmt.Printf("ERROR getting tracks: %v\n\n", err)
+	if *tracks <= 0 {
+		fmt.Println("ERROR: -tracks must be > 0")
 		return
 	}
 
-	fmt.Printf("len(tracks): %v\n", len(tracks))
-
-	dev.Println(tracks[0])
-}
-
-func testLexer() {
-	fmt.Println("--- Lexer ---\n")
-
-	inputs := []string{
-		`tags contains "rock" and year >= 1970`,
-		`genre = "rock" or genre = "pop"`,
-		`deleted_at is not null`,
-		`genre in ("rock", "pop", "jazz")`,
-		`not (year < 1970 and genre = "country")`,
-		`rating >= 3.5 and active = true`,
-	}
-
-	for _, input := range inputs {
-		fmt.Printf("Input:  %s\n", input)
-
-		l := lexer.New(input)
-		tokens, err := l.Scan()
-		if err != nil {
-			fmt.Printf("  ERROR: %v\n\n", err)
-			continue
-		}
-
-		for _, tok := range tokens {
-			fmt.Printf("  %s\n", tok)
-		}
-		fmt.Println()
-	}
-}
-
-func testParser() {
-	fmt.Println("--- Parser ---\n")
-
-	inputs := []string{
-		`tags contains "rock" and year >= 1970`,
-		`genre = "rock" or genre = "pop"`,
-		`deleted_at is not null`,
-		`genre in ("rock", "pop", "jazz")`,
-		`genre not in ("country", "folk")`,
-		`not (year < 1970 and genre = "country")`,
-		`(genre = "rock" or genre = "pop") and year >= 1970 and deleted_at is null`,
-		`rating >= 3.5 and active = true`,
-		`not not genre = "rock"`,
-		`a = 1 or b = 2 and c = 3`,
-	}
-
-	for _, input := range inputs {
-		fmt.Printf("Input:  %s\n", input)
-
-		p := parser.New(input)
-		expr, err := p.Parse()
-		if err != nil {
-			fmt.Printf("  PARSE ERROR: %v\n\n", err)
-			continue
-		}
-
-		fmt.Printf("  AST: %s\n\n", expr)
-	}
-}
-
-func testParserErrors() {
-	fmt.Println("--- Parser Errors ---\n")
-
-	inputs := []string{
-		``,
-		`)`,
-		`year >=`,
-		`= 1970`,
-		`(year >= 1970`,
-		`year >= 1970)`,
-		`not`,
-		`genre not`,
-		`genre in ("rock"`,
-	}
-
-	for _, input := range inputs {
-		fmt.Printf("Input: %q\n", input)
-
-		p := parser.New(input)
-		_, err := p.Parse()
-		if err != nil {
-			fmt.Printf("  ERROR: %v\n\n", err)
-		} else {
-			fmt.Printf("  (no error)\n\n")
-		}
-	}
-}
-
-func testPlanner() {
-	fmt.Println("--- Planner ---\n")
-
-	s := schema.New().
-		AddField("name", query.TypeString).
-		AddField("genre", query.TypeString).
-		AddField("title", query.TypeString).
-		AddField("description", query.TypeString).
-		AddField("year", query.TypeInt).
-		AddField("rating", query.TypeFloat).
-		AddField("duration", query.TypeInt).
-		AddField("active", query.TypeBool).
-		AddField("deleted_at", query.TypeString, schema.Nullable())
-
-	pl := planner.New(s)
-
-	inputs := []string{
-		`genre = "rock"`,
-		`year >= 1970`,
-		`rating >= 3.5`,
-		`description contains "classic"`,
-		`title like "%love%"`,
-		`genre = "rock" and year >= 1970`,
-		`genre = "rock" or genre = "pop"`,
-		`not genre = "rock"`,
-		`deleted_at is null`,
-		`deleted_at is not null`,
-		`genre in ("rock", "pop", "jazz")`,
-		`genre not in ("country", "folk")`,
-		`active = true`,
-		`(genre = "rock" or genre = "pop") and year >= 1970 and deleted_at is not null`,
-	}
-
-	for _, input := range inputs {
-		fmt.Printf("Input:  %s\n", input)
-
-		p := parser.New(input)
-		expr, err := p.Parse()
-		if err != nil {
-			fmt.Printf("  PARSE ERROR: %v\n\n", err)
-			continue
-		}
-
-		plan, err := pl.Plan(expr)
-		if err != nil {
-			fmt.Printf("  PLAN ERROR: %v\n\n", err)
-			continue
-		}
-
-		fmt.Printf("  Plan: %s\n\n", formatPlan(plan))
-	}
-
-	fmt.Println("--- Planner Errors ---\n")
-
-	errorInputs := []string{
-		`unknown = "value"`,
-		`year contains "rock"`,
-		`year like "%1970%"`,
-		`name > "rock"`,
-		`year = "rock"`,
-		`name = 1970`,
-		`name is null`,
-		`year in ("rock", "pop")`,
-	}
-
-	for _, input := range errorInputs {
-		fmt.Printf("Input: %s\n", input)
-
-		p := parser.New(input)
-		expr, err := p.Parse()
-		if err != nil {
-			fmt.Printf("  PARSE ERROR: %v\n\n", err)
-			continue
-		}
-
-		_, err = pl.Plan(expr)
-		if err != nil {
-			fmt.Printf("  ERROR: %v\n\n", err)
-		} else {
-			fmt.Printf("  (no error)\n\n")
-		}
-	}
-}
-
-func formatPlan(plan *query.Plan) string {
-	if plan.Filter == nil {
-		return "(empty)"
-	}
-	return formatFilterNode(plan.Filter)
-}
-
-func formatFilterNode(node query.FilterNode) string {
-	switch n := node.(type) {
-	case *query.ComparisonNode:
-		return fmt.Sprintf("Comparison(%s %s %v)", n.Field.Name, opString(n.Operator), n.Value.Value)
-	case *query.ContainsNode:
-		return fmt.Sprintf("Contains(%s, %v)", n.Field.Name, n.Value.Value)
-	case *query.IsNullNode:
-		if n.Not {
-			return fmt.Sprintf("IsNotNull(%s)", n.Field.Name)
-		}
-		return fmt.Sprintf("IsNull(%s)", n.Field.Name)
-	case *query.InNode:
-		vals := make([]string, len(n.Values))
-		for i, v := range n.Values {
-			vals[i] = fmt.Sprintf("%v", v.Value)
-		}
-		not := ""
-		if n.Not {
-			not = "not "
-		}
-		return fmt.Sprintf("%sIn(%s, [%s])", not, n.Field.Name, joinStrings(vals))
-	case *query.AndNode:
-		return fmt.Sprintf("And(%s, %s)", formatFilterNode(n.Left), formatFilterNode(n.Right))
-	case *query.OrNode:
-		return fmt.Sprintf("Or(%s, %s)", formatFilterNode(n.Left), formatFilterNode(n.Right))
-	case *query.NotNode:
-		return fmt.Sprintf("Not(%s)", formatFilterNode(n.Expr))
-	default:
-		return fmt.Sprintf("%T", node)
-	}
-}
-
-func opString(op query.Operator) string {
-	switch op {
-	case query.OpEqual:
-		return "="
-	case query.OpNotEqual:
-		return "!="
-	case query.OpGreater:
-		return ">"
-	case query.OpGreaterEqual:
-		return ">="
-	case query.OpLess:
-		return "<"
-	case query.OpLessEqual:
-		return "<="
-	case query.OpLike:
-		return "like"
-	default:
-		return "?"
-	}
-}
-
-func joinStrings(ss []string) string {
-	result := ""
-	for i, s := range ss {
-		if i > 0 {
-			result += ", "
-		}
-		result += s
-	}
-	return result
-}
-
-func testSQLCompiler() {
-	fmt.Println("--- SQL Compiler ---\n")
-
-	compiler := querysql.NewCompiler()
-
-	testComparison(compiler)
-	testLogicalOperators(compiler)
-	testSpecialOperators(compiler)
-	testOrdering(compiler)
-	testComplexQuery(compiler)
-}
-
-func testComparison(c *querysql.Compiler) {
-	fmt.Println("  -- Comparison Operators --\n")
-
-	tests := []struct {
-		name string
-		plan *query.Plan
-	}{
-		{
-			name: "Equal",
-			plan: &query.Plan{
-				Filter: &query.ComparisonNode{
-					Field:    &query.Field{Name: "name", Type: query.TypeString},
-					Operator: query.OpEqual,
-					Value:    query.Value{Type: query.TypeString, Value: "rock"},
-				},
-			},
-		},
-		{
-			name: "Not Equal",
-			plan: &query.Plan{
-				Filter: &query.ComparisonNode{
-					Field:    &query.Field{Name: "genre", Type: query.TypeString},
-					Operator: query.OpNotEqual,
-					Value:    query.Value{Type: query.TypeString, Value: "pop"},
-				},
-			},
-		},
-		{
-			name: "Greater Equal",
-			plan: &query.Plan{
-				Filter: &query.ComparisonNode{
-					Field:    &query.Field{Name: "year", Type: query.TypeInt},
-					Operator: query.OpGreaterEqual,
-					Value:    query.Value{Type: query.TypeInt, Value: 1970},
-				},
-			},
-		},
-		{
-			name: "Less Than",
-			plan: &query.Plan{
-				Filter: &query.ComparisonNode{
-					Field:    &query.Field{Name: "rating", Type: query.TypeFloat},
-					Operator: query.OpLess,
-					Value:    query.Value{Type: query.TypeFloat, Value: 3.5},
-				},
-			},
-		},
-		{
-			name: "Like",
-			plan: &query.Plan{
-				Filter: &query.ComparisonNode{
-					Field:    &query.Field{Name: "title", Type: query.TypeString},
-					Operator: query.OpLike,
-					Value:    query.Value{Type: query.TypeString, Value: "%love%"},
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		printPlan(c, "  "+tt.name, tt.plan)
-	}
-}
-
-func testLogicalOperators(c *querysql.Compiler) {
-	fmt.Println("  -- Logical Operators --\n")
-
-	tests := []struct {
-		name string
-		plan *query.Plan
-	}{
-		{
-			name: "AND",
-			plan: &query.Plan{
-				Filter: &query.AndNode{
-					Left: &query.ComparisonNode{
-						Field:    &query.Field{Name: "genre", Type: query.TypeString},
-						Operator: query.OpEqual,
-						Value:    query.Value{Type: query.TypeString, Value: "rock"},
-					},
-					Right: &query.ComparisonNode{
-						Field:    &query.Field{Name: "year", Type: query.TypeInt},
-						Operator: query.OpGreaterEqual,
-						Value:    query.Value{Type: query.TypeInt, Value: 1970},
-					},
-				},
-			},
-		},
-		{
-			name: "OR",
-			plan: &query.Plan{
-				Filter: &query.OrNode{
-					Left: &query.ComparisonNode{
-						Field:    &query.Field{Name: "genre", Type: query.TypeString},
-						Operator: query.OpEqual,
-						Value:    query.Value{Type: query.TypeString, Value: "rock"},
-					},
-					Right: &query.ComparisonNode{
-						Field:    &query.Field{Name: "genre", Type: query.TypeString},
-						Operator: query.OpEqual,
-						Value:    query.Value{Type: query.TypeString, Value: "pop"},
-					},
-				},
-			},
-		},
-		{
-			name: "NOT",
-			plan: &query.Plan{
-				Filter: &query.NotNode{
-					Expr: &query.ComparisonNode{
-						Field:    &query.Field{Name: "genre", Type: query.TypeString},
-						Operator: query.OpEqual,
-						Value:    query.Value{Type: query.TypeString, Value: "country"},
-					},
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		printPlan(c, "  "+tt.name, tt.plan)
-	}
-}
-
-func testSpecialOperators(c *querysql.Compiler) {
-	fmt.Println("  -- Special Operators --\n")
-
-	tests := []struct {
-		name string
-		plan *query.Plan
-	}{
-		{
-			name: "IS NULL",
-			plan: &query.Plan{
-				Filter: &query.IsNullNode{
-					Field: &query.Field{Name: "deleted_at", Type: query.TypeString, Nullable: true},
-				},
-			},
-		},
-		{
-			name: "IS NOT NULL",
-			plan: &query.Plan{
-				Filter: &query.IsNullNode{
-					Field: &query.Field{Name: "deleted_at", Type: query.TypeString, Nullable: true},
-					Not:   true,
-				},
-			},
-		},
-		{
-			name: "CONTAINS",
-			plan: &query.Plan{
-				Filter: &query.ContainsNode{
-					Field: &query.Field{Name: "description", Type: query.TypeString},
-					Value: query.Value{Type: query.TypeString, Value: "classic"},
-				},
-			},
-		},
-		{
-			name: "IN",
-			plan: &query.Plan{
-				Filter: &query.InNode{
-					Field: &query.Field{Name: "genre", Type: query.TypeString},
-					Values: []query.Value{
-						{Type: query.TypeString, Value: "rock"},
-						{Type: query.TypeString, Value: "pop"},
-						{Type: query.TypeString, Value: "jazz"},
-					},
-				},
-			},
-		},
-		{
-			name: "NOT IN",
-			plan: &query.Plan{
-				Filter: &query.InNode{
-					Field: &query.Field{Name: "status", Type: query.TypeString},
-					Values: []query.Value{
-						{Type: query.TypeString, Value: "deleted"},
-						{Type: query.TypeString, Value: "archived"},
-					},
-					Not: true,
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		printPlan(c, "  "+tt.name, tt.plan)
-	}
-}
-
-func testOrdering(c *querysql.Compiler) {
-	fmt.Println("  -- Ordering --\n")
-
-	tests := []struct {
-		name string
-		plan *query.Plan
-	}{
-		{
-			name: "Single ASC",
-			plan: &query.Plan{
-				OrderBy: []query.Ordering{
-					&query.FieldOrdering{
-						Field: &query.Field{Name: "name", Type: query.TypeString},
-						Dir:   query.DirAsc,
-					},
-				},
-			},
-		},
-		{
-			name: "Multiple",
-			plan: &query.Plan{
-				OrderBy: []query.Ordering{
-					&query.FieldOrdering{
-						Field: &query.Field{Name: "artist", Type: query.TypeString},
-						Dir:   query.DirAsc,
-					},
-					&query.FieldOrdering{
-						Field: &query.Field{Name: "year", Type: query.TypeInt},
-						Dir:   query.DirDesc,
-					},
-				},
-			},
-		},
-		{
-			name: "Random",
-			plan: &query.Plan{
-				OrderBy: []query.Ordering{
-					&query.RandomOrdering{},
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		printPlan(c, "  "+tt.name, tt.plan)
-	}
-}
-
-func testComplexQuery(c *querysql.Compiler) {
-	fmt.Println("  -- Complex Query --\n")
-
-	plan := &query.Plan{
-		Filter: &query.AndNode{
-			Left: &query.OrNode{
-				Left: &query.ComparisonNode{
-					Field:    &query.Field{Name: "genre", Type: query.TypeString},
-					Operator: query.OpEqual,
-					Value:    query.Value{Type: query.TypeString, Value: "rock"},
-				},
-				Right: &query.ComparisonNode{
-					Field:    &query.Field{Name: "genre", Type: query.TypeString},
-					Operator: query.OpEqual,
-					Value:    query.Value{Type: query.TypeString, Value: "pop"},
-				},
-			},
-			Right: &query.AndNode{
-				Left: &query.ComparisonNode{
-					Field:    &query.Field{Name: "year", Type: query.TypeInt},
-					Operator: query.OpGreaterEqual,
-					Value:    query.Value{Type: query.TypeInt, Value: 1970},
-				},
-				Right: &query.IsNullNode{
-					Field: &query.Field{Name: "deleted_at", Type: query.TypeString, Nullable: true},
-					Not:   true,
-				},
-			},
-		},
-		OrderBy: []query.Ordering{
-			&query.FieldOrdering{
-				Field: &query.Field{Name: "year", Type: query.TypeInt},
-				Dir:   query.DirDesc,
-			},
-			&query.FieldOrdering{
-				Field: &query.Field{Name: "title", Type: query.TypeString},
-				Dir:   query.DirAsc,
-			},
-		},
-	}
-
-	printPlan(c, "  Complex Query", plan)
-}
-
-func printPlan(c *querysql.Compiler, name string, plan *query.Plan) {
-	fmt.Printf("  %s\n", name)
-
-	res, err := c.Compile(plan)
+	uid, err := resolveUser(ctx, db, *userId)
 	if err != nil {
-		fmt.Printf("    ERROR: %v\n\n", err)
+		fmt.Printf("ERROR finding a user to use: %v\n", err)
 		return
 	}
+	fmt.Printf("target user: %s\n", uid)
 
-	if res.Where != nil {
-		sql, args, err := goqu.From("dummy").Where(res.Where).ToSQL()
+	selected, err := selectTracks(ctx, db, uid, *tracks)
+	if err != nil {
+		fmt.Printf("ERROR selecting tracks: %v\n", err)
+		return
+	}
+	if len(selected) == 0 {
+		fmt.Println("ERROR: no tracks with a duration found in the library")
+		return
+	}
+	fmt.Printf("selected %d tracks\n", len(selected))
+
+	if *favorites > 0 {
+		err := addFavorites(ctx, db, uid, selected, *favorites)
 		if err != nil {
-			fmt.Printf("    TO SQL ERROR: %v\n\n", err)
+			fmt.Printf("ERROR adding favorites: %v\n", err)
 			return
 		}
-		// Extract just the WHERE clause
-		whereIdx := len("SELECT * FROM \"dummy\" WHERE ")
-		if len(sql) > whereIdx {
-			sql = sql[whereIdx:]
-		}
-		fmt.Printf("    WHERE: %s\n", sql)
-		if len(args) > 0 {
-			fmt.Printf("    ARGS:  %v\n", args)
+	}
+
+	rng := rand.New(rand.NewSource(*seed))
+	runID := time.Now().UnixNano()
+
+	for year := *from; year <= *to; year++ {
+		err := synthesizeYear(
+			ctx, db, uid, year, selected, *plays, rng, *force, *gen, runID,
+		)
+		if err != nil {
+			fmt.Printf("ERROR generating year %d: %v\n", year, err)
+			continue
 		}
 	}
 
-	if len(res.Order) > 0 {
-		for i, ord := range res.Order {
-			sql, _, err := goqu.From("dummy").Order(ord).ToSQL()
-			if err != nil {
-				fmt.Printf("    TO SQL ERROR: %v\n\n", err)
-				continue
-			}
-			// Extract just the ORDER BY clause
-			orderIdx := len("SELECT * FROM \"dummy\" ORDER BY ")
-			if len(sql) > orderIdx {
-				sql = sql[orderIdx:]
-			}
-			if i == 0 {
-				fmt.Printf("    ORDER: %s\n", sql)
-			} else {
-				fmt.Printf("           %s\n", sql)
-			}
-		}
-	}
-
-	if res.Where == nil && len(res.Order) == 0 {
-		fmt.Printf("    (empty plan)\n")
+	if err := rebuildUserStats(ctx, db, uid); err != nil {
+		fmt.Printf("ERROR rebuilding user stats: %v\n", err)
+		return
 	}
 
 	fmt.Println()
+	printYearOverYear(ctx, db, uid)
+
+	fmt.Println("\ndone")
 }
 
-func testFullPipeline() {
-	fmt.Println("--- Full Pipeline (Input -> Lexer -> Parser -> Planner -> SQL) ---\n")
-
-	s := schema.New().
-		AddField("name", query.TypeString).
-		AddField("genre", query.TypeString).
-		AddField("title", query.TypeString).
-		AddField("description", query.TypeString).
-		AddField("year", query.TypeInt).
-		AddField("rating", query.TypeFloat).
-		AddField("duration", query.TypeInt).
-		AddField("active", query.TypeBool).
-		AddField("deleted_at", query.TypeString, schema.Nullable())
-
-	pl := planner.New(s)
-	compiler := querysql.NewCompiler()
-
-	inputs := []string{
-		`genre = "rock"`,
-		`year >= 1970`,
-		`rating >= 3.5`,
-		`description contains "classic"`,
-		`title like "%love%"`,
-		`genre = "rock" and year >= 1970`,
-		`genre = "rock" or genre = "pop"`,
-		`not genre = "country"`,
-		`deleted_at is null`,
-		`deleted_at is not null`,
-		`genre in ("rock", "pop", "jazz")`,
-		`genre not in ("country", "folk")`,
-		`active = true`,
-		`(genre = "rock" or genre = "pop") and year >= 1970 and deleted_at is not null`,
+func resolveUser(
+	ctx context.Context,
+	db *database.Database,
+	requested string,
+) (string, error) {
+	if requested != "" {
+		return requested, nil
 	}
 
-	for _, input := range inputs {
-		fmt.Printf("Input: %s\n", input)
+	query := dialect.From("user_track_stats").
+		Select(goqu.I("user_id").As("id")).
+		GroupBy("user_id").
+		Order(goqu.COUNT(goqu.Star()).Desc()).
+		Limit(1)
 
-		p := parser.New(input)
-		expr, err := p.Parse()
+	row, err := database.Single[userRow](db, ctx, query)
+	if err == nil {
+		return row.Id, nil
+	}
+
+	if !errors.Is(err, database.ErrItemNotFound) {
+		return "", err
+	}
+
+	fallback := dialect.From("users").
+		Select("id").
+		Order(goqu.I("created").Asc()).
+		Limit(1)
+
+	row, err = database.Single[userRow](db, ctx, fallback)
+	if err != nil {
+		return "", err
+	}
+
+	return row.Id, nil
+}
+
+func selectTracks(
+	ctx context.Context,
+	db *database.Database,
+	userId string,
+	limit int,
+) ([]trackRow, error) {
+	query := dialect.From(goqu.I("user_track_stats").As("uts")).
+		Select(goqu.I("tracks.id"), goqu.I("tracks.duration")).
+		Join(goqu.I("tracks"), goqu.On(
+			goqu.I("tracks.id").Eq(goqu.I("uts.track_id")),
+		)).
+		Where(
+			goqu.I("uts.user_id").Eq(userId),
+			goqu.I("uts.period_type").Eq("all"),
+			goqu.I("tracks.duration").Gt(0),
+		).
+		GroupBy(goqu.I("tracks.id"), goqu.I("tracks.duration")).
+		Order(
+			goqu.SUM(goqu.I("uts.play_count")).Desc(),
+			goqu.I("tracks.id").Asc(),
+		)
+
+	played, err := database.Multiple[trackRow](db, ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	tracks := played
+	if len(tracks) > limit {
+		tracks = tracks[:limit]
+	}
+
+	if len(tracks) < limit {
+		extra := dialect.From("tracks").
+			Select(goqu.I("tracks.id"), goqu.I("tracks.duration")).
+			Where(
+				goqu.I("tracks.duration").Gt(0),
+				goqu.I("tracks.id").NotIn(
+					dialect.From("user_track_stats").
+						Select(goqu.I("track_id")).
+						Where(goqu.I("user_id").Eq(userId)),
+				),
+			).
+			Order(goqu.L("RANDOM()").Asc()).
+			Limit(uint(limit - len(tracks)))
+
+		padding, err := database.Multiple[trackRow](db, ctx, extra)
 		if err != nil {
-			fmt.Printf("  PARSE ERROR: %v\n\n", err)
+			return nil, err
+		}
+
+		tracks = append(tracks, padding...)
+	}
+
+	return tracks, nil
+}
+
+func addFavorites(
+	ctx context.Context,
+	db *database.Database,
+	userId string,
+	tracks []trackRow,
+	count int,
+) error {
+	if count > len(tracks) {
+		count = len(tracks)
+	}
+
+	now := time.Now().UnixMilli()
+	rows := make([]goqu.Record, 0, count)
+	for i := 0; i < count; i++ {
+		rows = append(rows, goqu.Record{
+			"user_id":  userId,
+			"track_id": tracks[i].Id,
+			"added":    now,
+		})
+	}
+
+	_, err := db.Exec(ctx, dialect.Insert("user_favorites").
+		Rows(rows).
+		OnConflict(goqu.DoNothing()))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("marked %d tracks as favorites\n", count)
+	return nil
+}
+
+func synthesizeYear(
+	ctx context.Context,
+	db *database.Database,
+	userId string,
+	year int,
+	tracks []trackRow,
+	plays int,
+	rng *rand.Rand,
+	force bool,
+	generate bool,
+	runID int64,
+) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	now := time.Now().UnixMilli()
+
+	if force {
+		if err := clearYear(ctx, tx, userId, year); err != nil {
+			return err
+		}
+	} else {
+		hasData, err := yearHasData(ctx, tx, userId, year)
+		if err != nil {
+			return err
+		}
+		if hasData {
+			fmt.Printf("year %d already has data, skipping (use -force to overwrite)\n", year)
+			return nil
+		}
+	}
+
+	counts := allocatePlays(len(tracks), plays, rng)
+
+	monthAgg := make([]map[int]*aggregate, len(tracks))
+	quarterAgg := make([]map[int]*aggregate, len(tracks))
+	yearAgg := make([]*aggregate, len(tracks))
+	allAgg := make([]*aggregate, len(tracks))
+	for i := range tracks {
+		monthAgg[i] = map[int]*aggregate{}
+		quarterAgg[i] = map[int]*aggregate{}
+		yearAgg[i] = &aggregate{}
+		allAgg[i] = &aggregate{}
+	}
+
+	historySeq := 0
+	historyRows := make([]goqu.Record, 0, plays)
+
+	for i, track := range tracks {
+		if counts[i] == 0 {
 			continue
 		}
 
-		plan, err := pl.Plan(expr)
-		if err != nil {
-			fmt.Printf("  PLAN ERROR: %v\n\n", err)
+		numMonths := 1 + rng.Intn(9)
+		months := rng.Perm(12)[:numMonths]
+
+		monthWeights := make([]float64, numMonths)
+		monthWeightSum := 0.0
+		for j := range monthWeights {
+			monthWeights[j] = 0.5 + rng.Float64()
+			monthWeightSum += monthWeights[j]
+		}
+
+		monthPlays := make([]int, numMonths)
+		remaining := counts[i]
+		for j := 0; j < len(monthPlays); j++ {
+			if j == len(monthPlays)-1 {
+				monthPlays[j] = remaining
+			} else {
+				monthPlays[j] = int(float64(counts[i]) * monthWeights[j] / monthWeightSum)
+				remaining -= monthPlays[j]
+			}
+		}
+
+		for j, playsInMonth := range monthPlays {
+			month := months[j] + 1
+			quarter := (month-1)/3 + 1
+
+			mAgg := ensureAgg(monthAgg[i], month)
+			qAgg := ensureAgg(quarterAgg[i], quarter)
+
+			monthStart := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+			monthEnd := monthStart.AddDate(0, 1, 0)
+			monthMs := monthEnd.Sub(monthStart).Milliseconds()
+
+			for p := 0; p < playsInMonth; p++ {
+				var percentPlayed int
+				if rng.Float64() < 0.65 {
+					percentPlayed = 80 + rng.Intn(21)
+				} else {
+					percentPlayed = 10 + rng.Intn(70)
+				}
+
+				status := "skipped"
+				if percentPlayed >= 80 {
+					status = "completed"
+				}
+				skipped := status == "skipped"
+
+				playbackType := "sequential"
+				if rng.Float64() < 0.5 {
+					playbackType = "shuffle"
+				}
+
+				listenedAt := monthStart.
+					Add(time.Duration(rng.Int63n(monthMs)) * time.Millisecond).
+					UnixMilli()
+
+				playTime := int64(float64(track.Duration) * float64(percentPlayed) / 100.0)
+
+				mAgg.add(playTime, skipped)
+				qAgg.add(playTime, skipped)
+				yearAgg[i].add(playTime, skipped)
+				allAgg[i].add(playTime, skipped)
+
+				historySeq++
+				historyRows = append(historyRows, goqu.Record{
+					"id":             fmt.Sprintf("mock-%d-%d-%d", year, runID, historySeq),
+					"user_id":        userId,
+					"track_id":       track.Id,
+					"listened_at":    listenedAt,
+					"playback_type":  playbackType,
+					"status":         status,
+					"percent_played": percentPlayed,
+
+					"created": listenedAt,
+					"updated": listenedAt,
+				})
+			}
+		}
+	}
+
+	statRows := make([]goqu.Record, 0, len(tracks)*4)
+	allRows := make([]goqu.Record, 0, len(tracks))
+
+	for i, track := range tracks {
+		if yearAgg[i].playCount == 0 {
 			continue
 		}
 
-		res, err := compiler.Compile(plan)
-		if err != nil {
-			fmt.Printf("  COMPILE ERROR: %v\n\n", err)
-			continue
-		}
+		statRows = append(statRows, statRecord(
+			userId, track.Id, "year", year, 0, yearAgg[i], now))
+		allRows = append(allRows, statRecord(
+			userId, track.Id, "all", 0, 0, allAgg[i], now))
 
-		if res.Where != nil {
-			sql, args, err := goqu.From("dummy").Where(res.Where).ToSQL()
-			if err != nil {
-				fmt.Printf("  TO SQL ERROR: %v\n\n", err)
+		for month, agg := range monthAgg[i] {
+			if agg.playCount == 0 {
 				continue
 			}
-			// Extract just the WHERE clause
-			whereIdx := len("SELECT * FROM \"dummy\" WHERE ")
-			if len(sql) > whereIdx {
-				sql = sql[whereIdx:]
+			statRows = append(statRows, statRecord(
+				userId, track.Id, "month", year, month, agg, now))
+		}
+
+		for quarter, agg := range quarterAgg[i] {
+			if agg.playCount == 0 {
+				continue
 			}
-			fmt.Printf("  SQL:   %s\n", sql)
-			if len(args) > 0 {
-				fmt.Printf("  ARGS:  %v\n", args)
-			}
-		}
-		fmt.Println()
-	}
-}
-
-func testSort() {
-	fmt.Println("--- Sort Parser ---\n")
-
-	inputs := []string{
-		"",
-		"random",
-		"score",
-		"recent",
-		"shuffle=1234",
-		"+name",
-		"-year",
-		"+artist,-year",
-		"name asc",
-		"year desc",
-		"artist asc, year desc",
-		"name",
-		"+artist, year desc, -duration",
-		"  +artist  ,  -year  ",
-		"name ASC, year DESC",
-		"name nulls first",
-		"year desc nulls last",
-		"+artist nulls first, -year nulls last",
-		"name asc nulls first, year desc nulls last",
-	}
-
-	for _, input := range inputs {
-		fmt.Printf("Input: %q\n", input)
-		s, err := sort.Parse(input)
-		if err != nil {
-			fmt.Printf("  ERROR: %v\n\n", err)
-			continue
-		}
-
-		fmt.Printf("  Orderings: %d\n", len(s.Orderings))
-		for i, o := range s.Orderings {
-			switch o := o.(type) {
-			case *query.FieldOrdering:
-				dir := "ASC"
-				if o.Dir == query.DirDesc {
-					dir = "DESC"
-				}
-				nullStr := ""
-				switch o.NullOrder {
-				case query.NullOrderingFirst:
-					nullStr = " NULLS FIRST"
-				case query.NullOrderingLast:
-					nullStr = " NULLS LAST"
-				}
-				fmt.Printf("    [%d] Field: %s %s%s\n", i, o.Field.Name, dir, nullStr)
-			case *query.RandomOrdering:
-				fmt.Printf("    [%d] Random\n", i)
-			case *query.ShuffleOrdering:
-				fmt.Printf("    [%d] Shuffle (seed: %d)\n", i, o.Seed)
-			case *query.ScoreOrdering:
-				fmt.Printf("    [%d] Score\n", i)
-			}
-		}
-		fmt.Println()
-	}
-
-	fmt.Println("--- Sort Errors ---\n")
-
-	errorInputs := []string{
-		"shuffle=abc",
-		"+",
-		"-",
-		" asc",
-		" desc",
-	}
-
-	for _, input := range errorInputs {
-		fmt.Printf("Input: %q\n", input)
-		_, err := sort.Parse(input)
-		if err != nil {
-			fmt.Printf("  ERROR: %v\n\n", err)
-		} else {
-			fmt.Printf("  (no error)\n\n")
+			statRows = append(statRows, statRecord(
+				userId, track.Id, "quarter", year, quarter, agg, now))
 		}
 	}
-}
 
-func testDatabaseIntegration() {
-	fmt.Println("--- Database Integration Test ---\n")
-
-	db, err := database.Open("work/data.db")
+	err = upsertStats(ctx, tx, allRows)
 	if err != nil {
-		fmt.Printf("ERROR opening database: %v\n\n", err)
-		return
+		return err
 	}
-	defer db.Close()
 
-	fmt.Println("Connected to work/data.db\n")
+	err = upsertStats(ctx, tx, statRows)
+	if err != nil {
+		return err
+	}
 
-	s := schema.New().
-		AddField("id", query.TypeString, schema.Column("tracks.id")).
-		AddField("name", query.TypeString, schema.Column("tracks.name")).
-		AddField("number", query.TypeInt, schema.Column("tracks.number"), schema.Nullable()).
-		AddField("duration", query.TypeInt, schema.Column("tracks.duration"), schema.Nullable()).
-		AddField("year", query.TypeInt, schema.Column("tracks.year"), schema.Nullable()).
-		AddField("albumId", query.TypeString, schema.Column("tracks.album_id")).
-		AddField("artistId", query.TypeString, schema.Column("tracks.artist_id")).
-		AddField("albumName", query.TypeString, schema.Column("albums.name")).
-		AddField("artistName", query.TypeString, schema.Column("artists.name")).
-		AddField("tags", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString, "tracks.id")).
-		AddField("featuringArtist", query.TypeRelation, schema.Relation("tracks_featuring_artists", "track_id", "artist_id", query.TypeString, "tracks.id")).
-		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt, "tracks.id")).
-		AddField("created", query.TypeInt, schema.Column("tracks.created")).
-		AddField("updated", query.TypeInt, schema.Column("tracks.updated")).
-		SetDefaultSort(
-			&query.FieldOrdering{
-				Field: &query.Field{Name: "artistName"},
-				Dir:   query.DirAsc,
-			},
-			&query.FieldOrdering{
-				Field: &query.Field{Name: "year"},
-				Dir:   query.DirDesc,
+	err = insertChunked(ctx, tx, "track_history", historyRows)
+	if err != nil {
+		return err
+	}
+
+	totalPlays := 0
+	for i := range tracks {
+		totalPlays += yearAgg[i].playCount
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	fmt.Printf("year %d: %d tracks, %d plays\n",
+		year, numActiveTracks(yearAgg), totalPlays)
+
+	if generate {
+		if err := db.GenerateUserReview(ctx, userId, year); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ensureAgg(m map[int]*aggregate, key int) *aggregate {
+	agg := m[key]
+	if agg == nil {
+		agg = &aggregate{}
+		m[key] = agg
+	}
+	return agg
+}
+
+func statRecord(
+	userId string,
+	trackId string,
+	periodType string,
+	year int,
+	periodValue int,
+	agg *aggregate,
+	now int64,
+) goqu.Record {
+	return goqu.Record{
+		"user_id":      userId,
+		"track_id":     trackId,
+		"period_type":  periodType,
+		"year":         year,
+		"period_value": periodValue,
+
+		"play_count": agg.playCount,
+		"skip_count": agg.skipCount,
+		"play_time":  agg.playTime,
+
+		"created_at": now,
+		"updated_at": now,
+	}
+}
+
+func upsertStats(ctx context.Context, exec database.Executor, rows []goqu.Record) error {
+	if len(rows) == 0 {
+		return nil
+	}
+
+	for i := 0; i < len(rows); i += insertBatchSize {
+		end := min(i+insertBatchSize, len(rows))
+
+		_, err := exec.Exec(ctx, dialect.Insert("user_track_stats").
+			Rows(rows[i:end]).
+			OnConflict(goqu.DoUpdate(
+				"user_id, track_id, period_type, year, period_value",
+				goqu.Record{
+					"play_count": goqu.L("play_count + EXCLUDED.play_count"),
+					"skip_count": goqu.L("skip_count + EXCLUDED.skip_count"),
+					"play_time":  goqu.L("play_time + EXCLUDED.play_time"),
+					"updated_at": goqu.L("EXCLUDED.updated_at"),
+				},
+			)))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func numActiveTracks(aggs []*aggregate) int {
+	n := 0
+	for _, a := range aggs {
+		if a.playCount > 0 {
+			n++
+		}
+	}
+	return n
+}
+
+func insertChunked(
+	ctx context.Context,
+	exec database.Executor,
+	table string,
+	rows []goqu.Record,
+) error {
+	for i := 0; i < len(rows); i += insertBatchSize {
+		end := min(i+insertBatchSize, len(rows))
+
+		_, err := exec.Exec(ctx, dialect.Insert(table).Rows(rows[i:end]))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func clearYear(
+	ctx context.Context,
+	exec database.Executor,
+	userId string,
+	year int,
+) error {
+	now := time.Now().UnixMilli()
+
+	query := dialect.From("user_track_stats").
+		Select(
+			goqu.I("track_id"),
+			goqu.I("play_count"),
+			goqu.I("skip_count"),
+			goqu.I("play_time"),
+		).
+		Where(
+			goqu.I("user_id").Eq(userId),
+			goqu.I("period_type").Eq("year"),
+			goqu.I("year").Eq(year),
+		)
+
+	rows, err := database.Multiple[yearStatRow](exec, ctx, query)
+	if err != nil {
+		return err
+	}
+
+	if len(rows) > 0 {
+		rollback := make([]goqu.Record, len(rows))
+		for i, r := range rows {
+			rollback[i] = goqu.Record{
+				"user_id":      userId,
+				"track_id":     r.TrackId,
+				"period_type":  "all",
+				"year":         0,
+				"period_value": 0,
+
+				"play_count": -r.PlayCount,
+				"skip_count": -r.SkipCount,
+				"play_time":  -r.PlayTime,
+
+				"created_at": now,
+				"updated_at": now,
+			}
+		}
+
+		if err := upsertStats(ctx, exec, rollback); err != nil {
+			return err
+		}
+	}
+
+	_, err = exec.Exec(ctx, dialect.Delete("user_track_stats").Where(
+		goqu.Ex{
+			"user_id":     userId,
+			"period_type": goqu.Op{"in": []string{"year", "quarter", "month"}},
+			"year":        year,
+		},
+	))
+	if err != nil {
+		return err
+	}
+
+	start := time.Date(year, time.January, 1, 0, 0, 0, 0, time.Local).UnixMilli()
+	end := time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.Local).UnixMilli()
+
+	_, err = exec.Exec(ctx, dialect.Delete("track_history").Where(
+		goqu.I("user_id").Eq(userId),
+		goqu.And(
+			goqu.I("listened_at").Gte(start),
+			goqu.I("listened_at").Lt(end),
+		),
+	))
+	if err != nil {
+		return err
+	}
+
+	_, err = exec.Exec(ctx, dialect.Delete("user_year_reviews").Where(
+		goqu.Ex{
+			"user_id": userId,
+			"year":    year,
+		},
+	))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func yearHasData(
+	ctx context.Context,
+	exec database.Executor,
+	userId string,
+	year int,
+) (bool, error) {
+	query := dialect.From("user_track_stats").
+		Select(goqu.COUNT(goqu.Star()).As("count")).
+		Where(
+			goqu.Ex{
+				"user_id":     userId,
+				"period_type": goqu.Op{"in": []string{"year", "quarter", "month"}},
+				"year":        year,
 			},
 		)
 
-	pl := planner.New(s)
-	compiler := querysql.NewCompiler()
-
-	tests := []struct {
-		name  string
-		query string
-		sort  string
-	}{
-		{
-			name:  "Default sort (no sort provided)",
-			query: `year >= 2000`,
-		},
-		{
-			name:  "Year >= 2000",
-			query: `year >= 2000`,
-			sort:  "name asc",
-		},
-		{
-			name:  "Duration between 180 and 300",
-			query: `duration >= 180 and duration <= 300`,
-		},
-		{
-			name:  "Artist name contains 'The'",
-			query: `artistName contains "The"`,
-		},
-		{
-			name:  "Year is not null",
-			query: `year is not null`,
-		},
-		{
-			name:  "Complex: year >= 2000 and duration > 120",
-			query: `year >= 2000 and duration > 120`,
-		},
-		{
-			name:  "Album name contains 'live'",
-			query: `albumName contains "live"`,
-		},
-		{
-			name:  "Tags has 'soundtrack' (relation)",
-			query: `tags has "soundtrack"`,
-		},
-		{
-			name:  "Tags has 'rock' (relation)",
-			query: `tags has "rock"`,
-		},
-		{
-			name:  "Tags NOT has 'soundtrack' (relation)",
-			query: `not tags has "soundtrack"`,
-		},
-		{
-			name:  "Tags has 'rock' and year >= 2000 (relation)",
-			query: `tags has "rock" and year >= 2000`,
-		},
-		{
-			name:  "Tags has 'live'",
-			query: `tags has "live"`,
-		},
-		{
-			name:  "Featuring artist has specific ID",
-			query: `featuringArtist has "artist_123"`,
-		},
-		{
-			name:  "Featuring artist NOT has specific ID",
-			query: `not featuringArtist has "artist_123"`,
-		},
-		{
-			name:  "Tags has 'rock' and featuring artist has ID",
-			query: `tags has "rock" and featuringArtist has "vda30ry85z"`,
-		},
-		{
-			name:  "Rating relation has integer value 5",
-			query: `ratingRelation has 5`,
-		},
-		{
-			name:  "Rating relation has integer value 4 or 5",
-			query: `ratingRelation has 4 or ratingRelation has 5`,
-		},
-		{
-			name:  "Precedence: year >= 2000 or year <= 1990 and duration > 300",
-			query: `year >= 2000 or year <= 1990 and duration > 300`,
-		},
-		{
-			name:  "Precedence with parens: (year >= 2000 or year <= 1990) and duration > 300",
-			query: `(year >= 2000 or year <= 1990) and duration > 300`,
-		},
-		{
-			name:  "Precedence: tags has 'rock' or tags has 'pop' and year >= 2000",
-			query: `tags has "rock" or tags has "pop" and year >= 2000`,
-		},
-		{
-			name:  "Precedence with parens: (tags has 'rock' or tags has 'pop') and year >= 2000",
-			query: `(tags has "rock" or tags has "pop") and year >= 2000`,
-		},
-		{
-			name:  "Complex nested: (year >= 2000 and (tags has 'rock' or tags has 'metal')) or duration < 120",
-			query: `(year >= 2000 and (tags has "rock" or tags has "metal")) or duration < 120`,
-		},
-		{
-			name:  "Deep nesting: ((year >= 2000 or year <= 1980) and (tags has 'rock' or tags has 'pop')) and not tags has 'live'",
-			query: `((year >= 2000 or year <= 1980) and (tags has "rock" or tags has "pop")) and not tags has "live"`,
-		},
-		{
-			name:  "Multiple OR with AND: year >= 2000 and (tags has 'rock' or tags has 'pop' or tags has 'metal')",
-			query: `year >= 2000 and (tags has "rock" or tags has "pop" or tags has "metal")`,
-		},
-		{
-			name:  "NOT with parens: not (tags has 'live' or tags has 'acoustic')",
-			query: `not (tags has "live" or tags has "acoustic")`,
-		},
-		{
-			name:  "NOT without parens: not tags has 'live' or not tags has 'acoustic'",
-			query: `not tags has "live" or not tags has "acoustic"`,
-		},
-		{
-			name:  "Sort by name ascending",
-			query: `year >= 2000`,
-			sort:  "+name",
-		},
-		{
-			name:  "Sort by year descending, name ascending",
-			query: `year >= 2000`,
-			sort:  "-year,+name",
-		},
-		{
-			name:  "Sort by duration ascending",
-			query: `duration > 0`,
-			sort:  "duration asc",
-		},
-		{
-			name:  "Sort by artist name and year",
-			query: `year >= 2000`,
-			sort:  "artistName asc, year desc",
-		},
-		{
-			name:  "Random sort",
-			query: `year >= 2000`,
-			sort:  "random",
-		},
-		{
-			name:  "Recent sort",
-			query: `year >= 2000`,
-			sort:  "recent",
-		},
-		{
-			name:  "Sort with nulls first",
-			query: `year >= 2000`,
-			sort:  "year desc nulls first",
-		},
-		{
-			name:  "Sort with nulls last",
-			query: `year >= 2000`,
-			sort:  "year asc nulls last",
-		},
-		{
-			name:  "Sort with mixed null ordering",
-			query: `year >= 2000`,
-			sort:  "artistName asc nulls first, year desc nulls last",
-		},
+	row, err := database.Single[countRow](exec, ctx, query)
+	if err != nil {
+		return false, err
 	}
 
-	for _, tt := range tests {
-		fmt.Printf("--- %s ---\n", tt.name)
-		fmt.Printf("Query: %s\n", tt.query)
-		if tt.sort != "" {
-			fmt.Printf("Sort:  %s\n", tt.sort)
-		} else {
-			fmt.Printf("Sort:  (using default)\n")
-		}
-
-		p := parser.New(tt.query)
-		expr, err := p.Parse()
-		if err != nil {
-			fmt.Printf("  PARSE ERROR: %v\n\n", err)
-			continue
-		}
-
-		plan, err := pl.Plan(expr)
-		if err != nil {
-			fmt.Printf("  PLAN ERROR: %v\n\n", err)
-			continue
-		}
-
-		// Parse sorting if provided, otherwise use default
-		var sortOrderings []query.Ordering
-		if tt.sort != "" {
-			sortObj, err := sort.Parse(tt.sort)
-			if err != nil {
-				fmt.Printf("  SORT ERROR: %v\n\n", err)
-				continue
-			}
-			sortOrderings = sortObj.Orderings
-		}
-
-		// Resolve field names using the schema (applies default if sortOrderings is empty)
-		resolvedOrderings, err := pl.ResolveSort(sortOrderings)
-		if err != nil {
-			fmt.Printf("  SORT RESOLUTION ERROR: %v\n\n", err)
-			continue
-		}
-		plan.OrderBy = resolvedOrderings
-
-		result, err := compiler.Compile(plan)
-		if err != nil {
-			fmt.Printf("  COMPILE ERROR: %v\n\n", err)
-			continue
-		}
-
-		count, err := executeTrackQuery(db, result)
-		if err != nil {
-			fmt.Printf("  EXEC ERROR: %v\n\n", err)
-			continue
-		}
-
-		fmt.Printf("Results: %d tracks\n\n", count)
+	if row.Count > 0 {
+		return true, nil
 	}
+
+	start, end := yearRange(year)
+
+	query = dialect.From("track_history").
+		Select(goqu.COUNT(goqu.Star()).As("count")).
+		Where(
+			goqu.I("user_id").Eq(userId),
+			goqu.And(
+				goqu.I("listened_at").Gte(start),
+				goqu.I("listened_at").Lt(end),
+			),
+		)
+
+	row, err = database.Single[countRow](exec, ctx, query)
+	if err != nil {
+		return false, err
+	}
+
+	return row.Count > 0, nil
 }
 
-func executeTrackQuery(executor database.Executor, plan *querysql.CompileResult) (int, error) {
-	q := database.TrackQuery().Prepared(true)
-
-	if plan.Where != nil {
-		q = q.Where(plan.Where)
+// allocatePlays splits a total number of plays across tracks using a heavy
+// tailed random popularity. Every year gets a different distribution so the
+// top tracks/artists shift between years.
+func allocatePlays(trackCount int, total int, rng *rand.Rand) []int {
+	weights := make([]float64, trackCount)
+	sum := 0.0
+	for i := range weights {
+		weights[i] = math.Pow(rng.Float64(), 3) + 0.02
+		sum += weights[i]
 	}
 
-	if len(plan.Order) > 0 {
-		q = q.Order(plan.Order...)
+	counts := make([]int, trackCount)
+	remaining := total
+	for i := range counts {
+		allocated := int(float64(total) * weights[i] / sum)
+		if allocated > remaining {
+			allocated = remaining
+		}
+		counts[i] = allocated
+		remaining -= allocated
 	}
 
-	tracks, err := database.Multiple[database.Track](executor, context.Background(), q)
-	if err != nil {
-		return 0, fmt.Errorf("execute: %w", err)
+	if remaining > 0 && trackCount > 0 {
+		counts[0] += remaining
 	}
 
-	sqlStr, args, err := q.ToSQL()
-	if err != nil {
-		return 0, fmt.Errorf("SQL generation error: %w", err)
-	}
-
-	const debugPrint = false
-	if debugPrint {
-		fmt.Printf("sqlStr: %v\n", sqlStr)
-		fmt.Printf("args: %v\n", args)
-	}
-
-	return len(tracks), nil
+	return counts
 }
 
-func testErrorMessages() {
-	fmt.Println("--- Error Messages ---\n")
-
-	s := schema.New().
-		AddField("id", query.TypeString, schema.Column("tracks.id")).
-		AddField("name", query.TypeString, schema.Column("tracks.name")).
-		AddField("year", query.TypeInt, schema.Column("tracks.year"), schema.Nullable()).
-		AddField("duration", query.TypeInt, schema.Column("tracks.duration"), schema.Nullable()).
-		AddField("rating", query.TypeFloat, schema.Column("tracks.rating")).
-		AddField("active", query.TypeBool, schema.Column("tracks.active")).
-		AddField("tag", query.TypeRelation, schema.Relation("tracks_tags", "track_id", "tag_slug", query.TypeString, "tracks.id")).
-		AddField("ratingRelation", query.TypeRelation, schema.Relation("track_ratings", "track_id", "rating_value", query.TypeInt, "tracks.id"))
-
-	pl := planner.New(s)
-
-	fmt.Println("=== Lexer Errors ===\n")
-
-	lexerErrors := []string{
-		`name = "unterminated string`,
-		`year >= 1970 @`,
-		`name = "test\"`,
-		`year >= 123abc`,
+func rebuildUserStats(
+	ctx context.Context,
+	db *database.Database,
+	userId string,
+) error {
+	agg, err := database.Single[statsAggRow](db, ctx,
+		dialect.From("user_track_stats").
+			Select(
+				goqu.COALESCE(goqu.SUM("play_count"), 0).As("play_count"),
+				goqu.COALESCE(goqu.SUM("skip_count"), 0).As("skip_count"),
+				goqu.COALESCE(goqu.SUM("play_time"), 0).As("play_time"),
+			).
+			Where(
+				goqu.I("user_id").Eq(userId),
+				goqu.I("period_type").Eq("all"),
+			))
+	if err != nil {
+		return err
 	}
 
-	for _, input := range lexerErrors {
-		fmt.Printf("Input: %s\n", input)
-		l := lexer.New(input)
-		_, err := l.Scan()
-		if err != nil {
-			fmt.Printf("  Lexer Error: %v\n\n", err)
+	favorites, err := database.Single[countRow](db, ctx,
+		dialect.From("user_favorites").
+			Select(goqu.COUNT(goqu.Star()).As("count")).
+			Where(goqu.I("user_id").Eq(userId)))
+	if err != nil {
+		return err
+	}
+
+	type lastRow struct {
+		Last sql.NullInt64 `db:"last"`
+	}
+	last, err := database.Single[lastRow](db, ctx,
+		dialect.From("track_history").
+			Select(goqu.MAX("listened_at").As("last")).
+			Where(goqu.I("user_id").Eq(userId)))
+	if err != nil {
+		return err
+	}
+
+	type playlistsRow struct {
+		NumPlaylistsCreated int `db:"num_playlists_created"`
+	}
+	playlists := 0
+	existing, err := database.Single[playlistsRow](db, ctx,
+		dialect.From("user_stats").
+			Select("num_playlists_created").
+			Where(goqu.I("user_id").Eq(userId)))
+	if err == nil {
+		playlists = existing.NumPlaylistsCreated
+	} else if !errors.Is(err, database.ErrItemNotFound) {
+		return err
+	}
+
+	return db.SetUserStats(ctx, database.SetUserStatsParams{
+		UserId:              userId,
+		NumTracksPlayed:     agg.PlayCount,
+		NumTracksSkipped:    agg.SkipCount,
+		NumPlaylistsCreated: playlists,
+		NumFavoriteTracks:   favorites.Count,
+		ListeningTime:       agg.PlayTime,
+		LastListenedAt:      last.Last,
+	})
+}
+
+func yearRange(year int) (int64, int64) {
+	start := time.Date(year, time.January, 1, 0, 0, 0, 0, time.Local).UnixMilli()
+	end := time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.Local).UnixMilli()
+	return start, end
+}
+
+func printYearOverYear(
+	ctx context.Context,
+	db *database.Database,
+	userId string,
+) {
+	rows, err := database.Multiple[yearSummaryRow](db, ctx,
+		dialect.From("user_year_reviews").
+			Select(
+				"year",
+				"track_count",
+				"listening_time",
+				"avg_completion",
+				"skip_count",
+				"unique_tracks",
+				"favorite_plays",
+			).
+			Where(goqu.I("user_id").Eq(userId)).
+			Order(goqu.I("year").Asc()))
+	if err != nil {
+		fmt.Printf("could not load year reviews: %v\n", err)
+		return
+	}
+
+	if len(rows) == 0 {
+		fmt.Println("no year reviews generated yet")
+		return
+	}
+
+	fmt.Println("Year over year review")
+	fmt.Printf("%-6s %10s %10s %10s %8s %10s %10s %10s\n",
+		"Year", "Plays", "Hours", "Unique", "Skipped", "Skip%", "AvgComp", "FavPlays")
+
+	for _, r := range rows {
+		skipRate := 0.0
+		if r.TrackCount > 0 {
+			skipRate = float64(r.SkipCount) / float64(r.TrackCount) * 100
 		}
-	}
 
-	fmt.Println("=== Parser Errors ===\n")
-
-	parserErrors := []string{
-		`name = `,
-		`= "rock"`,
-		`name = "rock" and`,
-		`name = "rock" or`,
-		`(name = "rock"`,
-		`name = "rock")`,
-		`name = "rock" and and year >= 1970`,
-		`year >= >= 1970`,
-		`name in`,
-		`name in (`,
-		`name in ("rock"`,
-		`name in ("rock",)`,
-	}
-
-	for _, input := range parserErrors {
-		fmt.Printf("Input: %s\n", input)
-		p := parser.New(input)
-		_, err := p.Parse()
-		if err != nil {
-			fmt.Printf("  Parser Error: %v\n\n", err)
-		}
-	}
-
-	fmt.Println("=== Planner Errors ===\n")
-
-	plannerErrors := []string{
-		`unknownField = "value"`,
-		`year = "string on int field"`,
-		`name = 1970`,
-		`rating = "string on float field"`,
-		`active = "string on bool field"`,
-		`year > "string comparison"`,
-		`name > "string greater than"`,
-		`name < "string less than"`,
-		`name >= "string greater equal"`,
-		`name <= "string less equal"`,
-		`year contains "contains on int"`,
-		`rating contains "contains on float"`,
-		`active contains "contains on bool"`,
-		`year like "like on int"`,
-		`rating like "like on float"`,
-		`active like "like on bool"`,
-		`name is null`,
-		`name is not null`,
-		`year in ("string", "values")`,
-		`tag = "equality on relation"`,
-		`tag > "comparison on relation"`,
-		`tag contains "contains on relation"`,
-		`tag has 123`,
-		`ratingRelation has "string on int relation"`,
-	}
-
-	for _, input := range plannerErrors {
-		fmt.Printf("Input: %s\n", input)
-		p := parser.New(input)
-		expr, err := p.Parse()
-		if err != nil {
-			fmt.Printf("  Parser Error: %v\n\n", err)
-			continue
-		}
-		_, err = pl.Plan(expr)
-		if err != nil {
-			fmt.Printf("  Planner Error: %v\n\n", err)
-		}
+		fmt.Printf("%-6d %10d %10.1f %10d %8d %9.1f%% %9.1f%% %10d\n",
+			r.Year,
+			r.TrackCount,
+			float64(r.ListeningTime)/3600.0,
+			r.UniqueTracks,
+			r.SkipCount,
+			skipRate,
+			r.AvgCompletion,
+			r.FavoritePlays,
+		)
 	}
 }
