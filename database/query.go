@@ -109,23 +109,22 @@ func ApplyQuery(
 	}
 
 	// Validate sort
+
 	var sortOrder []exp.OrderedExpression
-	if params.Sort != "" {
-		sortObj, err := sort.Parse(params.Sort)
+	sortObj, err := sort.Parse(params.Sort)
+	if err != nil {
+		sortErr = &SortError{Op: "parse", Err: err}
+	} else {
+		resolvedOrderings, err := pl.ResolveSort(sortObj.Orderings)
 		if err != nil {
-			sortErr = &SortError{Op: "parse", Err: err}
-		} else {
-			resolvedOrderings, err := pl.ResolveSort(sortObj.Orderings)
+			sortErr = &SortError{Op: "resolution", Err: err}
+		} else if len(resolvedOrderings) > 0 {
+			plan := &query.Plan{OrderBy: resolvedOrderings}
+			result, err := compiler.Compile(plan)
 			if err != nil {
-				sortErr = &SortError{Op: "resolution", Err: err}
-			} else if len(resolvedOrderings) > 0 {
-				plan := &query.Plan{OrderBy: resolvedOrderings}
-				result, err := compiler.Compile(plan)
-				if err != nil {
-					sortErr = &SortError{Op: "compile", Err: err}
-				} else {
-					sortOrder = result.Order
-				}
+				sortErr = &SortError{Op: "compile", Err: err}
+			} else {
+				sortOrder = result.Order
 			}
 		}
 	}
