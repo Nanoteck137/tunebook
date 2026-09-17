@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	// TODO(patrik): Rename
+	// TODO(patrik): Remove
 	TopYearReviewItems = 5
 )
 
@@ -194,12 +194,6 @@ type UserYearReviewMonthDecade struct {
 
 type UserYear struct {
 	Year int `db:"year"`
-}
-
-type userYearMonth struct {
-	Month     int   `db:"month"`
-	PlayCount int   `db:"play_count"`
-	PlayTime  int64 `db:"play_time"`
 }
 
 type UserYearArtistTrack struct {
