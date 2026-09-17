@@ -107,6 +107,7 @@
             imagemagick
             ffmpeg
             just
+            sqlite
 
             inputs.versionctl.packages.${system}.default
           ];
