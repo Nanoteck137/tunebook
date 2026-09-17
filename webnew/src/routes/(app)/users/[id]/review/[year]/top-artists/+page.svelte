@@ -20,7 +20,7 @@
 		</div>
 
 		<p class="text-sm text-muted-foreground">
-			{data.artists.length.toLocaleString()}
+			{data.page.totalItems.toLocaleString()}
 			{data.artists.length === 1 ? "artist" : "artists"} ranked by plays
 		</p>
 	</div>
@@ -28,9 +28,9 @@
 	<section>
 		<div class="flex flex-col gap-2">
 			{#if data.artists.length > 0}
-				{#each data.artists as item (item.artist.id)}
+				{#each data.artists as item (item.id)}
 					<a
-						href="/artists/{item.artist.id}"
+						href="/artists/{item.id}"
 						class="flex items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:bg-accent"
 					>
 						<span
@@ -39,13 +39,13 @@
 							{item.rank}
 						</span>
 						<img
-							src={item.artist.coverArt.small}
+							src={item.coverArt.small}
 							alt=""
 							class="h-10 w-10 shrink-0 rounded object-cover"
 						/>
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">
-								{item.artist.name}
+								{item.name}
 							</span>
 						</span>
 						<span class="shrink-0 text-xs text-muted-foreground">

@@ -9,17 +9,18 @@ export const load: PageLoad = async ({ parent, params }) => {
 		throw error(400, { message: "Invalid year" });
 	}
 
-	const top = await data.apiClient.getUserYearReviewTopAlbums(
+	const albums = await data.apiClient.getUserYearReviewAlbums(
 		params.id,
 		String(year),
 	);
-	if (!top.success) {
-		throw error(top.error.code, { message: top.error.message });
+	if (!albums.success) {
+		throw error(albums.error.code, { message: albums.error.message });
 	}
 
 	return {
 		...data,
 		year,
-		albums: top.data.albums,
+		page: albums.data.page,
+		albums: albums.data.albums,
 	};
 };

@@ -4,6 +4,8 @@
 
 	let { data } = $props();
 
+	// TODO(patrik): Infinite scroll 
+
 	function albumArtistNames(album: Album): string {
 		return album.artists.map((a) => a.name).join(", ");
 	}
@@ -25,7 +27,7 @@
 		</div>
 
 		<p class="text-sm text-muted-foreground">
-			{data.albums.length.toLocaleString()}
+			{data.page.totalItems.toLocaleString()}
 			{data.albums.length === 1 ? "album" : "albums"} ranked by plays
 		</p>
 	</div>
@@ -33,9 +35,9 @@
 	<section>
 		<div class="flex flex-col gap-2">
 			{#if data.albums.length > 0}
-				{#each data.albums as item (item.album.id)}
+				{#each data.albums as item (item.id)}
 					<a
-						href="/albums/{item.album.id}"
+						href="/albums/{item.id}"
 						class="flex items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:bg-accent"
 					>
 						<span
@@ -44,16 +46,16 @@
 							{item.rank}
 						</span>
 						<img
-							src={item.album.coverArt.small}
+							src={item.coverArt.small}
 							alt=""
 							class="h-10 w-10 shrink-0 rounded object-cover"
 						/>
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">
-								{item.album.name}
+								{item.name}
 							</span>
 							<span class="block truncate text-xs text-muted-foreground">
-								{albumArtistNames(item.album)}
+								{albumArtistNames(item)}
 							</span>
 						</span>
 						<span class="shrink-0 text-xs text-muted-foreground">

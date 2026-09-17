@@ -31,13 +31,9 @@
 	let review = $derived(data.review);
 	let topTracks = $derived(data.topTracks);
 
-	// let topArtist = $derived(review.artists[0] ?? null);
-	// let topAlbum = $derived(review.albums[0] ?? null);
+	let topArtist = $derived(data.topArtists[0] ?? null);
+	let topAlbum = $derived(data.topAlbums[0] ?? null);
 	let topTrack = $derived(topTracks[0] ?? null);
-
-	$effect(() => {
-		console.log("top track", topTrack);
-	});
 
 	// let monthlyHours = $derived(review.months.map((m) => m.playTime / 3600));
 	// let monthLabels = $derived([
@@ -52,11 +48,11 @@
 	// 	),
 	// );
 
-	// let hoveredMonth = $state(-1);
-	//
-	// let expandedArtist = $state<string | null>(null);
-	// let expandedAlbum = $state<string | null>(null);
-	//
+	let hoveredMonth = $state(-1);
+
+	let expandedArtist = $state<string | null>(null);
+	let expandedAlbum = $state<string | null>(null);
+
 	// function artistTracksFor(id: string) {
 	// 	return review.artistTracks.find((a) => a.artist.id === id)?.tracks ?? [];
 	// }
@@ -65,13 +61,13 @@
 	// 	return review.albumTracks.find((a) => a.album.id === id)?.tracks ?? [];
 	// }
 
-	// function toggleArtist(id: string) {
-	// 	expandedArtist = expandedArtist === id ? null : id;
-	// }
-	//
-	// function toggleAlbum(id: string) {
-	// 	expandedAlbum = expandedAlbum === id ? null : id;
-	// }
+	function toggleArtist(id: string) {
+		expandedArtist = expandedArtist === id ? null : id;
+	}
+	
+	function toggleAlbum(id: string) {
+		expandedAlbum = expandedAlbum === id ? null : id;
+	}
 
 	function formatMonthlyHours(hours: number): string {
 		if (hours >= 1) {
@@ -156,42 +152,42 @@
 		<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Top Artist</span>
-				<!-- {#if topArtist} -->
-				<!-- 	<a href="/artists/{topArtist.artist.id}" class="flex items-center gap-2"> -->
-				<!-- 		<img -->
-				<!-- 			src={topArtist.artist.coverArt.small} -->
-				<!-- 			alt="" -->
-				<!-- 			class="h-10 w-10 rounded object-cover" -->
-				<!-- 		/> -->
-				<!-- 		<span class="truncate text-sm font-medium"> -->
-				<!-- 			{topArtist.artist.name} -->
-				<!-- 		</span> -->
-				<!-- 	</a> -->
-				<!-- {:else} -->
-				<!-- 	<span class="truncate text-sm font-medium text-muted-foreground"> -->
-				<!-- 		— -->
-				<!-- 	</span> -->
-				<!-- {/if} -->
+				{#if topArtist}
+					<a href="/artists/{topArtist.id}" class="flex items-center gap-2">
+						<img
+							src={topArtist.coverArt.small}
+							alt=""
+							class="h-10 w-10 rounded object-cover"
+						/>
+						<span class="truncate text-sm font-medium">
+							{topArtist.name}
+						</span>
+					</a>
+				{:else}
+					<span class="truncate text-sm font-medium text-muted-foreground">
+						—
+					</span>
+				{/if}
 			</div>
 
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Top Album</span>
-				<!-- {#if topAlbum} -->
-				<!-- 	<a href="/albums/{topAlbum.album.id}" class="flex items-center gap-2"> -->
-				<!-- 		<img -->
-				<!-- 			src={topAlbum.album.coverArt.small} -->
-				<!-- 			alt="" -->
-				<!-- 			class="h-10 w-10 rounded object-cover" -->
-				<!-- 		/> -->
-				<!-- 		<span class="truncate text-sm font-medium"> -->
-				<!-- 			{topAlbum.album.name} -->
-				<!-- 		</span> -->
-				<!-- 	</a> -->
-				<!-- {:else} -->
-				<!-- 	<span class="truncate text-sm font-medium text-muted-foreground"> -->
-				<!-- 		— -->
-				<!-- 	</span> -->
-				<!-- {/if} -->
+				{#if topAlbum}
+					<a href="/albums/{topAlbum.id}" class="flex items-center gap-2">
+						<img
+							src={topAlbum.coverArt.small}
+							alt=""
+							class="h-10 w-10 rounded object-cover"
+						/>
+						<span class="truncate text-sm font-medium">
+							{topAlbum.name}
+						</span>
+					</a>
+				{:else}
+					<span class="truncate text-sm font-medium text-muted-foreground">
+						—
+					</span>
+				{/if}
 			</div>
 
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
@@ -338,105 +334,105 @@
 	</section>
 
 	<section>
-		<!-- <SectionHeader -->
-		<!-- 	count={review.albumCount} -->
-		<!-- 	viewAllHref="/users/{data.userData.id}/review/{data.year}/top-albums" -->
-		<!-- > -->
-		<!-- 	<DiscAlbum /> -->
-		<!-- 	Top Albums -->
-		<!-- </SectionHeader> -->
+		<SectionHeader
+			count={data.topAlbumCount}
+			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-albums"
+		>
+			<DiscAlbum />
+			Top Albums
+		</SectionHeader>
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
-			<!-- {#each review.albums as item (item.album.id)} -->
-			<!-- 	{@const expanded = expandedAlbum === item.album.id} -->
-			<!-- 	<div -->
-			<!-- 		class="flex w-40 shrink-0 flex-col transition-all" -->
-			<!-- 		class:w-80={expanded} -->
-			<!-- 	> -->
-			<!-- 		<AlbumTile -->
-			<!-- 			id={item.album.id} -->
-			<!-- 			cover={item.album.coverArt.small} -->
-			<!-- 			name={item.album.name} -->
-			<!-- 			artists={item.album.artists} -->
-			<!-- 			{expanded} -->
-			<!-- 			onToggle={() => toggleAlbum(item.album.id)} -->
-			<!-- 		/> -->
-			<!---->
-			<!-- 		{#if expanded} -->
-			<!-- 			<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
-			<!-- 				{#each albumTracksFor(item.album.id) as entry (entry.track.id)} -->
-			<!-- 					<a -->
-			<!-- 						href="/tracks/{entry.track.id}" -->
-			<!-- 						class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
-			<!-- 					> -->
-			<!-- 						<img -->
-			<!-- 							src={entry.track.coverArt.small} -->
-			<!-- 							alt="" -->
-			<!-- 							class="h-8 w-8 shrink-0 rounded object-cover" -->
-			<!-- 						/> -->
-			<!-- 						<span class="min-w-0 flex-1 truncate text-sm"> -->
-			<!-- 							{entry.track.name} -->
-			<!-- 						</span> -->
-			<!-- 						<span class="shrink-0 text-xs text-muted-foreground"> -->
-			<!-- 							{entry.playCount.toLocaleString()} plays -->
-			<!-- 						</span> -->
-			<!-- 					</a> -->
-			<!-- 				{/each} -->
-			<!-- 			</div> -->
-			<!-- 		{/if} -->
-			<!-- 	</div> -->
-			<!-- {/each} -->
+			{#each data.topAlbums as item (item.id)}
+				{@const expanded = expandedAlbum === item.id}
+				<div
+					class="flex w-40 shrink-0 flex-col transition-all"
+					class:w-80={expanded}
+				>
+					<AlbumTile
+						id={item.id}
+						cover={item.coverArt.small}
+						name={item.name}
+						artists={item.artists}
+						{expanded}
+						onToggle={() => toggleAlbum(item.id)}
+					/>
+
+					<!-- {#if expanded} -->
+					<!-- 	<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
+					<!-- 		{#each albumTracksFor(item.album.id) as entry (entry.track.id)} -->
+					<!-- 			<a -->
+					<!-- 				href="/tracks/{entry.track.id}" -->
+					<!-- 				class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
+					<!-- 			> -->
+					<!-- 				<img -->
+					<!-- 					src={entry.track.coverArt.small} -->
+					<!-- 					alt="" -->
+					<!-- 					class="h-8 w-8 shrink-0 rounded object-cover" -->
+					<!-- 				/> -->
+					<!-- 				<span class="min-w-0 flex-1 truncate text-sm"> -->
+					<!-- 					{entry.track.name} -->
+					<!-- 				</span> -->
+					<!-- 				<span class="shrink-0 text-xs text-muted-foreground"> -->
+					<!-- 					{entry.playCount.toLocaleString()} plays -->
+					<!-- 				</span> -->
+					<!-- 			</a> -->
+					<!-- 		{/each} -->
+					<!-- 	</div> -->
+					<!-- {/if} -->
+				</div>
+			{/each}
 		</div>
 	</section>
 
 	<section>
-		<!-- <SectionHeader -->
-		<!-- 	count={review.artistCount} -->
-		<!-- 	viewAllHref="/users/{data.userData.id}/review/{data.year}/top-artists" -->
-		<!-- > -->
-		<!-- 	<Users /> -->
-		<!-- 	Top Artists -->
-		<!-- </SectionHeader> -->
+		<SectionHeader
+			count={data.topArtistCount}
+			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-artists"
+		>
+			<Users />
+			Top Artists
+		</SectionHeader>
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
-			<!-- {#each review.artists as item (item.artist.id)} -->
-			<!-- 	{@const expanded = expandedArtist === item.artist.id} -->
-			<!-- 	<div -->
-			<!-- 		class="flex w-40 shrink-0 flex-col transition-all" -->
-			<!-- 		class:w-80={expanded} -->
-			<!-- 	> -->
-			<!-- 		<ArtistTile -->
-			<!-- 			id={item.artist.id} -->
-			<!-- 			cover={item.artist.coverArt.small} -->
-			<!-- 			name={item.artist.name} -->
-			<!-- 			{expanded} -->
-			<!-- 			onToggle={() => toggleArtist(item.artist.id)} -->
-			<!-- 		/> -->
-			<!---->
-			<!-- 		{#if expanded} -->
-			<!-- 			<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
-			<!-- 				{#each artistTracksFor(item.artist.id) as entry (entry.track.id)} -->
-			<!-- 					<a -->
-			<!-- 						href="/tracks/{entry.track.id}" -->
-			<!-- 						class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
-			<!-- 					> -->
-			<!-- 						<img -->
-			<!-- 							src={entry.track.coverArt.small} -->
-			<!-- 							alt="" -->
-			<!-- 							class="h-8 w-8 shrink-0 rounded object-cover" -->
-			<!-- 						/> -->
-			<!-- 						<span class="min-w-0 flex-1 truncate text-sm"> -->
-			<!-- 							{entry.track.name} -->
-			<!-- 						</span> -->
-			<!-- 						<span class="shrink-0 text-xs text-muted-foreground"> -->
-			<!-- 							{entry.playCount.toLocaleString()} plays -->
-			<!-- 						</span> -->
-			<!-- 					</a> -->
-			<!-- 				{/each} -->
-			<!-- 			</div> -->
-			<!-- 		{/if} -->
-			<!-- 	</div> -->
-			<!-- {/each} -->
+			{#each data.topArtists as item (item.id)}
+				{@const expanded = expandedArtist === item.id}
+				<div
+					class="flex w-40 shrink-0 flex-col transition-all"
+					class:w-80={expanded}
+				>
+					<ArtistTile
+						id={item.id}
+						cover={item.coverArt.small}
+						name={item.name}
+						{expanded}
+						onToggle={() => toggleArtist(item.id)}
+					/>
+
+					<!-- {#if expanded} -->
+					<!-- 	<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
+					<!-- 		{#each artistTracksFor(item.artist.id) as entry (entry.track.id)} -->
+					<!-- 			<a -->
+					<!-- 				href="/tracks/{entry.track.id}" -->
+					<!-- 				class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
+					<!-- 			> -->
+					<!-- 				<img -->
+					<!-- 					src={entry.track.coverArt.small} -->
+					<!-- 					alt="" -->
+					<!-- 					class="h-8 w-8 shrink-0 rounded object-cover" -->
+					<!-- 				/> -->
+					<!-- 				<span class="min-w-0 flex-1 truncate text-sm"> -->
+					<!-- 					{entry.track.name} -->
+					<!-- 				</span> -->
+					<!-- 				<span class="shrink-0 text-xs text-muted-foreground"> -->
+					<!-- 					{entry.playCount.toLocaleString()} plays -->
+					<!-- 				</span> -->
+					<!-- 			</a> -->
+					<!-- 		{/each} -->
+					<!-- 	</div> -->
+					<!-- {/if} -->
+				</div>
+			{/each}
 		</div>
 	</section>
 

@@ -256,12 +256,8 @@ type GetAllUserYearReviews struct {
 type GetUserYearReview struct {
 	Review UserYearReview `json:"review"`
 
-	// Tracks  []ReviewTrack  `json:"tracks"`
-	// Albums  []ReviewAlbum  `json:"albums"`
 	// Artists []ReviewArtist `json:"artists"`
 	//
-	// TrackCount  int `json:"trackCount"`
-	// AlbumCount  int `json:"albumCount"`
 	// ArtistCount int `json:"artistCount"`
 	//
 	// ArtistTracks []ReviewArtistTracks `json:"artistTracks"`
@@ -283,6 +279,30 @@ type RankedTrack struct {
 type GetUserYearReviewTracks struct {
 	Page   types.Page    `json:"page"`
 	Tracks []RankedTrack `json:"tracks"`
+}
+
+type RankedAlbum struct {
+	Album
+
+	Rank      int `json:"rank"`
+	PlayCount int `json:"playCount"`
+}
+
+type GetUserYearReviewAlbums struct {
+	Page   types.Page    `json:"page"`
+	Albums []RankedAlbum `json:"albums"`
+}
+
+type RankedArtist struct {
+	Artist
+
+	Rank      int `json:"rank"`
+	PlayCount int `json:"playCount"`
+}
+
+type GetUserYearReviewArtists struct {
+	Page    types.Page     `json:"page"`
+	Artists []RankedArtist `json:"artists"`
 }
 
 func InstallUserHandlers(app core.App, group pyrin.Group) {
@@ -398,11 +418,105 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					Tracks: make([]RankedTrack, len(tracks)),
 				}
 
-				for i, track  := range tracks {
+				for i, track := range tracks {
 					res.Tracks[i] = RankedTrack{
 						Track:     ConvertDBTrack(c, track.Track),
 						Rank:      track.Rank,
 						PlayCount: track.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewAlbums",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/year-reviews/:year/albums",
+			ResponseType: GetUserYearReviewAlbums{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				albums, page, err := app.UserService().GetUserYearReviewAlbums(
+					ctx,
+					service.GetUserYearReviewAlbumsParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+						Page:   pageParams,
+						Query:  queryParams,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewAlbums{
+					Page:   page,
+					Albums: make([]RankedAlbum, len(albums)),
+				}
+
+				for i, album := range albums {
+					res.Albums[i] = RankedAlbum{
+						Album:     ConvertDBAlbum(c, album.Album),
+						Rank:      album.Rank,
+						PlayCount: album.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserYearReviewArtists",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/year-reviews/:year/artists",
+			ResponseType: GetUserYearReviewArtists{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				year, err := parseIntParam(c, "year")
+				if err != nil {
+					return nil, err
+				}
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				artists, page, err := app.UserService().GetUserYearReviewArtists(
+					ctx,
+					service.GetUserYearReviewArtistsParams{
+						UserId: c.Param("userId"),
+						Year:   year,
+						Page:   pageParams,
+						Query:  queryParams,
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserYearReviewArtists{
+					Page:    page,
+					Artists: make([]RankedArtist, len(artists)),
+				}
+
+				for i, artist := range artists {
+					res.Artists[i] = RankedArtist{
+						Artist:    ConvertDBArtist(c, artist.Artist),
+						Rank:      artist.Rank,
+						PlayCount: artist.PlayCount,
 					}
 				}
 

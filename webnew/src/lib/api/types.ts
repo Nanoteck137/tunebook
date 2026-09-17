@@ -809,6 +809,72 @@ export const GetUserYearReview = z.object({
 });
 export type GetUserYearReview = z.infer<typeof GetUserYearReview>;
 
+// Name: RankedAlbum
+export const RankedAlbum = z.object({
+  // Name: RankedAlbum.id
+  "id": z.string(),
+  // Name: RankedAlbum.name
+  "name": z.string(),
+  // Name: RankedAlbum.year
+  "year": z.number().nullable(),
+  // Name: RankedAlbum.albumType
+  "albumType": z.string(),
+  // Name: RankedAlbum.coverArt
+  "coverArt": Images,
+  // Name: RankedAlbum.artists
+  "artists": z.array(ArtistInfo),
+  // Name: RankedAlbum.tags
+  "tags": z.array(z.string()),
+  // Name: RankedAlbum.created
+  "created": z.string(),
+  // Name: RankedAlbum.updated
+  "updated": z.string(),
+  // Name: RankedAlbum.rank
+  "rank": z.number(),
+  // Name: RankedAlbum.playCount
+  "playCount": z.number(),
+});
+export type RankedAlbum = z.infer<typeof RankedAlbum>;
+
+// Name: GetUserYearReviewAlbums
+export const GetUserYearReviewAlbums = z.object({
+  // Name: GetUserYearReviewAlbums.page
+  "page": Page,
+  // Name: GetUserYearReviewAlbums.albums
+  "albums": z.array(RankedAlbum),
+});
+export type GetUserYearReviewAlbums = z.infer<typeof GetUserYearReviewAlbums>;
+
+// Name: RankedArtist
+export const RankedArtist = z.object({
+  // Name: RankedArtist.id
+  "id": z.string(),
+  // Name: RankedArtist.name
+  "name": z.string(),
+  // Name: RankedArtist.coverArt
+  "coverArt": Images,
+  // Name: RankedArtist.tags
+  "tags": z.array(z.string()),
+  // Name: RankedArtist.created
+  "created": z.string(),
+  // Name: RankedArtist.updated
+  "updated": z.string(),
+  // Name: RankedArtist.rank
+  "rank": z.number(),
+  // Name: RankedArtist.playCount
+  "playCount": z.number(),
+});
+export type RankedArtist = z.infer<typeof RankedArtist>;
+
+// Name: GetUserYearReviewArtists
+export const GetUserYearReviewArtists = z.object({
+  // Name: GetUserYearReviewArtists.page
+  "page": Page,
+  // Name: GetUserYearReviewArtists.artists
+  "artists": z.array(RankedArtist),
+});
+export type GetUserYearReviewArtists = z.infer<typeof GetUserYearReviewArtists>;
+
 // Name: RankedTrack
 export const RankedTrack = z.object({
   // Name: RankedTrack.id

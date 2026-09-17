@@ -28,6 +28,8 @@ var (
 	userYearReviewMonthDecadesTbl = goqu.T("user_year_review_month_decades")
 
 	userYearReviewTrackSchema = UserYearReviewTrackSchema()
+	userYearReviewAlbumSchema = UserYearReviewAlbumSchema()
+	userYearReviewArtistSchema = UserYearReviewArtistSchema()
 )
 
 const (
@@ -47,6 +49,48 @@ func UserYearReviewTrackSchema() *schema.Schema {
 			"play_count",
 			query.TypeInt,
 			schema.Column("user_year_review_tracks.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
+func UserYearReviewAlbumSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_albums?
+	return AlbumSchema().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_albums.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_albums.play_count"),
+		).
+		SetDefaultSort(
+			&query.FieldOrdering{
+				Field: &query.Field{Name: "rank"},
+				Dir:   query.DirAsc,
+			},
+		)
+}
+
+func UserYearReviewArtistSchema() *schema.Schema {
+	// TODO(patrik): Should we add the other columns from user_year_review_artists?
+	return ArtistSchema().
+		AddField(
+			"rank",
+			query.TypeInt,
+			schema.Column("user_year_review_artists.rank"),
+		).
+		AddField(
+			"play_count",
+			query.TypeInt,
+			schema.Column("user_year_review_artists.play_count"),
 		).
 		SetDefaultSort(
 			&query.FieldOrdering{
@@ -110,27 +154,25 @@ type UserYearReviewTrack struct {
 }
 
 type UserYearReviewAlbum struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Rank   int    `db:"rank"`
+	Album
 
-	AlbumId   string `db:"album_id"`
-	PlayCount int    `db:"play_count"`
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	AlbumId string `db:"album_id"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type UserYearReviewArtist struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Rank   int    `db:"rank"`
+	Artist
 
-	ArtistId  string `db:"artist_id"`
-	PlayCount int    `db:"play_count"`
+	UserId   string `db:"user_id"`
+	Year     int    `db:"year"`
+	ArtistId string `db:"artist_id"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type UserYearReviewMonth struct {
@@ -919,10 +961,10 @@ func (db DB) GetUserYearReview(
 
 type GetUserYearReviewTracksParams struct {
 	UserId string
-	Year int
+	Year   int
 
-	Page       types.PageParams
-	Query      types.QueryParams
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetUserYearReviewTracks(
@@ -969,52 +1011,108 @@ func (db DB) GetUserYearReviewTracks(
 	return items, page, nil
 }
 
+type GetUserYearReviewAlbumsParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
 func (db DB) GetUserYearReviewAlbums(
 	ctx context.Context,
-	userId string,
-	year int,
-) ([]UserYearReviewAlbum, error) {
-	query := dialect.From(userYearReviewAlbumsTbl).
-		Select(
+	params GetUserYearReviewAlbumsParams,
+) ([]UserYearReviewAlbum, types.Page, error) {
+	var err error
+
+	query := AlbumQuery().
+		SelectAppend(
 			userYearReviewAlbumsTbl.Col("user_id"),
 			userYearReviewAlbumsTbl.Col("year"),
-			userYearReviewAlbumsTbl.Col("rank"),
 			userYearReviewAlbumsTbl.Col("album_id"),
+
+			userYearReviewAlbumsTbl.Col("rank"),
 			userYearReviewAlbumsTbl.Col("play_count"),
-			userYearReviewAlbumsTbl.Col("created_at"),
-			userYearReviewAlbumsTbl.Col("updated_at"),
+		).
+		Join(
+			userYearReviewAlbumsTbl,
+			goqu.On(userYearReviewAlbumsTbl.Col("album_id").Eq(albumsTbl.Col("id"))),
 		).
 		Where(
-			userYearReviewAlbumsTbl.Col("user_id").Eq(userId),
-			userYearReviewAlbumsTbl.Col("year").Eq(year),
-		).
-		Order(userYearReviewAlbumsTbl.Col("rank").Asc())
+			userYearReviewAlbumsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewAlbumsTbl.Col("year").Eq(params.Year),
+		)
 
-	return Multiple[UserYearReviewAlbum](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewAlbumSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, albumsTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewAlbum](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
+type GetUserYearReviewArtistsParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
 }
 
 func (db DB) GetUserYearReviewArtists(
 	ctx context.Context,
-	userId string,
-	year int,
-) ([]UserYearReviewArtist, error) {
-	query := dialect.From(userYearReviewArtistsTbl).
-		Select(
+	params GetUserYearReviewArtistsParams,
+) ([]UserYearReviewArtist, types.Page, error) {
+	var err error
+
+	query := ArtistQuery().
+		SelectAppend(
 			userYearReviewArtistsTbl.Col("user_id"),
 			userYearReviewArtistsTbl.Col("year"),
-			userYearReviewArtistsTbl.Col("rank"),
 			userYearReviewArtistsTbl.Col("artist_id"),
+
+			userYearReviewArtistsTbl.Col("rank"),
 			userYearReviewArtistsTbl.Col("play_count"),
-			userYearReviewArtistsTbl.Col("created_at"),
-			userYearReviewArtistsTbl.Col("updated_at"),
+		).
+		Join(
+			userYearReviewArtistsTbl,
+			goqu.On(userYearReviewArtistsTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
 		).
 		Where(
-			userYearReviewArtistsTbl.Col("user_id").Eq(userId),
-			userYearReviewArtistsTbl.Col("year").Eq(year),
-		).
-		Order(userYearReviewArtistsTbl.Col("rank").Asc())
+			userYearReviewArtistsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewArtistsTbl.Col("year").Eq(params.Year),
+		)
 
-	return Multiple[UserYearReviewArtist](db, ctx, query)
+	query, err = ApplyQuery(query, userYearReviewArtistSchema, params.Query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	page, err := buildPage(ctx, db, params.Page, query, artistsTbl.Col("id"))
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query = applyPageParams(params.Page, query)
+
+	items, err := Multiple[UserYearReviewArtist](db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
 }
 
 func (db DB) GetUserYearReviewMonths(

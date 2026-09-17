@@ -1022,6 +1022,36 @@
       ]
     },
     {
+      "name": "GetUserYearReviewAlbums",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "albums",
+          "type": "[]RankedAlbum",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUserYearReviewArtists",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "artists",
+          "type": "[]RankedArtist",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetUserYearReviewTracks",
       "fields": [
         {
@@ -1257,6 +1287,111 @@
         {
           "name": "track",
           "type": "Track",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "RankedAlbum",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "year",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "albumType",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverArt",
+          "type": "Images",
+          "omitEmpty": false
+        },
+        {
+          "name": "artists",
+          "type": "[]ArtistInfo",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "RankedArtist",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverArt",
+          "type": "Images",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rank",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playCount",
+          "type": "int",
           "omitEmpty": false
         }
       ]
@@ -2206,6 +2341,20 @@
       "method": "GET",
       "path": "/api/v1/users/:userId/year-reviews/:year",
       "response": "GetUserYearReview"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewAlbums",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/albums",
+      "response": "GetUserYearReviewAlbums"
+    },
+    {
+      "type": "api",
+      "name": "GetUserYearReviewArtists",
+      "method": "GET",
+      "path": "/api/v1/users/:userId/year-reviews/:year/artists",
+      "response": "GetUserYearReviewArtists"
     },
     {
       "type": "api",

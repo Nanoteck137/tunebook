@@ -27,6 +27,28 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 	console.log("tracks", topTracks)
 
+	const topAlbums = await data.apiClient.getUserYearReviewAlbums(params.id, String(year), {
+		query: {
+			"perPage": "10",
+		}
+	});
+	if (!topAlbums.success) {
+		throw error(topAlbums.error.code, { message: topAlbums.error.message });
+	}
+
+	console.log("albums", topAlbums)
+
+	const topArtists = await data.apiClient.getUserYearReviewArtists(params.id, String(year), {
+		query: {
+			"perPage": "10",
+		}
+	});
+	if (!topArtists.success) {
+		throw error(topArtists.error.code, { message: topArtists.error.message });
+	}
+
+	console.log("artists", topArtists)
+
 	return {
 		...data,
 		year,
@@ -35,5 +57,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 
 		topTrackCount: topTracks.data.page.totalItems,
 		topTracks: topTracks.data.tracks,
+
+		topAlbumCount: topAlbums.data.page.totalItems,
+		topAlbums: topAlbums.data.albums,
+
+		topArtistCount: topArtists.data.page.totalItems,
+		topArtists: topArtists.data.artists,
 	};
 };

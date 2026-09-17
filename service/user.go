@@ -281,7 +281,7 @@ func (s *UserService) GetUserYearReviewTracks(
 			return nil, types.Page{}, ErrUserServiceUserNotFound
 		}
 
-		return nil, types.Page{}, userErr.Wrap("get user year review: user", err)
+		return nil, types.Page{}, userErr.Wrap("get user year review tracks: user", err)
 	}
 
 	tracks, page, err := s.db.GetUserYearReviewTracks(
@@ -295,7 +295,7 @@ func (s *UserService) GetUserYearReviewTracks(
 	)
 	if err != nil {
 		return nil, types.Page{},
-			userErr.Wrap("get user year review: reviews", err)
+			userErr.Wrap("get user year review tracks: reviews", err)
 	}
 
 	for i, track := range tracks {
@@ -306,6 +306,90 @@ func (s *UserService) GetUserYearReviewTracks(
 	pretty.Println(page)
 
 	return tracks, page, nil
+}
+
+type GetUserYearReviewAlbumsParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserYearReviewAlbums(
+	ctx context.Context,
+	params GetUserYearReviewAlbumsParams,
+) ([]database.UserYearReviewAlbum, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{}, 
+			userErr.Wrap("get user year review albums: user", err)
+	}
+
+	albums, page, err := s.db.GetUserYearReviewAlbums(
+		ctx,
+		database.GetUserYearReviewAlbumsParams{
+			UserId: params.UserId,
+			Year:   params.Year,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user year review albums: reviews", err)
+	}
+
+	pretty.Println(albums)
+	pretty.Println(page)
+
+	return albums, page, nil
+}
+
+type GetUserYearReviewArtistsParams struct {
+	UserId string
+	Year   int
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserYearReviewArtists(
+	ctx context.Context,
+	params GetUserYearReviewArtistsParams,
+) ([]database.UserYearReviewArtist, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{}, 
+			userErr.Wrap("get user year review artists: user", err)
+	}
+
+	artists, page, err := s.db.GetUserYearReviewArtists(
+		ctx,
+		database.GetUserYearReviewArtistsParams{
+			UserId: params.UserId,
+			Year:   params.Year,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user year review artists: reviews", err)
+	}
+
+	pretty.Println(artists)
+	pretty.Println(page)
+
+	return artists, page, nil
 }
 
 type GetUserYearStatsParams struct {
@@ -951,53 +1035,53 @@ type GetUserYearReviewTopAlbumsResult struct {
 	Albums []UserYearReviewAlbum
 }
 
-func (s *UserService) GetUserYearReviewTopAlbums(
-	ctx context.Context,
-	params GetUserYearReviewTopAlbumsParams,
-) (GetUserYearReviewTopAlbumsResult, error) {
-	if _, err := s.ensureUserYearReview(ctx, params.UserId, params.Year); err != nil {
-		return GetUserYearReviewTopAlbumsResult{}, err
-	}
-
-	rows, err := s.db.GetUserYearReviewAlbums(ctx, params.UserId, params.Year)
-	if err != nil {
-		return GetUserYearReviewTopAlbumsResult{}, userErr.Wrap(
-			"get user year review top albums", err)
-	}
-
-	ids := make([]string, len(rows))
-	for i, a := range rows {
-		ids[i] = a.AlbumId
-	}
-
-	loaded, err := s.db.GetAlbumsByIds(ctx, ids)
-	if err != nil {
-		return GetUserYearReviewTopAlbumsResult{}, userErr.Wrap(
-			"get user year review top albums: load", err)
-	}
-	loadedById := make(map[string]database.Album, len(loaded))
-	for _, a := range loaded {
-		loadedById[a.Id] = a
-	}
-
-	res := GetUserYearReviewTopAlbumsResult{
-		Albums: make([]UserYearReviewAlbum, 0, len(rows)),
-	}
-	for _, a := range rows {
-		album, ok := loadedById[a.AlbumId]
-		if !ok {
-			continue
-		}
-
-		res.Albums = append(res.Albums, UserYearReviewAlbum{
-			Rank:      a.Rank,
-			PlayCount: a.PlayCount,
-			Album:     album,
-		})
-	}
-
-	return res, nil
-}
+// func (s *UserService) GetUserYearReviewTopAlbums(
+// 	ctx context.Context,
+// 	params GetUserYearReviewTopAlbumsParams,
+// ) (GetUserYearReviewTopAlbumsResult, error) {
+// 	if _, err := s.ensureUserYearReview(ctx, params.UserId, params.Year); err != nil {
+// 		return GetUserYearReviewTopAlbumsResult{}, err
+// 	}
+//
+// 	rows, err := s.db.GetUserYearReviewAlbums(ctx, params.UserId, params.Year)
+// 	if err != nil {
+// 		return GetUserYearReviewTopAlbumsResult{}, userErr.Wrap(
+// 			"get user year review top albums", err)
+// 	}
+//
+// 	ids := make([]string, len(rows))
+// 	for i, a := range rows {
+// 		ids[i] = a.AlbumId
+// 	}
+//
+// 	loaded, err := s.db.GetAlbumsByIds(ctx, ids)
+// 	if err != nil {
+// 		return GetUserYearReviewTopAlbumsResult{}, userErr.Wrap(
+// 			"get user year review top albums: load", err)
+// 	}
+// 	loadedById := make(map[string]database.Album, len(loaded))
+// 	for _, a := range loaded {
+// 		loadedById[a.Id] = a
+// 	}
+//
+// 	res := GetUserYearReviewTopAlbumsResult{
+// 		Albums: make([]UserYearReviewAlbum, 0, len(rows)),
+// 	}
+// 	for _, a := range rows {
+// 		album, ok := loadedById[a.AlbumId]
+// 		if !ok {
+// 			continue
+// 		}
+//
+// 		res.Albums = append(res.Albums, UserYearReviewAlbum{
+// 			Rank:      a.Rank,
+// 			PlayCount: a.PlayCount,
+// 			Album:     album,
+// 		})
+// 	}
+//
+// 	return res, nil
+// }
 
 type GetUserYearReviewTopArtistsParams struct {
 	UserId string
@@ -1008,53 +1092,53 @@ type GetUserYearReviewTopArtistsResult struct {
 	Artists []UserYearReviewArtist
 }
 
-func (s *UserService) GetUserYearReviewTopArtists(
-	ctx context.Context,
-	params GetUserYearReviewTopArtistsParams,
-) (GetUserYearReviewTopArtistsResult, error) {
-	if _, err := s.ensureUserYearReview(ctx, params.UserId, params.Year); err != nil {
-		return GetUserYearReviewTopArtistsResult{}, err
-	}
-
-	rows, err := s.db.GetUserYearReviewArtists(ctx, params.UserId, params.Year)
-	if err != nil {
-		return GetUserYearReviewTopArtistsResult{}, userErr.Wrap(
-			"get user year review top artists", err)
-	}
-
-	ids := make([]string, len(rows))
-	for i, a := range rows {
-		ids[i] = a.ArtistId
-	}
-
-	loaded, err := s.db.GetArtistsByIds(ctx, ids)
-	if err != nil {
-		return GetUserYearReviewTopArtistsResult{}, userErr.Wrap(
-			"get user year review top artists: load", err)
-	}
-	loadedById := make(map[string]database.Artist, len(loaded))
-	for _, a := range loaded {
-		loadedById[a.Id] = a
-	}
-
-	res := GetUserYearReviewTopArtistsResult{
-		Artists: make([]UserYearReviewArtist, 0, len(rows)),
-	}
-	for _, a := range rows {
-		artist, ok := loadedById[a.ArtistId]
-		if !ok {
-			continue
-		}
-
-		res.Artists = append(res.Artists, UserYearReviewArtist{
-			Rank:      a.Rank,
-			PlayCount: a.PlayCount,
-			Artist:    artist,
-		})
-	}
-
-	return res, nil
-}
+// func (s *UserService) GetUserYearReviewTopArtists(
+// 	ctx context.Context,
+// 	params GetUserYearReviewTopArtistsParams,
+// ) (GetUserYearReviewTopArtistsResult, error) {
+// 	if _, err := s.ensureUserYearReview(ctx, params.UserId, params.Year); err != nil {
+// 		return GetUserYearReviewTopArtistsResult{}, err
+// 	}
+//
+// 	rows, err := s.db.GetUserYearReviewArtists(ctx, params.UserId, params.Year)
+// 	if err != nil {
+// 		return GetUserYearReviewTopArtistsResult{}, userErr.Wrap(
+// 			"get user year review top artists", err)
+// 	}
+//
+// 	ids := make([]string, len(rows))
+// 	for i, a := range rows {
+// 		ids[i] = a.ArtistId
+// 	}
+//
+// 	loaded, err := s.db.GetArtistsByIds(ctx, ids)
+// 	if err != nil {
+// 		return GetUserYearReviewTopArtistsResult{}, userErr.Wrap(
+// 			"get user year review top artists: load", err)
+// 	}
+// 	loadedById := make(map[string]database.Artist, len(loaded))
+// 	for _, a := range loaded {
+// 		loadedById[a.Id] = a
+// 	}
+//
+// 	res := GetUserYearReviewTopArtistsResult{
+// 		Artists: make([]UserYearReviewArtist, 0, len(rows)),
+// 	}
+// 	for _, a := range rows {
+// 		artist, ok := loadedById[a.ArtistId]
+// 		if !ok {
+// 			continue
+// 		}
+//
+// 		res.Artists = append(res.Artists, UserYearReviewArtist{
+// 			Rank:      a.Rank,
+// 			PlayCount: a.PlayCount,
+// 			Artist:    artist,
+// 		})
+// 	}
+//
+// 	return res, nil
+// }
 
 type GetUserYearReviewMonthTopTracksParams struct {
 	UserId string
