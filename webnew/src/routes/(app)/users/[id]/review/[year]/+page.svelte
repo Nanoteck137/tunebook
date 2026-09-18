@@ -504,7 +504,10 @@
 	</section>
 
 	<section>
-		<SectionHeader count={data.topTagCount}>
+		<SectionHeader
+			count={data.topTagCount}
+			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-tags"
+		>
 			<Tags />
 			Top Tags
 		</SectionHeader>
@@ -526,7 +529,10 @@
 	</section>
 
 	<section>
-		<SectionHeader count={data.topDecadeCount}>
+		<SectionHeader
+			count={data.topDecadeCount}
+			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-decades"
+		>
 			<DiscAlbum />
 			Decades
 		</SectionHeader>

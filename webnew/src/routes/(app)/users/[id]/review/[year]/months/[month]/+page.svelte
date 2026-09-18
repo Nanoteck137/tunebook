@@ -257,7 +257,10 @@
 
 	{#if data.topTags.length > 0}
 		<section>
-			<SectionHeader count={data.topTagCount}>
+			<SectionHeader
+				count={data.topTagCount}
+				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{data.monthNum}/top-tags"
+			>
 				<Tags />
 				Top Tags
 			</SectionHeader>
@@ -281,7 +284,10 @@
 
 	{#if data.topDecades.length > 0}
 		<section>
-			<SectionHeader count={data.topDecadeCount}>
+			<SectionHeader
+				count={data.topDecadeCount}
+				viewAllHref="/users/{data.userData.id}/review/{data.year}/months/{data.monthNum}/top-decades"
+			>
 				<DiscAlbum />
 				Decades
 			</SectionHeader>
