@@ -40,11 +40,6 @@ var (
 	userYearReviewMonthDecadeSchema = UserYearReviewMonthDecadeSchema()
 )
 
-const (
-	// TODO(patrik): Remove
-	TopYearReviewItems = 5
-)
-
 func UserYearReviewTrackSchema() *schema.Schema {
 	// TODO(patrik): Should we add the other columns from user_year_review_tracks?
 	return TrackSchema().
@@ -395,23 +390,6 @@ type UserYearReviewMonthDecade struct {
 	PlayCount int `db:"play_count"`
 }
 
-// TODO(patrik): Remove
-type UserYear struct {
-	Year int `db:"year"`
-}
-
-type UserYearArtistTrack struct {
-	TrackId   string `db:"track_id"`
-	PlayCount int    `db:"play_count"`
-	PlayTime  int64  `db:"play_time"`
-}
-
-type UserYearAlbumTrack struct {
-	TrackId   string `db:"track_id"`
-	PlayCount int    `db:"play_count"`
-	PlayTime  int64  `db:"play_time"`
-}
-
 type UserYearSummary struct {
 	TrackCount    int   `db:"track_count"`
 	ListeningTime int64 `db:"listening_time"`
@@ -638,80 +616,6 @@ GROUP BY artists.id`,
 	return RawQuery{Query: q, Params: params}
 }
 
-func GetUserYearMonthsQuery(userId string, year int) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
-		Select(
-			userTrackStatsTbl.Col("period_value").As("month"),
-			goqu.COALESCE(
-				goqu.SUM(userTrackStatsTbl.Col("play_count")), 0,
-			).As("play_count"),
-			goqu.COALESCE(
-				goqu.SUM(userTrackStatsTbl.Col("play_time")), 0,
-			).As("play_time"),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("month"),
-			userTrackStatsTbl.Col("year").Eq(year),
-		).
-		GroupBy(userTrackStatsTbl.Col("period_value")).
-		Order(userTrackStatsTbl.Col("period_value").Asc())
-}
-
-func GetUserYearArtistTracksQuery(
-	userId string,
-	year int,
-	artistId string,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
-		Select(
-			userTrackStatsTbl.Col("track_id"),
-			userTrackStatsTbl.Col("play_count"),
-			userTrackStatsTbl.Col("play_time"),
-		).
-		Join(
-			tracksTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("year"),
-			userTrackStatsTbl.Col("year").Eq(year),
-			tracksTbl.Col("artist_id").Eq(artistId),
-		).
-		Order(
-			userTrackStatsTbl.Col("play_count").Desc(),
-			userTrackStatsTbl.Col("track_id").Asc(),
-		)
-}
-
-func GetUserYearAlbumTracksQuery(
-	userId string,
-	year int,
-	albumId string,
-) *goqu.SelectDataset {
-	return dialect.From(userTrackStatsTbl).
-		Select(
-			userTrackStatsTbl.Col("track_id"),
-			userTrackStatsTbl.Col("play_count"),
-			userTrackStatsTbl.Col("play_time"),
-		).
-		Join(
-			tracksTbl,
-			goqu.On(userTrackStatsTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("year"),
-			userTrackStatsTbl.Col("year").Eq(year),
-			tracksTbl.Col("album_id").Eq(albumId),
-		).
-		Order(
-			userTrackStatsTbl.Col("play_count").Desc(),
-			userTrackStatsTbl.Col("track_id").Asc(),
-		)
-}
-
 func yearRange(year int) (int64, int64) {
 	start := time.Date(year, time.January, 1, 0, 0, 0, 0, time.Local).
 		UnixMilli()
@@ -931,10 +835,14 @@ func processUserYearMonth(
 	return nil
 }
 
+type GenerateUserReviewParams struct {
+	UserId string
+	Year   int
+}
+
 func (db *Database) GenerateUserReview(
 	ctx context.Context,
-	userId string,
-	year int,
+	params GenerateUserReviewParams,
 ) error {
 	now := time.Now().UnixMilli()
 
@@ -946,55 +854,33 @@ func (db *Database) GenerateUserReview(
 
 	// Clean up any previously generated review for this year.
 	_, err = tx.Exec(ctx, dialect.Delete(userYearReviewsTbl).Where(goqu.Ex{
-		"user_id": userId,
-		"year":    year,
+		"user_id": params.UserId,
+		"year":    params.Year,
 	}))
 	if err != nil {
 		return err
 	}
 
-	// TODO(patrik): Use this if we don't have the foreign keys.
-	// for _, tbl := range []any{
-	// 	userYearReviewTracksTbl,
-	// 	userYearReviewAlbumsTbl,
-	// 	userYearReviewArtistsTbl,
-	// 	userYearReviewMonthsTbl,
-	// 	userYearReviewMonthTracksTbl,
-	// 	userYearReviewMonthAlbumsTbl,
-	// 	userYearReviewMonthArtistsTbl,
-	// 	userYearReviewMonthTagsTbl,
-	// 	userYearReviewMonthDecadesTbl,
-	// 	userYearReviewTagsTbl,
-	// 	userYearReviewDecadesTbl,
-	// 	userYearReviewsTbl,
-	// } {
-	// 	_, err := tx.Exec(ctx, dialect.Delete(tbl).Where(goqu.Ex{
-	// 		"user_id": userId,
-	// 		"year":    year,
-	// 	}))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	summary, err := tx.GetUserYearSummary(ctx, userId, year)
+	summary, err := tx.GetUserYearSummary(ctx, params.UserId, params.Year)
 	if err != nil {
 		return err
 	}
 
-	historySummary, err := tx.GetUserYearHistorySummary(ctx, userId, year)
+	historySummary, err := tx.GetUserYearHistorySummary(
+		ctx, params.UserId, params.Year)
 	if err != nil {
 		return err
 	}
 
-	favorites, err := tx.GetUserYearFavoritePlays(ctx, userId, year)
+	favorites, err := tx.GetUserYearFavoritePlays(
+		ctx, params.UserId, params.Year)
 	if err != nil {
 		return err
 	}
 
 	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewsTbl).Rows(goqu.Record{
-		"user_id":        userId,
-		"year":           year,
+		"user_id":        params.UserId,
+		"year":           params.Year,
 		"track_count":    summary.TrackCount,
 		"listening_time": summary.ListeningTime,
 		"avg_completion": historySummary.AvgCompletion,
@@ -1009,33 +895,33 @@ func (db *Database) GenerateUserReview(
 		return err
 	}
 
-	_, err = tx.Exec(ctx, userYearReviewTracksInsertQuery(userId, year, 0, now))
+	_, err = tx.Exec(ctx, userYearReviewTracksInsertQuery(params.UserId, params.Year, 0, now))
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, userYearReviewAlbumsInsertQuery(userId, year, 0, now))
+	_, err = tx.Exec(ctx, userYearReviewAlbumsInsertQuery(params.UserId, params.Year, 0, now))
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, userYearReviewArtistsInsertQuery(userId, year, 0, now))
+	_, err = tx.Exec(ctx, userYearReviewArtistsInsertQuery(params.UserId, params.Year, 0, now))
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, userYearReviewTagsInsertQuery(userId, year, 0, now))
+	_, err = tx.Exec(ctx, userYearReviewTagsInsertQuery(params.UserId, params.Year, 0, now))
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, userYearReviewDecadesInsertQuery(userId, year, 0, now))
+	_, err = tx.Exec(ctx, userYearReviewDecadesInsertQuery(params.UserId, params.Year, 0, now))
 	if err != nil {
 		return err
 	}
 
 	for m := 1; m <= 12; m++ {
-		err := processUserYearMonth(tx.DB, ctx, userId, year, m, now)
+		err := processUserYearMonth(tx.DB, ctx, params.UserId, params.Year, m, now)
 		if err != nil {
 			return err
 		}
@@ -1044,53 +930,83 @@ func (db *Database) GenerateUserReview(
 	return tx.Commit()
 }
 
-func (db DB) GetUserStatsYears(ctx context.Context, userId string) ([]UserYear, error) {
+type GetUserStatsYearsParams struct {
+	UserId string
+}
+
+func (db DB) GetUserStatsYears(
+	ctx context.Context,
+	params GetUserStatsYearsParams,
+) ([]int, error) {
 	query := dialect.From(userTrackStatsTbl).
-		SelectDistinct(userTrackStatsTbl.Col("year")).
+		SelectDistinct(
+			userTrackStatsTbl.Col("year"),
+		).
 		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
+			userTrackStatsTbl.Col("user_id").Eq(params.UserId),
 			userTrackStatsTbl.Col("period_type").Eq("year"),
 		).
 		Order(userTrackStatsTbl.Col("year").Desc())
 
-	return Multiple[UserYear](db, ctx, query)
+	return Multiple[int](db, ctx, query)
 }
 
-var userYearReviewColumns = []any{
-	userYearReviewsTbl.Col("user_id"),
-	userYearReviewsTbl.Col("year"),
-	userYearReviewsTbl.Col("track_count"),
-	userYearReviewsTbl.Col("listening_time"),
-	userYearReviewsTbl.Col("avg_completion"),
-	userYearReviewsTbl.Col("skip_count"),
-	userYearReviewsTbl.Col("unique_tracks"),
-	userYearReviewsTbl.Col("favorite_plays"),
-	userYearReviewsTbl.Col("created_at"),
-	userYearReviewsTbl.Col("updated_at"),
+type GetUserYearReviewsParams struct {
+	UserId string
 }
 
 func (db DB) GetUserYearReviews(
 	ctx context.Context,
-	userId string,
+	params GetUserYearReviewsParams,
 ) ([]UserYearReview, error) {
 	query := dialect.From(userYearReviewsTbl).
-		Select(userYearReviewColumns...).
-		Where(userYearReviewsTbl.Col("user_id").Eq(userId)).
+		Select(
+			userYearReviewsTbl.Col("user_id"),
+			userYearReviewsTbl.Col("year"),
+
+			userYearReviewsTbl.Col("track_count"),
+			userYearReviewsTbl.Col("listening_time"),
+			userYearReviewsTbl.Col("avg_completion"),
+			userYearReviewsTbl.Col("skip_count"),
+			userYearReviewsTbl.Col("unique_tracks"),
+			userYearReviewsTbl.Col("favorite_plays"),
+
+			userYearReviewsTbl.Col("created_at"),
+			userYearReviewsTbl.Col("updated_at"),
+		).
+		Where(userYearReviewsTbl.Col("user_id").Eq(params.UserId)).
 		Order(userYearReviewsTbl.Col("year").Desc())
 
 	return Multiple[UserYearReview](db, ctx, query)
 }
 
+type GetUserYearReviewParams struct {
+	UserId string
+	Year   int
+}
+
 func (db DB) GetUserYearReview(
 	ctx context.Context,
-	userId string,
-	year int,
+	params GetUserYearReviewParams,
 ) (UserYearReview, error) {
 	query := dialect.From(userYearReviewsTbl).
-		Select(userYearReviewColumns...).
+		Select(
+			userYearReviewsTbl.Col("user_id"),
+			userYearReviewsTbl.Col("year"),
+
+			userYearReviewsTbl.Col("track_count"),
+			userYearReviewsTbl.Col("listening_time"),
+			userYearReviewsTbl.Col("avg_completion"),
+			userYearReviewsTbl.Col("skip_count"),
+			userYearReviewsTbl.Col("unique_tracks"),
+			userYearReviewsTbl.Col("favorite_plays"),
+
+			userYearReviewsTbl.Col("created_at"),
+			userYearReviewsTbl.Col("updated_at"),
+		).
 		Where(
-			userYearReviewsTbl.Col("user_id").Eq(userId),
-			userYearReviewsTbl.Col("year").Eq(year),
+			userYearReviewsTbl.Col("user_id").Eq(params.UserId),
+			userYearReviewsTbl.Col("year").Eq(params.Year),
 		)
 
 	return Single[UserYearReview](db, ctx, query)
@@ -1701,24 +1617,4 @@ func (db DB) GetUserYearReviewMonthDecades(
 	}
 
 	return items, page, nil
-}
-
-func (db DB) GetUserYearArtistTracks(
-	ctx context.Context,
-	userId string,
-	year int,
-	artistId string,
-) ([]UserYearArtistTrack, error) {
-	return Multiple[UserYearArtistTrack](
-		db, ctx, GetUserYearArtistTracksQuery(userId, year, artistId))
-}
-
-func (db DB) GetUserYearAlbumTracks(
-	ctx context.Context,
-	userId string,
-	year int,
-	albumId string,
-) ([]UserYearAlbumTrack, error) {
-	return Multiple[UserYearAlbumTrack](
-		db, ctx, GetUserYearAlbumTracksQuery(userId, year, albumId))
 }

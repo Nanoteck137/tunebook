@@ -282,7 +282,13 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	// TODO(patrik): Remove, temp
-	err = app.db.GenerateUserReview(context.Background(), "hmjna6kd9i", 2026)
+	err = app.db.GenerateUserReview(
+		context.Background(),
+		database.GenerateUserReviewParams{
+			UserId: "hmjna6kd9i",
+			Year:   2026,
+		},
+	)
 	if err != nil {
 		slog.Error("GenerateUserReview", "err", err)
 	}
