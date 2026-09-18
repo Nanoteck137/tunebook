@@ -78,7 +78,7 @@ func main() {
 		tracks    = flag.Int("tracks", 300, "number of tracks to simulate per year")
 		plays     = flag.Int("plays", 12000, "target total number of plays per year")
 		favorites = flag.Int("favorites", 50, "number of simulated tracks to mark as favorites (0 disables)")
-		gen       = flag.Bool("generate", true, "generate the user year reviews after inserting data")
+		gen       = flag.Bool("generate", false, "generate the user year reviews after inserting data")
 		force     = flag.Bool("force", false, "overwrite existing data for the given years")
 		seed      = flag.Int64("seed", 1, "random seed used for reproducible data")
 	)
@@ -472,7 +472,11 @@ func synthesizeYear(
 		year, numActiveTracks(yearAgg), totalPlays)
 
 	if generate {
-		if err := db.GenerateUserReview(ctx, userId, year); err != nil {
+		err := db.GenerateUserReview(ctx, database.GenerateUserReviewParams{
+			UserId: userId,
+			Year:   year,
+		})
+		if err != nil {
 			return err
 		}
 	}
