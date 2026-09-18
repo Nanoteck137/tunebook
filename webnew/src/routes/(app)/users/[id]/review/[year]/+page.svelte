@@ -50,9 +50,6 @@
 
 	let hoveredMonth = $state(-1);
 
-	let expandedArtist = $state<string | null>(null);
-	let expandedAlbum = $state<string | null>(null);
-
 	// function artistTracksFor(id: string) {
 	// 	return review.artistTracks.find((a) => a.artist.id === id)?.tracks ?? [];
 	// }
@@ -60,14 +57,6 @@
 	// function albumTracksFor(id: string) {
 	// 	return review.albumTracks.find((a) => a.album.id === id)?.tracks ?? [];
 	// }
-
-	function toggleArtist(id: string) {
-		expandedArtist = expandedArtist === id ? null : id;
-	}
-	
-	function toggleAlbum(id: string) {
-		expandedAlbum = expandedAlbum === id ? null : id;
-	}
 
 	function formatMonthlyHours(hours: number): string {
 		if (hours >= 1) {
@@ -344,42 +333,15 @@
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
 			{#each data.topAlbums as item (item.id)}
-				{@const expanded = expandedAlbum === item.id}
 				<div
 					class="flex w-40 shrink-0 flex-col transition-all"
-					class:w-80={expanded}
 				>
 					<AlbumTile
 						id={item.id}
 						cover={item.coverArt.small}
 						name={item.name}
 						artists={item.artists}
-						{expanded}
-						onToggle={() => toggleAlbum(item.id)}
 					/>
-
-					<!-- {#if expanded} -->
-					<!-- 	<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
-					<!-- 		{#each albumTracksFor(item.album.id) as entry (entry.track.id)} -->
-					<!-- 			<a -->
-					<!-- 				href="/tracks/{entry.track.id}" -->
-					<!-- 				class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
-					<!-- 			> -->
-					<!-- 				<img -->
-					<!-- 					src={entry.track.coverArt.small} -->
-					<!-- 					alt="" -->
-					<!-- 					class="h-8 w-8 shrink-0 rounded object-cover" -->
-					<!-- 				/> -->
-					<!-- 				<span class="min-w-0 flex-1 truncate text-sm"> -->
-					<!-- 					{entry.track.name} -->
-					<!-- 				</span> -->
-					<!-- 				<span class="shrink-0 text-xs text-muted-foreground"> -->
-					<!-- 					{entry.playCount.toLocaleString()} plays -->
-					<!-- 				</span> -->
-					<!-- 			</a> -->
-					<!-- 		{/each} -->
-					<!-- 	</div> -->
-					<!-- {/if} -->
 				</div>
 			{/each}
 		</div>
@@ -396,41 +358,14 @@
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
 			{#each data.topArtists as item (item.id)}
-				{@const expanded = expandedArtist === item.id}
 				<div
 					class="flex w-40 shrink-0 flex-col transition-all"
-					class:w-80={expanded}
 				>
 					<ArtistTile
 						id={item.id}
 						cover={item.coverArt.small}
 						name={item.name}
-						{expanded}
-						onToggle={() => toggleArtist(item.id)}
 					/>
-
-					<!-- {#if expanded} -->
-					<!-- 	<div class="mt-1 flex w-full flex-col gap-1 rounded-lg border bg-card p-2"> -->
-					<!-- 		{#each artistTracksFor(item.artist.id) as entry (entry.track.id)} -->
-					<!-- 			<a -->
-					<!-- 				href="/tracks/{entry.track.id}" -->
-					<!-- 				class="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent" -->
-					<!-- 			> -->
-					<!-- 				<img -->
-					<!-- 					src={entry.track.coverArt.small} -->
-					<!-- 					alt="" -->
-					<!-- 					class="h-8 w-8 shrink-0 rounded object-cover" -->
-					<!-- 				/> -->
-					<!-- 				<span class="min-w-0 flex-1 truncate text-sm"> -->
-					<!-- 					{entry.track.name} -->
-					<!-- 				</span> -->
-					<!-- 				<span class="shrink-0 text-xs text-muted-foreground"> -->
-					<!-- 					{entry.playCount.toLocaleString()} plays -->
-					<!-- 				</span> -->
-					<!-- 			</a> -->
-					<!-- 		{/each} -->
-					<!-- 	</div> -->
-					<!-- {/if} -->
 				</div>
 			{/each}
 		</div>
