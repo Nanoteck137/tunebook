@@ -47,9 +47,9 @@
 		},
 	]);
 
-	let maxTrackCount = $derived(
-		Math.max(...data.yearStats.map((y) => y.trackCount), 0),
-	);
+	// let maxTrackCount = $derived(
+	// 	Math.max(...data.yearStats.map((y) => y.trackCount), 0),
+	// );
 
 	function formatListeningTime(seconds: number): string {
 		const hours = Math.floor(seconds / 3600);
@@ -175,44 +175,44 @@
 		</section>
 	{/if}
 
-	{#if data.yearStats.length > 0}
-		<Separator />
-
-		<section>
-			<SectionHeader
-				count={data.yearStats.length}
-				viewAllHref="/users/{data.userData.id}/review"
-			>
-				<BarChart3 />
-				Year in Review
-			</SectionHeader>
-
-			<div class="flex flex-col gap-1">
-				{#each data.yearStats as stat (stat.year)}
-					<a
-						href="/users/{data.userData.id}/review/{stat.year}"
-						class="flex items-center gap-4 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent hover:text-accent-foreground"
-					>
-						<span class="w-12 text-sm font-medium">{stat.year}</span>
-						<div class="flex flex-1 flex-col gap-1">
-							<div
-								class="flex items-center justify-between text-xs text-muted-foreground"
-							>
-								<span>{stat.trackCount.toLocaleString()} tracks</span>
-								<span>{formatListeningTime(stat.listeningTime)}</span>
-							</div>
-							<div class="h-2 w-full rounded-full bg-muted">
-								<div
-									class="h-2 rounded-full bg-linear-to-r from-logo-1 to-logo-3"
-									style="width: {maxTrackCount > 0
-										? (stat.trackCount / maxTrackCount) * 100
-										: 0}%"
-								></div>
-							</div>
-						</div>
-					</a>
-				{/each}
-			</div>
-		</section>
-	{/if}
+	<!-- {#if data.yearStats.length > 0} -->
+	<!-- 	<Separator /> -->
+	<!---->
+	<!-- 	<section> -->
+	<!-- 		<SectionHeader -->
+	<!-- 			count={data.yearStats.length} -->
+	<!-- 			viewAllHref="/users/{data.userData.id}/review" -->
+	<!-- 		> -->
+	<!-- 			<BarChart3 /> -->
+	<!-- 			Year in Review -->
+	<!-- 		</SectionHeader> -->
+	<!---->
+	<!-- 		<div class="flex flex-col gap-1"> -->
+	<!-- 			{#each data.yearStats as stat (stat.year)} -->
+	<!-- 				<a -->
+	<!-- 					href="/users/{data.userData.id}/review/{stat.year}" -->
+	<!-- 					class="flex items-center gap-4 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent hover:text-accent-foreground" -->
+	<!-- 				> -->
+	<!-- 					<span class="w-12 text-sm font-medium">{stat.year}</span> -->
+	<!-- 					<div class="flex flex-1 flex-col gap-1"> -->
+	<!-- 						<div -->
+	<!-- 							class="flex items-center justify-between text-xs text-muted-foreground" -->
+	<!-- 						> -->
+	<!-- 							<span>{stat.trackCount.toLocaleString()} tracks</span> -->
+	<!-- 							<span>{formatListeningTime(stat.listeningTime)}</span> -->
+	<!-- 						</div> -->
+	<!-- 						<div class="h-2 w-full rounded-full bg-muted"> -->
+	<!-- 							<div -->
+	<!-- 								class="h-2 rounded-full bg-linear-to-r from-logo-1 to-logo-3" -->
+	<!-- 								style="width: {maxTrackCount > 0 -->
+	<!-- 									? (stat.trackCount / maxTrackCount) * 100 -->
+	<!-- 									: 0}%" -->
+	<!-- 							></div> -->
+	<!-- 						</div> -->
+	<!-- 					</div> -->
+	<!-- 				</a> -->
+	<!-- 			{/each} -->
+	<!-- 		</div> -->
+	<!-- 	</section> -->
+	<!-- {/if} -->
 </div>

@@ -1010,6 +1010,22 @@ type DeleteApiTokenParams struct {
 	UserId  string
 }
 
+func (s *UserService) RebuildUserTrackStats(
+	ctx context.Context,
+	userId string,
+) error {
+	err := s.db.RebuildUserTrackStats(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("rebuild user track stats", err)
+	}
+
+	return nil
+}
+
+type RebuildUserTrackStatsParams struct {
+	UserId string
+}
+
 func (s *UserService) RecalculateUserStats(
 	ctx context.Context,
 	userId string,

@@ -40,14 +40,16 @@ type yearStatRow struct {
 }
 
 type aggregate struct {
-	playCount int
-	skipCount int
-	playTime  int64
+	playCount  int
+	skipCount  int
+	playTime   int64
+	completion int
 }
 
-func (a *aggregate) add(playTime int64, skipped bool) {
+func (a *aggregate) add(playTime int64, skipped bool, completion int) {
 	a.playCount++
 	a.playTime += playTime
+	a.completion += completion
 	if skipped {
 		a.skipCount++
 	}
@@ -392,10 +394,10 @@ func synthesizeYear(
 
 				playTime := int64(float64(track.Duration) * float64(percentPlayed) / 100.0)
 
-				mAgg.add(playTime, skipped)
-				qAgg.add(playTime, skipped)
-				yearAgg[i].add(playTime, skipped)
-				allAgg[i].add(playTime, skipped)
+				mAgg.add(playTime, skipped, percentPlayed)
+				qAgg.add(playTime, skipped, percentPlayed)
+				yearAgg[i].add(playTime, skipped, percentPlayed)
+				allAgg[i].add(playTime, skipped, percentPlayed)
 
 				historySeq++
 				historyRows = append(historyRows, goqu.Record{
@@ -513,6 +515,8 @@ func statRecord(
 		"skip_count": agg.skipCount,
 		"play_time":  agg.playTime,
 
+		"completion_sum": agg.completion,
+
 		"created_at": now,
 		"updated_at": now,
 	}
@@ -534,6 +538,9 @@ func upsertStats(ctx context.Context, exec database.Executor, rows []goqu.Record
 					"play_count": goqu.L("play_count + EXCLUDED.play_count"),
 					"skip_count": goqu.L("skip_count + EXCLUDED.skip_count"),
 					"play_time":  goqu.L("play_time + EXCLUDED.play_time"),
+					"completion_sum": goqu.L(
+						"completion_sum + EXCLUDED.completion_sum",
+					),
 					"updated_at": goqu.L("EXCLUDED.updated_at"),
 				},
 			)))

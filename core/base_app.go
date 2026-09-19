@@ -257,6 +257,7 @@ func (app *BaseApp) Bootstrap() error {
 		tasks.NewLibrarySyncTask(app.libraryService),
 		tasks.NewSearchIndexTask(app.searchService),
 		tasks.NewUserStatsRecalculateTask(app.userService, app.jobService),
+		tasks.NewUserTrackStatsRebuildTask(app.userService, app.jobService),
 		tasks.NewAuthCleanupTask(app.authService),
 		tasks.NewCacheCleanupTask(app.filesystemService),
 		tasks.NewLibraryCleanupTask(app.libraryService),
@@ -272,6 +273,7 @@ func (app *BaseApp) Bootstrap() error {
 	jobList := []service.Job{
 		jobs.NewGeneratePlaylistImageJob(app.playlistService),
 		jobs.NewUserStatsUpdateJob(app.userService),
+		jobs.NewUserTrackStatsRebuildJob(app.userService),
 	}
 
 	for _, job := range jobList {
@@ -287,18 +289,6 @@ func (app *BaseApp) Bootstrap() error {
 		database.GenerateUserReviewParams{
 			UserId: "hmjna6kd9i",
 			Year:   2026,
-		},
-	)
-	if err != nil {
-		slog.Error("GenerateUserReview", "err", err)
-	}
-
-	// TODO(patrik): Remove, temp
-	err = app.db.GenerateUserReview(
-		context.Background(),
-		database.GenerateUserReviewParams{
-			UserId: "hmjna6kd9i",
-			Year:   0,
 		},
 	)
 	if err != nil {

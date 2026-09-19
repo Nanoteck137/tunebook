@@ -134,8 +134,9 @@ func (s *HistoryService) PushTrackHistory(
 				Year:        p.year,
 				PeriodValue: p.periodValue,
 
-				SkipDelta:     skipDelta,
-				PlayTimeDelta: playTimeDelta,
+				SkipDelta:       skipDelta,
+				PlayTimeDelta:   playTimeDelta,
+				CompletionDelta: params.PercentPlayed,
 			},
 		)
 		if err != nil {
