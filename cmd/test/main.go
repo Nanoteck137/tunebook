@@ -17,6 +17,24 @@ import (
 
 const insertBatchSize = 400
 
+// defaultMonthlyPlays is used when no existing history exists and the user has
+// not supplied an explicit -monthly volume.
+const defaultMonthlyPlays = 6000
+
+// dayOfWeekWeights model the observed per-day listening volume for each
+// weekday (indexed by time.Weekday: 0 = Sunday ... 6 = Saturday). Weekdays get
+// noticeably more plays than weekends, matching the reference database.
+var dayOfWeekWeights = [7]int{240, 246, 259, 290, 286, 230, 195}
+
+// hourWeights model the observed listening volume for each hour of the day
+// (0-23). Listening is spread fairly evenly throughout the day with a small
+// dip in the afternoon.
+var hourWeights = [24]int{
+	86, 97, 105, 110, 104, 94, 89, 86,
+	76, 77, 77, 80, 78, 77, 64, 72,
+	61, 63, 84, 79, 78, 72, 83, 84,
+}
+
 var dialect = database.SqliteDialect()
 
 type userRow struct {
@@ -78,7 +96,7 @@ func main() {
 		from      = flag.Int("from", time.Now().Year()-5, "first year to generate")
 		to        = flag.Int("to", time.Now().Year()-1, "last year to generate")
 		tracks    = flag.Int("tracks", 300, "number of tracks to simulate per year")
-		plays     = flag.Int("plays", 12000, "target total number of plays per year")
+		monthly   = flag.Int("monthly", 0, "target plays per month (default: auto-detected from the user's existing history)")
 		favorites = flag.Int("favorites", 50, "number of simulated tracks to mark as favorites (0 disables)")
 		gen       = flag.Bool("generate", false, "generate the user year reviews after inserting data")
 		force     = flag.Bool("force", false, "overwrite existing data for the given years")
@@ -123,6 +141,20 @@ func main() {
 	}
 	fmt.Printf("selected %d tracks\n", len(selected))
 
+	monthlyPlays := *monthly
+	if monthlyPlays <= 0 {
+		detected, err := detectStandardMonth(ctx, db, uid)
+		if err != nil {
+			fmt.Printf("ERROR detecting standard month: %v\n", err)
+			return
+		}
+		if detected <= 0 {
+			detected = defaultMonthlyPlays
+		}
+		monthlyPlays = detected
+		fmt.Printf("detected standard month volume: %d plays/month\n", monthlyPlays)
+	}
+
 	if *favorites > 0 {
 		err := addFavorites(ctx, db, uid, selected, *favorites)
 		if err != nil {
@@ -136,7 +168,7 @@ func main() {
 
 	for year := *from; year <= *to; year++ {
 		err := synthesizeYear(
-			ctx, db, uid, year, selected, *plays, rng, *force, *gen, runID,
+			ctx, db, uid, year, selected, monthlyPlays, rng, *force, *gen, runID,
 		)
 		if err != nil {
 			fmt.Printf("ERROR generating year %d: %v\n", year, err)
@@ -316,8 +348,6 @@ func synthesizeYear(
 		}
 	}
 
-	counts := allocatePlays(len(tracks), plays, rng)
-
 	monthAgg := make([]map[int]*aggregate, len(tracks))
 	quarterAgg := make([]map[int]*aggregate, len(tracks))
 	yearAgg := make([]*aggregate, len(tracks))
@@ -330,67 +360,44 @@ func synthesizeYear(
 	}
 
 	historySeq := 0
-	historyRows := make([]goqu.Record, 0, plays)
+	historyRows := make([]goqu.Record, 0, plays*12)
 
-	for i, track := range tracks {
-		if counts[i] == 0 {
-			continue
+	totalPlays := 0
+
+	for month := 1; month <= 12; month++ {
+		quarter := (month-1)/3 + 1
+
+		monthStart := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+		daysInMonth := monthStart.AddDate(0, 1, 0).AddDate(0, 0, -1).Day()
+
+		dayWeights := make([]int, daysInMonth)
+		for d := 0; d < daysInMonth; d++ {
+			wd := monthStart.AddDate(0, 0, d).Weekday()
+			dayWeights[d] = dayOfWeekWeights[wd]
 		}
 
-		numMonths := 1 + rng.Intn(9)
-		months := rng.Perm(12)[:numMonths]
+		monthPlays := jitterPlays(plays, rng)
+		counts := allocatePlays(len(tracks), monthPlays, rng)
 
-		monthWeights := make([]float64, numMonths)
-		monthWeightSum := 0.0
-		for j := range monthWeights {
-			monthWeights[j] = 0.5 + rng.Float64()
-			monthWeightSum += monthWeights[j]
-		}
-
-		monthPlays := make([]int, numMonths)
-		remaining := counts[i]
-		for j := 0; j < len(monthPlays); j++ {
-			if j == len(monthPlays)-1 {
-				monthPlays[j] = remaining
-			} else {
-				monthPlays[j] = int(float64(counts[i]) * monthWeights[j] / monthWeightSum)
-				remaining -= monthPlays[j]
+		for i, track := range tracks {
+			if counts[i] == 0 {
+				continue
 			}
-		}
-
-		for j, playsInMonth := range monthPlays {
-			month := months[j] + 1
-			quarter := (month-1)/3 + 1
 
 			mAgg := ensureAgg(monthAgg[i], month)
 			qAgg := ensureAgg(quarterAgg[i], quarter)
 
-			monthStart := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
-			monthEnd := monthStart.AddDate(0, 1, 0)
-			monthMs := monthEnd.Sub(monthStart).Milliseconds()
+			for p := 0; p < counts[i]; p++ {
+				day := weightedIndex(rng, dayWeights)
+				hour := weightedIndex(rng, hourWeights[:])
+				minute := rng.Intn(60)
+				second := rng.Intn(60)
 
-			for p := 0; p < playsInMonth; p++ {
-				var percentPlayed int
-				if rng.Float64() < 0.65 {
-					percentPlayed = 80 + rng.Intn(21)
-				} else {
-					percentPlayed = 10 + rng.Intn(70)
-				}
+				listenedAt := time.Date(
+					year, time.Month(month), day+1, hour, minute, second, 0, time.Local,
+				).UnixMilli()
 
-				status := "skipped"
-				if percentPlayed >= 80 {
-					status = "completed"
-				}
-				skipped := status == "skipped"
-
-				playbackType := "sequential"
-				if rng.Float64() < 0.5 {
-					playbackType = "shuffle"
-				}
-
-				listenedAt := monthStart.
-					Add(time.Duration(rng.Int63n(monthMs)) * time.Millisecond).
-					UnixMilli()
+				percentPlayed, status, skipped := mimicPlayback(rng)
 
 				playTime := int64(float64(track.Duration) * float64(percentPlayed) / 100.0)
 
@@ -405,7 +412,7 @@ func synthesizeYear(
 					"user_id":        userId,
 					"track_id":       track.Id,
 					"listened_at":    listenedAt,
-					"playback_type":  playbackType,
+					"playback_type":  "normal",
 					"status":         status,
 					"percent_played": percentPlayed,
 
@@ -414,6 +421,8 @@ func synthesizeYear(
 				})
 			}
 		}
+
+		totalPlays += monthPlays
 	}
 
 	statRows := make([]goqu.Record, 0, len(tracks)*4)
@@ -459,11 +468,6 @@ func synthesizeYear(
 	err = insertChunked(ctx, tx, "track_history", historyRows)
 	if err != nil {
 		return err
-	}
-
-	totalPlays := 0
-	for i := range tracks {
-		totalPlays += yearAgg[i].playCount
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -740,6 +744,90 @@ func allocatePlays(trackCount int, total int, rng *rand.Rand) []int {
 	}
 
 	return counts
+}
+
+// detectStandardMonth computes the average number of plays per month from the
+// user's existing history so that generated data matches the volume already in
+// the database. It returns 0 when there is no history to infer from.
+func detectStandardMonth(
+	ctx context.Context,
+	db *database.Database,
+	userId string,
+) (int, error) {
+	type monthRow struct {
+		Month string `db:"month"`
+		Count int    `db:"count"`
+	}
+
+	query := dialect.From("track_history").
+		Select(
+			goqu.L("strftime('%Y-%m', listened_at / 1000, 'unixepoch')").As("month"),
+			goqu.COUNT(goqu.Star()).As("count"),
+		).
+		Where(goqu.I("user_id").Eq(userId)).
+		GroupBy(goqu.L("strftime('%Y-%m', listened_at / 1000, 'unixepoch')"))
+
+	rows, err := database.Multiple[monthRow](db, ctx, query)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(rows) == 0 {
+		return 0, nil
+	}
+
+	total := 0
+	for _, r := range rows {
+		total += r.Count
+	}
+
+	return total / len(rows), nil
+}
+
+// weightedIndex picks an index from weights with probability proportional to
+// each entry.
+func weightedIndex(rng *rand.Rand, weights []int) int {
+	sum := 0
+	for _, w := range weights {
+		sum += w
+	}
+
+	r := rng.Intn(sum)
+	for i, w := range weights {
+		if r < w {
+			return i
+		}
+		r -= w
+	}
+
+	return len(weights) - 1
+}
+
+// jitterPlays applies mild random variation to the standard monthly volume so
+// consecutive months aren't identical, while staying close to the reference
+// quantity.
+func jitterPlays(base int, rng *rand.Rand) int {
+	const low = 0.9
+	const high = 1.1
+	factor := low + rng.Float64()*(high-low)
+	return int(float64(base) * factor)
+}
+
+// mimicPlayback reproduces the completion/skip pattern observed in the
+// reference database: almost every play is a completed listen at 100%, with a
+// tiny number of skips (-0.1%) and the rare partially completed listen.
+//
+// It returns the percent played, the status, and whether the play was skipped.
+func mimicPlayback(rng *rand.Rand) (int, string, bool) {
+	if rng.Float64() < 0.001 {
+		return 10 + rng.Intn(70), "skipped", true
+	}
+
+	if rng.Float64() < 0.001 {
+		return 94 + rng.Intn(6), "completed", false
+	}
+
+	return 100, "completed", false
 }
 
 func rebuildUserStats(

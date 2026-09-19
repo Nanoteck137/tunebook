@@ -11,6 +11,7 @@ import (
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tasks"
 	"github.com/nanoteck137/tunebook/tools/broker"
+	"github.com/nanoteck137/tunebook/tools/pretty"
 )
 
 var _ App = (*BaseApp)(nil)
@@ -283,16 +284,27 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	// TODO(patrik): Remove, temp
-	err = app.db.GenerateUserReview(
-		context.Background(),
-		database.GenerateUserReviewParams{
-			UserId: "hmjna6kd9i",
-			Year:   2026,
-		},
-	)
+	years, err := app.db.GetUserStatsYears(context.Background(), database.GetUserStatsYearsParams{
+		UserId: "hmjna6kd9i",
+	})
 	if err != nil {
 		slog.Error("GenerateUserReview", "err", err)
+	}
+
+	pretty.Println(years)
+
+	for _, year := range years {
+		// TODO(patrik): Remove, temp
+		err = app.db.GenerateUserReview(
+			context.Background(),
+			database.GenerateUserReviewParams{
+				UserId: "hmjna6kd9i",
+				Year:   year,
+			},
+		)
+		if err != nil {
+			slog.Error("GenerateUserReview", "err", err)
+		}
 	}
 
 	return nil
