@@ -16,9 +16,11 @@
 		Music,
 		Play,
 		Shuffle,
+		TrendingUp,
 		Users,
 	} from "@lucide/svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import TopTrackItem from "$lib/components/track-list/TopTrackItem.svelte";
 
 	const { data } = $props();
 	const musicManager = getMusicManager();
@@ -61,7 +63,9 @@
 	/>
 
 	<div class="flex min-w-0 flex-col gap-2">
-		<p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+		<p
+			class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+		>
 			Artist
 		</p>
 
@@ -147,6 +151,30 @@
 <div class="h-4"></div>
 
 <div class="flex flex-col gap-10">
+	{#if data.userTopTracks.length > 0}
+		<section>
+			<SectionHeader
+				count={data.userTopTrackPage?.totalItems ?? data.userTopTracks.length}
+				viewAllHref={data.user
+					? `/users/${data.user.id}/review/total/top-tracks`
+					: undefined}
+			>
+				<TrendingUp />
+				Your Top Tracks
+			</SectionHeader>
+
+			<div class="flex flex-col">
+				{#each data.userTopTracks as track (track.id)}
+					<TopTrackItem
+						rank={track.rank}
+						{track}
+						playCount={track.playCount}
+					/>
+				{/each}
+			</div>
+		</section>
+	{/if}
+
 	{#if data.tracks.length > 0}
 		<section>
 			<SectionHeader

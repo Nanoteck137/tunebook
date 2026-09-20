@@ -5,7 +5,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const data = await parent();
 	const id = params.id;
 
-	const [albums, tracks, featuredAlbums, featuredTracks] =
+	const [albums, tracks, featuredAlbums, featuredTracks, topTracks] =
 		await Promise.all([
 			data.apiClient.getAlbums({
 				query: { filter: `artistId = "${id}"`, perPage: "6" },
@@ -19,6 +19,14 @@ export const load: PageLoad = async ({ parent, params }) => {
 			data.apiClient.getTracks({
 				query: { filter: `featuringArtists has "${id}"`, perPage: "5" },
 			}),
+			data.user
+				? data.apiClient.getUserTotalReviewTracks(data.user.id, {
+						query: {
+							filter: `(artistId = "${id}" or featuringArtists has "${id}")`,
+							perPage: "5",
+						},
+					})
+				: null,
 		]);
 
 	if (!albums.success) {
@@ -41,6 +49,15 @@ export const load: PageLoad = async ({ parent, params }) => {
 		});
 	}
 
+	if (topTracks && !topTracks.success) {
+		throw error(topTracks.error.code, {
+			message: topTracks.error.message,
+		});
+	}
+
+	const userTopTracks = topTracks?.success ? topTracks.data.tracks : [];
+	const userTopTrackPage = topTracks?.success ? topTracks.data.page : null;
+
 	return {
 		...data,
 		albums: albums.data.albums,
@@ -51,5 +68,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		featuredAlbumPage: featuredAlbums.data.page,
 		featuredTracks: featuredTracks.data.tracks,
 		featuredTrackPage: featuredTracks.data.page,
+		userTopTracks,
+		userTopTrackPage,
 	};
 };
