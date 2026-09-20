@@ -14,6 +14,17 @@ export const load: PageLoad = async ({ parent, params }) => {
 		throw error(topTracks.error.code, { message: topTracks.error.message });
 	}
 
+	const playlists = await data.apiClient.getPlaylists({
+		query: {
+			filter: `ownerId = "${params.id}"`,
+			sort: "position",
+			perPage: "12",
+		},
+	});
+	if (!playlists.success) {
+		throw error(playlists.error.code, { message: playlists.error.message });
+	}
+
 	// const yearStats = await data.apiClient.getUserYearStats(params.id);
 	// if (!yearStats.success) {
 	// 	throw error(yearStats.error.code, { message: yearStats.error.message });
@@ -23,6 +34,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 		...data,
 		stats: stats.data,
 		topTracks: topTracks.data.tracks,
+		playlists: playlists.data.playlists,
 		// yearStats: yearStats.data.stats,
 	};
 };

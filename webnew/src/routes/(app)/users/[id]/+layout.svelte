@@ -24,8 +24,13 @@
 	);
 
 	const tabs = $derived([
-		{ label: "Overview", href: `/users/${data.userData.id}` },
-		{ label: "Top", href: `/users/${data.userData.id}/top` },
+		{ label: "Overview", href: `/users/${data.userData.id}`, public: true },
+		{ label: "Top", href: `/users/${data.userData.id}/top`, public: true },
+		{
+			label: "Playlists",
+			href: `/users/${data.userData.id}/playlists`,
+			public: true,
+		},
 		{ label: "Favorites", href: `/users/${data.userData.id}/favorites` },
 		{ label: "History", href: `/users/${data.userData.id}/history` },
 		{ label: "Review", href: `/users/${data.userData.id}/review` },
@@ -59,7 +64,7 @@
 
 		<div class="flex min-w-0 flex-col gap-2">
 			<p
-				class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+				class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 			>
 				Profile
 			</p>
@@ -79,7 +84,7 @@
 
 	<nav class="flex flex-wrap gap-1">
 		{#each tabs as tab (tab.href)}
-			{#if tab.href === `/users/${data.userData.id}` || data.userData.id === data.user?.id}
+			{#if tab.public || data.userData.id === data.user?.id}
 				<Button
 					class="transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page
 						.url.pathname === tab.href
