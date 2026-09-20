@@ -40,7 +40,6 @@ var (
 )
 
 func UserYearReviewTrackSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_tracks?
 	return TrackSchema().
 		AddField(
 			"rank",
@@ -61,7 +60,6 @@ func UserYearReviewTrackSchema() *schema.Schema {
 }
 
 func UserYearReviewAlbumSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_albums?
 	return AlbumSchema().
 		AddField(
 			"rank",
@@ -82,7 +80,6 @@ func UserYearReviewAlbumSchema() *schema.Schema {
 }
 
 func UserYearReviewArtistSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_artists?
 	return ArtistSchema().
 		AddField(
 			"rank",
@@ -103,7 +100,6 @@ func UserYearReviewArtistSchema() *schema.Schema {
 }
 
 func UserYearReviewDecadeSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_decades?
 	return schema.New().
 		AddField(
 			"rank",
@@ -124,7 +120,6 @@ func UserYearReviewDecadeSchema() *schema.Schema {
 }
 
 func UserYearReviewTagSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_tags?
 	return schema.New().
 		AddField(
 			"rank",
@@ -145,7 +140,6 @@ func UserYearReviewTagSchema() *schema.Schema {
 }
 
 func UserYearReviewMonthTrackSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_month_tracks?
 	return TrackSchema().
 		AddField(
 			"rank",
@@ -166,7 +160,6 @@ func UserYearReviewMonthTrackSchema() *schema.Schema {
 }
 
 func UserYearReviewMonthAlbumSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_month_albums?
 	return AlbumSchema().
 		AddField(
 			"rank",
@@ -187,7 +180,6 @@ func UserYearReviewMonthAlbumSchema() *schema.Schema {
 }
 
 func UserYearReviewMonthArtistSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_month_artists?
 	return ArtistSchema().
 		AddField(
 			"rank",
@@ -208,7 +200,6 @@ func UserYearReviewMonthArtistSchema() *schema.Schema {
 }
 
 func UserYearReviewMonthTagSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_month_tags?
 	return schema.New().
 		AddField(
 			"rank",
@@ -229,7 +220,6 @@ func UserYearReviewMonthTagSchema() *schema.Schema {
 }
 
 func UserYearReviewMonthDecadeSchema() *schema.Schema {
-	// TODO(patrik): Should we add the other columns from user_year_review_month_decades?
 	return schema.New().
 		AddField(
 			"rank",
@@ -254,7 +244,6 @@ type UserYearSummary struct {
 	ListeningTime int64 `db:"listening_time"`
 }
 
-// TODO(patrik): Move to user_track_stats
 func (db DB) GetUserYearSummary(
 	ctx context.Context,
 	userId string,
@@ -891,33 +880,31 @@ func (db DB) GetUserYearMonthFavoritePlays(
 	})
 }
 
-// TODO(patrik): This should be moved to the service package, UserService or ReviewService
-func processUserYearMonth(
-	tx DB,
+func (db DB) processUserYearMonth(
 	ctx context.Context,
 	userId string,
 	year int,
 	month int,
 	now int64,
 ) error {
-	monthSummary, err := tx.GetUserYearMonthSummary(ctx, userId, year, month)
+	monthSummary, err := db.GetUserYearMonthSummary(ctx, userId, year, month)
 	if err != nil {
 		return err
 	}
 
-	monthHistory, err := tx.GetUserYearMonthHistorySummary(
+	monthHistory, err := db.GetUserYearMonthHistorySummary(
 		ctx, userId, year, month)
 	if err != nil {
 		return err
 	}
 
-	monthFavorites, err := tx.GetUserYearMonthFavoritePlays(
+	monthFavorites, err := db.GetUserYearMonthFavoritePlays(
 		ctx, userId, year, month)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthsTbl).Rows(
+	_, err = db.Exec(ctx, dialect.Insert(userYearReviewMonthsTbl).Rows(
 		goqu.Record{
 			"user_id":        userId,
 			"year":           year,
@@ -937,31 +924,31 @@ func processUserYearMonth(
 		return err
 	}
 
-	err = tx.generateUserYearReviewMonthTracks(
+	err = db.generateUserYearReviewMonthTracks(
 		ctx, userId, year, month, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewMonthAlbums(
+	err = db.generateUserYearReviewMonthAlbums(
 		ctx, userId, year, month, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewMonthArtists(
+	err = db.generateUserYearReviewMonthArtists(
 		ctx, userId, year, month, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewMonthTags(
+	err = db.generateUserYearReviewMonthTags(
 		ctx, userId, year, month, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewMonthDecades(
+	err = db.generateUserYearReviewMonthDecades(
 		ctx, userId, year, month, now)
 	if err != nil {
 		return err
@@ -1063,8 +1050,7 @@ func (db *Database) GenerateUserReview(
 	}
 
 	for m := 1; m <= 12; m++ {
-		err := processUserYearMonth(
-			tx.DB, ctx, params.UserId, params.Year, m, now)
+		err := tx.processUserYearMonth(ctx, params.UserId, params.Year, m, now)
 		if err != nil {
 			return err
 		}
