@@ -232,6 +232,34 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/${userId}/top-tracks`, "GET", api.GetUserTopTracks, z.any().optional(), undefined, options)
   }
   
+  getUserTotalReview(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/total-review`, "GET", api.GetUserTotalReview, z.any().optional(), undefined, options)
+  }
+  
+  getUserTotalReviewAlbums(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/total-review/albums`, "GET", api.GetUserTotalReviewAlbums, z.any().optional(), undefined, options)
+  }
+  
+  getUserTotalReviewArtists(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/total-review/artists`, "GET", api.GetUserTotalReviewArtists, z.any().optional(), undefined, options)
+  }
+  
+  getUserTotalReviewDecades(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/total-review/decades`, "GET", api.GetUserTotalReviewDecades, z.any().optional(), undefined, options)
+  }
+  
+  getUserTotalReviewMonths(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/total-review/months`, "GET", api.GetUserTotalReviewMonths, z.any().optional(), undefined, options)
+  }
+  
+  getUserTotalReviewTags(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/total-review/tags`, "GET", api.GetUserTotalReviewTags, z.any().optional(), undefined, options)
+  }
+  
+  getUserTotalReviewTracks(userId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${userId}/total-review/tracks`, "GET", api.GetUserTotalReviewTracks, z.any().optional(), undefined, options)
+  }
+  
   getUserTrackFavorites(options?: ExtraOptions) {
     return this.request("/api/v1/favorites/tracks", "GET", api.GetUserFavorites, z.any().optional(), undefined, options)
   }
@@ -612,6 +640,34 @@ export class ClientUrls {
   
   getUserTopTracks(userId: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${userId}/top-tracks`)
+  }
+  
+  getUserTotalReview(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/total-review`)
+  }
+  
+  getUserTotalReviewAlbums(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/total-review/albums`)
+  }
+  
+  getUserTotalReviewArtists(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/total-review/artists`)
+  }
+  
+  getUserTotalReviewDecades(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/total-review/decades`)
+  }
+  
+  getUserTotalReviewMonths(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/total-review/months`)
+  }
+  
+  getUserTotalReviewTags(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/total-review/tags`)
+  }
+  
+  getUserTotalReviewTracks(userId: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${userId}/total-review/tracks`)
   }
   
   getUserTrackFavorites() {

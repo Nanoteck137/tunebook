@@ -747,6 +747,258 @@ func (s *UserService) GetUserYearReviewMonthDecades(
 	return decades, page, nil
 }
 
+type GetUserTotalReviewParams struct {
+	UserId string
+}
+
+func (s *UserService) GetUserTotalReview(
+	ctx context.Context,
+	params GetUserTotalReviewParams,
+) (database.UserTotalReview, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return database.UserTotalReview{}, ErrUserServiceUserNotFound
+		}
+
+		return database.UserTotalReview{},
+			userErr.Wrap("get user total review: user", err)
+	}
+
+	review, err := s.db.GetUserTotalReview(
+		ctx,
+		database.GetUserTotalReviewParams{
+			UserId: params.UserId,
+		},
+	)
+	if err != nil {
+		return database.UserTotalReview{},
+			userErr.Wrap("get user total review: reviews", err)
+	}
+
+	return review, nil
+}
+
+type GetUserTotalReviewTracksParams struct {
+	UserId string
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserTotalReviewTracks(
+	ctx context.Context,
+	params GetUserTotalReviewTracksParams,
+) ([]database.UserTotalReviewTrack, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{},
+			userErr.Wrap("get user total review tracks: user", err)
+	}
+
+	tracks, page, err := s.db.GetUserTotalReviewTracks(
+		ctx,
+		database.GetUserTotalReviewTracksParams{
+			UserId: params.UserId,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user total review tracks: reviews", err)
+	}
+
+	for i, track := range tracks {
+		tracks[i].Track.Order = utils.Pointer(track.Rank)
+	}
+
+	return tracks, page, nil
+}
+
+type GetUserTotalReviewAlbumsParams struct {
+	UserId string
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserTotalReviewAlbums(
+	ctx context.Context,
+	params GetUserTotalReviewAlbumsParams,
+) ([]database.UserTotalReviewAlbum, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{},
+			userErr.Wrap("get user total review albums: user", err)
+	}
+
+	albums, page, err := s.db.GetUserTotalReviewAlbums(
+		ctx,
+		database.GetUserTotalReviewAlbumsParams{
+			UserId: params.UserId,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user total review albums: reviews", err)
+	}
+
+	return albums, page, nil
+}
+
+type GetUserTotalReviewArtistsParams struct {
+	UserId string
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserTotalReviewArtists(
+	ctx context.Context,
+	params GetUserTotalReviewArtistsParams,
+) ([]database.UserTotalReviewArtist, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{},
+			userErr.Wrap("get user total review artists: user", err)
+	}
+
+	artists, page, err := s.db.GetUserTotalReviewArtists(
+		ctx,
+		database.GetUserTotalReviewArtistsParams{
+			UserId: params.UserId,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user total review artists: reviews", err)
+	}
+
+	return artists, page, nil
+}
+
+type GetUserTotalReviewTagsParams struct {
+	UserId string
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserTotalReviewTags(
+	ctx context.Context,
+	params GetUserTotalReviewTagsParams,
+) ([]database.UserTotalReviewTag, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{},
+			userErr.Wrap("get user total review tags: user", err)
+	}
+
+	tags, page, err := s.db.GetUserTotalReviewTags(
+		ctx,
+		database.GetUserTotalReviewTagsParams{
+			UserId: params.UserId,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user total review tags: reviews", err)
+	}
+
+	return tags, page, nil
+}
+
+type GetUserTotalReviewDecadesParams struct {
+	UserId string
+
+	Page  types.PageParams
+	Query types.QueryParams
+}
+
+func (s *UserService) GetUserTotalReviewDecades(
+	ctx context.Context,
+	params GetUserTotalReviewDecadesParams,
+) ([]database.UserTotalReviewDecade, types.Page, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, types.Page{}, ErrUserServiceUserNotFound
+		}
+
+		return nil, types.Page{},
+			userErr.Wrap("get user total review decades: user", err)
+	}
+
+	decades, page, err := s.db.GetUserTotalReviewDecades(
+		ctx,
+		database.GetUserTotalReviewDecadesParams{
+			UserId: params.UserId,
+			Page:   params.Page,
+			Query:  params.Query,
+		},
+	)
+	if err != nil {
+		return nil, types.Page{},
+			userErr.Wrap("get user total review decades: reviews", err)
+	}
+
+	return decades, page, nil
+}
+
+type GetUserTotalReviewMonthsParams struct {
+	UserId string
+}
+
+func (s *UserService) GetUserTotalReviewMonths(
+	ctx context.Context,
+	params GetUserTotalReviewMonthsParams,
+) ([]database.UserTotalReviewMonth, error) {
+	_, err := s.db.GetUserById(ctx, params.UserId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return nil, ErrUserServiceUserNotFound
+		}
+
+		return nil, userErr.Wrap("get user total review months: user", err)
+	}
+
+	res, err := s.db.GetUserTotalReviewMonths(
+		ctx,
+		database.GetUserTotalReviewMonthsParams{
+			UserId: params.UserId,
+		},
+	)
+	if err != nil {
+		return nil,
+			userErr.Wrap("get user total review months: reviews", err)
+	}
+
+	return res, nil
+}
+
 type GenerateUserReviewParams struct {
 	UserId string
 	Year   int

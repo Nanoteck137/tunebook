@@ -9,7 +9,11 @@ export const load: PageLoad = async ({ parent, params }) => {
 		throw error(stats.error.code, { message: stats.error.message });
 	}
 
-	const topTracks = await data.apiClient.getUserTopTracks(params.id);
+	const topTracks = await data.apiClient.getUserTotalReviewTracks(params.id, {
+		query: {
+			perPage: "10",
+		},
+	});
 	if (!topTracks.success) {
 		throw error(topTracks.error.code, { message: topTracks.error.message });
 	}

@@ -9,10 +9,7 @@
 		ListPlus,
 		Music,
 		Play,
-		Repeat,
 		Shuffle,
-		SkipForward,
-		Sprout,
 		Tags,
 		Users,
 	} from "@lucide/svelte";
@@ -27,7 +24,6 @@
 	let { data } = $props();
 	const favoritesManager = getFavorites();
 
-	let currentYear = $derived(new Date().getFullYear());
 	let review = $derived(data.review);
 	let topTracks = $derived(data.topTracks);
 
@@ -37,8 +33,18 @@
 
 	let monthlyHours = $derived(data.months.map((m) => m.playTime / 3600));
 	let monthLabels = $derived([
-		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"Jun",
+		"Jul",
+		"Aug",
+		"Sep",
+		"Oct",
+		"Nov",
+		"Dec",
 	]);
 	let maxMonthlyHours = $derived(Math.max(...monthlyHours, 1 / 60));
 
@@ -49,14 +55,6 @@
 	);
 
 	let hoveredMonth = $state(-1);
-
-	// function artistTracksFor(id: string) {
-	// 	return review.artistTracks.find((a) => a.artist.id === id)?.tracks ?? [];
-	// }
-	//
-	// function albumTracksFor(id: string) {
-	// 	return review.albumTracks.find((a) => a.album.id === id)?.tracks ?? [];
-	// }
 
 	function formatMonthlyHours(hours: number): string {
 		if (hours >= 1) {
@@ -106,30 +104,15 @@
 		<p
 			class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 		>
-			Year in Review
+			Total Review
 		</p>
 
-		<div class="flex items-center gap-3">
-			<h1 class="text-4xl font-bold md:text-5xl">{data.year}</h1>
-			{#if data.year === currentYear}
-				<span
-					class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary ring-1 ring-primary/25"
-				>
-					In progress
-				</span>
-			{/if}
-		</div>
+		<h1 class="text-4xl font-bold md:text-5xl">All time</h1>
 
-		<!-- {#if review.review.trackCount > 0} -->
-		<!-- 	<div class="flex flex-col gap-0.5"> -->
-		<!-- 		<p class="text-sm text-muted-foreground"> -->
-		<!-- 			{review.review.trackCount.toLocaleString()} plays &middot; -->
-		<!-- 			{formatListeningTime(review.review.listeningTime)} -->
-		<!-- 		</p> -->
-		<!-- 	</div> -->
-		<!-- {:else} -->
-		<!-- 	<p class="text-sm text-muted-foreground">No listening data this year.</p> -->
-		<!-- {/if} -->
+		<p class="text-sm text-muted-foreground">
+			{review.trackCount.toLocaleString()} plays &middot;
+			{formatListeningTime(review.listeningTime)}
+		</p>
 	</div>
 
 	<section>
@@ -245,7 +228,7 @@
 	<section>
 		<SectionHeader
 			count={data.topTrackCount}
-			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-tracks"
+			viewAllHref="/users/{data.userData.id}/review/total/top-tracks"
 		>
 			<Music />
 			Top Tracks
@@ -302,9 +285,7 @@
 								const wasFav = favoritesManager.hasTrack(item.id);
 								await favoritesManager.toggleTrack(item.id);
 								toast.success(
-									wasFav
-										? "Removed from favorites"
-										: "Added to favorites",
+									wasFav ? "Removed from favorites" : "Added to favorites",
 								);
 							}}
 						>
@@ -325,7 +306,7 @@
 	<section>
 		<SectionHeader
 			count={data.topAlbumCount}
-			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-albums"
+			viewAllHref="/users/{data.userData.id}/review/total/top-albums"
 		>
 			<DiscAlbum />
 			Top Albums
@@ -333,9 +314,7 @@
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
 			{#each data.topAlbums as item (item.id)}
-				<div
-					class="flex w-40 shrink-0 flex-col transition-all"
-				>
+				<div class="flex w-40 shrink-0 flex-col transition-all">
 					<AlbumTile
 						id={item.id}
 						cover={item.coverArt.small}
@@ -350,7 +329,7 @@
 	<section>
 		<SectionHeader
 			count={data.topArtistCount}
-			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-artists"
+			viewAllHref="/users/{data.userData.id}/review/total/top-artists"
 		>
 			<Users />
 			Top Artists
@@ -358,9 +337,7 @@
 
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
 			{#each data.topArtists as item (item.id)}
-				<div
-					class="flex w-40 shrink-0 flex-col transition-all"
-				>
+				<div class="flex w-40 shrink-0 flex-col transition-all">
 					<ArtistTile
 						id={item.id}
 						cover={item.coverArt.small}
@@ -423,7 +400,7 @@
 			{#each monthLabels as label, i (label)}
 				{@const count = data.months[i]?.playCount ?? 0}
 				<a
-					href="/users/{data.userData.id}/review/{data.year}/months/{i + 1}"
+					href="/users/{data.userData.id}/review/total/months/{i + 1}"
 					class="flex min-w-0 flex-col items-center gap-0.5 rounded-lg border bg-card px-2 py-2 transition-colors hover:bg-accent sm:min-w-[88px] sm:flex-none"
 					class:pointer-events-none={count === 0}
 					class:opacity-40={count === 0}
@@ -441,7 +418,7 @@
 	<section>
 		<SectionHeader
 			count={data.topTagCount}
-			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-tags"
+			viewAllHref="/users/{data.userData.id}/review/total/top-tags"
 		>
 			<Tags />
 			Top Tags
@@ -466,7 +443,7 @@
 	<section>
 		<SectionHeader
 			count={data.topDecadeCount}
-			viewAllHref="/users/{data.userData.id}/review/{data.year}/top-decades"
+			viewAllHref="/users/{data.userData.id}/review/total/top-decades"
 		>
 			<DiscAlbum />
 			Decades
@@ -494,4 +471,3 @@
 		</div>
 	</section>
 </div>
-

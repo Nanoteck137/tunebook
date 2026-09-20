@@ -249,6 +249,61 @@ type GetUserYearReviewMonthDecades struct {
 	Decades []RankedDecade `json:"decades"`
 }
 
+type UserTotalReview struct {
+	TrackCount    int   `json:"trackCount"`
+	ListeningTime int64 `json:"listeningTime"`
+
+	AvgCompletion float64 `json:"avgCompletion"`
+	SkipCount     int     `json:"skipCount"`
+	UniqueTracks  int     `json:"uniqueTracks"`
+	FavoritePlays int     `json:"favoritePlays"`
+}
+
+type GetUserTotalReview struct {
+	Review UserTotalReview `json:"review"`
+}
+
+type GetUserTotalReviewTracks struct {
+	Page   types.Page    `json:"page"`
+	Tracks []RankedTrack `json:"tracks"`
+}
+
+type GetUserTotalReviewAlbums struct {
+	Page   types.Page    `json:"page"`
+	Albums []RankedAlbum `json:"albums"`
+}
+
+type GetUserTotalReviewArtists struct {
+	Page    types.Page     `json:"page"`
+	Artists []RankedArtist `json:"artists"`
+}
+
+type GetUserTotalReviewTags struct {
+	Page types.Page  `json:"page"`
+	Tags []RankedTag `json:"tags"`
+}
+
+type GetUserTotalReviewDecades struct {
+	Page    types.Page     `json:"page"`
+	Decades []RankedDecade `json:"decades"`
+}
+
+type UserTotalReviewMonth struct {
+	Month int `json:"month"`
+
+	PlayCount int   `json:"playCount"`
+	PlayTime  int64 `json:"playTime"`
+
+	AvgCompletion float64 `json:"avgCompletion"`
+	SkipCount     int     `json:"skipCount"`
+	UniqueTracks  int     `json:"uniqueTracks"`
+	FavoritePlays int     `json:"favoritePlays"`
+}
+
+type GetUserTotalReviewMonths struct {
+	Months []UserTotalReviewMonth `json:"months"`
+}
+
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -1016,6 +1071,287 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				for i, t := range tracks {
 					res.Tracks[i] = ConvertDBTrack(c, t.Track)
+				}
+
+				return res, nil
+			},
+		},
+	)
+
+	group.Register(
+		pyrin.ApiHandler{
+			Name:         "GetUserTotalReview",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/total-review",
+			ResponseType: GetUserTotalReview{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				review, err := app.UserService().GetUserTotalReview(
+					ctx,
+					service.GetUserTotalReviewParams{
+						UserId: c.Param("userId"),
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				return GetUserTotalReview{
+					Review: UserTotalReview{
+						TrackCount:    review.TrackCount,
+						ListeningTime: review.ListeningTime,
+						AvgCompletion: review.AvgCompletion,
+						SkipCount:     review.SkipCount,
+						UniqueTracks:  review.UniqueTracks,
+						FavoritePlays: review.FavoritePlays,
+					},
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserTotalReviewTracks",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/total-review/tracks",
+			ResponseType: GetUserTotalReviewTracks{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				tracks, page, err := app.UserService().
+					GetUserTotalReviewTracks(
+						ctx,
+						service.GetUserTotalReviewTracksParams{
+							UserId: c.Param("userId"),
+							Page:   pageParams,
+							Query:  queryParams,
+						},
+					)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserTotalReviewTracks{
+					Page:   page,
+					Tracks: make([]RankedTrack, len(tracks)),
+				}
+
+				for i, track := range tracks {
+					res.Tracks[i] = RankedTrack{
+						Track:     ConvertDBTrack(c, track.Track),
+						Rank:      track.Rank,
+						PlayCount: track.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserTotalReviewAlbums",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/total-review/albums",
+			ResponseType: GetUserTotalReviewAlbums{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				albums, page, err := app.UserService().
+					GetUserTotalReviewAlbums(
+						ctx,
+						service.GetUserTotalReviewAlbumsParams{
+							UserId: c.Param("userId"),
+							Page:   pageParams,
+							Query:  queryParams,
+						},
+					)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserTotalReviewAlbums{
+					Page:   page,
+					Albums: make([]RankedAlbum, len(albums)),
+				}
+
+				for i, album := range albums {
+					res.Albums[i] = RankedAlbum{
+						Album:     ConvertDBAlbum(c, album.Album),
+						Rank:      album.Rank,
+						PlayCount: album.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserTotalReviewArtists",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/total-review/artists",
+			ResponseType: GetUserTotalReviewArtists{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				artists, page, err := app.UserService().
+					GetUserTotalReviewArtists(
+						ctx,
+						service.GetUserTotalReviewArtistsParams{
+							UserId: c.Param("userId"),
+							Page:   pageParams,
+							Query:  queryParams,
+						},
+					)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserTotalReviewArtists{
+					Page:    page,
+					Artists: make([]RankedArtist, len(artists)),
+				}
+
+				for i, artist := range artists {
+					res.Artists[i] = RankedArtist{
+						Artist:    ConvertDBArtist(c, artist.Artist),
+						Rank:      artist.Rank,
+						PlayCount: artist.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserTotalReviewTags",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/total-review/tags",
+			ResponseType: GetUserTotalReviewTags{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				tags, page, err := app.UserService().
+					GetUserTotalReviewTags(
+						ctx,
+						service.GetUserTotalReviewTagsParams{
+							UserId: c.Param("userId"),
+							Page:   pageParams,
+							Query:  queryParams,
+						},
+					)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserTotalReviewTags{
+					Page: page,
+					Tags: make([]RankedTag, len(tags)),
+				}
+
+				for i, tag := range tags {
+					res.Tags[i] = RankedTag{
+						TagSlug:   tag.TagSlug,
+						Rank:      tag.Rank,
+						PlayCount: tag.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserTotalReviewDecades",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/total-review/decades",
+			ResponseType: GetUserTotalReviewDecades{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				q := c.Request().URL.Query()
+				ctx := c.Request().Context()
+
+				pageParams := getPageParams(q, 100)
+				queryParams := getQueryParams(q)
+
+				decades, page, err := app.UserService().
+					GetUserTotalReviewDecades(
+						ctx,
+						service.GetUserTotalReviewDecadesParams{
+							UserId: c.Param("userId"),
+							Page:   pageParams,
+							Query:  queryParams,
+						},
+					)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserTotalReviewDecades{
+					Page:    page,
+					Decades: make([]RankedDecade, len(decades)),
+				}
+
+				for i, decade := range decades {
+					res.Decades[i] = RankedDecade{
+						Decade:    decade.Decade,
+						Rank:      decade.Rank,
+						PlayCount: decade.PlayCount,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserTotalReviewMonths",
+			Method:       http.MethodGet,
+			Path:         "/users/:userId/total-review/months",
+			ResponseType: GetUserTotalReviewMonths{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := c.Request().Context()
+
+				months, err := app.UserService().GetUserTotalReviewMonths(
+					ctx,
+					service.GetUserTotalReviewMonthsParams{
+						UserId: c.Param("userId"),
+					},
+				)
+				if err != nil {
+					return nil, handleUserServiceErrors(err)
+				}
+
+				res := GetUserTotalReviewMonths{
+					Months: make([]UserTotalReviewMonth, len(months)),
+				}
+
+				for i, month := range months {
+					res.Months[i] = UserTotalReviewMonth{
+						Month:         month.Month,
+						PlayCount:     month.PlayCount,
+						PlayTime:      month.PlayTime,
+						AvgCompletion: month.AvgCompletion,
+						SkipCount:     month.SkipCount,
+						UniqueTracks:  month.UniqueTracks,
+						FavoritePlays: month.FavoritePlays,
+					}
 				}
 
 				return res, nil

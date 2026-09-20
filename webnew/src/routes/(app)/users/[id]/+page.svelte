@@ -86,18 +86,18 @@
 		<section>
 			<SectionHeader
 				count={data.topTracks.length}
-				viewAllHref="/users/{data.userData.id}/top"
+				viewAllHref="/users/{data.userData.id}/review/total/top-tracks"
 			>
 				<TrendingUp />
 				Top Tracks
 			</SectionHeader>
 
 			<div class="flex flex-col">
-				{#each data.topTracks as track, i (track.id)}
+				{#each data.topTracks as item (item.id)}
 					<TopTrackItem
-						rank={i + 1}
-						{track}
-						playCount={Math.floor(Math.random() * 1000) + 100}
+						rank={item.rank}
+						track={item}
+						playCount={item.playCount}
 					>
 						{#snippet menuItems()}
 							<DropdownMenu.Group>
@@ -115,7 +115,7 @@
 
 							<DropdownMenu.Item
 								onSelect={() => {
-									goto(`/albums/${track.albumId}`);
+									goto(`/albums/${item.albumId}`);
 								}}
 							>
 								<DiscAlbum />
@@ -127,7 +127,7 @@
 									Go to artist
 								</DropdownMenu.SubTrigger>
 								<DropdownMenu.SubContent>
-									{#each track.artists as artist (artist.id)}
+									{#each item.artists as artist (artist.id)}
 										<a
 											href="/artists/{artist.id}"
 											class="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
@@ -144,14 +144,14 @@
 							</DropdownMenu.Item>
 							<DropdownMenu.Item
 								onSelect={async () => {
-									const wasFav = favoritesManager.hasTrack(track.id);
-									await favoritesManager.toggleTrack(track.id);
+									const wasFav = favoritesManager.hasTrack(item.id);
+									await favoritesManager.toggleTrack(item.id);
 									toast.success(
 										wasFav ? "Removed from favorites" : "Added to favorites",
 									);
 								}}
 							>
-								{#if favoritesManager.hasTrack(track.id)}
+								{#if favoritesManager.hasTrack(item.id)}
 									<Heart class="fill-primary stroke-primary" />
 									Unfavorite
 								{:else}
@@ -162,8 +162,8 @@
 							{#if quickPlaylistManager.playlist !== null}
 								<DropdownMenu.Item
 									onSelect={async () => {
-										const wasIn = quickPlaylistManager.hasTrack(track.id);
-										await quickPlaylistManager.toggleTrack(track.id);
+										const wasIn = quickPlaylistManager.hasTrack(item.id);
+										await quickPlaylistManager.toggleTrack(item.id);
 										toast.success(
 											wasIn
 												? "Removed from quick playlist"
@@ -171,7 +171,7 @@
 										);
 									}}
 								>
-									{#if quickPlaylistManager.hasTrack(track.id)}
+									{#if quickPlaylistManager.hasTrack(item.id)}
 										<Star class="fill-primary stroke-primary" />
 										Remove from Quick
 									{:else}

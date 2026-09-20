@@ -39,6 +39,30 @@
 		</div>
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			<a
+				href="/users/{data.userData.id}/review/total"
+				class="group flex flex-col gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-accent hover:text-accent-foreground"
+			>
+				<div class="flex items-center gap-2">
+					<span class="text-3xl font-bold">Total</span>
+					<span
+						class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary ring-1 ring-primary/25"
+					>
+						All time
+					</span>
+					<ChevronRight
+						size={18}
+						class="ml-auto text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+					/>
+				</div>
+
+				<div class="flex flex-col gap-0.5">
+					<span class="text-sm text-muted-foreground">
+						Every play, across every year.
+					</span>
+				</div>
+			</a>
+
 			{#each reviews as review (review.year)}
 				<a
 					href="/users/{data.userData.id}/review/{review.year}"
@@ -79,4 +103,3 @@
 		</div>
 	{/if}
 </div>
-

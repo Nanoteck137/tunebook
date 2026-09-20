@@ -304,9 +304,9 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	err = app.db.GenerateUserReviewTotal(
+	err = app.db.GenerateUserTotalReview(
 		context.Background(),
-		database.GenerateUserReviewTotalParams{
+		database.GenerateUserTotalReviewParams{
 			UserId: "hmjna6kd9i",
 		},
 	)
