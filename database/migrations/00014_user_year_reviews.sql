@@ -9,8 +9,8 @@ CREATE TABLE user_year_reviews (
     unique_tracks INTEGER NOT NULL DEFAULT 0,
     favorite_plays INTEGER NOT NULL DEFAULT 0,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     PRIMARY KEY (user_id, year)
 );
@@ -23,8 +23,8 @@ CREATE TABLE user_year_review_tracks (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, track_id)
@@ -38,8 +38,8 @@ CREATE TABLE user_year_review_albums (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, album_id)
@@ -53,8 +53,8 @@ CREATE TABLE user_year_review_artists (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, artist_id)
@@ -68,8 +68,8 @@ CREATE TABLE user_year_review_tags (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, tag_slug)
@@ -83,8 +83,8 @@ CREATE TABLE user_year_review_decades (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, decade)
@@ -103,8 +103,8 @@ CREATE TABLE user_year_review_months (
     unique_tracks INTEGER NOT NULL DEFAULT 0,
     favorite_plays INTEGER NOT NULL DEFAULT 0,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, month)
@@ -119,8 +119,8 @@ CREATE TABLE user_year_review_month_tracks (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, month, track_id)
@@ -135,8 +135,8 @@ CREATE TABLE user_year_review_month_albums (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, month, album_id)
@@ -151,8 +151,8 @@ CREATE TABLE user_year_review_month_artists (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, month, artist_id)
@@ -167,8 +167,8 @@ CREATE TABLE user_year_review_month_tags (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, month, tag_slug)
@@ -183,8 +183,8 @@ CREATE TABLE user_year_review_month_decades (
     rank INTEGER NOT NULL,
     play_count INTEGER NOT NULL,
 
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     FOREIGN KEY (user_id, year) REFERENCES user_year_reviews(user_id, year) ON DELETE CASCADE,
     PRIMARY KEY (user_id, year, month, decade)

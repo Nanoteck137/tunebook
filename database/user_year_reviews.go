@@ -291,8 +291,8 @@ func (db DB) generateUserYearReviewTracks(
 		track_id, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?,
@@ -337,8 +337,8 @@ func (db DB) generateUserYearReviewMonthTracks(
 		track_id, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?,
@@ -383,8 +383,8 @@ func (db DB) generateUserYearReviewAlbums(
 		album_id, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -431,8 +431,8 @@ func (db DB) generateUserYearReviewMonthAlbums(
 		album_id, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -479,8 +479,8 @@ func (db DB) generateUserYearReviewArtists(
 		artist_id, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -527,8 +527,8 @@ func (db DB) generateUserYearReviewMonthArtists(
 		artist_id, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -575,8 +575,8 @@ func (db DB) generateUserYearReviewTags(
 		tag_slug, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -623,8 +623,8 @@ func (db DB) generateUserYearReviewMonthTags(
 		tag_slug, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -671,8 +671,8 @@ func (db DB) generateUserYearReviewDecades(
 		decade, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -719,8 +719,8 @@ func (db DB) generateUserYearReviewMonthDecades(
 		decade, 
 		rank, 
 		play_count, 
-		created_at, 
-		updated_at
+		created, 
+		updated
 	)
 		SELECT 
 			?, 
@@ -929,8 +929,8 @@ func processUserYearMonth(
 			"unique_tracks":  monthHistory.UniqueTracks,
 			"favorite_plays": monthFavorites,
 
-			"created_at": now,
-			"updated_at": now,
+			"created": now,
+			"updated": now,
 		},
 	))
 	if err != nil {
@@ -1024,8 +1024,8 @@ func (db *Database) GenerateUserReview(
 			"unique_tracks":  historySummary.UniqueTracks,
 			"favorite_plays": favorites,
 
-			"created_at": now,
-			"updated_at": now,
+			"created": now,
+			"updated": now,
 		},
 	))
 	if err != nil {
@@ -1106,8 +1106,8 @@ type UserYearReview struct {
 	UniqueTracks  int     `db:"unique_tracks"`
 	FavoritePlays int     `db:"favorite_plays"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	CreatedAt int64 `db:"created"`
+	UpdatedAt int64 `db:"updated"`
 }
 
 type GetUserYearReviewsParams struct {
@@ -1130,8 +1130,8 @@ func (db DB) GetUserYearReviews(
 			userYearReviewsTbl.Col("unique_tracks"),
 			userYearReviewsTbl.Col("favorite_plays"),
 
-			userYearReviewsTbl.Col("created_at"),
-			userYearReviewsTbl.Col("updated_at"),
+			userYearReviewsTbl.Col("created"),
+			userYearReviewsTbl.Col("updated"),
 		).
 		Where(userYearReviewsTbl.Col("user_id").Eq(params.UserId)).
 		Order(userYearReviewsTbl.Col("year").Desc())
@@ -1160,8 +1160,8 @@ func (db DB) GetUserYearReview(
 			userYearReviewsTbl.Col("unique_tracks"),
 			userYearReviewsTbl.Col("favorite_plays"),
 
-			userYearReviewsTbl.Col("created_at"),
-			userYearReviewsTbl.Col("updated_at"),
+			userYearReviewsTbl.Col("created"),
+			userYearReviewsTbl.Col("updated"),
 		).
 		Where(
 			userYearReviewsTbl.Col("user_id").Eq(params.UserId),
@@ -1492,8 +1492,8 @@ type UserYearReviewMonth struct {
 	UniqueTracks  int     `db:"unique_tracks"`
 	FavoritePlays int     `db:"favorite_plays"`
 
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
+	CreatedAt int64 `db:"created"`
+	UpdatedAt int64 `db:"updated"`
 }
 
 type GetUserYearReviewMonthsParams struct {
@@ -1519,8 +1519,8 @@ func (db DB) GetUserYearReviewMonths(
 			userYearReviewMonthsTbl.Col("unique_tracks"),
 			userYearReviewMonthsTbl.Col("favorite_plays"),
 
-			userYearReviewMonthsTbl.Col("created_at"),
-			userYearReviewMonthsTbl.Col("updated_at"),
+			userYearReviewMonthsTbl.Col("created"),
+			userYearReviewMonthsTbl.Col("updated"),
 		).
 		Where(
 			userYearReviewMonthsTbl.Col("user_id").Eq(params.UserId),
@@ -1557,8 +1557,8 @@ func (db DB) GetUserYearReviewMonth(
 			userYearReviewMonthsTbl.Col("unique_tracks"),
 			userYearReviewMonthsTbl.Col("favorite_plays"),
 
-			userYearReviewMonthsTbl.Col("created_at"),
-			userYearReviewMonthsTbl.Col("updated_at"),
+			userYearReviewMonthsTbl.Col("created"),
+			userYearReviewMonthsTbl.Col("updated"),
 		).
 		Where(
 			userYearReviewMonthsTbl.Col("user_id").Eq(params.UserId),
