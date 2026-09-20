@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -250,146 +249,6 @@ func UserYearReviewMonthDecadeSchema() *schema.Schema {
 		)
 }
 
-type UserYearReview struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-
-	TrackCount    int   `db:"track_count"`
-	ListeningTime int64 `db:"listening_time"`
-
-	AvgCompletion float64 `db:"avg_completion"`
-	SkipCount     int     `db:"skip_count"`
-	UniqueTracks  int     `db:"unique_tracks"`
-	FavoritePlays int     `db:"favorite_plays"`
-
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
-}
-
-type UserYearReviewTag struct {
-	UserId  string `db:"user_id"`
-	Year    int    `db:"year"`
-	TagSlug string `db:"tag_slug"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewDecade struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Decade int    `db:"decade"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewTrack struct {
-	Track
-
-	UserId  string `db:"user_id"`
-	Year    int    `db:"year"`
-	TrackId string `db:"track_id"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewAlbum struct {
-	Album
-
-	UserId  string `db:"user_id"`
-	Year    int    `db:"year"`
-	AlbumId string `db:"album_id"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewArtist struct {
-	Artist
-
-	UserId   string `db:"user_id"`
-	Year     int    `db:"year"`
-	ArtistId string `db:"artist_id"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewMonth struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Month  int    `db:"month"`
-
-	PlayCount int   `db:"play_count"`
-	PlayTime  int64 `db:"play_time"`
-
-	AvgCompletion float64 `db:"avg_completion"`
-	SkipCount     int     `db:"skip_count"`
-	UniqueTracks  int     `db:"unique_tracks"`
-	FavoritePlays int     `db:"favorite_plays"`
-
-	CreatedAt int64 `db:"created_at"`
-	UpdatedAt int64 `db:"updated_at"`
-}
-
-type UserYearReviewMonthTrack struct {
-	Track
-
-	UserId  string `db:"user_id"`
-	Year    int    `db:"year"`
-	Month   int    `db:"month"`
-	TrackId string `db:"track_id"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewMonthAlbum struct {
-	Album
-
-	UserId  string `db:"user_id"`
-	Year    int    `db:"year"`
-	Month   int    `db:"month"`
-	AlbumId string `db:"album_id"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewMonthArtist struct {
-	Artist
-
-	UserId   string `db:"user_id"`
-	Year     int    `db:"year"`
-	Month    int    `db:"month"`
-	ArtistId string `db:"artist_id"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewMonthTag struct {
-	UserId  string `db:"user_id"`
-	Year    int    `db:"year"`
-	Month   int    `db:"month"`
-	TagSlug string `db:"tag_slug"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
-type UserYearReviewMonthDecade struct {
-	UserId string `db:"user_id"`
-	Year   int    `db:"year"`
-	Month  int    `db:"month"`
-	Decade int    `db:"decade"`
-
-	Rank      int `db:"rank"`
-	PlayCount int `db:"play_count"`
-}
-
 type UserYearSummary struct {
 	TrackCount    int   `db:"track_count"`
 	ListeningTime int64 `db:"listening_time"`
@@ -419,58 +278,29 @@ func (db DB) GetUserYearSummary(
 	return Single[UserYearSummary](db, ctx, query)
 }
 
-func userYearReviewTracksInsertQuery(
-	userId string,
-	year int,
-	month int,
-	now int64,
-) RawQuery {
-	table := "user_year_review_tracks"
-	monthCol := ""
-	monthSelect := ""
-	periodType := "year"
-	periodClause := ""
-	periodParams := []any{}
-	if month != 0 {
-		table = "user_year_review_month_tracks"
-		monthCol = ", month"
-		monthSelect = ", ?"
-		periodType = "month"
-		periodClause = " AND user_track_stats.period_value = ?"
-		periodParams = []any{month}
-	}
-
-	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, track_id, rank, play_count, created_at, updated_at)
-SELECT ?, ?%s, user_track_stats.track_id,
-       ROW_NUMBER() OVER (ORDER BY user_track_stats.play_count DESC, user_track_stats.track_id ASC),
-       user_track_stats.play_count, ?, ?
-FROM user_track_stats
-WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s`,
-		table, monthCol, monthSelect, periodType, periodClause)
-
-	params := []any{userId, year}
-	params = append(params, periodParams...)
-	params = append(params, now, now, userId, year)
-	params = append(params, periodParams...)
-
-	return RawQuery{Query: q, Params: params}
-}
-
 func (db DB) generateUserYearReviewTracks(
 	ctx context.Context,
 	userId string,
 	year int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_tracks (user_id, year, track_id, rank, play_count, created_at, updated_at)
+	query := `
+	INSERT INTO user_year_review_tracks (
+		user_id, 
+		year, 
+		track_id, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
 		SELECT 
 			?,
 			?,
 			user_track_stats.track_id,
 			ROW_NUMBER() OVER (
 				ORDER BY user_track_stats.play_count DESC, 
-				user_track_stats.track_id ASC
+					user_track_stats.track_id ASC
 			),
 			user_track_stats.play_count,
 			?,
@@ -484,7 +314,7 @@ func (db DB) generateUserYearReviewTracks(
 
 	params := []any{userId, year, now, now, userId, year}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
@@ -499,8 +329,17 @@ func (db DB) generateUserYearReviewMonthTracks(
 	month int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_month_tracks (user_id, year, month, track_id, rank, play_count, created_at, updated_at)
+	query := `
+	INSERT INTO user_year_review_month_tracks (
+		user_id, 
+		year, 
+		month, 
+		track_id, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
 		SELECT 
 			?,
 			?,
@@ -508,7 +347,7 @@ func (db DB) generateUserYearReviewMonthTracks(
 			user_track_stats.track_id,
 			ROW_NUMBER() OVER (
 				ORDER BY user_track_stats.play_count DESC,
-				user_track_stats.track_id ASC
+					user_track_stats.track_id ASC
 			),
 			user_track_stats.play_count,
 			?,
@@ -523,52 +362,12 @@ func (db DB) generateUserYearReviewMonthTracks(
 
 	params := []any{userId, year, month, now, now, userId, year, month}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func userYearReviewAlbumsInsertQuery(
-	userId string,
-	year int,
-	month int,
-	now int64,
-) RawQuery {
-	table := "user_year_review_albums"
-	monthCol := ""
-	monthSelect := ""
-	periodType := "year"
-	periodClause := ""
-	periodParams := []any{}
-	if month != 0 {
-		table = "user_year_review_month_albums"
-		monthCol = ", month"
-		monthSelect = ", ?"
-		periodType = "month"
-		periodClause = " AND user_track_stats.period_value = ?"
-		periodParams = []any{month}
-	}
-
-	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, album_id, rank, play_count, created_at, updated_at)
-SELECT ?, ?%s, albums.id,
-       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, albums.id ASC),
-       SUM(user_track_stats.play_count), ?, ?
-FROM user_track_stats
-JOIN tracks ON tracks.id = user_track_stats.track_id
-JOIN albums ON albums.id = tracks.album_id
-WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
-GROUP BY albums.id`,
-		table, monthCol, monthSelect, periodType, periodClause)
-
-	params := []any{userId, year}
-	params = append(params, periodParams...)
-	params = append(params, now, now, userId, year)
-	params = append(params, periodParams...)
-
-	return RawQuery{Query: q, Params: params}
 }
 
 func (db DB) generateUserYearReviewAlbums(
@@ -577,8 +376,16 @@ func (db DB) generateUserYearReviewAlbums(
 	year int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_albums (user_id, year, album_id, rank, play_count, created_at, updated_at)
+	query := `
+	INSERT INTO user_year_review_albums (
+		user_id, 
+		year, 
+		album_id, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
 		SELECT 
 			?, 
 			?, 
@@ -601,7 +408,7 @@ func (db DB) generateUserYearReviewAlbums(
 
 	params := []any{userId, year, now, now, userId, year}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
@@ -616,8 +423,17 @@ func (db DB) generateUserYearReviewMonthAlbums(
 	month int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_month_albums (user_id, year, month, album_id, rank, play_count, created_at, updated_at)
+	query := `
+	INSERT INTO user_year_review_month_albums (
+		user_id, 
+		year, 
+		month, 
+		album_id, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
 		SELECT 
 			?, 
 			?, 
@@ -642,7 +458,7 @@ func (db DB) generateUserYearReviewMonthAlbums(
 
 	params := []any{userId, year, month, now, now, userId, year, month}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
@@ -650,44 +466,100 @@ func (db DB) generateUserYearReviewMonthAlbums(
 	return nil
 }
 
-func userYearReviewTagsInsertQuery(
+func (db DB) generateUserYearReviewArtists(
+	ctx context.Context,
+	userId string,
+	year int,
+	now int64,
+) error {
+	query := `
+	INSERT INTO user_year_review_artists (
+		user_id, 
+		year, 
+		artist_id, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
+		SELECT 
+			?, 
+			?, 
+			artists.id,
+			ROW_NUMBER() OVER (
+				ORDER BY SUM(user_track_stats.play_count) DESC, 
+					artists.id ASC
+			),
+			SUM(user_track_stats.play_count), 
+			?, 
+			?
+		FROM user_track_stats
+		JOIN tracks ON tracks.id = user_track_stats.track_id
+		JOIN artists ON artists.id = tracks.artist_id
+		WHERE user_track_stats.user_id = ? AND 
+			user_track_stats.period_type = 'year' AND 
+			user_track_stats.year = ?
+		GROUP BY artists.id
+	`
+
+	params := []any{userId, year, now, now, userId, year}
+
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db DB) generateUserYearReviewMonthArtists(
+	ctx context.Context,
 	userId string,
 	year int,
 	month int,
 	now int64,
-) RawQuery {
-	table := "user_year_review_tags"
-	monthCol := ""
-	monthSelect := ""
-	periodType := "year"
-	periodClause := ""
-	periodParams := []any{}
-	if month != 0 {
-		table = "user_year_review_month_tags"
-		monthCol = ", month"
-		monthSelect = ", ?"
-		periodType = "month"
-		periodClause = " AND user_track_stats.period_value = ?"
-		periodParams = []any{month}
+) error {
+	query := `
+	INSERT INTO user_year_review_month_artists (
+		user_id, 
+		year, 
+		month, 
+		artist_id, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
+		SELECT 
+			?, 
+			?, 
+			?, 
+			artists.id,
+			ROW_NUMBER() OVER (
+				ORDER BY SUM(user_track_stats.play_count) DESC,
+					artists.id ASC
+			),
+			SUM(user_track_stats.play_count), 
+			?, 
+			?
+		FROM user_track_stats
+		JOIN tracks ON tracks.id = user_track_stats.track_id
+		JOIN artists ON artists.id = tracks.artist_id
+		WHERE user_track_stats.user_id = ? AND 
+			user_track_stats.period_type = 'month' AND 
+			user_track_stats.year = ? AND 
+			user_track_stats.period_value = ?
+		GROUP BY artists.id
+	`
+
+	params := []any{userId, year, month, now, now, userId, year, month}
+
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
+	if err != nil {
+		return err
 	}
 
-	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, tag_slug, rank, play_count, created_at, updated_at)
-SELECT ?, ?%s, tags.slug,
-       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, tags.slug ASC),
-       SUM(user_track_stats.play_count), ?, ?
-FROM user_track_stats
-JOIN tracks_tags ON tracks_tags.track_id = user_track_stats.track_id
-JOIN tags ON tags.slug = tracks_tags.tag_slug
-WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
-GROUP BY tags.slug`,
-		table, monthCol, monthSelect, periodType, periodClause)
-
-	params := []any{userId, year}
-	params = append(params, periodParams...)
-	params = append(params, now, now, userId, year)
-	params = append(params, periodParams...)
-
-	return RawQuery{Query: q, Params: params}
+	return nil
 }
 
 func (db DB) generateUserYearReviewTags(
@@ -696,8 +568,16 @@ func (db DB) generateUserYearReviewTags(
 	year int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_tags (user_id, year, tag_slug, rank, play_count, created_at, updated_at)
+	query := `
+	INSERT INTO user_year_review_tags (
+		user_id, 
+		year, 
+		tag_slug, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
 		SELECT 
 			?, 
 			?, 
@@ -720,7 +600,7 @@ func (db DB) generateUserYearReviewTags(
 
 	params := []any{userId, year, now, now, userId, year}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
@@ -735,66 +615,47 @@ func (db DB) generateUserYearReviewMonthTags(
 	month int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_month_tags (user_id, year, month, tag_slug, rank, play_count, created_at, updated_at)
-		SELECT ?, ?, ?, tags.slug,
-			   ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, tags.slug ASC),
-			   SUM(user_track_stats.play_count), ?, ?
+	query := `
+	INSERT INTO user_year_review_month_tags (
+		user_id, 
+		year, 
+		month, 
+		tag_slug, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
+		SELECT 
+			?, 
+			?, 
+			?, 
+			tags.slug,
+			ROW_NUMBER() OVER (
+				ORDER BY SUM(user_track_stats.play_count) DESC, 
+					tags.slug ASC
+			),
+			SUM(user_track_stats.play_count), 
+			?, 
+			?
 		FROM user_track_stats
 		JOIN tracks_tags ON tracks_tags.track_id = user_track_stats.track_id
 		JOIN tags ON tags.slug = tracks_tags.tag_slug
-		WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = 'month' AND user_track_stats.year = ? AND user_track_stats.period_value = ?
+		WHERE user_track_stats.user_id = ? AND 
+			user_track_stats.period_type = 'month' AND 
+			user_track_stats.year = ? AND 
+			user_track_stats.period_value = ?
 		GROUP BY tags.slug
 	`
 
 	params := []any{userId, year, month, now, now, userId, year, month}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func userYearReviewDecadesInsertQuery(
-	userId string,
-	year int,
-	month int,
-	now int64,
-) RawQuery {
-	table := "user_year_review_decades"
-	monthCol := ""
-	monthSelect := ""
-	periodType := "year"
-	periodClause := ""
-	periodParams := []any{}
-	if month != 0 {
-		table = "user_year_review_month_decades"
-		monthCol = ", month"
-		monthSelect = ", ?"
-		periodType = "month"
-		periodClause = " AND user_track_stats.period_value = ?"
-		periodParams = []any{month}
-	}
-
-	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, decade, rank, play_count, created_at, updated_at)
-SELECT ?, ?%s, tracks.year - tracks.year %% 10,
-       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, tracks.year - tracks.year %% 10 ASC),
-       SUM(user_track_stats.play_count), ?, ?
-FROM user_track_stats
-JOIN tracks ON tracks.id = user_track_stats.track_id
-WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
-  AND tracks.year IS NOT NULL
-GROUP BY tracks.year - tracks.year %% 10`,
-		table, monthCol, monthSelect, periodType, periodClause)
-
-	params := []any{userId, year}
-	params = append(params, periodParams...)
-	params = append(params, now, now, userId, year)
-	params = append(params, periodParams...)
-
-	return RawQuery{Query: q, Params: params}
 }
 
 func (db DB) generateUserYearReviewDecades(
@@ -803,8 +664,16 @@ func (db DB) generateUserYearReviewDecades(
 	year int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_decades (user_id, year, decade, rank, play_count, created_at, updated_at)
+	query := `
+	INSERT INTO user_year_review_decades (
+		user_id, 
+		year, 
+		decade, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
 		SELECT 
 			?, 
 			?, 
@@ -827,7 +696,7 @@ func (db DB) generateUserYearReviewDecades(
 
 	params := []any{userId, year, now, now, userId, year}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
@@ -842,8 +711,17 @@ func (db DB) generateUserYearReviewMonthDecades(
 	month int,
 	now int64,
 ) error {
-	q := `
-	INSERT INTO user_year_review_month_decades (user_id, year, month, decade, rank, play_count, created_at, updated_at)
+	query := `
+	INSERT INTO user_year_review_month_decades (
+		user_id, 
+		year, 
+		month, 
+		decade, 
+		rank, 
+		play_count, 
+		created_at, 
+		updated_at
+	)
 		SELECT 
 			?, 
 			?, 
@@ -868,123 +746,7 @@ func (db DB) generateUserYearReviewMonthDecades(
 
 	params := []any{userId, year, month, now, now, userId, year, month}
 
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func userYearReviewArtistsInsertQuery(
-	userId string,
-	year int,
-	month int,
-	now int64,
-) RawQuery {
-	table := "user_year_review_artists"
-	monthCol := ""
-	monthSelect := ""
-	periodType := "year"
-	periodClause := ""
-	periodParams := []any{}
-	if month != 0 {
-		table = "user_year_review_month_artists"
-		monthCol = ", month"
-		monthSelect = ", ?"
-		periodType = "month"
-		periodClause = " AND user_track_stats.period_value = ?"
-		periodParams = []any{month}
-	}
-
-	q := fmt.Sprintf(`INSERT INTO %s (user_id, year%s, artist_id, rank, play_count, created_at, updated_at)
-SELECT ?, ?%s, artists.id,
-       ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, artists.id ASC),
-       SUM(user_track_stats.play_count), ?, ?
-FROM user_track_stats
-JOIN tracks ON tracks.id = user_track_stats.track_id
-JOIN artists ON artists.id = tracks.artist_id
-WHERE user_track_stats.user_id = ? AND user_track_stats.period_type = '%s' AND user_track_stats.year = ?%s
-GROUP BY artists.id`,
-		table, monthCol, monthSelect, periodType, periodClause)
-
-	params := []any{userId, year}
-	params = append(params, periodParams...)
-	params = append(params, now, now, userId, year)
-	params = append(params, periodParams...)
-
-	return RawQuery{Query: q, Params: params}
-}
-
-func (db DB) generateUserYearReviewArtists(
-	ctx context.Context,
-	userId string,
-	year int,
-	now int64,
-) error {
-	q := `
-	INSERT INTO user_year_review_artists (user_id, year, artist_id, rank, play_count, created_at, updated_at)
-		SELECT 
-			?, 
-			?, 
-			artists.id,
-			ROW_NUMBER() OVER (ORDER BY SUM(user_track_stats.play_count) DESC, artists.id ASC),
-			SUM(user_track_stats.play_count), 
-			?, 
-			?
-		FROM user_track_stats
-		JOIN tracks ON tracks.id = user_track_stats.track_id
-		JOIN artists ON artists.id = tracks.artist_id
-		WHERE user_track_stats.user_id = ? AND 
-			user_track_stats.period_type = 'year' AND 
-			user_track_stats.year = ?
-		GROUP BY artists.id
-	`
-
-	params := []any{userId, year, now, now, userId, year}
-
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db DB) generateUserYearReviewMonthArtists(
-	ctx context.Context,
-	userId string,
-	year int,
-	month int,
-	now int64,
-) error {
-	q := `
-	INSERT INTO user_year_review_month_artists (user_id, year, month, artist_id, rank, play_count, created_at, updated_at)
-		SELECT 
-			?, 
-			?, 
-			?, 
-			artists.id,
-			ROW_NUMBER() OVER (
-				ORDER BY SUM(user_track_stats.play_count) DESC,
-				artists.id ASC
-			),
-			SUM(user_track_stats.play_count), 
-			?, 
-			?
-		FROM user_track_stats
-		JOIN tracks ON tracks.id = user_track_stats.track_id
-		JOIN artists ON artists.id = tracks.artist_id
-		WHERE user_track_stats.user_id = ? AND 
-			user_track_stats.period_type = 'month' AND 
-			user_track_stats.year = ? AND 
-			user_track_stats.period_value = ?
-		GROUP BY artists.id
-	`
-
-	params := []any{userId, year, month, now, now, userId, year, month}
-
-	_, err := db.Exec(ctx, RawQuery{Query: q, Params: params})
+	_, err := db.Exec(ctx, RawQuery{Query: query, Params: params})
 	if err != nil {
 		return err
 	}
@@ -1004,13 +766,23 @@ func (db DB) GetUserYearHistorySummary(
 	year int,
 ) (UserYearHistorySummary, error) {
 	query := `
-SELECT ROUND(COALESCE(CAST(SUM(completion_sum) AS REAL) / SUM(play_count), 0), 1) AS avg_completion,
-       COALESCE(SUM(skip_count), 0) AS skip_count,
-       COALESCE(COUNT(DISTINCT track_id), 0) AS unique_tracks
-FROM user_track_stats
-WHERE user_id = ?
-  AND period_type = 'year'
-  AND year = ?`
+	SELECT 
+		ROUND(
+			COALESCE(
+				CAST(SUM(s.completion_sum) AS REAL) / SUM(s.play_count), 0
+			), 1
+		) AS avg_completion,
+		COALESCE(
+			SUM(s.skip_count), 0
+		) AS skip_count,
+		COALESCE(
+			COUNT(DISTINCT s.track_id), 0
+		) AS unique_tracks
+	FROM user_track_stats s
+	WHERE s.user_id = ? AND 
+		s.period_type = 'year' AND 
+		s.year = ?
+  	`
 
 	return Single[UserYearHistorySummary](db, ctx, RawQuery{
 		Query:  query,
@@ -1018,24 +790,22 @@ WHERE user_id = ?
 	})
 }
 
-type UserYearFavoritePlays struct {
-	PlayCount int `db:"play_count"`
-}
-
 func (db DB) GetUserYearFavoritePlays(
 	ctx context.Context,
 	userId string,
 	year int,
-) (UserYearFavoritePlays, error) {
+) (int, error) {
 	query := `
-SELECT COALESCE(SUM(s.play_count), 0) AS play_count
-FROM user_track_stats s
-JOIN user_favorites f ON f.user_id = s.user_id AND f.track_id = s.track_id
-WHERE s.user_id = ?
-  AND s.period_type = 'year'
-  AND s.year = ?`
+	SELECT 
+		COALESCE(SUM(s.play_count), 0)
+	FROM user_track_stats s
+	JOIN user_favorites f ON f.user_id = s.user_id AND f.track_id = s.track_id
+	WHERE s.user_id = ? AND 
+		s.period_type = 'year' AND 
+		s.year = ?
+  	`
 
-	return Single[UserYearFavoritePlays](db, ctx, RawQuery{
+	return Single[int](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, year},
 	})
@@ -1066,33 +836,6 @@ func (db DB) GetUserYearMonthSummary(
 	return Single[UserYearSummary](db, ctx, query)
 }
 
-func (db DB) GetUserYearMonthSummaryTotal(
-	ctx context.Context,
-	userId string,
-	month int,
-) (UserYearSummary, error) {
-	query := dialect.From(userTrackStatsTbl).
-		Select(
-			goqu.COALESCE(
-				goqu.SUM(userTrackStatsTbl.Col("play_count")), 0,
-			).As("track_count"),
-			goqu.COALESCE(
-				goqu.SUM(userTrackStatsTbl.Col("play_time")), 0,
-			).As("listening_time"),
-		).
-		Where(
-			userTrackStatsTbl.Col("user_id").Eq(userId),
-			userTrackStatsTbl.Col("period_type").Eq("month"),
-			// userTrackStatsTbl.Col("year").Eq(year),
-			userTrackStatsTbl.Col("period_value").Eq(month),
-		)
-		// GroupBy(
-		// 	userTrackStatsTbl.Col("track_id"),
-		// )
-
-	return Single[UserYearSummary](db, ctx, query)
-}
-
 func (db DB) GetUserYearMonthHistorySummary(
 	ctx context.Context,
 	userId string,
@@ -1100,14 +843,24 @@ func (db DB) GetUserYearMonthHistorySummary(
 	month int,
 ) (UserYearHistorySummary, error) {
 	query := `
-SELECT ROUND(COALESCE(CAST(SUM(completion_sum) AS REAL) / SUM(play_count), 0), 1) AS avg_completion,
-       COALESCE(SUM(skip_count), 0) AS skip_count,
-       COALESCE(COUNT(DISTINCT track_id), 0) AS unique_tracks
-FROM user_track_stats
-WHERE user_id = ?
-  AND period_type = 'month'
-  AND year = ?
-  AND period_value = ?`
+	SELECT 
+		ROUND(
+			COALESCE(
+				CAST(SUM(completion_sum) AS REAL) / SUM(play_count), 0
+			), 1
+		) AS avg_completion,
+		COALESCE(
+			SUM(skip_count), 0
+		) AS skip_count,
+		COALESCE(
+			COUNT(DISTINCT track_id), 0
+		) AS unique_tracks
+	FROM user_track_stats
+	WHERE user_id = ? AND 
+		period_type = 'month' AND 
+		year = ? AND 
+		period_value = ?
+  	`
 
 	return Single[UserYearHistorySummary](db, ctx, RawQuery{
 		Query:  query,
@@ -1120,58 +873,21 @@ func (db DB) GetUserYearMonthFavoritePlays(
 	userId string,
 	year int,
 	month int,
-) (UserYearFavoritePlays, error) {
+) (int, error) {
 	query := `
-SELECT COALESCE(SUM(s.play_count), 0) AS play_count
-FROM user_track_stats s
-JOIN user_favorites f ON f.user_id = s.user_id AND f.track_id = s.track_id
-WHERE s.user_id = ?
-  AND s.period_type = 'month'
-  AND s.year = ?
-  AND s.period_value = ?`
+	SELECT 
+		COALESCE(SUM(s.play_count), 0)
+	FROM user_track_stats s
+	JOIN user_favorites f ON f.user_id = s.user_id AND f.track_id = s.track_id
+	WHERE s.user_id = ? AND 
+		s.period_type = 'month' AND 
+		s.year = ? AND 
+		s.period_value = ?
+  	`
 
-	return Single[UserYearFavoritePlays](db, ctx, RawQuery{
+	return Single[int](db, ctx, RawQuery{
 		Query:  query,
 		Params: []any{userId, year, month},
-	})
-}
-
-func (db DB) GetUserYearMonthHistorySummaryTotal(
-	ctx context.Context,
-	userId string,
-	month int,
-) (UserYearHistorySummary, error) {
-	query := `
-SELECT ROUND(COALESCE(CAST(SUM(completion_sum) AS REAL) / SUM(play_count), 0), 1) AS avg_completion,
-       COALESCE(SUM(skip_count), 0) AS skip_count,
-       COALESCE(COUNT(DISTINCT track_id), 0) AS unique_tracks
-FROM user_track_stats
-WHERE user_id = ?
-  AND period_type = 'month'
-  AND period_value = ?`
-
-	return Single[UserYearHistorySummary](db, ctx, RawQuery{
-		Query:  query,
-		Params: []any{userId, month},
-	})
-}
-
-func (db DB) GetUserYearMonthFavoritePlaysTotal(
-	ctx context.Context,
-	userId string,
-	month int,
-) (UserYearFavoritePlays, error) {
-	query := `
-SELECT COALESCE(SUM(s.play_count), 0) AS play_count
-FROM user_track_stats s
-JOIN user_favorites f ON f.user_id = s.user_id AND f.track_id = s.track_id
-WHERE s.user_id = ?
-  AND s.period_type = 'month'
-  AND s.period_value = ?`
-
-	return Single[UserYearFavoritePlays](db, ctx, RawQuery{
-		Query:  query,
-		Params: []any{userId, month},
 	})
 }
 
@@ -1189,30 +905,34 @@ func processUserYearMonth(
 		return err
 	}
 
-	monthHistory, err := tx.GetUserYearMonthHistorySummary(ctx, userId, year, month)
+	monthHistory, err := tx.GetUserYearMonthHistorySummary(
+		ctx, userId, year, month)
 	if err != nil {
 		return err
 	}
 
-	monthFavorites, err := tx.GetUserYearMonthFavoritePlays(ctx, userId, year, month)
+	monthFavorites, err := tx.GetUserYearMonthFavoritePlays(
+		ctx, userId, year, month)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthsTbl).Rows(goqu.Record{
-		"user_id":        userId,
-		"year":           year,
-		"month":          month,
-		"play_count":     monthSummary.TrackCount,
-		"play_time":      monthSummary.ListeningTime,
-		"avg_completion": monthHistory.AvgCompletion,
-		"skip_count":     monthHistory.SkipCount,
-		"unique_tracks":  monthHistory.UniqueTracks,
-		"favorite_plays": monthFavorites.PlayCount,
+	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewMonthsTbl).Rows(
+		goqu.Record{
+			"user_id":        userId,
+			"year":           year,
+			"month":          month,
+			"play_count":     monthSummary.TrackCount,
+			"play_time":      monthSummary.ListeningTime,
+			"avg_completion": monthHistory.AvgCompletion,
+			"skip_count":     monthHistory.SkipCount,
+			"unique_tracks":  monthHistory.UniqueTracks,
+			"favorite_plays": monthFavorites,
 
-		"created_at": now,
-		"updated_at": now,
-	}))
+			"created_at": now,
+			"updated_at": now,
+		},
+	))
 	if err != nil {
 		return err
 	}
@@ -1293,50 +1013,58 @@ func (db *Database) GenerateUserReview(
 		return err
 	}
 
-	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewsTbl).Rows(goqu.Record{
-		"user_id":        params.UserId,
-		"year":           params.Year,
-		"track_count":    summary.TrackCount,
-		"listening_time": summary.ListeningTime,
-		"avg_completion": historySummary.AvgCompletion,
-		"skip_count":     historySummary.SkipCount,
-		"unique_tracks":  historySummary.UniqueTracks,
-		"favorite_plays": favorites.PlayCount,
+	_, err = tx.Exec(ctx, dialect.Insert(userYearReviewsTbl).Rows(
+		goqu.Record{
+			"user_id":        params.UserId,
+			"year":           params.Year,
+			"track_count":    summary.TrackCount,
+			"listening_time": summary.ListeningTime,
+			"avg_completion": historySummary.AvgCompletion,
+			"skip_count":     historySummary.SkipCount,
+			"unique_tracks":  historySummary.UniqueTracks,
+			"favorite_plays": favorites,
 
-		"created_at": now,
-		"updated_at": now,
-	}))
+			"created_at": now,
+			"updated_at": now,
+		},
+	))
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewTracks(ctx, params.UserId, params.Year, now)
+	err = tx.generateUserYearReviewTracks(
+		ctx, params.UserId, params.Year, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewAlbums(ctx, params.UserId, params.Year, now)
+	err = tx.generateUserYearReviewAlbums(
+		ctx, params.UserId, params.Year, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewArtists(ctx, params.UserId, params.Year, now)
+	err = tx.generateUserYearReviewArtists(
+		ctx, params.UserId, params.Year, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewTags(ctx, params.UserId, params.Year, now)
+	err = tx.generateUserYearReviewTags(
+		ctx, params.UserId, params.Year, now)
 	if err != nil {
 		return err
 	}
 
-	err = tx.generateUserYearReviewDecades(ctx, params.UserId, params.Year, now)
+	err = tx.generateUserYearReviewDecades(
+		ctx, params.UserId, params.Year, now)
 	if err != nil {
 		return err
 	}
 
 	for m := 1; m <= 12; m++ {
-		err := processUserYearMonth(tx.DB, ctx, params.UserId, params.Year, m, now)
+		err := processUserYearMonth(
+			tx.DB, ctx, params.UserId, params.Year, m, now)
 		if err != nil {
 			return err
 		}
@@ -1364,6 +1092,22 @@ func (db DB) GetUserStatsYears(
 		Order(userTrackStatsTbl.Col("year").Desc())
 
 	return Multiple[int](db, ctx, query)
+}
+
+type UserYearReview struct {
+	UserId string `db:"user_id"`
+	Year   int    `db:"year"`
+
+	TrackCount    int   `db:"track_count"`
+	ListeningTime int64 `db:"listening_time"`
+
+	AvgCompletion float64 `db:"avg_completion"`
+	SkipCount     int     `db:"skip_count"`
+	UniqueTracks  int     `db:"unique_tracks"`
+	FavoritePlays int     `db:"favorite_plays"`
+
+	CreatedAt int64 `db:"created_at"`
+	UpdatedAt int64 `db:"updated_at"`
 }
 
 type GetUserYearReviewsParams struct {
@@ -1427,6 +1171,17 @@ func (db DB) GetUserYearReview(
 	return Single[UserYearReview](db, ctx, query)
 }
 
+type UserYearReviewTrack struct {
+	Track
+
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	TrackId string `db:"track_id"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
+}
+
 type GetUserYearReviewTracksParams struct {
 	UserId string
 	Year   int
@@ -1477,6 +1232,17 @@ func (db DB) GetUserYearReviewTracks(
 	}
 
 	return items, page, nil
+}
+
+type UserYearReviewAlbum struct {
+	Album
+
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	AlbumId string `db:"album_id"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type GetUserYearReviewAlbumsParams struct {
@@ -1531,6 +1297,17 @@ func (db DB) GetUserYearReviewAlbums(
 	return items, page, nil
 }
 
+type UserYearReviewArtist struct {
+	Artist
+
+	UserId   string `db:"user_id"`
+	Year     int    `db:"year"`
+	ArtistId string `db:"artist_id"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
+}
+
 type GetUserYearReviewArtistsParams struct {
 	UserId string
 	Year   int
@@ -1556,7 +1333,10 @@ func (db DB) GetUserYearReviewArtists(
 		).
 		Join(
 			userYearReviewArtistsTbl,
-			goqu.On(userYearReviewArtistsTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
+			goqu.On(
+				userYearReviewArtistsTbl.Col("artist_id").
+					Eq(artistsTbl.Col("id")),
+			),
 		).
 		Where(
 			userYearReviewArtistsTbl.Col("user_id").Eq(params.UserId),
@@ -1581,6 +1361,15 @@ func (db DB) GetUserYearReviewArtists(
 	}
 
 	return items, page, nil
+}
+
+type UserYearReviewTag struct {
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	TagSlug string `db:"tag_slug"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type GetUserYearReviewTagsParams struct {
@@ -1616,7 +1405,8 @@ func (db DB) GetUserYearReviewTags(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db, params.Page, query, userYearReviewTagsTbl.Col("tag_slug"))
+	page, err := buildPage(
+		ctx, db, params.Page, query, userYearReviewTagsTbl.Col("tag_slug"))
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -1629,6 +1419,15 @@ func (db DB) GetUserYearReviewTags(
 	}
 
 	return items, page, nil
+}
+
+type UserYearReviewDecade struct {
+	UserId string `db:"user_id"`
+	Year   int    `db:"year"`
+	Decade int    `db:"decade"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type GetUserYearReviewDecadesParams struct {
@@ -1664,7 +1463,8 @@ func (db DB) GetUserYearReviewDecades(
 		return nil, types.Page{}, err
 	}
 
-	page, err := buildPage(ctx, db, params.Page, query, userYearReviewDecadesTbl.Col("decade"))
+	page, err := buildPage(
+		ctx, db, params.Page, query, userYearReviewDecadesTbl.Col("decade"))
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -1677,6 +1477,23 @@ func (db DB) GetUserYearReviewDecades(
 	}
 
 	return items, page, nil
+}
+
+type UserYearReviewMonth struct {
+	UserId string `db:"user_id"`
+	Year   int    `db:"year"`
+	Month  int    `db:"month"`
+
+	PlayCount int   `db:"play_count"`
+	PlayTime  int64 `db:"play_time"`
+
+	AvgCompletion float64 `db:"avg_completion"`
+	SkipCount     int     `db:"skip_count"`
+	UniqueTracks  int     `db:"unique_tracks"`
+	FavoritePlays int     `db:"favorite_plays"`
+
+	CreatedAt int64 `db:"created_at"`
+	UpdatedAt int64 `db:"updated_at"`
 }
 
 type GetUserYearReviewMonthsParams struct {
@@ -1755,6 +1572,18 @@ func (db DB) GetUserYearReviewMonth(
 	return Single[UserYearReviewMonth](db, ctx, query)
 }
 
+type UserYearReviewMonthTrack struct {
+	Track
+
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	Month   int    `db:"month"`
+	TrackId string `db:"track_id"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
+}
+
 type GetUserYearReviewMonthTracksParams struct {
 	UserId string
 	Year   int
@@ -1782,7 +1611,10 @@ func (db DB) GetUserYearReviewMonthTracks(
 		).
 		Join(
 			userYearReviewMonthTracksTbl,
-			goqu.On(userYearReviewMonthTracksTbl.Col("track_id").Eq(tracksTbl.Col("id"))),
+			goqu.On(
+				userYearReviewMonthTracksTbl.Col("track_id").
+					Eq(tracksTbl.Col("id")),
+			),
 		).
 		Where(
 			userYearReviewMonthTracksTbl.Col("user_id").Eq(params.UserId),
@@ -1790,7 +1622,8 @@ func (db DB) GetUserYearReviewMonthTracks(
 			userYearReviewMonthTracksTbl.Col("month").Eq(params.Month),
 		)
 
-	query, err = ApplyQuery(query, userYearReviewMonthTrackSchema, params.Query)
+	query, err = ApplyQuery(
+		query, userYearReviewMonthTrackSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -1808,6 +1641,18 @@ func (db DB) GetUserYearReviewMonthTracks(
 	}
 
 	return items, page, nil
+}
+
+type UserYearReviewMonthAlbum struct {
+	Album
+
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	Month   int    `db:"month"`
+	AlbumId string `db:"album_id"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type GetUserYearReviewMonthAlbumsParams struct {
@@ -1837,7 +1682,10 @@ func (db DB) GetUserYearReviewMonthAlbums(
 		).
 		Join(
 			userYearReviewMonthAlbumsTbl,
-			goqu.On(userYearReviewMonthAlbumsTbl.Col("album_id").Eq(albumsTbl.Col("id"))),
+			goqu.On(
+				userYearReviewMonthAlbumsTbl.Col("album_id").
+					Eq(albumsTbl.Col("id")),
+			),
 		).
 		Where(
 			userYearReviewMonthAlbumsTbl.Col("user_id").Eq(params.UserId),
@@ -1845,7 +1693,8 @@ func (db DB) GetUserYearReviewMonthAlbums(
 			userYearReviewMonthAlbumsTbl.Col("month").Eq(params.Month),
 		)
 
-	query, err = ApplyQuery(query, userYearReviewMonthAlbumSchema, params.Query)
+	query, err = ApplyQuery(
+		query, userYearReviewMonthAlbumSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -1863,6 +1712,18 @@ func (db DB) GetUserYearReviewMonthAlbums(
 	}
 
 	return items, page, nil
+}
+
+type UserYearReviewMonthArtist struct {
+	Artist
+
+	UserId   string `db:"user_id"`
+	Year     int    `db:"year"`
+	Month    int    `db:"month"`
+	ArtistId string `db:"artist_id"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type GetUserYearReviewMonthArtistsParams struct {
@@ -1892,7 +1753,10 @@ func (db DB) GetUserYearReviewMonthArtists(
 		).
 		Join(
 			userYearReviewMonthArtistsTbl,
-			goqu.On(userYearReviewMonthArtistsTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
+			goqu.On(
+				userYearReviewMonthArtistsTbl.Col("artist_id").
+					Eq(artistsTbl.Col("id")),
+			),
 		).
 		Where(
 			userYearReviewMonthArtistsTbl.Col("user_id").Eq(params.UserId),
@@ -1900,7 +1764,8 @@ func (db DB) GetUserYearReviewMonthArtists(
 			userYearReviewMonthArtistsTbl.Col("month").Eq(params.Month),
 		)
 
-	query, err = ApplyQuery(query, userYearReviewMonthArtistSchema, params.Query)
+	query, err = ApplyQuery(
+		query, userYearReviewMonthArtistSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -1918,6 +1783,16 @@ func (db DB) GetUserYearReviewMonthArtists(
 	}
 
 	return items, page, nil
+}
+
+type UserYearReviewMonthTag struct {
+	UserId  string `db:"user_id"`
+	Year    int    `db:"year"`
+	Month   int    `db:"month"`
+	TagSlug string `db:"tag_slug"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
 }
 
 type GetUserYearReviewMonthTagsParams struct {
@@ -1977,6 +1852,17 @@ func (db DB) GetUserYearReviewMonthTags(
 	return items, page, nil
 }
 
+type UserYearReviewMonthDecade struct {
+	UserId string `db:"user_id"`
+	Year   int    `db:"year"`
+	Month  int    `db:"month"`
+	Decade int    `db:"decade"`
+
+	Rank      int `db:"rank"`
+	PlayCount int `db:"play_count"`
+}
+
+
 type GetUserYearReviewMonthDecadesParams struct {
 	UserId string
 	Year   int
@@ -2008,7 +1894,8 @@ func (db DB) GetUserYearReviewMonthDecades(
 			userYearReviewMonthDecadesTbl.Col("month").Eq(params.Month),
 		)
 
-	query, err = ApplyQuery(query, userYearReviewMonthDecadeSchema, params.Query)
+	query, err = ApplyQuery(
+		query, userYearReviewMonthDecadeSchema, params.Query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}

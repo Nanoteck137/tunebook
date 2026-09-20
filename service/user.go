@@ -10,7 +10,6 @@ import (
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/broker"
-	"github.com/nanoteck137/tunebook/tools/pretty"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
 )
@@ -233,8 +232,6 @@ func (s *UserService) GetAllUserYearReviews(
 		return nil, userErr.Wrap("get all user year reviews: reviews", err)
 	}
 
-	pretty.Println(res)
-
 	return res, nil
 }
 
@@ -268,8 +265,6 @@ func (s *UserService) GetUserYearReview(
 		return database.UserYearReview{},
 			userErr.Wrap("get user year review: reviews", err)
 	}
-
-	pretty.Println(review)
 
 	return review, nil
 }
@@ -314,9 +309,6 @@ func (s *UserService) GetUserYearReviewTracks(
 		tracks[i].Track.Order = utils.Pointer(track.Rank)
 	}
 
-	pretty.Println(tracks)
-	pretty.Println(page)
-
 	return tracks, page, nil
 }
 
@@ -355,9 +347,6 @@ func (s *UserService) GetUserYearReviewAlbums(
 		return nil, types.Page{},
 			userErr.Wrap("get user year review albums: reviews", err)
 	}
-
-	pretty.Println(albums)
-	pretty.Println(page)
 
 	return albums, page, nil
 }
@@ -398,9 +387,6 @@ func (s *UserService) GetUserYearReviewArtists(
 			userErr.Wrap("get user year review artists: reviews", err)
 	}
 
-	pretty.Println(artists)
-	pretty.Println(page)
-
 	return artists, page, nil
 }
 
@@ -439,9 +425,6 @@ func (s *UserService) GetUserYearReviewTags(
 		return nil, types.Page{},
 			userErr.Wrap("get user year review tags: reviews", err)
 	}
-
-	pretty.Println(tags)
-	pretty.Println(page)
 
 	return tags, page, nil
 }
@@ -482,9 +465,6 @@ func (s *UserService) GetUserYearReviewDecades(
 			userErr.Wrap("get user year review decades: reviews", err)
 	}
 
-	pretty.Println(decades)
-	pretty.Println(page)
-
 	return decades, page, nil
 }
 
@@ -517,8 +497,6 @@ func (s *UserService) GetAllUserYearReviewMonths(
 		return nil, 
 			userErr.Wrap("get all user year review months: reviews", err)
 	}
-
-	pretty.Println(res)
 
 	return res, nil
 }
@@ -556,8 +534,6 @@ func (s *UserService) GetUserYearReviewMonth(
 		return database.UserYearReviewMonth{},
 			userErr.Wrap("get user year review month: month", err)
 	}
-
-	pretty.Println(month)
 
 	return month, nil
 }
@@ -604,9 +580,6 @@ func (s *UserService) GetUserYearReviewMonthTracks(
 		tracks[i].Track.Order = utils.Pointer(track.Rank)
 	}
 
-	pretty.Println(tracks)
-	pretty.Println(page)
-
 	return tracks, page, nil
 }
 
@@ -647,9 +620,6 @@ func (s *UserService) GetUserYearReviewMonthAlbums(
 		return nil, types.Page{},
 			userErr.Wrap("get user year review month albums: reviews", err)
 	}
-
-	pretty.Println(albums)
-	pretty.Println(page)
 
 	return albums, page, nil
 }
@@ -692,9 +662,6 @@ func (s *UserService) GetUserYearReviewMonthArtists(
 			userErr.Wrap("get user year review month artists: reviews", err)
 	}
 
-	pretty.Println(artists)
-	pretty.Println(page)
-
 	return artists, page, nil
 }
 
@@ -736,9 +703,6 @@ func (s *UserService) GetUserYearReviewMonthTags(
 			userErr.Wrap("get user year review month tags: reviews", err)
 	}
 
-	pretty.Println(tags)
-	pretty.Println(page)
-
 	return tags, page, nil
 }
 
@@ -779,9 +743,6 @@ func (s *UserService) GetUserYearReviewMonthDecades(
 		return nil, types.Page{},
 			userErr.Wrap("get user year review month decades: reviews", err)
 	}
-
-	pretty.Println(decades)
-	pretty.Println(page)
 
 	return decades, page, nil
 }
