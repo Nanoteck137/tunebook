@@ -80,6 +80,11 @@
 							<span class="text-xs text-muted-foreground">
 								{task.isRunning ? "Running..." : "Idle"}
 							</span>
+							{#if task.schedule}
+								<span class="font-mono text-xs text-muted-foreground">
+									Schedule: {task.schedule}
+								</span>
+							{/if}
 						</div>
 						{#if !task.isRunning}
 							<Button
