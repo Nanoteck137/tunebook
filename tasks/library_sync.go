@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 
+	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 )
 
@@ -11,14 +12,12 @@ var _ service.Task = (*LibrarySyncTask)(nil)
 const LibrarySync = "library-sync"
 
 type LibrarySyncTask struct {
-	libraryService *service.LibraryService
+	jobService *service.JobService
 }
 
-func NewLibrarySyncTask(
-	libraryService *service.LibraryService,
-) *LibrarySyncTask {
+func NewLibrarySyncTask(jobService *service.JobService) *LibrarySyncTask {
 	return &LibrarySyncTask{
-		libraryService: libraryService,
+		jobService: jobService,
 	}
 }
 
@@ -31,5 +30,10 @@ func (j *LibrarySyncTask) Info() service.TaskInfo {
 }
 
 func (j *LibrarySyncTask) Run(ctx context.Context) error {
-	return j.libraryService.Sync(ctx)
+	return j.jobService.PushJob(
+		ctx,
+		jobs.LibrarySync,
+		nil,
+		service.WithUniqueKey(jobs.LibrarySync),
+	)
 }

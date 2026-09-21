@@ -2,11 +2,12 @@
 	import { PUBLIC_COMMIT, PUBLIC_VERSION } from "$env/static/public";
 	import { getApiClient, handleApiError } from "$lib";
 	import { formatDuration } from "$lib/utils.js";
-	import { Button, Card, Separator } from "$lib/components/ui";
+	import { Badge, Button, Card, Separator } from "$lib/components/ui";
 	import {
 		AlertCircle,
 		DiscAlbum,
 		FileMusic,
+		ListChecks,
 		Play,
 		RefreshCw,
 		Server,
@@ -67,7 +68,44 @@
 		tasks: z.array(TaskSyncStateEventTask),
 	});
 
+	const Job = z.object({
+		id: z.string(),
+		name: z.string(),
+		displayName: z.string(),
+		status: z.string(),
+		error: z.string(),
+		attempts: z.number(),
+		maxAttempts: z.number(),
+		created: z.number(),
+		updated: z.number(),
+	});
+	type JobTy = z.infer<typeof Job>;
+
+	const JobSyncStateEvent = z.object({
+		jobs: z.array(Job),
+	});
+
+	let jobs = $state<JobTy[]>(data.jobs);
 	let tasks = $state<TaskSyncStateEventTaskTy[]>([]);
+
+	function jobStatusVariant(status: string) {
+		switch (status) {
+			case "completed":
+				return "default";
+			case "running":
+				return "secondary";
+			case "failed":
+				return "destructive";
+			case "pending":
+				return "outline";
+			default:
+				return "outline";
+		}
+	}
+
+	function formatDate(ms: number) {
+		return new Date(ms).toLocaleString();
+	}
 
 	async function setupEventSource(): Promise<EventSource | null> {
 		const res = await apiClient.createSseToken();
@@ -107,6 +145,12 @@
 			const data = TaskSyncStateEvent.parse(JSON.parse(e.data));
 
 			tasks = data.tasks;
+		});
+
+		eventSource.addEventListener("job-sync-state", (e) => {
+			const data = JobSyncStateEvent.parse(JSON.parse(e.data));
+
+			jobs = data.jobs;
 		});
 
 		return eventSource;
@@ -280,6 +324,62 @@
 			</Card.Content>
 		</Card.Root>
 	</div>
+
+	<Card.Root>
+		<Card.Content>
+			<div class="flex items-center gap-2">
+				<ListChecks size={18} />
+				<h2 class="text-lg font-semibold">Jobs</h2>
+			</div>
+
+			<Separator class="my-4" />
+
+			{#if jobs.length === 0}
+				<p class="text-sm text-muted-foreground">No jobs.</p>
+			{:else}
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm">
+						<thead>
+							<tr class="text-muted-foreground">
+								<th class="px-3 py-2 font-medium">Name</th>
+								<th class="px-3 py-2 font-medium">Status</th>
+								<th class="px-3 py-2 font-medium">Attempts</th>
+								<th class="px-3 py-2 font-medium">Created</th>
+								<th class="px-3 py-2 font-medium">Updated</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each jobs as job (job.id)}
+								<tr class="border-t">
+									<td class="px-3 py-2">{job.displayName}</td>
+									<td class="px-3 py-2">
+										<Badge variant={jobStatusVariant(job.status)}>
+											{job.status}
+										</Badge>
+									</td>
+									<td class="px-3 py-2">
+										{job.attempts}/{job.maxAttempts}
+									</td>
+									<td class="px-3 py-2">{formatDate(job.created)}</td>
+									<td class="px-3 py-2">{formatDate(job.updated)}</td>
+								</tr>
+								{#if job.error}
+									<tr class="border-t">
+										<td
+											colspan={5}
+											class="px-3 py-2 font-mono text-xs text-destructive"
+										>
+											{job.error}
+										</td>
+									</tr>
+								{/if}
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
+		</Card.Content>
+	</Card.Root>
 
 	{#if errors.length > 0}
 		<Card.Root>

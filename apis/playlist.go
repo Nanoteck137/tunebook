@@ -410,6 +410,9 @@ func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
 						PlaylistId: c.Param("playlistId"),
 						UserId:     user.Id,
 					},
+					service.WithUniqueKey(
+						jobs.PlaylistImageUniqueKey(c.Param("playlistId")),
+					),
 				)
 				if err != nil {
 					return nil, err

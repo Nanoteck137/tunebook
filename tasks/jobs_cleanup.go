@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 )
 
@@ -32,6 +33,11 @@ func (j *JobsCleanupTask) Info() service.TaskInfo {
 }
 
 func (j *JobsCleanupTask) Run(ctx context.Context) error {
-	_, err := j.jobService.CleanupOldJobs(ctx, jobsRetention)
-	return err
+	return j.jobService.PushJob(
+		ctx,
+		jobs.JobsCleanup,
+		service.JobsCleanupParams{
+			OlderThanMs: jobsRetention.Milliseconds(),
+		},
+	)
 }

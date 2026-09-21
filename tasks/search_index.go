@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 
+	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 )
 
@@ -11,14 +12,12 @@ var _ service.Task = (*SearchIndexTask)(nil)
 const SearchIndex = "search-index"
 
 type SearchIndexTask struct {
-	searchService *service.SearchService
+	jobService *service.JobService
 }
 
-func NewSearchIndexTask(
-	searchService *service.SearchService,
-) *SearchIndexTask {
+func NewSearchIndexTask(jobService *service.JobService) *SearchIndexTask {
 	return &SearchIndexTask{
-		searchService: searchService,
+		jobService: jobService,
 	}
 }
 
@@ -31,5 +30,9 @@ func (j *SearchIndexTask) Info() service.TaskInfo {
 }
 
 func (j *SearchIndexTask) Run(ctx context.Context) error {
-	return j.searchService.Index(ctx)
+	return j.jobService.PushJob(
+		ctx,
+		jobs.SearchIndex,
+		nil,
+	)
 }

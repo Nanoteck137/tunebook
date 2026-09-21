@@ -154,6 +154,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/favorites/tracks/ids", "GET", api.GetFavoriteTrackIds, z.any().optional(), undefined, options)
   }
   
+  getJobs(options?: ExtraOptions) {
+    return this.request("/api/v1/system/jobs", "GET", api.GetJobsResponse, z.any().optional(), undefined, options)
+  }
+  
   getMe(options?: ExtraOptions) {
     return this.request("/api/v1/auth/me", "GET", api.GetMe, z.any().optional(), undefined, options)
   }
@@ -556,6 +560,10 @@ export class ClientUrls {
   
   getFavoriteTrackIds() {
     return createUrl(this.baseUrl, "/api/v1/favorites/tracks/ids")
+  }
+  
+  getJobs() {
+    return createUrl(this.baseUrl, "/api/v1/system/jobs")
   }
   
   getMe() {

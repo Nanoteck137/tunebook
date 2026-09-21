@@ -13,6 +13,8 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 	InstallAuthHandlers(app, g)
 	InstallUserHandlers(app, g)
 
+	InstallJobHandlers(app, g)
+
 	InstallArtistHandlers(app, g)
 	InstallAlbumHandlers(app, g)
 	InstallTrackHandlers(app, g)

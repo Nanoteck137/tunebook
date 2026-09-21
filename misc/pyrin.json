@@ -722,6 +722,16 @@
       ]
     },
     {
+      "name": "GetJobsResponse",
+      "fields": [
+        {
+          "name": "jobs",
+          "type": "[]JobItem",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "GetMe",
       "fields": [
         {
@@ -1307,6 +1317,56 @@
         {
           "name": "large",
           "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "JobItem",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "error",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "attempts",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "maxAttempts",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "int",
           "omitEmpty": false
         }
       ]
@@ -2557,6 +2617,13 @@
       "method": "GET",
       "path": "/api/v1/favorites/tracks/ids",
       "response": "GetFavoriteTrackIds"
+    },
+    {
+      "type": "api",
+      "name": "GetJobs",
+      "method": "GET",
+      "path": "/api/v1/system/jobs",
+      "response": "GetJobsResponse"
     },
     {
       "type": "api",

@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 
+	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 )
 
@@ -11,12 +12,12 @@ var _ service.Task = (*CacheCleanupTask)(nil)
 const CacheCleanup = "cache-cleanup"
 
 type CacheCleanupTask struct {
-	filesystem *service.FilesystemService
+	jobService *service.JobService
 }
 
-func NewCacheCleanupTask(filesystem *service.FilesystemService) *CacheCleanupTask {
+func NewCacheCleanupTask(jobService *service.JobService) *CacheCleanupTask {
 	return &CacheCleanupTask{
-		filesystem: filesystem,
+		jobService: jobService,
 	}
 }
 
@@ -29,5 +30,9 @@ func (j *CacheCleanupTask) Info() service.TaskInfo {
 }
 
 func (j *CacheCleanupTask) Run(ctx context.Context) error {
-	return j.filesystem.ClearCache()
+	return j.jobService.PushJob(
+		ctx,
+		jobs.CacheCleanup,
+		nil,
+	)
 }

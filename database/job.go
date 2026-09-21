@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -24,6 +25,7 @@ type Job struct {
 	Id            string `db:"id"`
 	Name          string `db:"name"`
 	Data          string `db:"data"`
+	UniqueKey     string `db:"unique_key"`
 	Status        string `db:"status"`
 	Error         string `db:"error"`
 	Attempts      int    `db:"attempts"`
@@ -39,6 +41,7 @@ func JobQuery() *goqu.SelectDataset {
 			jobsTbl.Col("id"),
 			jobsTbl.Col("name"),
 			jobsTbl.Col("data"),
+			goqu.COALESCE(jobsTbl.Col("unique_key"), "").As("unique_key"),
 			jobsTbl.Col("status"),
 			jobsTbl.Col("error"),
 			jobsTbl.Col("attempts"),
@@ -55,6 +58,7 @@ type CreateJobParams struct {
 	Id          string
 	Name        string
 	Data        string
+	UniqueKey   string
 	MaxAttempts int
 }
 
@@ -72,10 +76,16 @@ func (db DB) CreateJob(
 		params.MaxAttempts = 1
 	}
 
+	var uniqueKey any
+	if params.UniqueKey != "" {
+		uniqueKey = params.UniqueKey
+	}
+
 	query := dialect.Insert(jobsTbl).Rows(goqu.Record{
 		"id":              params.Id,
 		"name":            params.Name,
 		"data":            params.Data,
+		"unique_key":      uniqueKey,
 		"status":          JobStatusPending,
 		"error":           "",
 		"attempts":        0,
@@ -98,6 +108,51 @@ func (db DB) GetJobById(ctx context.Context, jobId string) (Job, error) {
 		Where(jobsTbl.Col("id").Eq(jobId))
 
 	return Single[Job](db, ctx, query)
+}
+
+// HasActiveJobWithUniqueKey reports whether a job with the given unique key is
+// currently pending or running. It is used to dedupe jobs that should only
+// ever be queued once at a time (e.g. library sync, one playlist image
+// generation per playlist).
+func (db DB) HasActiveJobWithUniqueKey(
+	ctx context.Context,
+	uniqueKey string,
+) (bool, error) {
+	if uniqueKey == "" {
+		return false, nil
+	}
+
+	query := JobQuery().
+		Where(
+			jobsTbl.Col("unique_key").Eq(uniqueKey),
+			jobsTbl.Col("status").In(
+				JobStatusPending,
+				JobStatusRunning,
+			),
+		).
+		Limit(1)
+
+	_, err := Single[Job](db, ctx, query)
+	if errors.Is(err, ErrItemNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (db DB) GetJobs(ctx context.Context, limit int) ([]Job, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+
+	query := JobQuery().
+		Order(jobsTbl.Col("created").Desc()).
+		Limit(uint(limit))
+
+	return Multiple[Job](db, ctx, query)
 }
 
 func (db DB) GetPendingJobs(ctx context.Context, limit int) ([]Job, error) {
@@ -177,27 +232,32 @@ func (db DB) FailJob(
 	return err
 }
 
-// RequeueStuckJobs resets jobs left in the "running" state to "pending" so they
-// are retried after a crash. A job older than olderThan (unix millis) that is
-// still marked as running is assumed to have been interrupted.
-func (db DB) RequeueStuckJobs(ctx context.Context, olderThan int64) (int64, error) {
+// GetStuckJobs returns jobs left in the "running" state. A job found in this
+// state on startup is assumed to have been interrupted by a crash or restart.
+func (db DB) GetStuckJobs(ctx context.Context) ([]Job, error) {
+	query := JobQuery().
+		Where(jobsTbl.Col("status").Eq(JobStatusRunning))
+
+	return Multiple[Job](db, ctx, query)
+}
+
+// RequeueJob resets a job from "running" back to "pending" so it is retried,
+// scheduling it for its next attempt at nextAttemptAt (unix millis).
+func (db DB) RequeueJob(
+	ctx context.Context,
+	jobId string,
+	nextAttemptAt int64,
+) error {
 	query := dialect.Update(jobsTbl).
 		Set(goqu.Record{
 			"status":          JobStatusPending,
-			"next_attempt_at": time.Now().UnixMilli(),
+			"next_attempt_at": nextAttemptAt,
 			"updated":         time.Now().UnixMilli(),
 		}).
-		Where(
-			jobsTbl.Col("status").Eq(JobStatusRunning),
-			jobsTbl.Col("updated").Lt(olderThan),
-		)
+		Where(jobsTbl.Col("id").Eq(jobId))
 
-	res, err := db.Exec(ctx, query)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.RowsAffected()
+	_, err := db.Exec(ctx, query)
+	return err
 }
 
 // DeleteOldJobs removes finished jobs (completed or failed) last updated before

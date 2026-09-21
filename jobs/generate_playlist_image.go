@@ -11,6 +11,12 @@ var _ service.Job = (*GeneratePlaylistImageJob)(nil)
 
 const GeneratePlaylistImage = "generate-playlist-image"
 
+// PlaylistImageUniqueKey returns the unique key for image generation of a
+// playlist, so at most one generation job per playlist is queued at a time.
+func PlaylistImageUniqueKey(playlistId string) string {
+	return "playlist-image-generation-" + playlistId
+}
+
 type GeneratePlaylistImageJob struct {
 	playlistService *service.PlaylistService
 }

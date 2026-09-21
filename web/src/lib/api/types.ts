@@ -539,6 +539,36 @@ export const GetHistoryById = z.object({
 });
 export type GetHistoryById = z.infer<typeof GetHistoryById>;
 
+// Name: JobItem
+export const JobItem = z.object({
+  // Name: JobItem.id
+  "id": z.string(),
+  // Name: JobItem.name
+  "name": z.string(),
+  // Name: JobItem.displayName
+  "displayName": z.string(),
+  // Name: JobItem.status
+  "status": z.string(),
+  // Name: JobItem.error
+  "error": z.string(),
+  // Name: JobItem.attempts
+  "attempts": z.number(),
+  // Name: JobItem.maxAttempts
+  "maxAttempts": z.number(),
+  // Name: JobItem.created
+  "created": z.number(),
+  // Name: JobItem.updated
+  "updated": z.number(),
+});
+export type JobItem = z.infer<typeof JobItem>;
+
+// Name: GetJobsResponse
+export const GetJobsResponse = z.object({
+  // Name: GetJobsResponse.jobs
+  "jobs": z.array(JobItem),
+});
+export type GetJobsResponse = z.infer<typeof GetJobsResponse>;
+
 // Name: GetMe
 export const GetMe = z.object({
   // Name: GetMe.id

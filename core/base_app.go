@@ -166,6 +166,7 @@ func (app *BaseApp) Bootstrap() error {
 	app.jobService = service.NewJobService(
 		newServiceLogger("job"),
 		app.db,
+		app.broker,
 	)
 
 	app.imageService = service.NewImageService(
@@ -252,16 +253,18 @@ func (app *BaseApp) Bootstrap() error {
 
 	app.broker.RegisterProducer(app.libraryService)
 	app.broker.RegisterProducer(app.taskService)
+	app.broker.RegisterProducer(app.jobService)
 
 	taskList := []service.Task{
-		tasks.NewLibrarySyncTask(app.libraryService),
-		tasks.NewSearchIndexTask(app.searchService),
+		tasks.NewLibrarySyncTask(app.jobService),
+		tasks.NewSearchIndexTask(app.jobService),
 		tasks.NewUserStatsRecalculateTask(app.userService, app.jobService),
 		tasks.NewUserTrackStatsRebuildTask(app.userService, app.jobService),
-		tasks.NewAuthCleanupTask(app.authService),
-		tasks.NewCacheCleanupTask(app.filesystemService),
-		tasks.NewLibraryCleanupTask(app.libraryService),
+		tasks.NewAuthCleanupTask(app.jobService),
+		tasks.NewCacheCleanupTask(app.jobService),
+		tasks.NewLibraryCleanupTask(app.jobService),
 		tasks.NewJobsCleanupTask(app.jobService),
+		tasks.NewTestTask(app.jobService),
 	}
 
 	for _, task := range taskList {
@@ -272,9 +275,16 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	jobList := []service.Job{
+		jobs.NewLibrarySyncJob(app.libraryService),
+		jobs.NewSearchIndexJob(app.searchService),
+		jobs.NewAuthCleanupJob(app.authService),
+		jobs.NewCacheCleanupJob(app.filesystemService),
+		jobs.NewLibraryCleanupJob(app.libraryService),
+		jobs.NewJobsCleanupJob(app.jobService),
 		jobs.NewGeneratePlaylistImageJob(app.playlistService),
 		jobs.NewUserStatsUpdateJob(app.userService),
 		jobs.NewUserTrackStatsRebuildJob(app.userService),
+		jobs.NewTestJob(),
 	}
 
 	for _, job := range jobList {

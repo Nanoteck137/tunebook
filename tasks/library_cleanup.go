@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 
+	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 )
 
@@ -11,14 +12,12 @@ var _ service.Task = (*LibraryCleanupTask)(nil)
 const LibraryCleanup = "library-cleanup"
 
 type LibraryCleanupTask struct {
-	libraryService *service.LibraryService
+	jobService *service.JobService
 }
 
-func NewLibraryCleanupTask(
-	libraryService *service.LibraryService,
-) *LibraryCleanupTask {
+func NewLibraryCleanupTask(jobService *service.JobService) *LibraryCleanupTask {
 	return &LibraryCleanupTask{
-		libraryService: libraryService,
+		jobService: jobService,
 	}
 }
 
@@ -31,5 +30,9 @@ func (j *LibraryCleanupTask) Info() service.TaskInfo {
 }
 
 func (j *LibraryCleanupTask) Run(ctx context.Context) error {
-	return j.libraryService.Cleanup(ctx)
+	return j.jobService.PushJob(
+		ctx,
+		jobs.LibraryCleanup,
+		nil,
+	)
 }

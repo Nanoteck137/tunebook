@@ -9,9 +9,10 @@ export const load: PageLoad = async ({ parent }) => {
     redirect(301, "/");
   }
 
-  const [mediaSettings, systemInfo] = await Promise.all([
+  const [mediaSettings, systemInfo, jobsResult] = await Promise.all([
     data.apiClient.getMediaSettings(),
     data.apiClient.getSystemInfo(),
+    data.apiClient.getJobs(),
   ]);
 
   if (!mediaSettings.success) {
@@ -28,9 +29,17 @@ export const load: PageLoad = async ({ parent }) => {
     });
   }
 
+  if (!jobsResult.success) {
+    throw error(jobsResult.error.code, {
+      message: jobsResult.error.message,
+      type: jobsResult.error.type,
+    });
+  }
+
   return {
     ...data,
     mediaSettings: mediaSettings.data,
     systemInfo: systemInfo.data,
+    jobs: jobsResult.data.jobs,
   };
 };

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/tools/broker"
 )
 
 var jobErr = NewServiceErrCreator("job")
@@ -18,8 +19,11 @@ const (
 	// permanently failed, unless overridden with WithMaxAttempts.
 	DefaultJobMaxAttempts = 3
 
+	// DefaultJobsLimit is how many jobs are returned/sent when listing or
+	// syncing jobs.
+	DefaultJobsLimit = 50
+
 	jobRunTimeout = 5 * time.Minute
-	stuckJobGrace = 5 * time.Minute
 
 	jobBackoffBase = 30 * time.Second
 	jobMaxBackoff  = 30 * time.Minute
@@ -28,6 +32,12 @@ const (
 type JobInfo struct {
 	Name        string
 	DisplayName string
+
+	// FailOnRestart marks the job as failed instead of requeueing it if the
+	// server restarts while the job is running. Defaults to false, meaning the
+	// job is requeued (and retried) after a restart. Jobs like a full library
+	// sync should set this so they don't resume from a half-finished run.
+	FailOnRestart bool
 }
 
 type Job interface {
@@ -49,31 +59,62 @@ type JobService struct {
 	jobs     map[string]*jobEntry
 	mu       sync.RWMutex
 
+	emitter broker.EventEmitter
+
 	stopCh chan struct{}
 	wg     sync.WaitGroup
 }
 
-func NewJobService(logger *slog.Logger, db *database.Database) *JobService {
+func NewJobService(
+	logger *slog.Logger,
+	db *database.Database,
+	emitter broker.EventEmitter,
+) *JobService {
 	return &JobService{
 		logger:   logger,
 		db:       db,
 		handlers: make(map[string]JobHandler),
 		jobs:     make(map[string]*jobEntry),
+		emitter:  emitter,
 	}
+}
+
+var _ broker.Event = (*GetJobsResponse)(nil)
+var _ broker.EventProducer = (*JobService)(nil)
+
+// GetEventType implements broker.Event.
+func (e GetJobsResponse) GetEventType() string {
+	return "job-sync-state"
+}
+
+func (s *JobService) update() {
+	if s.emitter == nil {
+		return
+	}
+
+	jobs, err := s.GetJobs(context.Background(), DefaultJobsLimit)
+	if err != nil {
+		s.logger.Error("get jobs for sync event", "err", err)
+		return
+	}
+
+	s.emitter.EmitEvent(jobs)
+}
+
+func (s *JobService) GetInitEvents() []broker.Event {
+	jobs, err := s.GetJobs(context.Background(), DefaultJobsLimit)
+	if err != nil {
+		s.logger.Error("get jobs for init event", "err", err)
+		return nil
+	}
+
+	return []broker.Event{jobs}
 }
 
 func (s *JobService) Start() {
 	s.stopCh = make(chan struct{})
 
-	requeued, err := s.db.RequeueStuckJobs(
-		context.Background(),
-		time.Now().UnixMilli()-stuckJobGrace.Milliseconds(),
-	)
-	if err != nil {
-		s.logger.Error("requeue stuck jobs", "err", err)
-	} else if requeued > 0 {
-		s.logger.Info("requeued stuck jobs", "count", requeued)
-	}
+	s.recoverStuckJobs()
 
 	s.wg.Add(1)
 	go func() {
@@ -102,6 +143,74 @@ func (s *JobService) Stop() {
 	close(s.stopCh)
 	s.wg.Wait()
 	s.logger.Info("job queue worker stopped")
+}
+
+// recoverStuckJobs handles jobs that were left in the "running" state, meaning
+// they were interrupted by a shutdown, crash or restart. Restartable jobs are
+// requeued so they are retried, while jobs marked FailOnRestart are marked
+// failed instead.
+func (s *JobService) recoverStuckJobs() {
+	stuck, err := s.db.GetStuckJobs(context.Background())
+	if err != nil {
+		s.logger.Error("get stuck jobs", "err", err)
+		return
+	}
+
+	if len(stuck) == 0 {
+		return
+	}
+
+	requeued := 0
+	failed := 0
+	for _, job := range stuck {
+		if s.jobRestartable(job.Name) {
+			err := s.db.RequeueJob(
+				context.Background(),
+				job.Id,
+				time.Now().UnixMilli(),
+			)
+			if err != nil {
+				s.logger.Error("requeue stuck job", "id", job.Id, "err", err)
+				continue
+			}
+
+			requeued++
+			continue
+		}
+
+		err := s.db.FailJob(
+			context.Background(),
+			job.Id,
+			database.FailJobParams{
+				Requeue: false,
+				Error:   "job interrupted by server restart",
+			},
+		)
+		if err != nil {
+			s.logger.Error("fail stuck job", "id", job.Id, "err", err)
+			continue
+		}
+
+		failed++
+	}
+
+	s.logger.Info(
+		"recovered stuck jobs",
+		"requeued", requeued,
+		"failed", failed,
+	)
+}
+
+func (s *JobService) jobRestartable(name string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	entry, exists := s.jobs[name]
+	if !exists {
+		return true
+	}
+
+	return !entry.info.FailOnRestart
 }
 
 func (s *JobService) RegisterJob(name string, handler JobHandler) {
@@ -150,6 +259,7 @@ func (s *JobService) AddJob(job Job) error {
 
 type PushJobOptions struct {
 	MaxAttempts int
+	UniqueKey   string
 }
 
 type PushJobOption func(*PushJobOptions)
@@ -157,6 +267,17 @@ type PushJobOption func(*PushJobOptions)
 func WithMaxAttempts(maxAttempts int) PushJobOption {
 	return func(o *PushJobOptions) {
 		o.MaxAttempts = maxAttempts
+	}
+}
+
+// WithUniqueKey sets a unique key for the job. Only one job with the same
+// unique key may be pending or running at a time; pushing again while one is
+// active is a no-op. Keys are used to dedupe jobs that must not be queued
+// multiple times, e.g. a full library sync or image generation for the same
+// playlist.
+func WithUniqueKey(uniqueKey string) PushJobOption {
+	return func(o *PushJobOptions) {
+		o.UniqueKey = uniqueKey
 	}
 }
 
@@ -181,6 +302,22 @@ func (s *JobService) PushJob(
 		return jobErr.Newf("no handler registered for job: %s", name)
 	}
 
+	if options.UniqueKey != "" {
+		active, err := s.db.HasActiveJobWithUniqueKey(ctx, options.UniqueKey)
+		if err != nil {
+			return jobErr.Wrap("check active job by unique key", err)
+		}
+
+		if active {
+			s.logger.Info(
+				"job already active, skipping push",
+				"name", name,
+				"uniqueKey", options.UniqueKey,
+			)
+			return nil
+		}
+	}
+
 	raw, err := json.Marshal(data)
 	if err != nil {
 		return jobErr.Wrap("marshal job data", err)
@@ -189,6 +326,7 @@ func (s *JobService) PushJob(
 	id, err := s.db.CreateJob(ctx, database.CreateJobParams{
 		Name:        name,
 		Data:        string(raw),
+		UniqueKey:   options.UniqueKey,
 		MaxAttempts: options.MaxAttempts,
 	})
 	if err != nil {
@@ -196,6 +334,8 @@ func (s *JobService) PushJob(
 	}
 
 	s.logger.Info("pushed job", "id", id, "name", name)
+
+	s.update()
 
 	return nil
 }
@@ -231,6 +371,8 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 		return jobErr.Wrap("claim job", err)
 	}
 
+	s.update()
+
 	s.logger.Info(
 		"running job",
 		"id", job.Id,
@@ -249,6 +391,7 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 			Requeue: false,
 			Error:   errMsg,
 		})
+		s.update()
 		return jobErr.New(errMsg)
 	}
 
@@ -280,6 +423,7 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 			Error:         err.Error(),
 			NextAttemptAt: nextAttemptAt,
 		})
+		s.update()
 		return jobErr.Wrap("job handler failed", err)
 	}
 
@@ -288,9 +432,67 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 		return jobErr.Wrap("complete job", err)
 	}
 
+	s.update()
+
 	s.logger.Info("job completed", "id", job.Id, "name", job.Name)
 
 	return nil
+}
+
+// GetJobsResponseItem is a single job as returned to API clients.
+type JobItem struct {
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Status      string `json:"status"`
+	Error       string `json:"error"`
+	Attempts    int    `json:"attempts"`
+	MaxAttempts int    `json:"maxAttempts"`
+	Created     int64  `json:"created"`
+	Updated     int64  `json:"updated"`
+}
+
+type GetJobsResponse struct {
+	Jobs []JobItem `json:"jobs"`
+}
+
+type JobsCleanupParams struct {
+	OlderThanMs int64 `json:"olderThanMs"`
+}
+
+func (s *JobService) GetJobs(ctx context.Context, limit int) (GetJobsResponse, error) {
+	jobs, err := s.db.GetJobs(ctx, limit)
+	if err != nil {
+		return GetJobsResponse{}, jobErr.Wrap("get jobs", err)
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	res := GetJobsResponse{
+		Jobs: make([]JobItem, 0, len(jobs)),
+	}
+
+	for _, job := range jobs {
+		displayName := job.Name
+		if entry, exists := s.jobs[job.Name]; exists && entry.info.DisplayName != "" {
+			displayName = entry.info.DisplayName
+		}
+
+		res.Jobs = append(res.Jobs, JobItem{
+			Id:          job.Id,
+			Name:        job.Name,
+			DisplayName: displayName,
+			Status:      job.Status,
+			Error:       job.Error,
+			Attempts:    job.Attempts,
+			MaxAttempts: job.MaxAttempts,
+			Created:     job.Created,
+			Updated:     job.Updated,
+		})
+	}
+
+	return res, nil
 }
 
 func jobBackoff(attempt int) time.Duration {
