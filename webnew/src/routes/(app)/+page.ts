@@ -53,8 +53,8 @@ async function getTopTracks(
 ): Promise<Track[]> {
   if (!userId) return [];
 
-  const res = await apiClient.getUserTopTracks(userId, {
-    query: { limit: "10" },
+  const res = await apiClient.getUserTotalReviewTracks(userId, {
+    query: { perPage: "10" },
   });
   if (!res.success) {
     return [];
