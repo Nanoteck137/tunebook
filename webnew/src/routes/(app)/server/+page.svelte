@@ -11,10 +11,10 @@
 		ListFilter,
 		Music,
 		Play,
-		Server,
 		Users,
 	} from "@lucide/svelte";
-	import { Card, Separator } from "$lib/components/ui";
+	import { Separator } from "$lib/components/ui";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { formatPlayTime } from "$lib/utils";
 
 	const { data } = $props();
@@ -87,26 +87,13 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	<div class="flex items-center gap-3">
-		<Server size={24} />
-		<div class="flex flex-col">
-			<h1 class="text-xl font-bold">Server</h1>
-			<p class="text-xs text-muted-foreground">
-				v{data.systemInfo.version}
-				{#if data.systemInfo.commit}({data.systemInfo.commit}){/if}
-			</p>
-		</div>
-	</div>
+	<section>
+		<SectionHeader>
+			<Info />
+			Overview
+		</SectionHeader>
 
-	<Card.Root>
-		<Card.Content>
-			<div class="flex items-center gap-2">
-				<Info size={18} />
-				<h2 class="text-lg font-semibold">Overview</h2>
-			</div>
-
-			<Separator class="my-4" />
-
+		<div class="rounded-lg border bg-card p-4">
 			<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
 				{#each overview as item (item.label)}
 					<div class="flex items-center justify-between gap-4">
@@ -117,21 +104,19 @@
 					</div>
 				{/each}
 			</div>
-		</Card.Content>
-	</Card.Root>
+		</div>
+	</section>
 
-	<Card.Root>
-		<Card.Content>
-			<div class="flex items-center gap-2">
-				<Database size={18} />
-				<h2 class="text-lg font-semibold">Stats</h2>
-			</div>
+	<section>
+		<SectionHeader>
+			<Database />
+			Stats
+		</SectionHeader>
 
-			<Separator class="my-4" />
-
+		<div class="rounded-lg border bg-card p-4">
 			<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
 				{#each statTiles as tile (tile.label)}
-					<div class="flex flex-col gap-2 rounded border p-4">
+					<div class="flex flex-col gap-2 rounded-lg border bg-card p-4">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<tile.icon size={16} />
 							<span>{tile.label}</span>
@@ -140,18 +125,16 @@
 					</div>
 				{/each}
 			</div>
-		</Card.Content>
-	</Card.Root>
+		</div>
+	</section>
 
-	<Card.Root>
-		<Card.Content>
-			<div class="flex items-center gap-2">
-				<Play size={18} />
-				<h2 class="text-lg font-semibold">Usage</h2>
-			</div>
+	<section>
+		<SectionHeader>
+			<Play />
+			Usage
+		</SectionHeader>
 
-			<Separator class="my-4" />
-
+		<div class="rounded-lg border bg-card p-4">
 			<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
 				<div class="flex items-center justify-between gap-4">
 					<span class="text-sm text-muted-foreground">Total plays</span>
@@ -168,18 +151,16 @@
 					</span>
 				</div>
 			</div>
-		</Card.Content>
-	</Card.Root>
+		</div>
+	</section>
 
-	<Card.Root>
-		<Card.Content>
-			<div class="flex items-center gap-2">
-				<Disc3 size={18} />
-				<h2 class="text-lg font-semibold">Media Configuration</h2>
-			</div>
+	<section>
+		<SectionHeader>
+			<Disc3 />
+			Media Configuration
+		</SectionHeader>
 
-			<Separator class="my-4" />
-
+		<div class="rounded-lg border bg-card p-4">
 			<div class="flex flex-col gap-6">
 				<div>
 					<h3 class="mb-2 text-sm font-medium text-muted-foreground">
@@ -247,6 +228,6 @@
 					</div>
 				</div>
 			</div>
-		</Card.Content>
-	</Card.Root>
+		</div>
+	</section>
 </div>

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { getApiClient, handleApiError } from "$lib";
 	import { cn } from "$lib/utils";
-	import { Badge, Button, Card, Separator } from "$lib/components/ui";
+	import { Badge, Button } from "$lib/components/ui";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { ListChecks, Play, RefreshCw } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -63,61 +64,53 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	<Card.Root>
-		<Card.Content>
-			<div class="flex items-center gap-2">
-				<RefreshCw size={18} />
-				<h2 class="text-lg font-semibold">Tasks</h2>
-			</div>
+	<section>
+		<SectionHeader>
+			<RefreshCw />
+			Tasks
+		</SectionHeader>
 
-			<Separator class="my-4" />
-
-			<div class="flex flex-col gap-2">
-				{#each tasks as task (task.name)}
-					<div class="flex items-center justify-between rounded-lg border p-3">
-						<div class="flex flex-col">
-							<span class="text-sm font-medium">{task.displayName}</span>
-							<span class="text-xs text-muted-foreground">
-								{task.isRunning ? "Running..." : "Idle"}
-							</span>
+		<div class="flex flex-col divide-y rounded-lg border bg-card px-4">
+			{#each tasks as task (task.name)}
+				<div class="flex items-center justify-between gap-4 py-3">
+					<div class="flex min-w-0 flex-col">
+						<span class="text-sm font-medium">{task.displayName}</span>
+						<span class="text-xs text-muted-foreground">
+							{task.isRunning ? "Running..." : "Idle"}
 							{#if task.schedule}
-								<span class="font-mono text-xs text-muted-foreground">
-									Schedule: {task.schedule}
-								</span>
+								&middot; {task.schedule}
 							{/if}
-						</div>
-						{#if !task.isRunning}
-							<Button
-								variant="outline"
-								size="sm"
-								onclick={async () => {
-									const res = await apiClient.runTask(task.name);
-									if (!res.success) {
-										return handleApiError(res.error);
-									}
-
-									toast.success("Dispatched task");
-								}}
-							>
-								<Play size={14} />
-								Run
-							</Button>
-						{/if}
+						</span>
 					</div>
-				{/each}
-			</div>
-		</Card.Content>
-	</Card.Root>
+					{#if !task.isRunning}
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={async () => {
+								const res = await apiClient.runTask(task.name);
+								if (!res.success) {
+									return handleApiError(res.error);
+								}
 
-	<Card.Root>
-		<Card.Content>
-			<div class="flex items-center gap-2">
-				<ListChecks size={18} />
-				<h2 class="text-lg font-semibold">Jobs</h2>
-			</div>
+								toast.success("Dispatched task");
+							}}
+						>
+							<Play size={14} />
+							Run
+						</Button>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</section>
 
-			<Separator class="my-4" />
+	<section>
+		<SectionHeader>
+			<ListChecks />
+			Jobs
+		</SectionHeader>
 
+		<div class="flex flex-col gap-4 rounded-lg border bg-card p-4">
 			<div class="flex flex-wrap items-center gap-2">
 				{#each filters as f (f.value)}
 					<Button
@@ -139,25 +132,28 @@
 				{/each}
 			</div>
 
-			<Separator class="my-4" />
-
-			{#if filteredJobs.length === 0}
-				<p class="text-sm text-muted-foreground">
-					No {filter === "all" ? "jobs" : `${filter} jobs`}.
-				</p>
-			{:else}
-				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm">
-						<thead>
-							<tr class="text-muted-foreground">
-								<th class="px-3 py-2 font-medium">Name</th>
-								<th class="px-3 py-2 font-medium">Status</th>
-								<th class="px-3 py-2 font-medium">Attempts</th>
-								<th class="px-3 py-2 font-medium">Created</th>
-								<th class="px-3 py-2 font-medium">Updated</th>
+			<div class="overflow-x-auto">
+				<table class="w-full text-left text-sm">
+					<thead>
+						<tr class="text-muted-foreground">
+							<th class="px-3 py-2 font-medium">Name</th>
+							<th class="px-3 py-2 font-medium">Status</th>
+							<th class="px-3 py-2 font-medium">Attempts</th>
+							<th class="px-3 py-2 font-medium">Created</th>
+							<th class="px-3 py-2 font-medium">Updated</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#if filteredJobs.length === 0}
+							<tr>
+								<td
+									colspan={5}
+									class="px-3 py-6 text-center text-sm text-muted-foreground"
+								>
+									No {filter === "all" ? "jobs" : `${filter} jobs`}.
+								</td>
 							</tr>
-						</thead>
-						<tbody>
+						{:else}
 							{#each filteredJobs as job (job.id)}
 								<tr class="border-t">
 									<td class="px-3 py-2">{job.displayName}</td>
@@ -181,10 +177,10 @@
 									</tr>
 								{/if}
 							{/each}
-						</tbody>
-					</table>
-				</div>
-			{/if}
-		</Card.Content>
-	</Card.Root>
+						{/if}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
 </div>
