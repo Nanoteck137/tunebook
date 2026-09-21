@@ -261,6 +261,7 @@ func (app *BaseApp) Bootstrap() error {
 		tasks.NewAuthCleanupTask(app.authService),
 		tasks.NewCacheCleanupTask(app.filesystemService),
 		tasks.NewLibraryCleanupTask(app.libraryService),
+		tasks.NewJobsCleanupTask(app.jobService),
 	}
 
 	for _, task := range taskList {
@@ -281,37 +282,6 @@ func (app *BaseApp) Bootstrap() error {
 		if err != nil {
 			return err
 		}
-	}
-
-	years, err := app.db.GetUserStatsYears(context.Background(), database.GetUserStatsYearsParams{
-		UserId: "hmjna6kd9i",
-	})
-	if err != nil {
-		slog.Error("GenerateUserReview", "err", err)
-	}
-
-	for _, year := range years {
-		// TODO(patrik): Remove, temp
-		err = app.db.GenerateUserReview(
-			context.Background(),
-			database.GenerateUserReviewParams{
-				UserId: "hmjna6kd9i",
-				Year:   year,
-			},
-		)
-		if err != nil {
-			slog.Error("GenerateUserReview", "err", err)
-		}
-	}
-
-	err = app.db.GenerateUserTotalReview(
-		context.Background(),
-		database.GenerateUserTotalReviewParams{
-			UserId: "hmjna6kd9i",
-		},
-	)
-	if err != nil {
-		slog.Error("GenerateUserReview", "err", err)
 	}
 
 	return nil

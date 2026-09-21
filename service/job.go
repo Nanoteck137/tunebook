@@ -13,6 +13,18 @@ import (
 
 var jobErr = NewServiceErrCreator("job")
 
+const (
+	// DefaultJobMaxAttempts is how many times a job is attempted before it is
+	// permanently failed, unless overridden with WithMaxAttempts.
+	DefaultJobMaxAttempts = 3
+
+	jobRunTimeout = 5 * time.Minute
+	stuckJobGrace = 5 * time.Minute
+
+	jobBackoffBase = 30 * time.Second
+	jobMaxBackoff  = 30 * time.Minute
+)
+
 type JobInfo struct {
 	Name        string
 	DisplayName string
@@ -52,6 +64,16 @@ func NewJobService(logger *slog.Logger, db *database.Database) *JobService {
 
 func (s *JobService) Start() {
 	s.stopCh = make(chan struct{})
+
+	requeued, err := s.db.RequeueStuckJobs(
+		context.Background(),
+		time.Now().UnixMilli()-stuckJobGrace.Milliseconds(),
+	)
+	if err != nil {
+		s.logger.Error("requeue stuck jobs", "err", err)
+	} else if requeued > 0 {
+		s.logger.Info("requeued stuck jobs", "count", requeued)
+	}
 
 	s.wg.Add(1)
 	go func() {
@@ -126,11 +148,31 @@ func (s *JobService) AddJob(job Job) error {
 	return nil
 }
 
+type PushJobOptions struct {
+	MaxAttempts int
+}
+
+type PushJobOption func(*PushJobOptions)
+
+func WithMaxAttempts(maxAttempts int) PushJobOption {
+	return func(o *PushJobOptions) {
+		o.MaxAttempts = maxAttempts
+	}
+}
+
 func (s *JobService) PushJob(
 	ctx context.Context,
 	name string,
 	data any,
+	opts ...PushJobOption,
 ) error {
+	options := PushJobOptions{
+		MaxAttempts: DefaultJobMaxAttempts,
+	}
+	for _, opt := range opts {
+		opt(&options)
+	}
+
 	s.mu.RLock()
 	_, exists := s.handlers[name]
 	s.mu.RUnlock()
@@ -145,8 +187,9 @@ func (s *JobService) PushJob(
 	}
 
 	id, err := s.db.CreateJob(ctx, database.CreateJobParams{
-		Name: name,
-		Data: string(raw),
+		Name:        name,
+		Data:        string(raw),
+		MaxAttempts: options.MaxAttempts,
 	})
 	if err != nil {
 		return jobErr.Wrap("create job", err)
@@ -209,9 +252,18 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 		return jobErr.New(errMsg)
 	}
 
-	err = handler(ctx, job.Data)
+	runCtx, cancel := context.WithTimeout(ctx, jobRunTimeout)
+	defer cancel()
+
+	err = handler(runCtx, job.Data)
 	if err != nil {
 		shouldRequeue := job.Attempts+1 < job.MaxAttempts
+
+		nextAttemptAt := int64(0)
+		if shouldRequeue {
+			delay := jobBackoff(job.Attempts + 1)
+			nextAttemptAt = time.Now().Add(delay).UnixMilli()
+		}
 
 		s.logger.Error(
 			"job failed",
@@ -224,8 +276,9 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 		)
 
 		s.db.FailJob(ctx, job.Id, database.FailJobParams{
-			Requeue: shouldRequeue,
-			Error:   err.Error(),
+			Requeue:       shouldRequeue,
+			Error:         err.Error(),
+			NextAttemptAt: nextAttemptAt,
 		})
 		return jobErr.Wrap("job handler failed", err)
 	}
@@ -238,4 +291,37 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 	s.logger.Info("job completed", "id", job.Id, "name", job.Name)
 
 	return nil
+}
+
+func jobBackoff(attempt int) time.Duration {
+	delay := jobBackoffBase
+	for i := 1; i < attempt; i++ {
+		delay *= 2
+		if delay >= jobMaxBackoff {
+			return jobMaxBackoff
+		}
+	}
+
+	if delay > jobMaxBackoff {
+		delay = jobMaxBackoff
+	}
+
+	return delay
+}
+
+// CleanupOldJobs deletes finished jobs older than olderThan and returns how
+// many rows were removed.
+func (s *JobService) CleanupOldJobs(
+	ctx context.Context,
+	olderThan time.Duration,
+) (int64, error) {
+	count, err := s.db.DeleteOldJobs(
+		ctx,
+		time.Now().UnixMilli()-olderThan.Milliseconds(),
+	)
+	if err != nil {
+		return 0, jobErr.Wrap("delete old jobs", err)
+	}
+
+	return count, nil
 }

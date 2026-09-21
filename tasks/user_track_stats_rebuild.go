@@ -9,8 +9,6 @@ import (
 
 var _ service.Task = (*UserTrackStatsRebuildTask)(nil)
 
-const UserTrackStatsRebuild = "user-track-stats-rebuild"
-
 type UserTrackStatsRebuildTask struct {
 	userService *service.UserService
 	jobService  *service.JobService
@@ -28,7 +26,7 @@ func NewUserTrackStatsRebuildTask(
 
 func (j *UserTrackStatsRebuildTask) Info() service.TaskInfo {
 	return service.TaskInfo{
-		Name:        UserTrackStatsRebuild,
+		Name:        jobs.UserTrackStatsRebuild,
 		DisplayName: "User Track Stats Rebuild",
 		Schedule:    "",
 	}

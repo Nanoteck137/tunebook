@@ -21,15 +21,16 @@ var (
 )
 
 type Job struct {
-	Id          string `db:"id"`
-	Name        string `db:"name"`
-	Data        string `db:"data"`
-	Status      string `db:"status"`
-	Error       string `db:"error"`
-	Attempts    int    `db:"attempts"`
-	MaxAttempts int    `db:"max_attempts"`
-	Created     int64  `db:"created"`
-	Updated     int64  `db:"updated"`
+	Id            string `db:"id"`
+	Name          string `db:"name"`
+	Data          string `db:"data"`
+	Status        string `db:"status"`
+	Error         string `db:"error"`
+	Attempts      int    `db:"attempts"`
+	MaxAttempts   int    `db:"max_attempts"`
+	NextAttemptAt int64  `db:"next_attempt_at"`
+	Created       int64  `db:"created"`
+	Updated       int64  `db:"updated"`
 }
 
 func JobQuery() *goqu.SelectDataset {
@@ -42,6 +43,7 @@ func JobQuery() *goqu.SelectDataset {
 			jobsTbl.Col("error"),
 			jobsTbl.Col("attempts"),
 			jobsTbl.Col("max_attempts"),
+			jobsTbl.Col("next_attempt_at"),
 			jobsTbl.Col("created"),
 			jobsTbl.Col("updated"),
 		)
@@ -71,15 +73,16 @@ func (db DB) CreateJob(
 	}
 
 	query := dialect.Insert(jobsTbl).Rows(goqu.Record{
-		"id":           params.Id,
-		"name":         params.Name,
-		"data":         params.Data,
-		"status":       JobStatusPending,
-		"error":        "",
-		"attempts":     0,
-		"max_attempts": params.MaxAttempts,
-		"created":      t,
-		"updated":      t,
+		"id":              params.Id,
+		"name":            params.Name,
+		"data":            params.Data,
+		"status":          JobStatusPending,
+		"error":           "",
+		"attempts":        0,
+		"max_attempts":    params.MaxAttempts,
+		"next_attempt_at": t,
+		"created":         t,
+		"updated":         t,
 	})
 
 	_, err := db.Exec(ctx, query)
@@ -98,8 +101,13 @@ func (db DB) GetJobById(ctx context.Context, jobId string) (Job, error) {
 }
 
 func (db DB) GetPendingJobs(ctx context.Context, limit int) ([]Job, error) {
+	now := time.Now().UnixMilli()
+
 	query := JobQuery().
-		Where(jobsTbl.Col("status").Eq(JobStatusPending)).
+		Where(
+			jobsTbl.Col("status").Eq(JobStatusPending),
+			jobsTbl.Col("next_attempt_at").Lte(now),
+		).
 		Order(jobsTbl.Col("created").Asc()).
 		Limit(uint(limit))
 
@@ -133,8 +141,9 @@ func (db DB) CompleteJob(ctx context.Context, jobId string) error {
 }
 
 type FailJobParams struct {
-	Requeue bool
-	Error   string
+	Requeue       bool
+	Error         string
+	NextAttemptAt int64
 }
 
 func (db DB) FailJob(
@@ -148,9 +157,16 @@ func (db DB) FailJob(
 	}
 
 	if params.Requeue {
+		nextAttemptAt := params.NextAttemptAt
+		if nextAttemptAt <= 0 {
+			nextAttemptAt = time.Now().UnixMilli()
+		}
+
 		record["status"] = JobStatusPending
+		record["next_attempt_at"] = nextAttemptAt
 	} else {
 		record["status"] = JobStatusFailed
+		record["next_attempt_at"] = 0
 	}
 
 	query := dialect.Update(jobsTbl).
@@ -159,4 +175,47 @@ func (db DB) FailJob(
 
 	_, err := db.Exec(ctx, query)
 	return err
+}
+
+// RequeueStuckJobs resets jobs left in the "running" state to "pending" so they
+// are retried after a crash. A job older than olderThan (unix millis) that is
+// still marked as running is assumed to have been interrupted.
+func (db DB) RequeueStuckJobs(ctx context.Context, olderThan int64) (int64, error) {
+	query := dialect.Update(jobsTbl).
+		Set(goqu.Record{
+			"status":          JobStatusPending,
+			"next_attempt_at": time.Now().UnixMilli(),
+			"updated":         time.Now().UnixMilli(),
+		}).
+		Where(
+			jobsTbl.Col("status").Eq(JobStatusRunning),
+			jobsTbl.Col("updated").Lt(olderThan),
+		)
+
+	res, err := db.Exec(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.RowsAffected()
+}
+
+// DeleteOldJobs removes finished jobs (completed or failed) last updated before
+// olderThan (unix millis).
+func (db DB) DeleteOldJobs(ctx context.Context, olderThan int64) (int64, error) {
+	query := dialect.Delete(jobsTbl).
+		Where(
+			jobsTbl.Col("status").In(
+				JobStatusCompleted,
+				JobStatusFailed,
+			),
+			jobsTbl.Col("updated").Lt(olderThan),
+		)
+
+	res, err := db.Exec(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.RowsAffected()
 }
