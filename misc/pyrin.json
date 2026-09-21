@@ -893,6 +893,86 @@
           "name": "version",
           "type": "string",
           "omitEmpty": false
+        },
+        {
+          "name": "commit",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "startedAt",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetSystemStats",
+      "fields": [
+        {
+          "name": "users",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "artists",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "albums",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "tracks",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "playlists",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "favorites",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "trackFilters",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "queues",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "totalPlays",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "totalListeningTime",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "dataDir",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "databaseFile",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "databaseSize",
+          "type": "int",
+          "omitEmpty": false
         }
       ]
     },
@@ -2700,6 +2780,13 @@
       "method": "GET",
       "path": "/api/v1/system/info",
       "response": "GetSystemInfo"
+    },
+    {
+      "type": "api",
+      "name": "GetSystemStats",
+      "method": "GET",
+      "path": "/api/v1/system/stats",
+      "response": "GetSystemStats"
     },
     {
       "type": "api",

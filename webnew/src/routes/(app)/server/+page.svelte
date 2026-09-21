@@ -1,409 +1,180 @@
 <script lang="ts">
 	import { PUBLIC_COMMIT, PUBLIC_VERSION } from "$env/static/public";
-	import { getApiClient, handleApiError } from "$lib";
-	import { formatDuration } from "$lib/utils.js";
-	import { Badge, Button, Card, Separator } from "$lib/components/ui";
 	import {
-		AlertCircle,
+		Database,
+		Disc3,
 		DiscAlbum,
-		FileMusic,
-		ListChecks,
+		Heart,
+		Info,
+		LayoutGrid,
+		ListMusic,
+		ListFilter,
+		Music,
 		Play,
-		RefreshCw,
 		Server,
 		Users,
 	} from "@lucide/svelte";
-	import { onMount } from "svelte";
-	import { z } from "zod";
-	import { toast } from "svelte-sonner";
+	import { Card, Separator } from "$lib/components/ui";
+	import { formatPlayTime } from "$lib/utils";
 
 	const { data } = $props();
-	const apiClient = getApiClient();
 
-	let errors = $state<string[]>([]);
-	let numArtists = $state(0);
-	let numAlbums = $state(0);
-	let numTracks = $state(0);
+	const formatsCount = $derived(data.mediaSettings.formats.length);
+	const deviceSpecsCount = $derived(data.mediaSettings.deviceSpecs.length);
 
-	let missingArtists = $state<MissingItemTy[]>([]);
-	let missingAlbums = $state<MissingItemTy[]>([]);
-	let missingTracks = $state<MissingItemTy[]>([]);
+	const statTiles = $derived([
+		{ icon: Users, label: "Users", value: data.serverStats.users },
+		{ icon: Disc3, label: "Artists", value: data.serverStats.artists },
+		{ icon: DiscAlbum, label: "Albums", value: data.serverStats.albums },
+		{ icon: Music, label: "Tracks", value: data.serverStats.tracks },
+		{ icon: ListMusic, label: "Playlists", value: data.serverStats.playlists },
+		{ icon: Heart, label: "Favorites", value: data.serverStats.favorites },
+		{
+			icon: ListFilter,
+			label: "Track filters",
+			value: data.serverStats.trackFilters,
+		},
+		{ icon: LayoutGrid, label: "Queues", value: data.serverStats.queues },
+	]);
 
-	let artistSyncTime = $state(0);
-	let albumSyncTime = $state(0);
-	let trackSyncTime = $state(0);
-	let totalSyncTime = $state(0);
+	function formatUptime(ms: number) {
+		const s = Math.floor(ms / 1000);
+		const d = Math.floor(s / 86400);
+		const h = Math.floor((s % 86400) / 3600);
+		const m = Math.floor((s % 3600) / 60);
 
-	const MissingItem = z.object({
-		id: z.string(),
-		name: z.string(),
-	});
-	type MissingItemTy = z.infer<typeof MissingItem>;
-
-	const LibrarySyncStateEvent = z.object({
-		errors: z.array(z.string()),
-
-		numArtists: z.number(),
-		numAlbums: z.number(),
-		numTracks: z.number(),
-
-		missingArtists: z.array(MissingItem),
-		missingAlbums: z.array(MissingItem),
-		missingTracks: z.array(MissingItem),
-
-		artistsSyncDurationMs: z.number(),
-		albumsSyncDurationMs: z.number(),
-		tracksSyncDurationMs: z.number(),
-		totalSyncDurationMs: z.number(),
-	});
-
-	const TaskSyncStateEventTask = z.object({
-		name: z.string(),
-		displayName: z.string(),
-		isRunning: z.boolean(),
-	});
-	type TaskSyncStateEventTaskTy = z.infer<typeof TaskSyncStateEventTask>;
-
-	const TaskSyncStateEvent = z.object({
-		tasks: z.array(TaskSyncStateEventTask),
-	});
-
-	const Job = z.object({
-		id: z.string(),
-		name: z.string(),
-		displayName: z.string(),
-		status: z.string(),
-		error: z.string(),
-		attempts: z.number(),
-		maxAttempts: z.number(),
-		created: z.number(),
-		updated: z.number(),
-	});
-	type JobTy = z.infer<typeof Job>;
-
-	const JobSyncStateEvent = z.object({
-		jobs: z.array(Job),
-	});
-
-	let jobs = $state<JobTy[]>(data.jobs);
-	let tasks = $state<TaskSyncStateEventTaskTy[]>([]);
-
-	function jobStatusVariant(status: string) {
-		switch (status) {
-			case "completed":
-				return "default";
-			case "running":
-				return "secondary";
-			case "failed":
-				return "destructive";
-			case "pending":
-				return "outline";
-			default:
-				return "outline";
-		}
+		if (d > 0) return `${d}d ${h}h`;
+		if (h > 0) return `${h}h ${m}m`;
+		return `${m}m`;
 	}
 
-	function formatDate(ms: number) {
-		return new Date(ms).toLocaleString();
+	function formatBytes(bytes: number) {
+		if (bytes <= 0) return "0 B";
+
+		const units = ["B", "kB", "MB", "GB", "TB"];
+		const i = Math.min(
+			Math.floor(Math.log(bytes) / Math.log(1024)),
+			units.length - 1,
+		);
+		return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 	}
 
-	async function setupEventSource(): Promise<EventSource | null> {
-		const res = await apiClient.createSseToken();
-		if (!res.success) {
-			handleApiError(res.error);
-			return null;
-		}
+	const uptime = $derived(
+		formatUptime(Date.now() - data.systemInfo.startedAt),
+	);
+	const startedAt = $derived(new Date(data.systemInfo.startedAt));
 
-		const url = apiClient.url.sseHandler();
-		url.searchParams.set("token", res.data.token);
-
-		const eventSource = new EventSource(url);
-
-		eventSource.addEventListener("connected", () => {
-			console.log("Connected to SSE handler");
-		});
-
-		eventSource.addEventListener("library-sync-state", (e) => {
-			const data = LibrarySyncStateEvent.parse(JSON.parse(e.data));
-
-			errors = data.errors;
-			numArtists = data.numArtists;
-			numAlbums = data.numAlbums;
-			numTracks = data.numTracks;
-
-			missingArtists = data.missingArtists;
-			missingAlbums = data.missingAlbums;
-			missingTracks = data.missingTracks;
-
-			artistSyncTime = data.artistsSyncDurationMs;
-			albumSyncTime = data.albumsSyncDurationMs;
-			trackSyncTime = data.tracksSyncDurationMs;
-			totalSyncTime = data.totalSyncDurationMs;
-		});
-
-		eventSource.addEventListener("task-sync-state", (e) => {
-			const data = TaskSyncStateEvent.parse(JSON.parse(e.data));
-
-			tasks = data.tasks;
-		});
-
-		eventSource.addEventListener("job-sync-state", (e) => {
-			const data = JobSyncStateEvent.parse(JSON.parse(e.data));
-
-			jobs = data.jobs;
-		});
-
-		return eventSource;
-	}
-
-	let eventSource = $state<EventSource | null>(null);
-
-	onMount(() => {
-		setupEventSource().then((e) => {
-			eventSource = e;
-		});
-
-		return () => {
-			eventSource?.close();
-		};
-	});
+	const overview = $derived([
+		{ label: "Server version", value: data.systemInfo.version, mono: true },
+		{ label: "Commit", value: data.systemInfo.commit, mono: true },
+		{ label: "Uptime", value: uptime },
+		{ label: "Started", value: startedAt.toLocaleString() },
+		{ label: "Client version", value: `v${PUBLIC_VERSION}`, mono: true },
+		{ label: "Client commit", value: PUBLIC_COMMIT, mono: true },
+		{ label: "Media formats", value: String(formatsCount) },
+		{ label: "Device specs", value: String(deviceSpecsCount) },
+		{ label: "Data directory", value: data.serverStats.dataDir, mono: true },
+		{
+			label: "Database file",
+			value: data.serverStats.databaseFile,
+			mono: true,
+		},
+		{
+			label: "Database size",
+			value: formatBytes(data.serverStats.databaseSize),
+		},
+	]);
 </script>
 
 <div class="flex flex-col gap-6">
 	<div class="flex items-center gap-3">
 		<Server size={24} />
-		<h1 class="text-xl font-bold">Server</h1>
-		<span class="text-xs text-muted-foreground">
-			Server: {data.systemInfo.version} | Client: v{PUBLIC_VERSION} ({PUBLIC_COMMIT})
-		</span>
-	</div>
-
-	<div class="grid grid-cols-3 gap-4">
-		<Card.Root>
-			<Card.Content class="flex flex-col gap-2">
-				<div class="flex items-center gap-2 text-sm text-muted-foreground">
-					<Users size={16} />
-					<span>Artists</span>
-				</div>
-				<span class="text-2xl font-bold">{numArtists}</span>
-				<span class="text-xs text-muted-foreground">
-					Last sync: {formatDuration(artistSyncTime)}
-				</span>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Content class="flex flex-col gap-2">
-				<div class="flex items-center gap-2 text-sm text-muted-foreground">
-					<DiscAlbum size={16} />
-					<span>Albums</span>
-				</div>
-				<span class="text-2xl font-bold">{numAlbums}</span>
-				<span class="text-xs text-muted-foreground">
-					Last sync: {formatDuration(albumSyncTime)}
-				</span>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Content class="flex flex-col gap-2">
-				<div class="flex items-center gap-2 text-sm text-muted-foreground">
-					<FileMusic size={16} />
-					<span>Tracks</span>
-				</div>
-				<span class="text-2xl font-bold">{numTracks}</span>
-				<span class="text-xs text-muted-foreground">
-					Last sync: {formatDuration(trackSyncTime)}
-				</span>
-			</Card.Content>
-		</Card.Root>
-	</div>
-
-	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-		<Card.Root>
-			<Card.Content>
-				<div class="flex items-center gap-2">
-					<RefreshCw size={18} />
-					<h2 class="text-lg font-semibold">Tasks</h2>
-				</div>
-
-				<Separator class="my-4" />
-
-				<div class="flex flex-col gap-2">
-					{#each tasks as task (task.name)}
-						<div
-							class="flex items-center justify-between rounded-lg border p-3"
-						>
-							<div class="flex flex-col">
-								<span class="text-sm font-medium">{task.displayName}</span>
-								<span class="text-xs text-muted-foreground">
-									{task.isRunning ? "Running..." : "Idle"}
-								</span>
-							</div>
-							{#if !task.isRunning}
-								<Button
-									variant="outline"
-									size="sm"
-									onclick={async () => {
-										const res = await apiClient.runTask(task.name);
-										if (!res.success) {
-											return handleApiError(res.error);
-										}
-
-										toast.success("Dispatched task");
-									}}
-								>
-									<Play size={14} />
-									Run
-								</Button>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Content>
-				<div class="flex items-center gap-2">
-					<AlertCircle size={18} />
-					<h2 class="text-lg font-semibold">Missing Items</h2>
-				</div>
-
-				<Separator class="my-4" />
-
-				<div class="flex flex-col gap-4">
-					{#if missingArtists.length > 0}
-						<div>
-							<span class="text-xs font-medium text-muted-foreground"
-								>Artists ({missingArtists.length})</span
-							>
-							<div class="mt-1 flex flex-col">
-								{#each missingArtists as artist (artist.id)}
-									<a
-										href="/artists/{artist.id}"
-										class="text-sm hover:underline">{artist.name}</a
-									>
-								{/each}
-							</div>
-						</div>
-					{/if}
-
-					{#if missingAlbums.length > 0}
-						<div>
-							<span class="text-xs font-medium text-muted-foreground"
-								>Albums ({missingAlbums.length})</span
-							>
-							<div class="mt-1 flex flex-col">
-								{#each missingAlbums as album (album.id)}
-									<a href="/albums/{album.id}" class="text-sm hover:underline"
-										>{album.name}</a
-									>
-								{/each}
-							</div>
-						</div>
-					{/if}
-
-					{#if missingTracks.length > 0}
-						<div>
-							<span class="text-xs font-medium text-muted-foreground"
-								>Tracks ({missingTracks.length})</span
-							>
-							<div class="mt-1 flex flex-col">
-								{#each missingTracks as track (track.name)}
-									<span class="text-sm">{track.name}</span>
-								{/each}
-							</div>
-						</div>
-					{/if}
-
-					{#if missingArtists.length === 0 && missingAlbums.length === 0 && missingTracks.length === 0}
-						<p class="text-sm text-muted-foreground">No missing items.</p>
-					{/if}
-				</div>
-			</Card.Content>
-		</Card.Root>
+		<div class="flex flex-col">
+			<h1 class="text-xl font-bold">Server</h1>
+			<p class="text-xs text-muted-foreground">
+				v{data.systemInfo.version}
+				{#if data.systemInfo.commit}({data.systemInfo.commit}){/if}
+			</p>
+		</div>
 	</div>
 
 	<Card.Root>
 		<Card.Content>
 			<div class="flex items-center gap-2">
-				<ListChecks size={18} />
-				<h2 class="text-lg font-semibold">Jobs</h2>
+				<Info size={18} />
+				<h2 class="text-lg font-semibold">Overview</h2>
 			</div>
 
 			<Separator class="my-4" />
 
-			{#if jobs.length === 0}
-				<p class="text-sm text-muted-foreground">No jobs.</p>
-			{:else}
-				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm">
-						<thead>
-							<tr class="text-muted-foreground">
-								<th class="px-3 py-2 font-medium">Name</th>
-								<th class="px-3 py-2 font-medium">Status</th>
-								<th class="px-3 py-2 font-medium">Attempts</th>
-								<th class="px-3 py-2 font-medium">Created</th>
-								<th class="px-3 py-2 font-medium">Updated</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each jobs as job (job.id)}
-								<tr class="border-t">
-									<td class="px-3 py-2">{job.displayName}</td>
-									<td class="px-3 py-2">
-										<Badge variant={jobStatusVariant(job.status)}>
-											{job.status}
-										</Badge>
-									</td>
-									<td class="px-3 py-2">
-										{job.attempts}/{job.maxAttempts}
-									</td>
-									<td class="px-3 py-2">{formatDate(job.created)}</td>
-									<td class="px-3 py-2">{formatDate(job.updated)}</td>
-								</tr>
-								{#if job.error}
-									<tr class="border-t">
-										<td
-											colspan={5}
-											class="px-3 py-2 font-mono text-xs text-destructive"
-										>
-											{job.error}
-										</td>
-									</tr>
-								{/if}
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			{/if}
+			<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+				{#each overview as item (item.label)}
+					<div class="flex items-center justify-between gap-4">
+						<span class="text-sm text-muted-foreground">{item.label}</span>
+						<span class="text-sm font-medium {item.mono ? 'font-mono' : ''}">
+							{item.value}
+						</span>
+					</div>
+				{/each}
+			</div>
 		</Card.Content>
 	</Card.Root>
-
-	{#if errors.length > 0}
-		<Card.Root>
-			<Card.Content>
-				<div class="flex items-center gap-2 text-destructive">
-					<AlertCircle size={18} />
-					<h2 class="text-lg font-semibold">Errors</h2>
-				</div>
-
-				<Separator class="my-4" />
-
-				<div class="flex flex-col gap-1">
-					{#each errors as err (err)}
-						<p class="font-mono text-sm text-destructive">{err}</p>
-					{/each}
-				</div>
-			</Card.Content>
-		</Card.Root>
-	{/if}
 
 	<Card.Root>
 		<Card.Content>
 			<div class="flex items-center gap-2">
-				<Server size={18} />
+				<Database size={18} />
+				<h2 class="text-lg font-semibold">Stats</h2>
+			</div>
+
+			<Separator class="my-4" />
+
+			<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+				{#each statTiles as tile (tile.label)}
+					<div class="flex flex-col gap-2 rounded border p-4">
+						<div class="flex items-center gap-2 text-sm text-muted-foreground">
+							<tile.icon size={16} />
+							<span>{tile.label}</span>
+						</div>
+						<span class="text-2xl font-bold">{tile.value}</span>
+					</div>
+				{/each}
+			</div>
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Content>
+			<div class="flex items-center gap-2">
+				<Play size={18} />
+				<h2 class="text-lg font-semibold">Usage</h2>
+			</div>
+
+			<Separator class="my-4" />
+
+			<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+				<div class="flex items-center justify-between gap-4">
+					<span class="text-sm text-muted-foreground">Total plays</span>
+					<span class="text-sm font-medium">
+						{data.serverStats.totalPlays}
+					</span>
+				</div>
+				<div class="flex items-center justify-between gap-4">
+					<span class="text-sm text-muted-foreground"
+						>Total listening time</span
+					>
+					<span class="text-sm font-medium">
+						{formatPlayTime(data.serverStats.totalListeningTime)}
+					</span>
+				</div>
+			</div>
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Content>
+			<div class="flex items-center gap-2">
+				<Disc3 size={18} />
 				<h2 class="text-lg font-semibold">Media Configuration</h2>
 			</div>
 

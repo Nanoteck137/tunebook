@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"os"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook"
@@ -12,11 +13,31 @@ import (
 )
 
 type GetSystemInfo struct {
-	Version string `json:"version"`
+	Version   string `json:"version"`
+	Commit    string `json:"commit"`
+	StartedAt int64  `json:"startedAt"`
 }
 
 type CreateSSEToken struct {
 	Token string `json:"token"`
+}
+
+type GetSystemStats struct {
+	Users        int `json:"users"`
+	Artists      int `json:"artists"`
+	Albums       int `json:"albums"`
+	Tracks       int `json:"tracks"`
+	Playlists    int `json:"playlists"`
+	Favorites    int `json:"favorites"`
+	TrackFilters int `json:"trackFilters"`
+	Queues       int `json:"queues"`
+
+	TotalPlays         int   `json:"totalPlays"`
+	TotalListeningTime int64 `json:"totalListeningTime"`
+
+	DataDir      string `json:"dataDir"`
+	DatabaseFile string `json:"databaseFile"`
+	DatabaseSize int64  `json:"databaseSize"`
 }
 
 func InstallSystemHandlers(app core.App, group pyrin.Group) {
@@ -28,7 +49,51 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 			ResponseType: GetSystemInfo{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				return GetSystemInfo{
-					Version: tunebook.Version,
+					Version:   tunebook.Version,
+					Commit:    tunebook.Commit,
+					StartedAt: tunebook.BootTime.UnixMilli(),
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetSystemStats",
+			Method:       http.MethodGet,
+			Path:         "/system/stats",
+			ResponseType: GetSystemStats{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				_, err := User(app, c, RequireAdmin)
+				if err != nil {
+					return nil, err
+				}
+
+				stats, err := app.DB().GetStats(c.Request().Context())
+				if err != nil {
+					return nil, err
+				}
+
+				databaseFile := app.FilesystemService().DatabaseFile()
+				var databaseSize int64
+				if info, err := os.Stat(databaseFile); err == nil {
+					databaseSize = info.Size()
+				}
+
+				return GetSystemStats{
+					Users:        stats.Users,
+					Artists:      stats.Artists,
+					Albums:       stats.Albums,
+					Tracks:       stats.Tracks,
+					Playlists:    stats.Playlists,
+					Favorites:    stats.Favorites,
+					TrackFilters: stats.TrackFilters,
+					Queues:       stats.Queues,
+
+					TotalPlays:         stats.TotalPlays,
+					TotalListeningTime: stats.TotalListeningTime,
+
+					DataDir:      app.FilesystemService().DataDir().String(),
+					DatabaseFile: databaseFile,
+					DatabaseSize: databaseSize,
 				}, nil
 			},
 		},

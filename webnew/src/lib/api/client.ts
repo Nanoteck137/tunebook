@@ -199,6 +199,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any().optional(), undefined, options)
   }
   
+  getSystemStats(options?: ExtraOptions) {
+    return this.request("/api/v1/system/stats", "GET", api.GetSystemStats, z.any().optional(), undefined, options)
+  }
+  
   getTags(options?: ExtraOptions) {
     return this.request("/api/v1/tags", "GET", api.GetTags, z.any().optional(), undefined, options)
   }
@@ -608,6 +612,10 @@ export class ClientUrls {
   
   getSystemInfo() {
     return createUrl(this.baseUrl, "/api/v1/system/info")
+  }
+  
+  getSystemStats() {
+    return createUrl(this.baseUrl, "/api/v1/system/stats")
   }
   
   getTags() {

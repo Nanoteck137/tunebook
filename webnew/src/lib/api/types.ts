@@ -735,8 +735,43 @@ export type GetQueueItem = z.infer<typeof GetQueueItem>;
 export const GetSystemInfo = z.object({
   // Name: GetSystemInfo.version
   "version": z.string(),
+  // Name: GetSystemInfo.commit
+  "commit": z.string(),
+  // Name: GetSystemInfo.startedAt
+  "startedAt": z.number(),
 });
 export type GetSystemInfo = z.infer<typeof GetSystemInfo>;
+
+// Name: GetSystemStats
+export const GetSystemStats = z.object({
+  // Name: GetSystemStats.users
+  "users": z.number(),
+  // Name: GetSystemStats.artists
+  "artists": z.number(),
+  // Name: GetSystemStats.albums
+  "albums": z.number(),
+  // Name: GetSystemStats.tracks
+  "tracks": z.number(),
+  // Name: GetSystemStats.playlists
+  "playlists": z.number(),
+  // Name: GetSystemStats.favorites
+  "favorites": z.number(),
+  // Name: GetSystemStats.trackFilters
+  "trackFilters": z.number(),
+  // Name: GetSystemStats.queues
+  "queues": z.number(),
+  // Name: GetSystemStats.totalPlays
+  "totalPlays": z.number(),
+  // Name: GetSystemStats.totalListeningTime
+  "totalListeningTime": z.number(),
+  // Name: GetSystemStats.dataDir
+  "dataDir": z.string(),
+  // Name: GetSystemStats.databaseFile
+  "databaseFile": z.string(),
+  // Name: GetSystemStats.databaseSize
+  "databaseSize": z.number(),
+});
+export type GetSystemStats = z.infer<typeof GetSystemStats>;
 
 // Name: Tag
 export const Tag = z.object({

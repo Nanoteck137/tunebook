@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/golang-cz/devslog"
 )
@@ -13,6 +14,8 @@ var CliAppName = AppName + "-cli"
 
 var Version = "no-version"
 var Commit = "no-commit"
+
+var BootTime = time.Now()
 
 func VersionTemplate(appName string) string {
 	return fmt.Sprintf(
