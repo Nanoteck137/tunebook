@@ -15,14 +15,15 @@
 	import type { LibrarySyncStateEventTy } from "../events";
 	import {
 		connectServerSse,
+		JobSyncStateEvent,
 		LibrarySyncStateEvent,
-		TaskSyncStateEvent,
 	} from "../events";
 
 	const apiClient = getApiClient();
 
 	const initial: LibrarySyncStateEventTy = {
 		errors: [],
+		currentItem: null,
 		numArtists: 0,
 		numAlbums: 0,
 		numTracks: 0,
@@ -54,11 +55,11 @@
 			"library-sync-state": (data) => {
 				syncState = LibrarySyncStateEvent.parse(data);
 			},
-			"task-sync-state": (data) => {
-				const event = TaskSyncStateEvent.parse(data);
+			"job-sync-state": (data) => {
+				const event = JobSyncStateEvent.parse(data);
 				syncing =
-					event.tasks.find((task) => task.name === "library-sync")
-						?.isRunning ?? false;
+					event.jobs.find((job) => job.name === "library-sync")?.status ===
+					"running";
 			},
 		}).then((e) => {
 			eventSource = e;
@@ -91,6 +92,24 @@
 			{/if}
 		</Button>
 	</div>
+
+	{#if syncing && syncState.currentItem}
+		<div class="flex items-center gap-3 rounded border p-3">
+			<Loader2 size={16} class="shrink-0 animate-spin text-muted-foreground" />
+			<span class="text-sm">
+				Syncing {syncState.currentItem.kind}:
+				<span class="font-medium">{syncState.currentItem.name}</span>
+			</span>
+			{#if syncState.currentItem.info}
+				<span
+					class="ml-auto max-w-64 truncate font-mono text-xs text-muted-foreground"
+					title={syncState.currentItem.info}
+				>
+					{syncState.currentItem.info}
+				</span>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="grid grid-cols-3 gap-4">
 		<Card.Root>

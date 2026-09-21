@@ -31,6 +31,7 @@ var _ broker.EventProducer = (*TaskService)(nil)
 type TaskSyncStateEventTask struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
+	Schedule    string `json:"schedule"`
 	IsRunning   bool   `json:"isRunning"`
 
 	order int
@@ -96,6 +97,7 @@ func (s *TaskService) GetSyncStateEvent() TaskSyncStateEvent {
 		res.Tasks = append(res.Tasks, TaskSyncStateEventTask{
 			Name:        task.info.Name,
 			DisplayName: displayName,
+			Schedule:    task.info.Schedule,
 			IsRunning:   task.isRunning,
 
 			order: task.order,

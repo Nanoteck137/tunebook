@@ -38,6 +38,12 @@ type JobInfo struct {
 	// job is requeued (and retried) after a restart. Jobs like a full library
 	// sync should set this so they don't resume from a half-finished run.
 	FailOnRestart bool
+
+	// NoTimeout disables the per-job run timeout (jobRunTimeout). Set this for
+	// jobs that are expected to run longer than the default timeout, e.g. a
+	// full library sync or search index rebuild. Defaults to false, meaning the
+	// job is canceled once the timeout elapses.
+	NoTimeout bool
 }
 
 type Job interface {
@@ -382,6 +388,10 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 
 	s.mu.RLock()
 	handler, exists := s.handlers[job.Name]
+	noTimeout := false
+	if entry, ok := s.jobs[job.Name]; ok {
+		noTimeout = entry.info.NoTimeout
+	}
 	s.mu.RUnlock()
 
 	if !exists {
@@ -395,7 +405,11 @@ func (s *JobService) processJob(ctx context.Context, job database.Job) error {
 		return jobErr.New(errMsg)
 	}
 
-	runCtx, cancel := context.WithTimeout(ctx, jobRunTimeout)
+	var runCtx context.Context = ctx
+	var cancel context.CancelFunc = func() {}
+	if !noTimeout {
+		runCtx, cancel = context.WithTimeout(ctx, jobRunTimeout)
+	}
 	defer cancel()
 
 	err = handler(runCtx, job.Data)

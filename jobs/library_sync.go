@@ -25,6 +25,7 @@ func (j *LibrarySyncJob) Info() service.JobInfo {
 		Name:          LibrarySync,
 		DisplayName:   "Library Sync",
 		FailOnRestart: true,
+		NoTimeout:     true,
 	}
 }
 

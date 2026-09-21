@@ -24,6 +24,7 @@ func (j *SearchIndexJob) Info() service.JobInfo {
 	return service.JobInfo{
 		Name:        SearchIndex,
 		DisplayName: "Search Index",
+		NoTimeout:   true,
 	}
 }
 

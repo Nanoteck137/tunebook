@@ -7,12 +7,22 @@ export const MissingItem = z.object({
 });
 export type MissingItemTy = z.infer<typeof MissingItem>;
 
+export const CurrentItem = z.object({
+	kind: z.string(),
+	name: z.string(),
+	info: z.string(),
+	index: z.number(),
+});
+export type CurrentItemTy = z.infer<typeof CurrentItem>;
+
 export const LibrarySyncStateEvent = z.object({
 	errors: z.array(z.string()),
 
 	numArtists: z.number(),
 	numAlbums: z.number(),
 	numTracks: z.number(),
+
+	currentItem: CurrentItem.nullable(),
 
 	missingArtists: z.array(MissingItem),
 	missingAlbums: z.array(MissingItem),
@@ -28,6 +38,7 @@ export type LibrarySyncStateEventTy = z.infer<typeof LibrarySyncStateEvent>;
 export const TaskSyncStateEventTask = z.object({
 	name: z.string(),
 	displayName: z.string(),
+	schedule: z.string(),
 	isRunning: z.boolean(),
 });
 export type TaskSyncStateEventTaskTy = z.infer<typeof TaskSyncStateEventTask>;

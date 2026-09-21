@@ -36,12 +36,21 @@ type MissingItem struct {
 	Name string `json:"name"`
 }
 
+type LibraryCurrentItem struct {
+	Kind  string `json:"kind"`
+	Name  string `json:"name"`
+	Info  string `json:"info"`
+	Index int    `json:"index"`
+}
+
 type LibrarySyncStateEvent struct {
 	Errors []string `json:"errors"`
 
 	NumArtists int `json:"numArtists"`
 	NumAlbums  int `json:"numAlbums"`
 	NumTracks  int `json:"numTracks"`
+
+	CurrentItem *LibraryCurrentItem `json:"currentItem"`
 
 	MissingArtists []MissingItem `json:"missingArtists"`
 	MissingAlbums  []MissingItem `json:"missingAlbums"`
@@ -77,6 +86,8 @@ type LibraryService struct {
 	numArtists int
 	numAlbums  int
 	numTracks  int
+
+	currentItem *LibraryCurrentItem
 
 	missingArtists []MissingItem
 	missingAlbums  []MissingItem
@@ -140,6 +151,7 @@ func (s *LibraryService) GetSyncStateEvent() LibrarySyncStateEvent {
 		NumArtists:            s.numArtists,
 		NumAlbums:             s.numAlbums,
 		NumTracks:             s.numTracks,
+		CurrentItem:           s.currentItem,
 		MissingArtists:        s.missingArtists,
 		MissingAlbums:         s.missingAlbums,
 		MissingTracks:         s.missingTracks,
@@ -321,6 +333,13 @@ func (s *LibraryService) syncArtists(
 		if entry.Path != "" {
 			entry.Path = path.Join(libraryDir, entry.Path)
 		}
+
+		s.currentItem = &LibraryCurrentItem{
+			Kind:  "artist",
+			Name:  entry.Name,
+			Index: idx,
+		}
+		s.update()
 
 		err = s.syncSingleArtist(ctx, &entry)
 		if err != nil {
@@ -559,6 +578,13 @@ func (s *LibraryService) syncAlbums(
 		if entry.Path != "" {
 			entry.Path = path.Join(libraryDir, entry.Path)
 		}
+
+		s.currentItem = &LibraryCurrentItem{
+			Kind:  "album",
+			Name:  entry.Name,
+			Index: idx,
+		}
+		s.update()
 
 		err = s.syncSingleAlbum(ctx, &entry)
 		if err != nil {
@@ -854,6 +880,16 @@ func (s *LibraryService) syncTracks(
 			entry.Path = path.Join(libraryDir, entry.Path)
 		}
 
+		item := &LibraryCurrentItem{
+			Kind:  "track",
+			Name:  entry.Name,
+			Info:  entry.GetTrackFile(),
+			Index: idx,
+		}
+
+		s.currentItem = item
+		s.update()
+
 		err = s.syncSingleTrack(ctx, &entry)
 		if err != nil {
 			stop := s.addError(
@@ -951,6 +987,8 @@ func (s *LibraryService) initSyncState() {
 	s.numAlbums = 0
 	s.numTracks = 0
 
+	s.currentItem = nil
+
 	s.artistsSyncDuration = 0
 	s.albumsSyncDuration = 0
 	s.tracksSyncDuration = 0
@@ -966,6 +1004,7 @@ func (s *LibraryService) initSyncState() {
 }
 
 func (s *LibraryService) finishSync() {
+	s.currentItem = nil
 	s.update()
 
 	s.logger.Info("stopped library sync")
