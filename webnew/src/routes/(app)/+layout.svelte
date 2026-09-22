@@ -1,5 +1,5 @@
 <script lang="ts">
-import {
+	import {
 		Compass,
 		House,
 		Library,
@@ -19,7 +19,10 @@ import {
 	import { getApiAddress, handleApiError, setApiClient } from "$lib";
 	import { setMusicManager } from "$lib/music-manager.svelte";
 	import { goto, invalidateAll } from "$app/navigation";
-	import { setQuickPlaylist, getQuickPlaylist } from "$lib/quick-playlist.svelte";
+	import {
+		setQuickPlaylist,
+		getQuickPlaylist,
+	} from "$lib/quick-playlist.svelte";
 	import { setFavorites, getFavorites } from "$lib/favorites.svelte";
 	import { setSseConnection } from "$lib/sse.svelte";
 	import {
@@ -56,7 +59,7 @@ import {
 
 	const sse = setSseConnection(apiClient);
 
-	const favorites = getFavorites()
+	const favorites = getFavorites();
 
 	sse.on("favorites-changed", () => {
 		favorites.fetchIds();
@@ -89,7 +92,8 @@ import {
 
 {#if data.user}
 	<header
-		class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60" >
+		class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60"
+	>
 		<div
 			class="old-container flex h-14 max-w-screen-2xl items-center gap-4 px-4 sm:px-8"
 		>
@@ -101,6 +105,20 @@ import {
 			</a>
 
 			<div class="hidden items-center gap-1 md:flex">
+				<Button
+					href="/"
+					class="text-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page
+						.url.pathname === '/'
+						? 'bg-accent text-accent-foreground'
+						: 'text-muted-foreground'}"
+					variant="ghost"
+					title="Home"
+					aria-label="Home"
+				>
+					<House />
+					Home
+				</Button>
+
 				<Button
 					href="/browse"
 					class="text-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page.url.pathname.startsWith(
@@ -276,8 +294,8 @@ import {
 		>
 			<a
 				href="/"
-				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page.url.pathname ===
-				'/'
+				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors {page
+					.url.pathname === '/'
 					? 'text-primary'
 					: 'text-muted-foreground'}"
 			>

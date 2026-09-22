@@ -1,149 +1,149 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
-  import { Disc, Mic, Music } from "@lucide/svelte";
-  import { onMount } from "svelte";
-  import TrackList from "$lib/components/track-list/TrackList.svelte";
-  import { getMusicManager } from "$lib/music-manager.svelte";
-  import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
-  import ArtistTile from "$lib/components/tiles/ArtistTile.svelte";
-  import SearchBarHeader from "./SearchBarHeader.svelte";
-  import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import { goto } from "$app/navigation";
+	import { Disc, Mic, Music } from "@lucide/svelte";
+	import { onMount } from "svelte";
+	import TrackList from "$lib/components/track-list/TrackList.svelte";
+	import { getMusicManager } from "$lib/music-manager.svelte";
+	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
+	import ArtistTile from "$lib/components/tiles/ArtistTile.svelte";
+	import SearchBarHeader from "./SearchBarHeader.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 
-  const { data } = $props();
-  const musicManager = getMusicManager();
+	const { data } = $props();
+	const musicManager = getMusicManager();
 
-  async function search(query: string) {
-    await goto(`?query=${query}`, {
-      invalidateAll: true,
-      keepFocus: true,
-      replaceState: true,
-    });
-  }
+	async function search(query: string) {
+		await goto(`?query=${query}`, {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
+	}
 
-  function clearSearch() {
-    value = "";
-    search("");
-  }
+	function clearSearch() {
+		value = "";
+		search("");
+	}
 
-  let value = $state("");
+	let value = $state("");
 
-  onMount(() => {
-    value = data.query;
-  });
+	onMount(() => {
+		value = data.query;
+	});
 
-  function formatError(err: { type: string; code: number; message: string }) {
-    return err.message;
-  }
+	function formatError(err: { type: string; code: number; message: string }) {
+		return err.message;
+	}
 
-  let topTracks = $derived(data.tracks.slice(0, 6));
+	let topTracks = $derived(data.tracks.slice(0, 6));
 
-  async function playTrack(trackId: string) {
-    await musicManager.addTracks({
-      trackIds: topTracks.map((t) => t.id),
-      trackId,
-      clear: true,
-    });
-  }
+	async function playTrack(trackId: string) {
+		await musicManager.addTracks({
+			trackIds: topTracks.map((t) => t.id),
+			trackId,
+			clear: true,
+		});
+	}
 </script>
 
 <svelte:head>
-  <title>Search - Tunebook</title>
+	<title>Search - Tunebook</title>
 </svelte:head>
 
 <div class="flex flex-col gap-6">
-  <SearchBarHeader
-    searchBarPlaceholder="Search artists, albums, tracks, playlists, users..."
-    {value}
-    setValue={(v) => {
-      value = v;
-    }}
-    {search}
-    searchWithValue={() => {
-      search(value);
-    }}
-    {clearSearch}
-  />
+	<SearchBarHeader
+		searchBarPlaceholder="Search artists, albums, tracks, playlists, users..."
+		{value}
+		setValue={(v) => {
+			value = v;
+		}}
+		{search}
+		searchWithValue={() => {
+			search(value);
+		}}
+		{clearSearch}
+	/>
 
-  {#if data.artistError || data.albumError || data.trackError}
-    <div class="flex flex-col gap-1 text-sm text-red-400">
-      {#if data.artistError}
-        <p>Artists: {formatError(data.artistError)}</p>
-      {/if}
-      {#if data.albumError}
-        <p>Albums: {formatError(data.albumError)}</p>
-      {/if}
-      {#if data.trackError}
-        <p>Tracks: {formatError(data.trackError)}</p>
-      {/if}
-    </div>
-  {/if}
+	{#if data.artistError || data.albumError || data.trackError}
+		<div class="flex flex-col gap-1 text-sm text-red-400">
+			{#if data.artistError}
+				<p>Artists: {formatError(data.artistError)}</p>
+			{/if}
+			{#if data.albumError}
+				<p>Albums: {formatError(data.albumError)}</p>
+			{/if}
+			{#if data.trackError}
+				<p>Tracks: {formatError(data.trackError)}</p>
+			{/if}
+		</div>
+	{/if}
 
-  {#if data.query && data.artists.length === 0 && data.albums.length === 0 && data.tracks.length === 0}
-    <p class="py-12 text-center text-sm text-muted-foreground">
-      No results found for "{data.query}".
-    </p>
-  {/if}
+	{#if data.query && data.artists.length === 0 && data.albums.length === 0 && data.tracks.length === 0}
+		<p class="py-12 text-center text-sm text-muted-foreground">
+			No results found for "{data.query}".
+		</p>
+	{/if}
 
-  {#if topTracks.length > 0}
-    <section>
-      <SectionHeader
-        count={data.tracks.length}
-        viewAllHref="/search/tracks?query={data.query}"
-      >
-        <Music />
-        Tracks
-      </SectionHeader>
+	{#if topTracks.length > 0}
+		<section>
+			<SectionHeader
+				count={data.tracks.length}
+				viewAllHref="/search/tracks?query={data.query}"
+			>
+				<Music />
+				Tracks
+			</SectionHeader>
 
-      <TrackList
-        totalTracks={topTracks.length}
-        tracks={topTracks}
-        onPlay={playTrack}
-      />
-    </section>
-  {/if}
+			<TrackList
+				totalTracks={topTracks.length}
+				tracks={topTracks}
+				onPlay={playTrack}
+			/>
+		</section>
+	{/if}
 
-  {#if data.artists.length > 0}
-    <section>
-      <SectionHeader
-        count={data.artists.length}
-        viewAllHref="/search/artists?query={data.query}"
-      >
-        <Mic />
-        Artists
-      </SectionHeader>
+	{#if data.artists.length > 0}
+		<section>
+			<SectionHeader
+				count={data.artists.length}
+				viewAllHref="/search/artists?query={data.query}"
+			>
+				<Mic />
+				Artists
+			</SectionHeader>
 
-      <div class="flex flex-wrap gap-3 px-2">
-        {#each data.artists.slice(0, 6) as artist (artist.id)}
-          <ArtistTile
-            id={artist.id}
-            cover={artist.coverArt.medium}
-            name={artist.name}
-          />
-        {/each}
-      </div>
-    </section>
-  {/if}
+			<div class="flex flex-wrap gap-3 px-2">
+				{#each data.artists.slice(0, 6) as artist (artist.id)}
+					<ArtistTile
+						id={artist.id}
+						cover={artist.coverArt.medium}
+						name={artist.name}
+					/>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
-  {#if data.albums.length > 0}
-    <section>
-      <SectionHeader
-        count={data.albums.length}
-        viewAllHref="/search/albums?query={data.query}"
-      >
-        <Disc />
-        Albums
-      </SectionHeader>
+	{#if data.albums.length > 0}
+		<section>
+			<SectionHeader
+				count={data.albums.length}
+				viewAllHref="/search/albums?query={data.query}"
+			>
+				<Disc />
+				Albums
+			</SectionHeader>
 
-      <div class="flex flex-wrap gap-3 px-2">
-        {#each data.albums.slice(0, 6) as album (album.id)}
-          <AlbumTile
-            id={album.id}
-            cover={album.coverArt.medium}
-            name={album.name}
-            artists={album.artists}
-          />
-        {/each}
-      </div>
-    </section>
-  {/if}
+			<div class="flex flex-wrap gap-3 px-2">
+				{#each data.albums.slice(0, 6) as album (album.id)}
+					<AlbumTile
+						id={album.id}
+						cover={album.coverArt.medium}
+						name={album.name}
+						artists={album.artists}
+					/>
+				{/each}
+			</div>
+		</section>
+	{/if}
 </div>

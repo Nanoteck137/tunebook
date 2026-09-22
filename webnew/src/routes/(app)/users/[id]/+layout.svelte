@@ -38,7 +38,7 @@
 	]);
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="section-users flex flex-col gap-6">
 	<div class="py-2">
 		<Breadcrumb.Root>
 			<Breadcrumb.List>
@@ -54,31 +54,64 @@
 	</div>
 
 	<div
-		class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
+		class="flex min-w-0 flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6 md:gap-8"
 	>
-		<img
-			class="h-40 w-40 self-center rounded-full shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:h-52 md:w-52 dark:ring-white/10"
-			src={data.userData.picture.large}
-			alt=""
-		/>
+		<div class="flex min-w-0 flex-col gap-4 md:hidden">
+			<div class="flex items-center gap-4">
+				<img
+					class="h-20 min-h-20 w-20 min-w-20 shrink-0 rounded-full shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] dark:ring-white/10"
+					src={data.userData.picture.large}
+					alt=""
+				/>
 
-		<div class="flex min-w-0 flex-col gap-2">
-			<p
-				class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-			>
-				Profile
-			</p>
+				<div class="flex min-w-0 flex-col gap-0.5">
+					<p
+						class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+					>
+						Profile
+					</p>
 
-			<h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
-				{data.userData.displayName}
-			</h1>
+					<h1 class="line-clamp-2 text-2xl font-bold">
+						{data.userData.displayName}
+					</h1>
+				</div>
+			</div>
 
-			<p class="font-medium text-foreground">{roleLabel}</p>
+			<div class="flex flex-col items-start gap-1 text-sm">
+				<p class="font-medium text-foreground">{roleLabel}</p>
 
-			<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
-				<Calendar size={14} />
-				<span>Member since {createdString}</span>
-			</p>
+				<p class="flex items-center gap-1.5 text-muted-foreground">
+					<Calendar size={14} />
+					<span>Member since {createdString}</span>
+				</p>
+			</div>
+		</div>
+
+		<div class="hidden gap-6 md:flex md:items-end md:gap-8">
+			<img
+				class="h-52 min-h-52 w-52 min-w-52 shrink-0 rounded-full shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] dark:ring-white/10"
+				src={data.userData.picture.large}
+				alt=""
+			/>
+
+			<div class="flex min-w-0 flex-col gap-2">
+				<p
+					class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+				>
+					Profile
+				</p>
+
+				<h1 class="line-clamp-2 text-4xl font-bold">
+					{data.userData.displayName}
+				</h1>
+
+				<p class="font-medium text-foreground">{roleLabel}</p>
+
+				<p class="flex items-center gap-1.5 text-sm text-muted-foreground">
+					<Calendar size={14} />
+					<span>Member since {createdString}</span>
+				</p>
+			</div>
 		</div>
 	</div>
 

@@ -46,13 +46,13 @@
 	const currentTab = $derived(tabs.find((tab) => isActive(tab)) ?? tabs[0]);
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="section-server flex flex-col gap-6">
 	<div
-		class="flex flex-col gap-4 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
+		class="flex flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
 	>
 		<div class="flex items-center gap-4">
 			<div
-				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-tr from-section-gradiant-1 via-section-gradiant-2 to-section-gradiant-3 text-white"
 			>
 				<Server size={24} />
 			</div>

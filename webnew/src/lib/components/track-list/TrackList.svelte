@@ -36,6 +36,7 @@
 
 		isAlbumShowcase?: boolean;
 		displayOrder?: boolean;
+		highlightId?: string | null;
 
 		// eslint-disable-next-line no-unused-vars
 		onPlay: (trackId: string, shuffle: boolean) => void;
@@ -43,8 +44,14 @@
 		onReorder?: (items: string[], anchor: string | null) => void;
 	};
 
-	const { isAlbumShowcase, tracks, displayOrder, onPlay, onReorder }: Props =
-		$props();
+	const {
+		isAlbumShowcase,
+		tracks,
+		displayOrder,
+		highlightId,
+		onPlay,
+		onReorder,
+	}: Props = $props();
 	const apiClient = getApiClient();
 	const favoritesManager = getFavorites();
 	const quickPlaylistManager = getQuickPlaylist();
@@ -103,8 +110,9 @@
 
 	<div class="flex flex-col">
 		{#each tracks as track (track.id)}
-			<div class="group">
+			<div class="group" id="track-{track.id}">
 				<TrackListItem
+					class={highlightId === track.id ? "flash-highlight" : undefined}
 					showNumber={isAlbumShowcase}
 					{displayOrder}
 					{track}

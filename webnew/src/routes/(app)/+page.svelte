@@ -4,13 +4,15 @@
 	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
 	import TrackSkeletonTile from "$lib/components/tiles/TrackSkeletonTile.svelte";
 	import TrackTile from "$lib/components/tiles/TrackTile.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { Button } from "$lib/components/ui";
 	import {
-		ChevronRight,
 		Clock,
 		Compass,
 		Disc3,
+		Flame,
 		Heart,
+		History,
 		Library,
 		ListMusic,
 		Pause,
@@ -19,7 +21,6 @@
 		Server,
 		Smartphone,
 	} from "@lucide/svelte";
-	import collage from "$lib/assets/collage.png";
 
 	let { data } = $props();
 
@@ -82,31 +83,17 @@
 </script>
 
 {#if !data.user}
-	<div
-		class="flex min-h-[70dvh] flex-col items-center justify-center p-4"
-	>
+	<div class="flex min-h-[70dvh] flex-col items-center justify-center p-4">
 		<div
-			class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 p-8 text-center sm:p-12"
+			class="w-full max-w-2xl rounded-2xl border bg-card p-8 text-center shadow-sm sm:p-12"
 		>
-			<div
-				class="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-2xl"
-			></div>
-
-			<img
-				src={collage}
-				alt=""
-				class="pointer-events-none absolute inset-0 h-full w-full object-cover"
-			/>
-
-			<div
-				class="relative flex flex-col items-center gap-5"
-			>
+			<div class="relative flex flex-col items-center gap-5">
 				<div
-					class="flex h-24 w-24 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-sm"
+					class="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 shadow-lg"
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
-						class="h-12 w-12 text-white"
+						class="h-10 w-10 text-white"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -114,36 +101,40 @@
 						stroke-linecap="round"
 						stroke-linejoin="round"
 					>
-						<circle cx="12" cy="12" r="10" /><circle
-							cx="12"
-							cy="12"
-							r="3"
-						/>
+						<circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" />
 					</svg>
 				</div>
 
-				<h1 class="text-5xl font-bold text-white">Tunebook</h1>
-				<p class="text-base text-white/90">
-					Your personal music streaming server
-				</p>
-
-				<div class="grid w-full max-w-md grid-cols-1 gap-2 text-left sm:grid-cols-3">
-					<div
-						class="flex items-center gap-2 rounded-lg border border-white/20 bg-black/25 p-3 text-sm text-white backdrop-blur-sm"
+				<div class="flex flex-col items-center gap-2">
+					<h1
+						class="bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-5xl font-bold text-transparent"
 					>
-						<Server class="h-4 w-4 shrink-0" />
+						Tunebook
+					</h1>
+					<p class="text-base text-muted-foreground">
+						Your personal music streaming server
+					</p>
+				</div>
+
+				<div
+					class="grid w-full max-w-md grid-cols-1 gap-2 text-left sm:grid-cols-3"
+				>
+					<div
+						class="flex items-center gap-2 rounded-lg border p-3 text-sm text-foreground"
+					>
+						<Server class="h-4 w-4 shrink-0 text-primary" />
 						<span>Self-host your library</span>
 					</div>
 					<div
-						class="flex items-center gap-2 rounded-lg border border-white/20 bg-black/25 p-3 text-sm text-white backdrop-blur-sm"
+						class="flex items-center gap-2 rounded-lg border p-3 text-sm text-foreground"
 					>
-						<Heart class="h-4 w-4 shrink-0" />
+						<Heart class="h-4 w-4 shrink-0 text-primary" />
 						<span>Favorites & playlists</span>
 					</div>
 					<div
-						class="flex items-center gap-2 rounded-lg border border-white/20 bg-black/25 p-3 text-sm text-white backdrop-blur-sm"
+						class="flex items-center gap-2 rounded-lg border p-3 text-sm text-foreground"
 					>
-						<Smartphone class="h-4 w-4 shrink-0" />
+						<Smartphone class="h-4 w-4 shrink-0 text-primary" />
 						<span>Play on any device</span>
 					</div>
 				</div>
@@ -153,49 +144,49 @@
 		</div>
 	</div>
 {:else}
-	<div class="flex flex-col gap-10">
-		<!-- Hero -->
+	<div class="section-home flex flex-col gap-8">
 		<section
-			class="relative flex justify-center overflow-hidden rounded-lg bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 p-6 sm:justify-start sm:p-10"
+			class="flex flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6"
 		>
-			<div
-				class="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-2xl"
-			></div>
+			<div class="flex min-w-0 flex-col gap-4">
+				<div class="flex items-center gap-4">
+					<a href="/users/{data.user.id}" title={data.user.displayName}>
+						<div
+							class="rounded-full bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 transition-transform duration-300 hover:scale-[1.02]"
+						>
+							<img
+								class="h-16 min-h-16 w-16 min-w-16 shrink-0 rounded-full border-2 border-white/40 object-cover"
+								src={data.user.picture.small}
+								alt={data.user.displayName}
+							/>
+						</div>
+					</a>
 
-			<img
-				src={collage}
-				alt=""
-				class="pointer-events-none absolute inset-0 h-full w-full object-cover"
-			/>
-
-			<div
-				class="relative flex min-w-0 flex-col items-center gap-4 rounded-lg border border-white/20 bg-black/30 p-4 text-center backdrop-blur-sm sm:items-start sm:p-6 sm:text-left"
-			>
-				<div class="flex items-center gap-3">
-					<img
-						class="h-14 w-14 rounded-full border-2 border-white/40"
-						src={data.user.picture.small}
-						alt={data.user.displayName}
-					/>
-					<div>
-						<p class="text-sm font-medium uppercase tracking-widest text-white/80">
+					<div class="flex min-w-0 flex-col gap-0.5">
+						<p
+							class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+						>
 							{greeting()}
 						</p>
-						<h1 class="text-3xl font-bold text-white sm:text-4xl">
-							{data.user.displayName}
+						<h1 class="line-clamp-1 text-xl font-bold sm:text-2xl">
+							<a
+								href="/users/{data.user.id}"
+								class="hover:underline"
+								title={data.user.displayName}>{data.user.displayName}</a
+							>
 						</h1>
 					</div>
 				</div>
 
-				<p class="max-w-xl text-sm text-white/90">
+				<p class="text-sm text-muted-foreground">
 					{#await data.stats}
-					Your personal music streaming server.
+						Your personal music streaming server.
 					{:then stats}
 						{#if stats}
 							You've played {stats.numTracksPlayed} track(s) for
 							{formatListeningTime(stats.listeningTime)} total
 							{#if stats.lastListenedAt}
-								· last listened {timeAgo(stats.lastListenedAt)}
+								&middot; last listened {timeAgo(stats.lastListenedAt)}
 							{/if}
 							.
 						{:else}
@@ -203,44 +194,39 @@
 						{/if}
 					{/await}
 				</p>
+			</div>
 
-				<div class="mt-1 flex items-center gap-2">
-					{#if musicManager.currentItem}
-						<Button
-							size="lg"
-							class="bg-white text-black hover:bg-white/90"
-							onclick={() => {
-								if (musicManager.playing) {
-									musicManager.pause();
-								} else {
-									musicManager.play();
-								}
-							}}
-						>
-							{#if musicManager.playing}
-								<Pause />
-								Pause
-							{:else}
-								<Play />
-								Resume
-							{/if}
-						</Button>
-					{/if}
-
+			<div
+				class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"
+			>
+				{#if musicManager.currentItem}
 					<Button
-						size="lg"
-						variant="secondary"
-						class="bg-black/25 text-white border-white/30 backdrop-blur-sm hover:bg-black/40"
-						href="/browse"
+						class="w-full sm:w-auto"
+						onclick={() => {
+							if (musicManager.playing) {
+								musicManager.pause();
+							} else {
+								musicManager.play();
+							}
+						}}
 					>
-						<Compass />
-						Browse
+						{#if musicManager.playing}
+							<Pause />
+							Pause
+						{:else}
+							<Play />
+							Resume
+						{/if}
 					</Button>
-				</div>
+				{/if}
+
+				<Button variant="outline" class="w-full sm:w-auto" href="/browse">
+					<Compass />
+					Browse
+				</Button>
 			</div>
 		</section>
 
-		<!-- Quick actions -->
 		{#if musicManager.currentItem}
 			<section>
 				<div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -278,23 +264,21 @@
 		{/if}
 
 		{#await data.stats}
-			<section class="flex flex-col gap-8">
-				{#each Array(4) as _}
-					<div
-						class="h-6 w-40 animate-pulse rounded bg-muted"
-					></div>
-				{/each}
+			<section>
+				<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+					{#each Array(4) as _}
+						<div class="h-28 animate-pulse rounded-lg border bg-card"></div>
+					{/each}
+				</div>
 			</section>
 		{:then stats}
 			{#if stats}
 				<section>
 					<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-						<div
-							class="flex flex-col gap-1 rounded-lg border bg-card p-4"
-						>
+						<div class="flex flex-col gap-1 rounded-lg border bg-card p-4">
 							<div class="flex items-center gap-2 text-muted-foreground">
 								<Disc3 class="h-4 w-4" />
-								<span class="text-xs uppercase tracking-wider">
+								<span class="text-xs tracking-wider uppercase">
 									Tracks played
 								</span>
 							</div>
@@ -306,12 +290,10 @@
 							</p>
 						</div>
 
-						<div
-							class="flex flex-col gap-1 rounded-lg border bg-card p-4"
-						>
+						<div class="flex flex-col gap-1 rounded-lg border bg-card p-4">
 							<div class="flex items-center gap-2 text-muted-foreground">
 								<Clock class="h-4 w-4" />
-								<span class="text-xs uppercase tracking-wider">
+								<span class="text-xs tracking-wider uppercase">
 									Listening time
 								</span>
 							</div>
@@ -333,7 +315,7 @@
 						>
 							<div class="flex items-center gap-2 text-muted-foreground">
 								<Heart class="h-4 w-4" />
-								<span class="text-xs uppercase tracking-wider">
+								<span class="text-xs tracking-wider uppercase">
 									Favorite tracks
 								</span>
 							</div>
@@ -349,7 +331,7 @@
 						>
 							<div class="flex items-center gap-2 text-muted-foreground">
 								<ListMusic class="h-4 w-4" />
-								<span class="text-xs uppercase tracking-wider">
+								<span class="text-xs tracking-wider uppercase">
 									Playlists
 								</span>
 							</div>
@@ -363,17 +345,11 @@
 			{/if}
 		{/await}
 
-		<!-- Recently played -->
 		<section>
-			<a
-				class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-				href="/users/{data.user.id}/history"
-			>
+			<SectionHeader viewAllHref="/users/{data.user.id}/history">
+				<History />
 				Recently Played
-				<ChevronRight />
-			</a>
-
-			<div class="h-4"></div>
+			</SectionHeader>
 
 			{#await data.recentlyPlayed}
 				<div class="flex gap-2 overflow-x-auto pb-4">
@@ -387,6 +363,7 @@
 						{#each tracks as track (track.id)}
 							<TrackTile
 								id={track.id}
+								albumId={track.albumId}
 								cover={track.coverArt.medium}
 								name={track.name}
 								artists={track.artists}
@@ -394,20 +371,18 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="text-sm text-muted-foreground">
+					<p class="px-2 text-sm text-muted-foreground">
 						Nothing played yet — start listening!
 					</p>
 				{/if}
 			{/await}
 		</section>
 
-		<!-- Top tracks -->
 		<section>
-			<div class="flex items-center gap-1 text-xl font-semibold">
-				Your Top Tracks
-			</div>
-
-			<div class="h-4"></div>
+			<SectionHeader>
+				<Flame />
+				Top Tracks
+			</SectionHeader>
 
 			{#await data.topTracks}
 				<div class="flex gap-2 overflow-x-auto pb-4">
@@ -428,24 +403,18 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="text-sm text-muted-foreground">
+					<p class="px-2 text-sm text-muted-foreground">
 						Your most-played tracks will appear here.
 					</p>
 				{/if}
 			{/await}
 		</section>
 
-		<!-- Your playlists -->
 		<section>
-			<a
-				class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-				href="/library/playlists"
-			>
+			<SectionHeader viewAllHref="/library/playlists">
+				<ListMusic />
 				Your Playlists
-				<ChevronRight />
-			</a>
-
-			<div class="h-4"></div>
+			</SectionHeader>
 
 			{#await data.playlists}
 				<div class="flex gap-2 overflow-x-auto pb-4">
@@ -466,22 +435,16 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="text-sm text-muted-foreground">No playlists yet</p>
+					<p class="px-2 text-sm text-muted-foreground">No playlists yet</p>
 				{/if}
 			{/await}
 		</section>
 
-		<!-- Favorites -->
 		<section>
-			<a
-				class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-				href="/library/favorites"
-			>
+			<SectionHeader viewAllHref="/library/favorites">
+				<Heart />
 				Favorites
-				<ChevronRight />
-			</a>
-
-			<div class="h-4"></div>
+			</SectionHeader>
 
 			{#await data.favorites}
 				<div class="flex gap-2 overflow-x-auto pb-4">
@@ -502,7 +465,7 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="text-sm text-muted-foreground">
+					<p class="px-2 text-sm text-muted-foreground">
 						Heart some tracks to see them here
 					</p>
 				{/if}

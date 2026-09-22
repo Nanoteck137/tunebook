@@ -402,12 +402,12 @@
 							{/if}
 						</div>
 
-<p class="truncate text-xs text-muted-foreground">
-						{playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
-						{#if playlist.playTime > 0}
-							&middot; {formatPlayTime(playlist.playTime)}
-						{/if}
-					</p>
+						<p class="truncate text-xs text-muted-foreground">
+							{playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
+							{#if playlist.playTime > 0}
+								&middot; {formatPlayTime(playlist.playTime)}
+							{/if}
+						</p>
 					</div>
 				</div>
 			{/each}

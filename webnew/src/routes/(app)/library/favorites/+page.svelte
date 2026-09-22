@@ -15,6 +15,7 @@
 		ListSortAscendingIcon,
 		CheckIcon,
 		ListFilter,
+		Heart,
 	} from "@lucide/svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import { getApiClient, handleApiError } from "$lib";
@@ -23,8 +24,8 @@
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import FilterButton from "../../tracks/FilterButton.svelte";
-	import collage from "$lib/assets/collage.png";
 	import {
 		sortTypes,
 		defaultSort,
@@ -123,61 +124,37 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<section
-		class="relative flex justify-center overflow-hidden rounded-lg bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 p-6 sm:justify-start sm:p-8"
-	>
-		<div
-			class="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-2xl"
-		></div>
+	<section>
+		<SectionHeader count={data.page?.totalItems ?? 0}>
+			<Heart />
+			Favorites
 
-		<img
-			src={collage}
-			alt=""
-			class="pointer-events-none absolute inset-0 h-full w-full object-cover"
-		/>
-
-		<div
-			class="relative flex min-w-0 flex-col items-center gap-3 rounded-lg border border-white/20 bg-black/30 p-4 text-center backdrop-blur-sm sm:items-start sm:p-6 sm:text-left"
-		>
-			<h1 class="text-3xl font-bold text-white">Favorites</h1>
-
-			<p class="text-sm text-white/90">
-				{#if data.page}
-					{data.page.totalItems} saved track{data.page.totalItems !== 1
-						? "s"
-						: ""}
-				{/if}
-			</p>
-
-			<div class="mt-1 flex items-center gap-2">
-				<Button
-					size="lg"
-					class="bg-white text-black hover:bg-white/90"
-					onclick={() => playAll()}
-				>
-					<Play />
-					Play All
-				</Button>
-				<Button
-					size="lg"
-					variant="secondary"
-					class="border-white/30 bg-black/25 text-white backdrop-blur-sm hover:bg-black/40"
-					onclick={async () => {
-						await musicManager.queueRequest(
-							{
-								type: "addFavorites",
-								userId: user.id,
-								filterId: filterId ?? undefined,
-							},
-							{ shuffle: true },
-						);
-					}}
-				>
-					<Shuffle />
-					Shuffle
-				</Button>
-			</div>
-		</div>
+			{#snippet actions()}
+				<div class="flex items-center gap-2">
+					<Button size="sm" onclick={() => playAll()}>
+						<Play />
+						Play All
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						onclick={async () => {
+							await musicManager.queueRequest(
+								{
+									type: "addFavorites",
+									userId: user.id,
+									filterId: filterId ?? undefined,
+								},
+								{ shuffle: true },
+							);
+						}}
+					>
+						<Shuffle />
+						Shuffle
+					</Button>
+				</div>
+			{/snippet}
+		</SectionHeader>
 	</section>
 
 	<!-- Toolbar -->

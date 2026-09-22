@@ -1,9 +1,18 @@
 <script lang="ts">
-	import { ChevronRight, Disc, Mic, Music, Search } from "@lucide/svelte";
-	import collage from "$lib/assets/collage.png";
+	import {
+		ChevronRight,
+		Compass,
+		Disc,
+		Disc3,
+		ListMusic,
+		Mic,
+		Music,
+		Search,
+	} from "@lucide/svelte";
 	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 	import TrackTile from "$lib/components/tiles/TrackTile.svelte";
 	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { Button } from "$lib/components/ui";
 
 	let { data } = $props();
@@ -48,52 +57,54 @@
 	];
 </script>
 
-<div class="flex flex-col gap-8">
+<div class="section-browse flex flex-col gap-8">
 	<section
-		class="relative flex justify-center overflow-hidden rounded-lg bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 p-6 sm:justify-start sm:p-10"
+		class="rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
 	>
-		<div class="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-2xl"></div>
-
-		<img
-			src={collage}
-			alt=""
-			class="pointer-events-none absolute inset-0 h-full w-full object-cover"
-		/>
-
-		<div
-			class="relative flex min-w-0 flex-col items-center gap-2 rounded-lg border border-white/20 bg-black/30 p-4 text-center backdrop-blur-sm sm:items-start sm:text-left"
-		>
-			<h1 class="text-3xl font-bold text-white">Browse</h1>
-			<p class="text-sm text-white/90">
-				Albums, artists and tracks from your library
-			</p>
+		<div class="flex items-center gap-4">
+			<div
+				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-tr from-section-gradiant-1 via-section-gradiant-2 to-section-gradiant-3 text-white"
+			>
+				<Compass size={24} />
+			</div>
+			<div class="flex min-w-0 flex-col">
+				<h1 class="text-2xl font-bold">Browse</h1>
+				<p class="text-sm text-muted-foreground">
+					Albums, artists and tracks from your library
+				</p>
+			</div>
 		</div>
 	</section>
 
 	<section>
+		<SectionHeader>
+			<Disc3 />
+			Categories
+		</SectionHeader>
+
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 			{#each categories as category (category.title)}
-				<div
-					class="flex flex-col gap-3 rounded-lg border bg-card p-4"
-				>
-<a
-					href={category.allHref}
-					class="group flex items-center gap-3 rounded border bg-muted p-3 transition-colors hover:bg-accent"
-					title={`Browse all ${category.title.toLowerCase()}`}
-				>
-					<category.icon class="h-6 w-6 shrink-0" />
-					<div class="min-w-0 flex-1">
-						<p class="font-semibold group-hover:underline">{category.title}</p>
-						<p
-							class="text-xs text-muted-foreground group-hover:text-accent-foreground"
-						>
-							{category.description}
-						</p>
-					</div>
-					<ChevronRight
-						class="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-					/>
-				</a>
+				<div class="flex flex-col gap-3 rounded-lg border bg-card p-4">
+					<a
+						href={category.allHref}
+						class="group flex items-center gap-3 rounded border bg-muted p-3 transition-colors hover:bg-accent"
+						title={`Browse all ${category.title.toLowerCase()}`}
+					>
+						<category.icon class="h-6 w-6 shrink-0" />
+						<div class="min-w-0 flex-1">
+							<p class="font-semibold group-hover:underline">
+								{category.title}
+							</p>
+							<p
+								class="text-xs text-muted-foreground group-hover:text-accent-foreground"
+							>
+								{category.description}
+							</p>
+						</div>
+						<ChevronRight
+							class="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+						/>
+					</a>
 
 					<div class="flex flex-col">
 						{#each category.links as link (link.href)}
@@ -122,15 +133,10 @@
 	</section>
 
 	<section>
-		<a
-			class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-			href="/albums?sort=created-new"
-		>
+		<SectionHeader viewAllHref="/albums?sort=created-new">
+			<Disc />
 			Recently Added Albums
-			<ChevronRight />
-		</a>
-
-		<div class="h-4"></div>
+		</SectionHeader>
 
 		{#if data.recentAlbums.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
@@ -144,20 +150,15 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="text-sm text-muted-foreground">No albums yet</p>
+			<p class="px-2 text-sm text-muted-foreground">No albums yet</p>
 		{/if}
 	</section>
 
 	<section>
-		<a
-			class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-			href="/tracks"
-		>
+		<SectionHeader viewAllHref="/tracks?sort=created-new">
+			<Music />
 			Recently Added Tracks
-			<ChevronRight />
-		</a>
-
-		<div class="h-4"></div>
+		</SectionHeader>
 
 		{#if data.recentTracks.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
@@ -171,20 +172,15 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="text-sm text-muted-foreground">No tracks yet</p>
+			<p class="px-2 text-sm text-muted-foreground">No tracks yet</p>
 		{/if}
 	</section>
 
 	<section>
-		<a
-			class="flex items-center gap-1 text-xl font-semibold hover:cursor-pointer hover:underline"
-			href="/library/playlists?sort=created-new"
-		>
+		<SectionHeader viewAllHref="/library/playlists?sort=created-new">
+			<ListMusic />
 			Recently Added Playlists
-			<ChevronRight />
-		</a>
-
-		<div class="h-4"></div>
+		</SectionHeader>
 
 		{#if data.recentPlaylists.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
@@ -198,7 +194,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="text-sm text-muted-foreground">No playlists yet</p>
+			<p class="px-2 text-sm text-muted-foreground">No playlists yet</p>
 		{/if}
 	</section>
 </div>
