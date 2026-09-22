@@ -41,12 +41,12 @@
 
 	<a
 		href="/albums/{id}"
-		class="mt-2 w-40 truncate text-sm font-medium hover:underline"
+		class="mt-2 truncate text-sm font-medium hover:underline"
 		title={name}
 	>
 		{name}
 	</a>
 
-	<ArtistList class="w-40 justify-start text-muted-foreground" {artists} />
+	<ArtistList class="justify-start text-muted-foreground" {artists} />
 </div>
 

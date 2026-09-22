@@ -15,7 +15,7 @@
 </script>
 
 <p
-	class={cn("line-clamp-1 w-full text-xs truncate", className)}
+	class={cn("line-clamp-1 w-full text-xs text-ellipsis", className)}
 	title={artists.map((a) => a.name).join(", ")}
 >
 	{#each artists as artist, i (artist.id)}
