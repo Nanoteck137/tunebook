@@ -20,6 +20,7 @@
 	import { getMusicManager } from "$lib/music-manager.svelte.js";
 	import Image from "$lib/components/Image.svelte";
 	import ArtistList from "$lib/components/ArtistList.svelte";
+	import { formatPlayTime } from "$lib/utils";
 
 	let { data } = $props();
 	const musicManager = getMusicManager();
@@ -41,12 +42,9 @@
 		});
 	});
 
-	let durationLabel = $derived.by(() => {
-		const totalMs = data.tracks.reduce((sum, t) => sum + t.duration, 0);
-		const s = Math.floor(totalMs / 1000);
-		const h = Math.floor(s / 3600);
-		const m = Math.floor((s % 3600) / 60);
-		return h > 0 ? `${h}h ${m}m` : `${m}m`;
+	let playTimeLabel = $derived.by(() => {
+		const s = data.album.playTime;
+		return s > 0 ? formatPlayTime(s) : "";
 	});
 </script>
 
@@ -96,7 +94,7 @@
 		<p class="text-sm text-muted-foreground">
 			{data.tracks.length}
 			{data.tracks.length === 1 ? "song" : "songs"}
-			&middot; {durationLabel}
+			{#if playTimeLabel}&middot; {playTimeLabel}{/if}
 		</p>
 
 		{#if data.album.tags.length > 0}

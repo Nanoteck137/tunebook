@@ -38,6 +38,8 @@ type Album struct {
 
 	Tags sql.NullString `db:"tags"`
 
+	PlayTime int64 `db:"play_time"`
+
 	FeaturingArtists JsonColumn[[]FeaturingArtist] `db:"featuring_artists"`
 }
 
@@ -90,6 +92,7 @@ func AlbumSchema() *schema.Schema {
 		).
 		AddField("created", query.TypeInt, schema.Column("albums.created")).
 		AddField("updated", query.TypeInt, schema.Column("albums.updated")).
+		AddField("playTime", query.TypeInt, schema.Column("play_time.data")).
 		SetDefaultSort(
 			&query.FieldOrdering{
 				Field: &query.Field{Name: "name"},
@@ -100,6 +103,13 @@ func AlbumSchema() *schema.Schema {
 
 func AlbumQuery() *goqu.SelectDataset {
 	idCol := albumsTbl.Col("id")
+
+	playTimeQuery := dialect.From(tracksTbl).
+		Select(
+			tracksTbl.Col("album_id").As("id"),
+			goqu.SUM(tracksTbl.Col("duration")).As("data"),
+		).
+		GroupBy(tracksTbl.Col("album_id"))
 
 	query := dialect.From(albumsTbl).
 		Select(
@@ -117,10 +127,16 @@ func AlbumQuery() *goqu.SelectDataset {
 			albumsTbl.Col("updated"),
 
 			artistsTbl.Col("name").As("artist_name"),
+
+			goqu.COALESCE(goqu.I("play_time.data"), 0).As("play_time"),
 		).
 		Join(
 			artistsTbl,
 			goqu.On(albumsTbl.Col("artist_id").Eq(artistsTbl.Col("id"))),
+		).
+		LeftJoin(
+			playTimeQuery.As("play_time"),
+			goqu.On(idCol.Eq(goqu.I("play_time.id"))),
 		)
 
 	query = AddTagsToQuery(query, idCol, albumsTagsTbl, "album_id")

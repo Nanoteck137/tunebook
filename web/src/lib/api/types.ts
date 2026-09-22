@@ -138,6 +138,8 @@ export const Album = z.object({
   "artists": z.array(ArtistInfo),
   // Name: Album.tags
   "tags": z.array(z.string()),
+  // Name: Album.playTime
+  "playTime": z.number(),
   // Name: Album.created
   "created": z.string(),
   // Name: Album.updated
@@ -933,6 +935,8 @@ export const RankedAlbum = z.object({
   "artists": z.array(ArtistInfo),
   // Name: RankedAlbum.tags
   "tags": z.array(z.string()),
+  // Name: RankedAlbum.playTime
+  "playTime": z.number(),
   // Name: RankedAlbum.created
   "created": z.string(),
   // Name: RankedAlbum.updated

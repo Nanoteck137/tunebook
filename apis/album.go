@@ -25,6 +25,8 @@ type Album struct {
 
 	Tags []string `json:"tags"`
 
+	PlayTime int64 `json:"playTime"`
+
 	Created string `json:"created"`
 	Updated string `json:"updated"`
 }
@@ -52,6 +54,7 @@ func ConvertDBAlbum(c pyrin.Context, album database.Album) Album {
 		CoverArt:  ConvertAlbumCoverURL(c, album.Id),
 		Artists:   allArtists,
 		Tags:      utils.SplitTagString(album.Tags.String),
+		PlayTime:  album.PlayTime,
 		Created:   formatTime(album.Created),
 		Updated:   formatTime(album.Updated),
 	}
