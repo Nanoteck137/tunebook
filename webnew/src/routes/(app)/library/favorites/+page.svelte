@@ -2,8 +2,17 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { onMount } from "svelte";
-	import { Button, Separator, buttonVariants } from "$lib/components/ui";
-	import { Play, Shuffle, X, ListFilter, Heart } from "@lucide/svelte";
+	import { fly } from "svelte/transition";
+	import { cn } from "$lib/utils";
+	import { Button, Card, Separator, buttonVariants } from "$lib/components/ui";
+	import {
+		Play,
+		Shuffle,
+		X,
+		ListFilter,
+		Heart,
+		ExternalLink,
+	} from "@lucide/svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Track } from "$lib/api/types";
@@ -29,6 +38,8 @@
 	const user = $derived(data.user!);
 
 	let filterId = $derived(page.url.searchParams.get("filterId"));
+
+	let filterOpen = $state(false);
 
 	let value = $state("");
 
@@ -120,41 +131,38 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<section>
-		<SectionHeader count={data.page?.totalItems ?? 0}>
-			<Heart />
-			Favorites
+	<SectionHeader count={data.page?.totalItems ?? 0}>
+		<Heart />
+		Favorites
 
-			{#snippet actions()}
-				<div class="flex items-center gap-2">
-					<Button size="sm" onclick={() => playAll()}>
-						<Play />
-						Play All
-					</Button>
-					<Button
-						size="sm"
-						variant="outline"
-						onclick={async () => {
-							await musicManager.queueRequest(
-								{
-									type: "addFavorites",
-									userId: user.id,
-									filterId: filterId ?? undefined,
-								},
-								{ shuffle: true },
-							);
-						}}
-					>
-						<Shuffle />
-						Shuffle
-					</Button>
-				</div>
-			{/snippet}
-		</SectionHeader>
-	</section>
+		{#snippet actions()}
+			<div class="flex items-center gap-2">
+				<Button size="sm" onclick={() => playAll()}>
+					<Play />
+					Play
+				</Button>
+				<Button
+					size="icon-sm"
+					variant="ghost"
+					onclick={async () => {
+						await musicManager.queueRequest(
+							{
+								type: "addFavorites",
+								userId: user.id,
+								filterId: filterId ?? undefined,
+							},
+							{ shuffle: true },
+						);
+					}}
+				>
+					<Shuffle />
+				</Button>
+			</div>
+		{/snippet}
+	</SectionHeader>
 
 	<!-- Toolbar -->
-	<div class="flex flex-wrap items-center justify-between gap-2 px-2">
+	<div class="flex flex-wrap items-center justify-between gap-2">
 		<DebouncedSearchInput
 			class="flex-1 md:max-w-64"
 			placeholder="Search favorites..."
@@ -164,6 +172,25 @@
 		/>
 
 		<div class="flex items-center gap-1">
+			<Button
+				variant="ghost"
+				size="icon"
+				title="Saved Filters"
+				aria-label="Saved Filters"
+				class={cn(
+					"relative transition-opacity",
+					filterOpen && "bg-accent text-accent-foreground",
+				)}
+				onclick={() => (filterOpen = !filterOpen)}
+			>
+				<ListFilter />
+				{#if data.filters && data.filters.length > 0}
+					<span
+						class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary"
+					></span>
+				{/if}
+			</Button>
+
 			<SortToggleDropdown
 				types={sortTypes}
 				{sort}
@@ -173,48 +200,40 @@
 		</div>
 	</div>
 
-	<Separator />
+	{#if filterOpen}
+		<div transition:fly={{ y: -6, duration: 150 }}>
+			<Card.Root class="py-2">
+				<Card.Content class="flex-warp flex items-center justify-between px-2">
+					<div class="flex flex-wrap items-center gap-1.5">
+						{#if data.filters && data.filters.length > 0}
+							{#each data.filters as filter (filter.filterId)}
+								<FilterButton {filter} />
+							{/each}
+						{:else}
+							<span class="text-sm text-muted-foreground">None saved yet</span>
+						{/if}
+					</div>
+
+					<div class="flex items-center gap-1">
+						<a
+							href="/library/filters/tracks"
+							class={buttonVariants({ variant: "ghost", size: "icon" })}
+							title="Manage Filters"
+						>
+							<ExternalLink />
+						</a>
+
+						{#if filterId}
+							<Button variant="ghost" size="icon" onclick={clearFilter}>
+								<X />
+							</Button>
+						{/if}
+					</div>
+				</Card.Content>
+			</Card.Root>
+		</div>
+	{/if}
 </div>
-
-<div
-	class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2"
->
-	<div class="flex flex-wrap items-center gap-1.5">
-		<span
-			class="mr-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
-		>
-			<ListFilter size={12} />
-			Saved Filters
-		</span>
-
-		{#if data.filters && data.filters.length > 0}
-			{#each data.filters as filter (filter.filterId)}
-				<FilterButton {filter} />
-			{/each}
-		{:else}
-			<span class="text-sm text-muted-foreground">None saved yet</span>
-		{/if}
-	</div>
-
-	<div class="flex items-center gap-1">
-		<a
-			href="/library/filters/tracks"
-			class={buttonVariants({ variant: "ghost", size: "sm" })}
-		>
-			<ListFilter size={14} />
-			Manage Filters
-		</a>
-
-		{#if filterId}
-			<Button variant="ghost" size="sm" onclick={clearFilter}>
-				<X size={14} />
-				Clear
-			</Button>
-		{/if}
-	</div>
-</div>
-
-<Spacer size="lg" />
 
 <InfiniteScroll controller={scroll}>
 	<TrackList
