@@ -1,5 +1,11 @@
-import { defineEnumTypes } from "$lib/utils";
 import { z } from "zod";
+
+export type SortToggleType = {
+	label: string;
+	value: string;
+	reverse: string;
+	direction: "asc" | "desc";
+};
 
 export type TrackKind = "playlist" | "album";
 
@@ -9,15 +15,25 @@ const orderLabels: Record<TrackKind, { asc: string; desc: string }> = {
 };
 
 function makeSortTypes(kind: TrackKind) {
-	const order = orderLabels[kind];
-
 	return [
-		{ label: order.asc, value: "order-asc" },
-		{ label: order.desc, value: "order-desc" },
-		{ label: "Title (A–Z)", value: "title-asc" },
-		{ label: "Title (Z–A)", value: "title-desc" },
-		{ label: "Added (Newest first)", value: "added-desc" },
-		{ label: "Added (Oldest first)", value: "added-asc" },
+		{
+			label: "Order",
+			value: "order-asc",
+			reverse: "order-desc",
+			direction: "asc",
+		},
+		{
+			label: "Title",
+			value: "title-asc",
+			reverse: "title-desc",
+			direction: "asc",
+		},
+		{
+			label: "Added",
+			value: "added-desc",
+			reverse: "added-asc",
+			direction: "desc",
+		},
 	] as const;
 }
 
@@ -26,12 +42,15 @@ export const trackSortTypes = {
 	album: makeSortTypes("album"),
 };
 
-export const { SortTypeEnum, defaultSort } = defineEnumTypes(
-	makeSortTypes("playlist"),
-	"order-asc",
-);
+const trackSortValues = [
+	...trackSortTypes.playlist.map((t) => t.value),
+	...trackSortTypes.playlist.map((t) => t.reverse),
+] as const;
 
-export type SortType = (typeof trackSortTypes.playlist)[number]["value"];
+export const SortTypeEnum = z.enum(trackSortValues);
+export type SortType = (typeof trackSortValues)[number];
+
+export const defaultSort: SortType = "order-asc";
 
 export function trackSortQuery(kind: TrackKind, sort: SortType): string {
 	switch (sort) {

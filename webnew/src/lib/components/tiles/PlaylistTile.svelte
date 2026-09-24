@@ -123,6 +123,7 @@
 	src={playlist.coverArt.medium}
 	alt={playlist.name}
 	name={playlist.name}
+	hover="group"
 	sectionClass="section-playlists"
 	nameClass={size === "sm" ? "line-clamp-1" : "line-clamp-2"}
 	onPlay={selectionMode ? undefined : () => play()}

@@ -1,13 +1,5 @@
 <script lang="ts">
-	import {
-		Search,
-		X,
-		Plus,
-		ListFilter,
-		ListSortAscendingIcon,
-		CheckIcon,
-		Disc,
-	} from "@lucide/svelte";
+	import { Search, X, Plus, ListFilter, Disc } from "@lucide/svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 	import HeroCard from "$lib/components/HeroCard.svelte";
 	import HeroIcon from "$lib/components/HeroIcon.svelte";
@@ -15,13 +7,8 @@
 	import type { Album } from "$lib/api/types";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
-	import {
-		Separator,
-		Button,
-		Input,
-		DropdownMenu,
-		buttonVariants,
-	} from "$lib/components/ui";
+	import { Separator, Button, Input } from "$lib/components/ui";
+	import { SortToggleDropdown } from "$lib/components/sort";
 	import { cn } from "$lib/utils";
 	import { goto } from "$app/navigation";
 	import { getMusicManager } from "$lib/music-manager.svelte";
@@ -260,31 +247,11 @@
 				{/if}
 			</Button>
 
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger
-					class={buttonVariants({ variant: "ghost", size: "icon" })}
-					title="Sort"
-					aria-label="Sort"
-				>
-					<ListSortAscendingIcon />
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Group>
-						{#each sortTypes as ty (ty.value)}
-							{@const selected = sort === ty.value}
-							<DropdownMenu.Item
-								onSelect={() => updateSort(ty.value)}
-								class={selected ? "bg-accent text-foreground" : ""}
-							>
-								{#if selected}
-									<CheckIcon />
-								{/if}
-								{ty.label}
-							</DropdownMenu.Item>
-						{/each}
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+			<SortToggleDropdown
+				types={sortTypes}
+				{sort}
+				onSortChange={(value) => updateSort(value)}
+			/>
 
 			{#if hasActiveFilters}
 				<Button variant="ghost" size="sm" onclick={clearFilters} class="pr-1">

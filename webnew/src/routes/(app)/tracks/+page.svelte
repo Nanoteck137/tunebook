@@ -6,10 +6,10 @@
 	import {
 		Button,
 		Input,
-		Select,
 		Separator,
 		buttonVariants,
 	} from "$lib/components/ui";
+	import { SortToggleDropdown } from "$lib/components/sort";
 	import { Music, Play, Shuffle, Plus, X, ListFilter } from "@lucide/svelte";
 	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
@@ -139,20 +139,11 @@
 		>
 			<div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
 				<Input class="sm:w-56" placeholder="Search tracks..." disabled />
-				<Select.Root
-					type="single"
-					allowDeselect={false}
-					onValueChange={(v) => (selectedSort = v as SortType)}
-				>
-					<Select.Trigger class="h-9 w-full sm:w-40">
-						{sortTypes.find((i) => i.value === selectedSort)?.label ?? "Sort"}
-					</Select.Trigger>
-					<Select.Content>
-						{#each sortTypes as ty (ty.value)}
-							<Select.Item value={ty.value} label={ty.label} />
-						{/each}
-					</Select.Content>
-				</Select.Root>
+				<SortToggleDropdown
+					types={sortTypes}
+					sort={selectedSort}
+					onSortChange={(v) => (selectedSort = v as SortType)}
+				/>
 			</div>
 		</div>
 

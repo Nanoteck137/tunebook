@@ -37,8 +37,8 @@
 	import SectionImage from "$lib/components/SectionImage.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 	import {
-		SortDropdown,
 		SortableHeader,
+		SortToggleDropdown,
 		defaultSort,
 		buildTrackQuery,
 		trackColumns,
@@ -430,7 +430,7 @@
 	</div>
 
 	<div class="flex items-center gap-2 pr-2">
-		<SortDropdown
+		<SortToggleDropdown
 			types={trackSortTypes.playlist}
 			{sort}
 			onSortChange={updateSort}

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { Breadcrumb, Select } from "$lib/components/ui";
+	import { Breadcrumb } from "$lib/components/ui";
+	import { SortToggleDropdown } from "$lib/components/sort";
 	import Image from "$lib/components/Image.svelte";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Album } from "$lib/api/types";
@@ -90,21 +91,7 @@
 			{/if}
 		</div>
 
-		<Select.Root
-			type="single"
-			allowDeselect={false}
-			value={sort}
-			onValueChange={updateSort}
-		>
-			<Select.Trigger class="h-9 w-full sm:w-40">
-				{sortTypes.find((i) => i.value === sort)?.label ?? "Sort"}
-			</Select.Trigger>
-			<Select.Content>
-				{#each sortTypes as ty (ty.value)}
-					<Select.Item value={ty.value} label={ty.label} />
-				{/each}
-			</Select.Content>
-		</Select.Root>
+		<SortToggleDropdown types={sortTypes} {sort} onSortChange={updateSort} />
 	</div>
 
 	<InfiniteScroll controller={scroll}>

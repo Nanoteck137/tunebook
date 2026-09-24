@@ -49,7 +49,7 @@
 		alt = "",
 		name,
 		sectionClass,
-		hover = "normal",
+		hover = "group",
 		onPlay,
 		menu,
 		subtitle,
@@ -103,7 +103,10 @@
 		<div class="flex items-center gap-1">
 			<a
 				{href}
-				class="min-w-0 flex-1 truncate text-sm font-medium group-hover:underline {nameClass}"
+				class={cn(
+					"line-clamp-1 min-w-0 flex-1 text-sm font-medium text-ellipsis group-hover:underline",
+					nameClass,
+				)}
 				title={name}
 				onclick={(e) => {
 					if (disabled) {

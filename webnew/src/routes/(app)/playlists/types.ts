@@ -1,22 +1,52 @@
-import { defineEnumTypes } from "$lib/utils";
 import { z } from "zod";
 
-export const { sortTypes, SortTypeEnum, defaultSort } = defineEnumTypes(
-	[
-		{ label: "Custom", value: "custom" },
-		{ label: "Name (A–Z)", value: "name-a-z" },
-		{ label: "Name (Z–A)", value: "name-z-a" },
-		{ label: "Tracks (Most)", value: "tracks-most" },
-		{ label: "Tracks (Least)", value: "tracks-least" },
-		{ label: "Added (New–Old)", value: "created-new" },
-		{ label: "Added (Old–New)", value: "created-old" },
-		{ label: "Updated (New–Old)", value: "updated-new" },
-		{ label: "Updated (Old–New)", value: "updated-old" },
-	] as const,
-	"custom",
-);
+export const sortTypes = [
+	{
+		label: "Position",
+		value: "position",
+		reverse: "position-reverse",
+		field: "position",
+		direction: "asc",
+	},
+	{
+		label: "Name",
+		value: "name-a-z",
+		reverse: "name-z-a",
+		field: "name",
+		direction: "asc",
+	},
+	{
+		label: "Tracks",
+		value: "tracks-most",
+		reverse: "tracks-least",
+		field: "trackCount",
+		direction: "desc",
+	},
+	{
+		label: "Created",
+		value: "created-new",
+		reverse: "created-old",
+		field: "created",
+		direction: "desc",
+	},
+	{
+		label: "Updated",
+		value: "updated-new",
+		reverse: "updated-old",
+		field: "updated",
+		direction: "desc",
+	},
+] as const;
 
-export type SortType = (typeof sortTypes)[number]["value"];
+const sortValues = [
+	...sortTypes.map((t) => t.value),
+	...sortTypes.map((t) => t.reverse),
+] as const;
+
+export const SortTypeEnum = z.enum(sortValues);
+export type SortType = (typeof sortValues)[number];
+
+export const defaultSort: SortType = "position";
 
 export const FullFilter = z.object({
 	query: z.string(),
@@ -43,33 +73,18 @@ export function constructFilterSort(
 
 	query["filter"] = filters.join(" and ");
 
-	switch (filter.sort) {
-		case "custom":
-			query["sort"] = "+position";
-			break;
-		case "name-a-z":
-			query["sort"] = "+name";
-			break;
-		case "name-z-a":
-			query["sort"] = "-name";
-			break;
-		case "tracks-most":
-			query["sort"] = "-trackCount";
-			break;
-		case "tracks-least":
-			query["sort"] = "+trackCount";
-			break;
-		case "created-new":
-			query["sort"] = "-created";
-			break;
-		case "created-old":
-			query["sort"] = "+created";
-			break;
-		case "updated-new":
-			query["sort"] = "-updated";
-			break;
-		case "updated-old":
-			query["sort"] = "+updated";
-			break;
+	for (const type of sortTypes) {
+		const reversed = filter.sort === type.reverse;
+		if (filter.sort === type.value || reversed) {
+			const dir = reversed
+				? type.direction === "asc"
+					? "desc"
+					: "asc"
+				: type.direction;
+			query["sort"] = (dir === "asc" ? "+" : "-") + type.field;
+			return;
+		}
 	}
+
+	query["sort"] = "+position";
 }

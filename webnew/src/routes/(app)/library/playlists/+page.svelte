@@ -1,21 +1,11 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
 	import { page } from "$app/state";
-	import {
-		Button,
-		buttonVariants,
-		Input,
-		DropdownMenu,
-		Separator,
-	} from "$lib/components/ui";
-	import {
-		CheckIcon,
-		ChevronDown,
-		ListSortAscendingIcon,
-		Plus,
-		X,
-	} from "@lucide/svelte";
+	import { Button, Input, Separator } from "$lib/components/ui";
+	import { ChevronDown, ListMusic, Plus, X } from "@lucide/svelte";
 	import { cn } from "$lib/utils";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import { SortToggleDropdown } from "$lib/components/sort";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Playlist } from "$lib/api/types";
 	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
@@ -124,8 +114,8 @@
 		selectedPlaylists = [];
 		toast.success("Updated playlists");
 
-		if (sort !== "custom") {
-			updateSort("custom");
+		if (sort !== "position") {
+			updateSort("position");
 		} else {
 			invalidateAll();
 		}
@@ -133,96 +123,50 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<div class="flex items-baseline justify-between gap-2 px-2">
-		<div class="flex items-baseline gap-2">
-			<h1 class="text-xl font-bold">Playlists</h1>
-			{#if data.page}
-				<span class="text-sm text-muted-foreground">
-					{data.page.totalItems}
-				</span>
-			{/if}
-		</div>
+	<section>
+		<SectionHeader count={data.page?.totalItems}>
+			<ListMusic />
+			Playlists
 
-		<Button size="sm" onclick={() => (openNewPlaylistModal = true)}>
-			<Plus size={14} />
-			New Playlist
-		</Button>
-	</div>
+			{#snippet actions()}
+				<Button size="sm" onclick={() => (openNewPlaylistModal = true)}>
+					<Plus size={14} />
+					New Playlist
+				</Button>
+			{/snippet}
+		</SectionHeader>
+	</section>
 
 	<!-- Toolbar -->
 	<div class="flex flex-wrap items-center justify-between gap-2 px-2">
-		{#if selectedPlaylists.length > 0}
-			<div class="flex items-center gap-2">
-				<Button
-					class="rounded-full"
-					variant="ghost"
-					size="icon-lg"
-					onclick={() => {
-						selectedPlaylists = [];
-					}}
+		<div class="relative flex-1 md:max-w-64">
+			<Input
+				class="pr-8"
+				placeholder="Search playlists..."
+				bind:value={searchQuery}
+				onkeydown={(e) => {
+					if (e.key === "Enter") {
+						updateSearch();
+					}
+				}}
+			/>
+			{#if searchQuery}
+				<button
+					class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+					onclick={clearSearch}
+					aria-label="Clear search"
 				>
-					<X />
-				</Button>
-
-				<Button
-					class="rounded-full"
-					variant="default"
-					onclick={() => handleReorder(null)}
-				>
-					<ChevronDown />
-					Insert after
-				</Button>
-			</div>
-		{:else}
-			<div class="relative flex-1 md:max-w-64">
-				<Input
-					class="pr-8"
-					placeholder="Search playlists..."
-					bind:value={searchQuery}
-					onkeydown={(e) => {
-						if (e.key === "Enter") {
-							updateSearch();
-						}
-					}}
-				/>
-				{#if searchQuery}
-					<button
-						class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
-						onclick={clearSearch}
-						aria-label="Clear search"
-					>
-						<X size={14} />
-					</button>
-				{/if}
-			</div>
-		{/if}
+					<X size={14} />
+				</button>
+			{/if}
+		</div>
 
 		<div class="flex items-center gap-1">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger
-					class={buttonVariants({ variant: "ghost", size: "icon" })}
-					title="Sort"
-					aria-label="Sort"
-				>
-					<ListSortAscendingIcon />
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Group>
-						{#each sortTypes as ty (ty.value)}
-							{@const selected = sort === ty.value}
-							<DropdownMenu.Item
-								onSelect={() => updateSort(ty.value)}
-								class={selected ? "bg-accent text-foreground" : ""}
-							>
-								{#if selected}
-									<CheckIcon />
-								{/if}
-								{ty.label}
-							</DropdownMenu.Item>
-						{/each}
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+			<SortToggleDropdown
+				types={sortTypes}
+				{sort}
+				onSortChange={(value) => updateSort(value)}
+			/>
 		</div>
 	</div>
 
@@ -232,6 +176,42 @@
 		<div
 			class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
 		>
+			{#if selectedPlaylists.length > 0}
+				<div class="group relative flex shrink-0 flex-col">
+					<button
+						class="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border/60 bg-muted/40 text-muted-foreground transition-colors group-hover:border-primary/60 group-hover:bg-accent/50 group-hover:text-foreground"
+						onclick={() => handleReorder(null)}
+						aria-label={`Move ${selectedPlaylists.length} selected playlists to the beginning`}
+					>
+						<div class="flex flex-col items-center gap-1.5">
+							<ChevronDown
+								class="h-5 w-5 text-muted-foreground/60 transition-colors group-hover:text-foreground"
+							/>
+							<span class="px-2 text-xs font-medium">
+								Place {selectedPlaylists.length} here
+							</span>
+						</div>
+					</button>
+
+					<button
+						class="absolute top-1.5 left-1.5 flex h-7 w-7 items-center justify-center rounded-full border bg-background/70 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+						onclick={() => (selectedPlaylists = [])}
+						aria-label="Clear selection"
+						title="Clear selection"
+					>
+						<X size={14} />
+					</button>
+
+					<div class="flex flex-col gap-0.5 pt-2">
+						<span
+							class="truncate text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground"
+						>
+							Move to beginning
+						</span>
+					</div>
+				</div>
+			{/if}
+
 			{#each scroll.items as playlist (playlist.id)}
 				<PlaylistTile
 					{playlist}

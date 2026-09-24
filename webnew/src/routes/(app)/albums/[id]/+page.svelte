@@ -17,8 +17,8 @@
 		X,
 	} from "@lucide/svelte";
 	import {
-		SortDropdown,
 		SortableHeader,
+		SortToggleDropdown,
 		defaultSort,
 		trackColumns,
 		trackSortTypes,
@@ -263,7 +263,7 @@
 	</div>
 
 	<div class="flex items-center gap-2 pr-2">
-		<SortDropdown
+		<SortToggleDropdown
 			types={trackSortTypes.album}
 			{sort}
 			onSortChange={updateSort}

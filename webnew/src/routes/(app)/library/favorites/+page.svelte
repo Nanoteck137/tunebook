@@ -5,18 +5,9 @@
 		Button,
 		Separator,
 		Input,
-		DropdownMenu,
 		buttonVariants,
 	} from "$lib/components/ui";
-	import {
-		Play,
-		Shuffle,
-		X,
-		ListSortAscendingIcon,
-		CheckIcon,
-		ListFilter,
-		Heart,
-	} from "@lucide/svelte";
+	import { Play, Shuffle, X, ListFilter, Heart } from "@lucide/svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Track } from "$lib/api/types";
@@ -25,6 +16,7 @@
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import { SortToggleDropdown } from "$lib/components/sort";
 	import FilterButton from "../../tracks/FilterButton.svelte";
 	import {
 		sortTypes,
@@ -182,31 +174,11 @@
 		</div>
 
 		<div class="flex items-center gap-1">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger
-					class={buttonVariants({ variant: "ghost", size: "icon" })}
-					title="Sort"
-					aria-label="Sort"
-				>
-					<ListSortAscendingIcon />
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Group>
-						{#each sortTypes as ty (ty.value)}
-							{@const selected = sort === ty.value}
-							<DropdownMenu.Item
-								onSelect={() => updateSort(ty.value)}
-								class={selected ? "bg-accent text-foreground" : ""}
-							>
-								{#if selected}
-									<CheckIcon />
-								{/if}
-								{ty.label}
-							</DropdownMenu.Item>
-						{/each}
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+			<SortToggleDropdown
+				types={sortTypes}
+				{sort}
+				onSortChange={(value) => updateSort(value)}
+			/>
 		</div>
 	</div>
 
