@@ -206,12 +206,6 @@
 		alt={data.playlist.name}
 	/>
 
-	<!-- <Image -->
-	<!-- 	class="w-40 min-w-40 self-center rounded-xl shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:w-52 md:min-w-52 dark:ring-white/10" -->
-	<!-- 	src={data.playlist.coverArt.large} -->
-	<!-- 	alt={data.playlist.name} -->
-	<!-- /> -->
-
 	<div class="flex min-w-0 flex-col gap-2">
 		<p
 			class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
@@ -330,8 +324,6 @@
 	</div>
 </HeroCard>
 
-<Spacer />
-
 <div
 	role="button"
 	tabindex={showCompactHeader ? 0 : -1}
@@ -386,9 +378,7 @@
 	</div>
 </div>
 
-<Spacer />
-
-<div class="flex items-center justify-between gap-2 sm:hidden">
+<div class="flex items-center justify-between gap-2 sm:hidden py-4">
 	<DebouncedSearchInput
 		class="flex-1"
 		placeholder="Search tracks..."
@@ -414,9 +404,8 @@
 	</div>
 </div>
 
-<Spacer size="sm" />
-
 <SortableHeader
+	class="py-4"
 	{sort}
 	onSortChange={updateSort}
 	columns={trackColumns("playlist")}
@@ -438,8 +427,6 @@
 		/>
 	</div>
 </SortableHeader>
-
-<Spacer size="sm" />
 
 <InfiniteScroll controller={scroll} errorMessage="Failed to load more tracks">
 	<TrackList
