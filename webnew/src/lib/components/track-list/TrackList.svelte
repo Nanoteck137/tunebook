@@ -272,7 +272,7 @@
 							>
 								<EllipsisVertical />
 							</DropdownMenu.Trigger>
-							<DropdownMenu.Content align="end">
+							<DropdownMenu.Content align="end" class="min-w-44">
 								<DropdownMenu.Group>
 									<DropdownMenu.Item
 										onSelect={() => {
