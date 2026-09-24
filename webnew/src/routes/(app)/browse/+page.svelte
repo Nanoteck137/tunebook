@@ -15,6 +15,7 @@
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import { Button } from "$lib/components/ui";
+	import Spacer from "$lib/components/Spacer.svelte";
 
 	let { data } = $props();
 
@@ -81,6 +82,8 @@
 			Categories
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 			{#each categories as category (category.title)}
 				<div class="flex flex-col gap-3 rounded-lg border bg-card p-4">
@@ -137,6 +140,8 @@
 			Recently Added Albums
 		</SectionHeader>
 
+		<Spacer />
+
 		{#if data.recentAlbums.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
 				{#each data.recentAlbums as album (album.id)}
@@ -154,6 +159,8 @@
 			Recently Added Tracks
 		</SectionHeader>
 
+		<Spacer />
+
 		{#if data.recentTracks.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
 				{#each data.recentTracks as track (track.id)}
@@ -170,6 +177,8 @@
 			<ListMusic />
 			Recently Added Playlists
 		</SectionHeader>
+
+		<Spacer />
 
 		{#if data.recentPlaylists.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
