@@ -320,6 +320,16 @@
 		padding-bottom: 6rem !important;
 	}
 
+	@media (max-width: 767.98px) {
+		main {
+			padding-bottom: 3.5rem !important;
+		}
+
+		body[data-player="true"] main {
+			padding-bottom: 7rem !important;
+		}
+	}
+
 	.bottom-popup {
 		bottom: 0.5rem;
 	}

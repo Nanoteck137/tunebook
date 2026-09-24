@@ -290,7 +290,7 @@
 
 	{#if data.user}
 		<nav
-			class="flex items-center justify-around border-t bg-background py-1 md:hidden"
+			class="flex h-11 items-center justify-around border-t border-border/40 bg-background/95 py-1 backdrop-blur supports-backdrop-filter:bg-background/60 md:hidden"
 		>
 			<a
 				href="/"
