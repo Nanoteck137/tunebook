@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
 	import { page } from "$app/state";
-	import { Button, Input, Separator } from "$lib/components/ui";
+	import { onMount } from "svelte";
+	import { Button, Separator } from "$lib/components/ui";
 	import { ChevronDown, ListMusic, Plus, X } from "@lucide/svelte";
 	import { cn } from "$lib/utils";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
 	import { SortToggleDropdown } from "$lib/components/sort";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Playlist } from "$lib/api/types";
@@ -65,26 +67,33 @@
 
 		const query = page.url.searchParams;
 		query.delete("sort");
-		query.set("sort", sort);
 
-		goto("?" + query.toString(), { invalidateAll: true });
-	}
-
-	let searchQuery = $state(page.url.searchParams.get("query") ?? "");
-	function updateSearch() {
-		const query = page.url.searchParams;
-		query.delete("query");
-
-		if (searchQuery) {
-			query.set("query", searchQuery);
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
 		}
 
 		goto("?" + query.toString(), { invalidateAll: true });
 	}
 
-	function clearSearch() {
-		searchQuery = "";
-		updateSearch();
+	let value = $state("");
+
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
+		}
+
+		await goto("?" + params.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
 	}
 
 	async function toggleQuick(playlistId: string) {
@@ -123,54 +132,37 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<section>
-		<SectionHeader count={data.page?.totalItems}>
-			<ListMusic />
-			Playlists
+	<SectionHeader count={data.page?.totalItems}>
+		<ListMusic />
+		Playlists
 
-			{#snippet actions()}
-				<Button size="sm" onclick={() => (openNewPlaylistModal = true)}>
-					<Plus size={14} />
-					New Playlist
-				</Button>
-			{/snippet}
-		</SectionHeader>
-	</section>
+		{#snippet actions()}
+			<Button size="sm" onclick={() => (openNewPlaylistModal = true)}>
+				<Plus size={14} />
+				New Playlist
+			</Button>
+		{/snippet}
+	</SectionHeader>
 
 	<!-- Toolbar -->
-	<div class="flex flex-wrap items-center justify-between gap-2 px-2">
-		<div class="relative flex-1 md:max-w-64">
-			<Input
-				class="pr-8"
-				placeholder="Search playlists..."
-				bind:value={searchQuery}
-				onkeydown={(e) => {
-					if (e.key === "Enter") {
-						updateSearch();
-					}
-				}}
-			/>
-			{#if searchQuery}
-				<button
-					class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
-					onclick={clearSearch}
-					aria-label="Clear search"
-				>
-					<X size={14} />
-				</button>
-			{/if}
-		</div>
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<DebouncedSearchInput
+			class="flex-1 md:max-w-64"
+			placeholder="Search playlists..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
 
 		<div class="flex items-center gap-1">
 			<SortToggleDropdown
 				types={sortTypes}
 				{sort}
+				{defaultSort}
 				onSortChange={(value) => updateSort(value)}
 			/>
 		</div>
 	</div>
-
-	<Separator />
 
 	<InfiniteScroll controller={scroll}>
 		<div

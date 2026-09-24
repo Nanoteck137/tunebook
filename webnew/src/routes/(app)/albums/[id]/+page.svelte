@@ -1,21 +1,16 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { afterNavigate, goto } from "$app/navigation";
+	import { onMount } from "svelte";
 	import {
 		Breadcrumb,
 		Button,
 		buttonVariants,
 		Checkbox,
 		DropdownMenu,
-		Input,
 	} from "$lib/components/ui";
-	import {
-		EllipsisVertical,
-		ListPlus,
-		Play,
-		Shuffle,
-		X,
-	} from "@lucide/svelte";
+	import { EllipsisVertical, ListPlus, Play, Shuffle } from "@lucide/svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
 	import {
 		SortableHeader,
 		SortToggleDropdown,
@@ -54,41 +49,25 @@
 		goto("?" + query.toString(), { invalidateAll: true });
 	}
 
-	let searchQuery = $state(page.url.searchParams.get("query") ?? "");
+	let value = $state("");
 
-	let searchTimer: ReturnType<typeof setTimeout>;
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
 
-	function onSearchInput(e: Event) {
-		const target = e.target as HTMLInputElement;
-		const current = target.value;
-		searchQuery = current;
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
 
-		clearTimeout(searchTimer);
-		searchTimer = setTimeout(() => {
-			updateSearch();
-		}, 500);
-	}
-
-	function updateSearch() {
-		clearTimeout(searchTimer);
-
-		const query = page.url.searchParams;
-		query.delete("query");
-
-		if (searchQuery) {
-			query.set("query", searchQuery);
+		if (query) {
+			params.set("query", query);
 		}
 
-		goto("?" + query.toString(), {
+		await goto("?" + params.toString(), {
 			invalidateAll: true,
 			keepFocus: true,
 			replaceState: true,
 		});
-	}
-
-	function clearSearch() {
-		searchQuery = "";
-		updateSearch();
 	}
 
 	let selectedTracks = $state<string[]>([]);
@@ -239,33 +218,19 @@
 <Spacer />
 
 <div class="flex items-center justify-between gap-2 sm:hidden">
-	<div class="relative flex-1">
-		<Input
-			class="pr-8"
-			placeholder="Search tracks..."
-			value={searchQuery}
-			oninput={onSearchInput}
-			onkeydown={(e) => {
-				if (e.key === "Enter") {
-					updateSearch();
-				}
-			}}
-		/>
-		{#if searchQuery}
-			<button
-				class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
-				onclick={clearSearch}
-				aria-label="Clear search"
-			>
-				<X size={14} />
-			</button>
-		{/if}
-	</div>
+	<DebouncedSearchInput
+		class="flex-1"
+		placeholder="Search tracks..."
+		{value}
+		setValue={(v) => (value = v)}
+		{search}
+	/>
 
 	<div class="flex items-center gap-2 pr-2">
 		<SortToggleDropdown
 			types={trackSortTypes.album}
 			{sort}
+			{defaultSort}
 			onSortChange={updateSort}
 		/>
 
@@ -284,28 +249,14 @@
 	columns={trackColumns("album")}
 >
 	<div class="flex shrink-0 items-center gap-2 border-l border-border/40 pl-3">
-		<div class="relative">
-			<Input
-				class="h-7 w-44 pr-6"
-				placeholder="Search tracks..."
-				value={searchQuery}
-				oninput={onSearchInput}
-				onkeydown={(e) => {
-					if (e.key === "Enter") {
-						updateSearch();
-					}
-				}}
-			/>
-			{#if searchQuery}
-				<button
-					class="absolute top-1/2 right-1 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
-					onclick={clearSearch}
-					aria-label="Clear search"
-				>
-					<X size={12} />
-				</button>
-			{/if}
-		</div>
+		<DebouncedSearchInput
+			inputClass="h-7 w-44 pr-6"
+			iconSize={12}
+			placeholder="Search tracks..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
 		<Checkbox
 			title="Select all"
 			aria-label="Select all"

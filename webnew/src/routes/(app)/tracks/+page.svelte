@@ -142,6 +142,7 @@
 				<SortToggleDropdown
 					types={sortTypes}
 					sort={selectedSort}
+					{defaultSort}
 					onSortChange={(v) => (selectedSort = v as SortType)}
 				/>
 			</div>

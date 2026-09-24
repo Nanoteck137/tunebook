@@ -91,7 +91,12 @@
 			{/if}
 		</div>
 
-		<SortToggleDropdown types={sortTypes} {sort} onSortChange={updateSort} />
+		<SortToggleDropdown
+			types={sortTypes}
+			{sort}
+			{defaultSort}
+			onSortChange={updateSort}
+		/>
 	</div>
 
 	<InfiniteScroll controller={scroll}>

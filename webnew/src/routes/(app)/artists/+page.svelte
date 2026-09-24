@@ -19,9 +19,11 @@
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import { Separator, Button, Input, Dialog } from "$lib/components/ui";
 	import { SortToggleDropdown } from "$lib/components/sort";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
 	import { cn } from "$lib/utils";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { onMount } from "svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import {
 		sortTypes,
@@ -45,26 +47,33 @@
 
 		const query = page.url.searchParams;
 		query.delete("sort");
-		query.set("sort", sort);
 
-		goto("?" + query.toString(), { invalidateAll: true });
-	}
-
-	let searchQuery = $state(page.url.searchParams.get("query") ?? "");
-	function updateSearch() {
-		const query = page.url.searchParams;
-		query.delete("query");
-
-		if (searchQuery) {
-			query.set("query", searchQuery);
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
 		}
 
 		goto("?" + query.toString(), { invalidateAll: true });
 	}
 
-	function clearSearch() {
-		searchQuery = "";
-		updateSearch();
+	let value = $state("");
+
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
+		}
+
+		await goto("?" + params.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
 	}
 
 	let tagInput = $state("");
@@ -193,27 +202,13 @@
 
 	<!-- Toolbar -->
 	<div class="flex flex-wrap items-center justify-between gap-2">
-		<div class="relative flex-1 md:max-w-64">
-			<Input
-				class="pr-8"
-				placeholder="Search artists..."
-				bind:value={searchQuery}
-				onkeydown={(e) => {
-					if (e.key === "Enter") {
-						updateSearch();
-					}
-				}}
-			/>
-			{#if searchQuery}
-				<button
-					class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
-					onclick={clearSearch}
-					aria-label="Clear search"
-				>
-					<X size={14} />
-				</button>
-			{/if}
-		</div>
+		<DebouncedSearchInput
+			class="flex-1 md:max-w-64"
+			placeholder="Search artists..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
 
 		<div class="flex items-center gap-1">
 			<Button
@@ -247,6 +242,7 @@
 			<SortToggleDropdown
 				types={sortTypes}
 				{sort}
+				{defaultSort}
 				onSortChange={(value) => updateSort(value)}
 			/>
 

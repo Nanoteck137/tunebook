@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import {
-		Button,
-		Separator,
-		Input,
-		buttonVariants,
-	} from "$lib/components/ui";
+	import { onMount } from "svelte";
+	import { Button, Separator, buttonVariants } from "$lib/components/ui";
 	import { Play, Shuffle, X, ListFilter, Heart } from "@lucide/svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import { getApiClient, handleApiError } from "$lib";
@@ -16,6 +12,7 @@
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
 	import { SortToggleDropdown } from "$lib/components/sort";
 	import FilterButton from "../../tracks/FilterButton.svelte";
 	import {
@@ -33,21 +30,25 @@
 
 	let filterId = $derived(page.url.searchParams.get("filterId"));
 
-	let searchQuery = $state(page.url.searchParams.get("query") ?? "");
-	function updateSearch() {
-		const query = page.url.searchParams;
-		query.delete("query");
+	let value = $state("");
 
-		if (searchQuery) {
-			query.set("query", searchQuery);
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
 		}
 
-		goto("?" + query.toString(), { invalidateAll: true });
-	}
-
-	function clearSearch() {
-		searchQuery = "";
-		updateSearch();
+		await goto("?" + params.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
 	}
 
 	let sort = $state(
@@ -58,7 +59,10 @@
 
 		const query = page.url.searchParams;
 		query.delete("sort");
-		query.set("sort", sort);
+
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
 
 		goto("?" + query.toString(), { invalidateAll: true });
 	}
@@ -151,32 +155,19 @@
 
 	<!-- Toolbar -->
 	<div class="flex flex-wrap items-center justify-between gap-2 px-2">
-		<div class="relative flex-1 md:max-w-64">
-			<Input
-				class="pr-8"
-				placeholder="Search favorites..."
-				bind:value={searchQuery}
-				onkeydown={(e) => {
-					if (e.key === "Enter") {
-						updateSearch();
-					}
-				}}
-			/>
-			{#if searchQuery}
-				<button
-					class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
-					onclick={clearSearch}
-					aria-label="Clear search"
-				>
-					<X size={14} />
-				</button>
-			{/if}
-		</div>
+		<DebouncedSearchInput
+			class="flex-1 md:max-w-64"
+			placeholder="Search favorites..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
 
 		<div class="flex items-center gap-1">
 			<SortToggleDropdown
 				types={sortTypes}
 				{sort}
+				{defaultSort}
 				onSortChange={(value) => updateSort(value)}
 			/>
 		</div>

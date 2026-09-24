@@ -15,7 +15,7 @@
 	} = $props();
 </script>
 
-<div class="mb-3 flex items-center justify-between px-2">
+<div class="flex items-center justify-between px-2">
 	<div class="flex items-baseline gap-2">
 		<h2
 			class="text-lg font-bold [&_svg:not([class*='size-'])]:size-4 [&_svg]:mr-1.5 [&_svg]:inline [&_svg]:shrink-0 [&_svg]:text-muted-foreground [&_svg]:align-[-0.125em]"

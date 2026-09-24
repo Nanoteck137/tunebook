@@ -24,7 +24,7 @@ const sortValues = [
 export const SortTypeEnum = z.enum(sortValues);
 export type SortType = (typeof sortValues)[number];
 
-export const defaultSort: SortType = "name-a-z";
+export const defaultSort: SortType = "created-new";
 
 export const FullFilter = z.object({
 	query: z.string(),

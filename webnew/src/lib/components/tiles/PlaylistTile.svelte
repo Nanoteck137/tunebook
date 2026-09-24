@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { ChevronDown, FileHeart, Play, Shuffle, Star } from "@lucide/svelte";
+	import {
+		ChevronDown,
+		ChevronLeft,
+		ChevronRight,
+		FileHeart,
+		ListChecks,
+		Play,
+		Shuffle,
+		Star,
+	} from "@lucide/svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import type { Playlist } from "$lib/api/types";
 	import { Button, Checkbox, DropdownMenu } from "$lib/components/ui";
@@ -54,7 +63,7 @@
 
 {#snippet overlay()}
 	{#if selectionMode}
-		<div class="absolute top-1.5 left-1.5 z-10">
+		<div class="absolute top-2 right-2 z-10">
 			<Checkbox
 				checked={selected}
 				onCheckedChange={(checked) => onSelectChange?.(checked)}
@@ -63,59 +72,64 @@
 
 		{#if onMoveAfter}
 			<Button
-				class="absolute right-2 bottom-2 z-10 hidden h-10 w-10 items-center justify-center rounded-full opacity-0 shadow-lg transition-all group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
-				variant="default"
+				class="absolute right-2 bottom-2 hidden translate-y-2 rounded-full opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:inline-flex"
+				size="icon"
 				onclick={onMoveAfter}
 				title="Move selected after this playlist"
 				aria-label={`Move selected after ${playlist.name}`}
 			>
-				<ChevronDown size={18} />
+				<ChevronRight />
 			</Button>
 		{/if}
 	{:else if onToggleQuick}
-		<button
-			class="absolute top-1.5 right-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all {isQuick
-				? 'bg-primary text-primary-foreground shadow-md'
-				: 'border bg-background/70 text-muted-foreground backdrop-blur-sm hover:scale-105 hover:text-foreground'}"
+		<Button
+			class="absolute top-2 right-2 rounded-full opacity-80 shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 hover:scale-110"
+			size="icon"
+			variant="secondary"
 			title={isQuick ? "Unset as quick playlist" : "Set as quick playlist"}
 			aria-label={isQuick
 				? `Unset ${playlist.name} as quick playlist`
 				: `Set ${playlist.name} as quick playlist`}
 			onclick={onToggleQuick}
 		>
-			<Star size={14} class={isQuick ? "fill-current" : ""} />
-		</button>
+			<Star class={isQuick ? "fill-primary stroke-primary" : ""} />
+		</Button>
 	{/if}
 {/snippet}
 
 {#snippet menu()}
+	{#if onSelectChange}
+		<DropdownMenu.Group>
+			<DropdownMenu.Item onSelect={() => onSelectChange(true)}>
+				<ListChecks />
+				Select playlist
+			</DropdownMenu.Item>
+		</DropdownMenu.Group>
+
+		<DropdownMenu.Separator />
+	{/if}
+
 	<DropdownMenu.Group>
-		<DropdownMenu.Item onclick={() => play()}>
-			<Play size={14} />
+		<DropdownMenu.Item onSelect={() => play()}>
+			<Play />
 			Play
 		</DropdownMenu.Item>
-		<DropdownMenu.Item onclick={() => play(true)}>
-			<Shuffle size={14} />
+		<DropdownMenu.Item onSelect={() => play(true)}>
+			<Shuffle />
 			Shuffle play
 		</DropdownMenu.Item>
 	</DropdownMenu.Group>
 
-	<DropdownMenu.Separator />
+	{#if onToggleQuick}
+		<DropdownMenu.Separator />
 
-	<DropdownMenu.Group>
-		{#if onSelectChange}
-			<DropdownMenu.Item onclick={() => onSelectChange(true)}>
-				Select playlist
-			</DropdownMenu.Item>
-		{/if}
-
-		{#if onToggleQuick}
-			<DropdownMenu.Item onclick={onToggleQuick}>
+		<DropdownMenu.Group>
+			<DropdownMenu.Item onSelect={onToggleQuick}>
 				<FileHeart />
 				{isQuick ? "Remove Quick Playlist" : "Set as Quick Playlist"}
 			</DropdownMenu.Item>
-		{/if}
-	</DropdownMenu.Group>
+		</DropdownMenu.Group>
+	{/if}
 {/snippet}
 
 <Tile

@@ -36,7 +36,7 @@
 	}
 </script>
 
-<div class="section-library flex flex-col gap-6">
+<div class="section-library flex flex-col gap-4">
 	<HeroCard class="section-library">
 		<div class="flex items-center gap-4">
 			<HeroIcon>

@@ -1,16 +1,23 @@
 <script lang="ts">
 	import { buttonVariants, DropdownMenu } from "$lib/components/ui";
-	import { ArrowDown, ArrowUp, ListSortAscendingIcon } from "@lucide/svelte";
+	import {
+		ArrowDown,
+		ArrowUp,
+		ListSortAscendingIcon,
+		RotateCcw,
+	} from "@lucide/svelte";
 	import type { SortToggleType } from "./types";
 
 	let {
 		types,
 		sort,
+		defaultSort,
 		onSortChange,
 		align,
 	}: {
 		types: readonly SortToggleType[];
 		sort: string;
+		defaultSort: string;
 		onSortChange: (sort: string) => void;
 		align?: "start" | "center" | "end";
 	} = $props();
@@ -60,5 +67,12 @@
 				</DropdownMenu.Item>
 			{/each}
 		</DropdownMenu.Group>
+		{#if sort !== defaultSort}
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item onSelect={() => onSortChange(defaultSort)}>
+				<RotateCcw class="h-4 w-4" />
+				Clear
+			</DropdownMenu.Item>
+		{/if}
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
