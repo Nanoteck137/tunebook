@@ -53,7 +53,7 @@
 
 <div
 	class={cn(
-		"group flex items-center gap-3 rounded-lg px-2 py-1 transition-colors",
+		"group flex items-center gap-3 rounded-lg p-2 transition-colors",
 		selectionMode
 			? "cursor-pointer select-none hover:bg-accent hover:text-accent-foreground"
 			: "hover:bg-accent hover:text-accent-foreground has-data-[state='open']:bg-accent has-data-[state='open']:text-accent-foreground",
