@@ -8,6 +8,8 @@
 	import HeroCard from "$lib/components/HeroCard.svelte";
 	import Image from "$lib/components/Image.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
+	import SavedFilterButton from "$lib/components/SavedFilterButton.svelte";
+	import SavedFilterCard from "$lib/components/SavedFilterCard.svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
@@ -52,6 +54,9 @@
 	let openConfirmDelete = $state(false);
 	let openEditPlaylistModal = $state(false);
 	let openUploadCoverModal = $state(false);
+
+	let filterId = $derived(page.url.searchParams.get("filterId"));
+	let filterOpen = $state(false);
 
 	let sort = $state(
 		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
@@ -142,7 +147,11 @@
 
 	async function playPlaylist(opts: { shuffle?: boolean } = {}) {
 		await musicManager.queueRequest(
-			{ type: "addPlaylist", playlistId: data.playlist.id },
+			{
+				type: "addPlaylist",
+				playlistId: data.playlist.id,
+				filterId: page.url.searchParams.get("filterId") ?? undefined,
+			},
 			{ shuffle: opts.shuffle },
 		);
 	}
@@ -162,6 +171,10 @@
 			};
 
 			buildTrackQuery(data.filter, "playlist", query);
+
+			if (filterId) {
+				query["filterId"] = filterId;
+			}
 
 			const res = await apiClient.getPlaylistItems(data.playlist.id, {
 				query,
@@ -324,6 +337,8 @@
 	</div>
 </HeroCard>
 
+<Spacer size="md" />
+
 <div
 	role="button"
 	tabindex={showCompactHeader ? 0 : -1}
@@ -378,7 +393,7 @@
 	</div>
 </div>
 
-<div class="flex items-center justify-between gap-2 sm:hidden py-4">
+<div class="flex items-center justify-between gap-2 sm:hidden">
 	<DebouncedSearchInput
 		class="flex-1"
 		placeholder="Search tracks..."
@@ -388,6 +403,11 @@
 	/>
 
 	<div class="flex items-center gap-2 pr-2">
+		<SavedFilterButton
+			bind:filterOpen
+			hasFilters={data.filters && data.filters.length > 0}
+		/>
+
 		<SortToggleDropdown
 			types={trackSortTypes.playlist}
 			{sort}
@@ -405,12 +425,16 @@
 </div>
 
 <SortableHeader
-	class="py-4"
 	{sort}
 	onSortChange={updateSort}
 	columns={trackColumns("playlist")}
 >
 	<div class="flex shrink-0 items-center gap-2 border-l border-border/40 pl-3">
+		<SavedFilterButton
+			bind:filterOpen
+			hasFilters={data.filters && data.filters.length > 0}
+		/>
+
 		<DebouncedSearchInput
 			inputClass="h-7 w-44 pr-6"
 			iconSize={12}
@@ -427,6 +451,10 @@
 		/>
 	</div>
 </SortableHeader>
+
+<SavedFilterCard class="mt-2" {filterOpen} filters={data.filters} />
+
+<Spacer size="md" />
 
 <InfiniteScroll controller={scroll} errorMessage="Failed to load more tracks">
 	<TrackList

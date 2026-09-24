@@ -30,6 +30,8 @@
 		type SortType,
 		constructFilterSort,
 	} from "./types";
+	import SavedFilterButton from "$lib/components/SavedFilterButton.svelte";
+	import SavedFilterCard from "$lib/components/SavedFilterCard.svelte";
 
 	let { data } = $props();
 
@@ -172,24 +174,10 @@
 		/>
 
 		<div class="flex items-center gap-1">
-			<Button
-				variant="ghost"
-				size="icon"
-				title="Saved Filters"
-				aria-label="Saved Filters"
-				class={cn(
-					"relative transition-opacity",
-					filterOpen && "bg-accent text-accent-foreground",
-				)}
-				onclick={() => (filterOpen = !filterOpen)}
-			>
-				<ListFilter />
-				{#if data.filters && data.filters.length > 0}
-					<span
-						class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary"
-					></span>
-				{/if}
-			</Button>
+			<SavedFilterButton
+				bind:filterOpen
+				hasFilters={data.filters && data.filters.length > 0}
+			/>
 
 			<SortToggleDropdown
 				types={sortTypes}
@@ -200,39 +188,7 @@
 		</div>
 	</div>
 
-	{#if filterOpen}
-		<div transition:fly={{ y: -6, duration: 150 }}>
-			<Card.Root class="py-2">
-				<Card.Content class="flex-warp flex items-center justify-between px-2">
-					<div class="flex flex-wrap items-center gap-1.5">
-						{#if data.filters && data.filters.length > 0}
-							{#each data.filters as filter (filter.filterId)}
-								<FilterButton {filter} />
-							{/each}
-						{:else}
-							<span class="text-sm text-muted-foreground">None saved yet</span>
-						{/if}
-					</div>
-
-					<div class="flex items-center gap-1">
-						<a
-							href="/library/filters/tracks"
-							class={buttonVariants({ variant: "ghost", size: "icon" })}
-							title="Manage Filters"
-						>
-							<ExternalLink />
-						</a>
-
-						{#if filterId}
-							<Button variant="ghost" size="icon" onclick={clearFilter}>
-								<X />
-							</Button>
-						{/if}
-					</div>
-				</Card.Content>
-			</Card.Root>
-		</div>
-	{/if}
+	<SavedFilterCard {filterOpen} filters={data.filters} />
 </div>
 
 <InfiniteScroll controller={scroll}>

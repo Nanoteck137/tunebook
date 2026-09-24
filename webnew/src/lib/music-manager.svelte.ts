@@ -592,7 +592,7 @@ export class MusicManager {
 				res = await this.apiClient.addPlaylistToQueue(
 					this.#deviceId,
 					request.playlistId,
-					body,
+					{ ...body, filterId: request.filterId },
 				);
 				break;
 			case "addFavorites":

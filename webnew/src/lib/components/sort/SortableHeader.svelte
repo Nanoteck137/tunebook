@@ -44,7 +44,7 @@
 </script>
 
 <div
-	class={cn("group/header hidden items-center gap-3 pl-2 pr-4 pt-2 pb-1.5 text-xs font-medium text-muted-foreground select-none sm:flex sm:gap-4", className)}
+	class={cn("group/header hidden items-center gap-3 pl-2 pr-4 text-xs font-medium text-muted-foreground select-none sm:flex sm:gap-4", className)}
 	role="row"
 >
 	{#each columns as col (col.label)}

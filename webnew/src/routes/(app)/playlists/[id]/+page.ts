@@ -2,6 +2,7 @@ import { getPagedQueryOptions } from "$lib/utils";
 import { TrackFilter, buildTrackQuery } from "$lib/components/sort";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
+import type { TrackFilter as SavedTrackFilter } from "$lib/api/types";
 
 export const load: PageLoad = async ({ parent, params, url }) => {
 	const data = await parent();
@@ -9,6 +10,11 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 	const playlist = await data.apiClient.getPlaylistById(params.id);
 	if (!playlist.success) {
 		throw error(playlist.error.code, { message: playlist.error.message });
+	}
+
+	const filtersRes = await data.apiClient.getTrackFilters();
+	if (!filtersRes.success) {
+		throw error(filtersRes.error.code, { message: filtersRes.error.message });
 	}
 
 	const query = getPagedQueryOptions(url.searchParams);
@@ -38,5 +44,6 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 		page: items.data.page,
 		items: items.data.items,
 		filter,
+		filters: filtersRes.data.filters,
 	};
 };
