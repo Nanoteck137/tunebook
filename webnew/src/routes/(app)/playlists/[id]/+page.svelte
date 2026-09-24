@@ -218,7 +218,7 @@
 	innerClass="md:flex-row md:items-end md:gap-8"
 >
 	<SectionImage
-		class="w-40 min-w-40 self-center rounded-xl shadow-2xl md:w-52 md:min-w-52"
+		class="aspect-square w-40 min-w-40 self-center rounded-xl shadow-2xl md:w-52 md:min-w-52"
 		src={data.playlist.coverArt.large}
 		alt={data.playlist.name}
 	/>
