@@ -42,6 +42,10 @@
 	--input: oklch(0.922 0.008 45);
 	--ring: oklch(0.68 0.19 40);
 
+	/* Generic highlight */
+	--highlight-base: oklch(0.68 0.19 40 / 0.1);
+	--highlight-flash: oklch(0.68 0.19 40 / 0.35);
+
 	/* Logo-inspired chart palette */
 	--chart-1: oklch(0.8 0.17 80);
 	--chart-2: oklch(0.7 0.18 35);
@@ -106,6 +110,10 @@
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 15%);
 	--ring: oklch(0.72 0.18 40);
+
+	/* Generic highlight */
+	--highlight-base: oklch(0.72 0.18 40 / 0.12);
+	--highlight-flash: oklch(0.72 0.18 40 / 0.4);
 
 	/* Logo-inspired chart palette */
 	--chart-1: oklch(0.8 0.17 80);
@@ -182,6 +190,30 @@
 
 .dark .section-albums {
 	--section-hero-from: oklch(0.27 0.07 115);
+}
+
+.section-artists {
+	--section-gradiant-1: #fb923c;
+	--section-gradiant-2: #f97316;
+	--section-gradiant-3: #ea580c;
+	--section-hero-from: oklch(0.93 0.06 55);
+	--section-hero-to: var(--background);
+}
+
+.dark .section-artists {
+	--section-hero-from: oklch(0.26 0.05 55);
+}
+
+.section-tracks {
+	--section-gradiant-1: #2dd4bf;
+	--section-gradiant-2: #14b8a6;
+	--section-gradiant-3: #0d9488;
+	--section-hero-from: oklch(0.93 0.05 180);
+	--section-hero-to: var(--background);
+}
+
+.dark .section-tracks {
+	--section-hero-from: oklch(0.26 0.05 180);
 }
 
 .section-server {
@@ -292,25 +324,29 @@
 		bottom: 0.5rem;
 	}
 
-	.flash-highlight {
-		animation: tunebook-row-flash 4s ease-in-out;
+	.row-flash {
+		animation: row-flash 4s;
 	}
 
-	@keyframes tunebook-row-flash {
+	.row-highlight {
+		background-color: var(--highlight-base);
+	}
+
+	@keyframes row-flash {
 		0%,
 		8% {
-			background-color: oklch(0.68 0.19 40 / 0.35);
+			background-color: var(--highlight-flash);
 		}
 		22% {
-			background-color: transparent;
+			background-color: var(--highlight-base);
 		}
 		30%,
 		38% {
-			background-color: oklch(0.68 0.19 40 / 0.35);
+			background-color: var(--highlight-flash);
 		}
 		50%,
 		100% {
-			background-color: transparent;
+			background-color: var(--highlight-base);
 		}
 	}
 

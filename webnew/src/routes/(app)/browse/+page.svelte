@@ -13,6 +13,7 @@
 	import TrackTile from "$lib/components/tiles/TrackTile.svelte";
 	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import { Button } from "$lib/components/ui";
 
 	let { data } = $props();
@@ -62,11 +63,9 @@
 		class="rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
 	>
 		<div class="flex items-center gap-4">
-			<div
-				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-tr from-section-gradiant-1 via-section-gradiant-2 to-section-gradiant-3 text-white"
-			>
-				<Compass size={24} />
-			</div>
+			<HeroIcon>
+				<Compass />
+			</HeroIcon>
 			<div class="flex min-w-0 flex-col">
 				<h1 class="text-2xl font-bold">Browse</h1>
 				<p class="text-sm text-muted-foreground">
@@ -141,12 +140,7 @@
 		{#if data.recentAlbums.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
 				{#each data.recentAlbums as album (album.id)}
-					<AlbumTile
-						id={album.id}
-						cover={album.coverArt.medium}
-						name={album.name}
-						artists={album.artists}
-					/>
+					<AlbumTile class="w-40" size="sm" {album} />
 				{/each}
 			</div>
 		{:else}
@@ -163,12 +157,7 @@
 		{#if data.recentTracks.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
 				{#each data.recentTracks as track (track.id)}
-					<TrackTile
-						id={track.id}
-						cover={track.coverArt.medium}
-						name={track.name}
-						artists={track.artists}
-					/>
+					<TrackTile size="sm" class="w-40" {track} />
 				{/each}
 			</div>
 		{:else}
@@ -185,12 +174,7 @@
 		{#if data.recentPlaylists.length > 0}
 			<div class="flex gap-2 overflow-x-auto pb-4">
 				{#each data.recentPlaylists as playlist (playlist.id)}
-					<PlaylistTile
-						id={playlist.id}
-						cover={playlist.coverArt.medium}
-						name={playlist.name}
-						trackCount={playlist.trackCount}
-					/>
+					<PlaylistTile size="sm" class="w-40" {playlist} />
 				{/each}
 			</div>
 		{:else}

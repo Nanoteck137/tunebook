@@ -6,9 +6,12 @@
 		EllipsisVertical,
 		Heart,
 		Info,
+		ListChecks,
 		ListPlus,
+		Play,
+		Shuffle,
 		Star,
-		Users,
+		User,
 		X,
 	} from "@lucide/svelte";
 	import { getApiClient, handleApiError } from "$lib";
@@ -38,25 +41,26 @@
 		displayOrder?: boolean;
 		highlightId?: string | null;
 
+		selectedTracks?: string[];
+
 		// eslint-disable-next-line no-unused-vars
 		onPlay: (trackId: string, shuffle: boolean) => void;
 		// eslint-disable-next-line no-unused-vars
 		onReorder?: (items: string[], anchor: string | null) => void;
 	};
 
-	const {
+	let {
 		isAlbumShowcase,
 		tracks,
 		displayOrder,
 		highlightId,
+		selectedTracks = $bindable([]),
 		onPlay,
 		onReorder,
 	}: Props = $props();
 	const apiClient = getApiClient();
 	const favoritesManager = getFavorites();
 	const quickPlaylistManager = getQuickPlaylist();
-
-	let selectedTracks = $state<string[]>([]);
 
 	let infoTrackId = $state<string | null>(null);
 	let infoOpen = $state(false);
@@ -78,33 +82,131 @@
 			day: "numeric",
 		});
 	}
+
+	let allSelectedFavorited = $derived(
+		selectedTracks.length > 0 &&
+			selectedTracks.every((id) => favoritesManager.hasTrack(id)),
+	);
+
+	function toggleTrackSelection(id: string) {
+		if (selectedTracks.includes(id)) {
+			selectedTracks = selectedTracks.filter((v) => v !== id);
+		} else {
+			selectedTracks = [...selectedTracks, id];
+		}
+	}
+
+	async function favoriteSelectedTracks() {
+		const ids = selectedTracks;
+		selectedTracks = [];
+
+		if (allSelectedFavorited) {
+			await favoritesManager.unfavoriteTracks(ids);
+		} else {
+			await favoritesManager.favoriteTracks(ids);
+		}
+	}
+
+	async function addSelectedToPlaylist() {
+		const ids = selectedTracks;
+		const playlist = await showPlaylistModal();
+		if (!playlist) return;
+
+		const t = toast.success(`Adding (0 / ${ids.length}) to ${playlist.name}`);
+
+		let num = 0;
+
+		for (const id of ids) {
+			const res = await apiClient.addItemToPlaylist(playlist.id, {
+				trackId: id,
+			});
+			if (!res.success) {
+				if (res.error.type !== "PLAYLIST_ALREADY_HAS_TRACK") {
+					handleApiError(res.error);
+					return;
+				}
+			}
+
+			num++;
+
+			toast.info(`Adding (${num} / ${ids.length}) to ${playlist.name}`, {
+				id: t,
+			});
+		}
+
+		toast.success(
+			`Added ${ids.length} track${ids.length === 1 ? "" : "s"} to ${playlist.name}`,
+			{
+				id: t,
+			},
+		);
+		selectedTracks = [];
+	}
 </script>
 
 <div class="flex flex-col">
 	{#if selectedTracks.length > 0}
-		<div class="flex h-14 items-center justify-end gap-1 px-2">
-			<Button
-				class="rounded-full"
-				variant="ghost"
-				size="icon-lg"
+		<div
+			class="flex h-12 shrink-0 items-center gap-1 rounded-lg border border-dashed border-border/60 px-1 text-xs font-medium text-muted-foreground"
+		>
+			<button
+				class="rounded-full p-1.5 transition-colors hover:bg-muted hover:text-foreground"
 				onclick={() => {
 					selectedTracks = [];
 				}}
+				aria-label="Clear selection"
+				title="Clear selection"
 			>
-				<X />
-			</Button>
+				<X size={16} />
+			</button>
 
-			<Button
-				class="rounded-full"
-				variant="default"
-				onclick={() => {
-					onReorder?.(selectedTracks, null);
-					selectedTracks = [];
-				}}
-			>
-				<ChevronDown />
-				Insert after
-			</Button>
+			{#if onReorder}
+				<button
+					class="group flex h-full min-w-0 flex-1 items-center justify-center gap-2 rounded-md border-2 border-dotted border-transparent transition-colors hover:border-primary/60 hover:bg-accent/50 hover:text-foreground"
+					onclick={() => {
+						onReorder(selectedTracks, null);
+						selectedTracks = [];
+					}}
+				>
+					<ChevronDown
+						class="text-muted-foreground/60 transition-colors group-hover:text-foreground"
+					/>
+					Place {selectedTracks.length} here
+				</button>
+			{:else}
+				<span class="flex-1 text-center">
+					{selectedTracks.length}
+					{selectedTracks.length === 1 ? "track" : "tracks"} selected
+				</span>
+			{/if}
+
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger
+					class={buttonVariants({
+						variant: "ghost",
+						size: "icon-lg",
+						class: "rounded-full",
+					})}
+					title="Actions"
+					aria-label="Actions"
+				>
+					<EllipsisVertical />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					<DropdownMenu.Group>
+						<DropdownMenu.Item onSelect={favoriteSelectedTracks}>
+							<Heart />
+							{allSelectedFavorited
+								? "Remove from favorites"
+								: "Add to favorites"}
+						</DropdownMenu.Item>
+						<DropdownMenu.Item onSelect={addSelectedToPlaylist}>
+							<ListPlus />
+							Save to Playlist
+						</DropdownMenu.Item>
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		</div>
 	{/if}
 
@@ -112,10 +214,15 @@
 		{#each tracks as track (track.id)}
 			<div class="group" id="track-{track.id}">
 				<TrackListItem
-					class={highlightId === track.id ? "flash-highlight" : undefined}
+					class={highlightId === track.id
+						? "row-flash row-highlight"
+						: undefined}
 					showNumber={isAlbumShowcase}
 					{displayOrder}
 					{track}
+					selectionMode={selectedTracks.length > 0}
+					selected={selectedTracks.includes(track.id)}
+					onSelect={() => toggleTrackSelection(track.id)}
 					onPlayClicked={() => {
 						onPlay(track.id, false);
 					}}
@@ -171,7 +278,21 @@
 											selectedTracks = [...selectedTracks, track.id];
 										}}
 									>
+										<ListChecks />
 										Select track
+									</DropdownMenu.Item>
+								</DropdownMenu.Group>
+
+								<DropdownMenu.Separator />
+
+								<DropdownMenu.Group>
+									<DropdownMenu.Item
+										onSelect={() => {
+											onPlay(track.id, false);
+										}}
+									>
+										<Play />
+										Play
 									</DropdownMenu.Item>
 
 									<DropdownMenu.Item
@@ -179,11 +300,45 @@
 											onPlay(track.id, true);
 										}}
 									>
+										<Shuffle />
 										Shuffle play
 									</DropdownMenu.Item>
+								</DropdownMenu.Group>
 
+								<DropdownMenu.Separator />
+
+								{#if !isAlbumShowcase}
 									<DropdownMenu.Item
-										class="sm:hidden"
+										onSelect={() => {
+											goto(`/albums/${track.albumId}?track=${track.id}`);
+										}}
+									>
+										<DiscAlbum />
+										Go to Album
+									</DropdownMenu.Item>
+								{/if}
+
+								<DropdownMenu.Sub>
+									<DropdownMenu.SubTrigger>
+										<User />
+										Go to artist
+									</DropdownMenu.SubTrigger>
+									<DropdownMenu.SubContent>
+										{#each track.artists as artist (artist.id)}
+											<a
+												href="/artists/{artist.id}"
+												class="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+											>
+												{artist.name}
+											</a>
+										{/each}
+									</DropdownMenu.SubContent>
+								</DropdownMenu.Sub>
+
+								<DropdownMenu.Separator />
+
+								<DropdownMenu.Group>
+									<DropdownMenu.Item
 										onSelect={async () => {
 											const wasFav = favoritesManager.hasTrack(track.id);
 											await favoritesManager.toggleTrack(track.id);
@@ -195,7 +350,7 @@
 										}}
 									>
 										{#if favoritesManager.hasTrack(track.id)}
-											<Heart class="fill-primary" />
+											<Heart class="fill-primary stroke-primary" />
 											Unfavorite
 										{:else}
 											<Heart />
@@ -205,7 +360,6 @@
 
 									{#if quickPlaylistManager.playlist !== null}
 										<DropdownMenu.Item
-											class="sm:hidden"
 											onSelect={async () => {
 												const wasIn = quickPlaylistManager.hasTrack(track.id);
 												await quickPlaylistManager.toggleTrack(track.id);
@@ -217,7 +371,7 @@
 											}}
 										>
 											{#if quickPlaylistManager.hasTrack(track.id)}
-												<Star class="fill-primary" />
+												<Star class="fill-primary stroke-primary" />
 												Remove from Quick
 											{:else}
 												<Star />
@@ -227,30 +381,11 @@
 									{/if}
 
 									<DropdownMenu.Item
-										class="sm:hidden"
-										onSelect={() => {
-											goto(`/artists/${track.artists[0].id}`);
-										}}
-									>
-										<Users />
-										Go to Artist
-									</DropdownMenu.Item>
-									{#if !isAlbumShowcase}
-										<DropdownMenu.Item
-											onSelect={() => {
-												goto(`/albums/${track.albumId}`);
-											}}
-										>
-											<DiscAlbum />
-											Go to Album
-										</DropdownMenu.Item>
-									{/if}
-									<DropdownMenu.Item
 										onSelect={async () => {
-											const id = await showPlaylistModal();
-											if (!id) return;
+											const playlist = await showPlaylistModal();
+											if (!playlist) return;
 
-											const res = await apiClient.addItemToPlaylist(id, {
+											const res = await apiClient.addItemToPlaylist(playlist.id, {
 												trackId: track.id,
 											});
 											if (!res.success) {
@@ -264,14 +399,18 @@
 										<ListPlus />
 										Save to Playlist
 									</DropdownMenu.Item>
+								</DropdownMenu.Group>
 
+								<DropdownMenu.Separator />
+
+								<DropdownMenu.Group>
 									<DropdownMenu.Item
 										onSelect={() => {
 											infoTrackId = track.id;
 											infoOpen = true;
 										}}
 									>
-										<Info size={14} />
+										<Info />
 										Show more info
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>

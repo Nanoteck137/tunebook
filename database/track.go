@@ -501,13 +501,23 @@ func (db DB) GetTrackIdsByUserFavorites(
 func (db DB) GetTracksByAlbum(
 	ctx context.Context,
 	albumId string,
+	params types.QueryParams,
 ) ([]Track, error) {
-	query := TrackQuery().
-		Where(tracksTbl.Col("album_id").Eq(albumId)).
-		Order(
+	var err error
+
+	query := TrackQuery().Where(tracksTbl.Col("album_id").Eq(albumId))
+
+	query, err = ApplyQuery(query, trackSchema, params)
+	if err != nil {
+		return nil, err
+	}
+
+	if params.Sort == "" {
+		query = query.Order(
 			tracksTbl.Col("number").Asc().NullsLast(),
 			tracksTbl.Col("name").Asc(),
 		)
+	}
 
 	return Multiple[Track](db, ctx, query)
 }

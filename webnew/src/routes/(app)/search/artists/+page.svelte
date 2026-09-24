@@ -165,7 +165,7 @@
 								<DropdownMenu.Content align="end">
 									<DropdownMenu.Group>
 										<DropdownMenu.Item onclick={() => showInfo(artist.id)}>
-											<Info size={14} />
+											<Info />
 											Show more info
 										</DropdownMenu.Item>
 									</DropdownMenu.Group>

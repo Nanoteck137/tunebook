@@ -1,60 +1,44 @@
 <script lang="ts">
-	import { Play } from "@lucide/svelte";
-	import ArtistList, { type Artist } from "$lib/components/ArtistList.svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
+	import type { Track } from "$lib/api/types";
+	import Tile from "./Tile.svelte";
 
 	type Props = {
-		id: string;
-		albumId?: string;
-		cover: string;
-		name: string;
-		artists: Artist[];
+		track: Track;
+		size?: "default" | "sm";
+		class?: string;
 	};
 
-	const { id, albumId, cover, name, artists }: Props = $props();
+	const { track, size = "default", class: className }: Props = $props();
 	const musicManager = getMusicManager();
-
-	let trackHref = $derived(albumId ? `/albums/${albumId}?track=${id}` : "#");
 
 	async function play() {
 		await musicManager.addTracks({
-			trackIds: [id],
-			trackId: id,
+			trackIds: [track.id],
+			trackId: track.id,
 			clear: true,
 		});
 	}
 </script>
 
-<div class="group relative flex w-40 shrink-0 flex-col">
-	<div class="relative overflow-hidden rounded-lg">
-		<!-- svelte-ignore a11y_invalid_attribute -->
-		<a href={trackHref} class="block">
-			<img
-				class="aspect-square w-40 object-cover transition-transform duration-300 group-hover:scale-105"
-				src={cover}
-				alt=""
-				title={name}
-			/>
-		</a>
-
-		<button
-			class="absolute right-2 bottom-2 hidden h-9 w-9 translate-y-2 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-110 sm:flex"
-			title="Play track"
-			aria-label={`Play ${name}`}
-			onclick={play}
+{#snippet subtitle()}
+	{#if track.artists.length > 0}
+		<p
+			class="line-clamp-1 text-xs text-ellipsis text-muted-foreground"
+			title={track.artists.map((a) => a.name).join(", ")}
 		>
-			<Play size={16} />
-		</button>
-	</div>
+			{track.artists.map((a) => a.name).join(", ")}
+		</p>
+	{/if}
+{/snippet}
 
-	<!-- svelte-ignore a11y_invalid_attribute -->
-	<a
-		href={trackHref}
-		class="mt-2 w-40 truncate text-sm font-medium hover:underline"
-		title={name}
-	>
-		{name}
-	</a>
-
-	<ArtistList class="w-40 justify-start text-muted-foreground" {artists} />
-</div>
+<Tile
+	href="/albums/{track.albumId}?track={track.id}"
+	src={track.coverArt.medium}
+	name={track.name}
+	sectionClass="section-tracks"
+	nameClass={size === "sm" ? "line-clamp-1" : "line-clamp-2"}
+	onPlay={play}
+	{subtitle}
+	class={className}
+/>

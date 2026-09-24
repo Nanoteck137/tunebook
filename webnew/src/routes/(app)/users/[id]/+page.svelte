@@ -249,13 +249,13 @@
 											<DropdownMenu.Item
 												onSelect={() => playPlaylist(playlist.id)}
 											>
-												<Play size={14} />
+												<Play />
 												Play
 											</DropdownMenu.Item>
 											<DropdownMenu.Item
 												onSelect={() => playPlaylist(playlist.id, true)}
 											>
-												<Shuffle size={14} />
+												<Shuffle />
 												Shuffle play
 											</DropdownMenu.Item>
 										</DropdownMenu.Group>

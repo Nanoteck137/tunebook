@@ -21,6 +21,8 @@
 		Server,
 		Smartphone,
 	} from "@lucide/svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
+	import SectionImage from "$lib/components/SectionImage.svelte";
 
 	let { data } = $props();
 
@@ -144,22 +146,21 @@
 		</div>
 	</div>
 {:else}
-	<div class="section-home flex flex-col gap-8">
-		<section
-			class="flex flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6"
+	<div class="flex flex-col gap-8">
+		<HeroCard
+			class="section-home"
+			innerClass="sm:flex-row sm:items-center sm:justify-between"
 		>
 			<div class="flex min-w-0 flex-col gap-4">
 				<div class="flex items-center gap-4">
 					<a href="/users/{data.user.id}" title={data.user.displayName}>
-						<div
-							class="rounded-full bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 transition-transform duration-300 hover:scale-[1.02]"
-						>
-							<img
-								class="h-16 min-h-16 w-16 min-w-16 shrink-0 rounded-full border-2 border-white/40 object-cover"
-								src={data.user.picture.small}
-								alt={data.user.displayName}
-							/>
-						</div>
+						<SectionImage
+							variant="full"
+							src={data.user.picture.small}
+							alt={data.user.displayName}
+							class="aspect-square w-16 rounded-full p-0.5 md:w-28"
+							imgClass="rounded-full"
+						/>
 					</a>
 
 					<div class="flex min-w-0 flex-col gap-0.5">
@@ -225,7 +226,7 @@
 					Browse
 				</Button>
 			</div>
-		</section>
+		</HeroCard>
 
 		{#if musicManager.currentItem}
 			<section>
@@ -361,13 +362,7 @@
 				{#if tracks.length > 0}
 					<div class="flex gap-2 overflow-x-auto pb-4">
 						{#each tracks as track (track.id)}
-							<TrackTile
-								id={track.id}
-								albumId={track.albumId}
-								cover={track.coverArt.medium}
-								name={track.name}
-								artists={track.artists}
-							/>
+							<TrackTile size="sm" class="w-40" {track} />
 						{/each}
 					</div>
 				{:else}
@@ -394,12 +389,7 @@
 				{#if tracks.length > 0}
 					<div class="flex gap-2 overflow-x-auto pb-4">
 						{#each tracks as track (track.id)}
-							<TrackTile
-								id={track.id}
-								cover={track.coverArt.medium}
-								name={track.name}
-								artists={track.artists}
-							/>
+							<TrackTile size="sm" class="w-40" {track} />
 						{/each}
 					</div>
 				{:else}
@@ -426,12 +416,7 @@
 				{#if playlists.length > 0}
 					<div class="flex gap-2 overflow-x-auto pb-4">
 						{#each playlists as playlist (playlist.id)}
-							<PlaylistTile
-								id={playlist.id}
-								cover={playlist.coverArt.medium}
-								name={playlist.name}
-								trackCount={playlist.trackCount}
-							/>
+							<PlaylistTile size="sm" class="w-40" {playlist} />
 						{/each}
 					</div>
 				{:else}
@@ -456,12 +441,7 @@
 				{#if favorites.length > 0}
 					<div class="flex gap-2 overflow-x-auto pb-4">
 						{#each favorites as track (track.id)}
-							<TrackTile
-								id={track.id}
-								cover={track.coverArt.medium}
-								name={track.name}
-								artists={track.artists}
-							/>
+							<TrackTile size="sm" class="w-40" {track} />
 						{/each}
 					</div>
 				{:else}

@@ -15,6 +15,10 @@
 		track: Track;
 		children?: Snippet;
 
+		selectionMode?: boolean;
+		selected?: boolean;
+		onSelect?: () => void;
+
 		onPlayClicked?: () => void;
 	};
 
@@ -24,6 +28,11 @@
 		displayOrder,
 		track,
 		children,
+
+		selectionMode,
+		selected,
+		onSelect,
+
 		onPlayClicked,
 	}: Props = $props();
 	const favoriteManager = getFavorites();
@@ -44,37 +53,71 @@
 
 <div
 	class={cn(
-		"group hover:bg-accent hover:text-accent-foreground has-data-[state='open']:bg-accent has-data-[state='open']:text-accent-foreground flex items-center gap-3 rounded-lg p-2 transition-colors",
+		"group flex items-center gap-3 rounded-lg p-2 transition-colors",
+		selectionMode
+			? "cursor-pointer select-none hover:bg-accent hover:text-accent-foreground"
+			: "hover:bg-accent hover:text-accent-foreground has-data-[state='open']:bg-accent has-data-[state='open']:text-accent-foreground",
+		selected && "bg-accent text-accent-foreground",
 		className,
 	)}
+	role="button"
+	tabindex="0"
+	onkeydown={(e) => {
+		if (selectionMode && (e.key === "Enter" || e.key === " ")) {
+			e.preventDefault();
+			onSelect?.();
+		}
+	}}
+	onclick={(e) => {
+		if (!selectionMode) return;
+
+		const target = e.target as HTMLElement;
+		if (target.closest("button, input, select, textarea, a")) return;
+
+		onSelect?.();
+	}}
 >
-	<button
-		class="shrink-0"
-		onclick={() => onPlayClicked?.()}
-		aria-label="Play {track.name}"
-	>
-		{#if showNumber}
-			<div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md">
-				<span
-					class="text-sm font-medium tabular-nums group-hover:hidden"
-				>
-					{track.number}.
-				</span>
-				<div class="hidden items-center justify-center group-hover:flex">
-					<Play size={20} />
-				</div>
-			</div>
-		{:else}
-			<div class="relative h-12 w-12">
-				<Image class="h-12 w-12" src={track.coverArt.small} alt="" />
+	{#if selectionMode}
+		<div class="shrink-0">
+			{#if showNumber}
 				<div
-					class="absolute inset-0 flex items-center justify-center rounded-md bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
+					class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md"
 				>
-					<Play size={18} class="text-white" />
+					<span class="text-sm font-medium tabular-nums">{track.number}.</span>
 				</div>
-			</div>
-		{/if}
-	</button>
+			{:else}
+				<Image class="h-12 w-12" src={track.coverArt.small} alt="" />
+			{/if}
+		</div>
+	{:else}
+		<button
+			class="shrink-0"
+			onclick={() => onPlayClicked?.()}
+			aria-label="Play {track.name}"
+		>
+			{#if showNumber}
+				<div
+					class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md"
+				>
+					<span class="text-sm font-medium tabular-nums group-hover:hidden">
+						{track.number}.
+					</span>
+					<div class="hidden items-center justify-center group-hover:flex">
+						<Play size={20} />
+					</div>
+				</div>
+			{:else}
+				<div class="relative h-12 w-12">
+					<Image class="h-12 w-12" src={track.coverArt.small} alt="" />
+					<div
+						class="absolute inset-0 flex items-center justify-center rounded-md bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
+					>
+						<Play size={18} class="text-white" />
+					</div>
+				</div>
+			{/if}
+		</button>
+	{/if}
 
 	<div class="flex min-w-0 flex-1 flex-col gap-0.5">
 		<p class="truncate text-sm font-medium" title={track.name}>
@@ -111,7 +154,7 @@
 	</div>
 
 	<span
-		class="hidden shrink-0 text-xs tabular-nums text-muted-foreground sm:block"
+		class="hidden shrink-0 text-xs text-muted-foreground tabular-nums sm:block"
 	>
 		{formatDuration(track.duration)}
 	</span>

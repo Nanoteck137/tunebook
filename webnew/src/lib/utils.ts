@@ -23,7 +23,7 @@ export function capitilize(s: string) {
 }
 
 export function formatTime(s: number) {
-	if(Number.isNaN(s)){
+	if (Number.isNaN(s)) {
 		return "0:00"
 	}
 
@@ -97,4 +97,12 @@ export function defineEnumTypes<
 		),
 		defaultSort: (defaultVal ?? entries[0].value) as T[number]["value"],
 	};
+}
+
+export function formatDate(iso: string) {
+	return new Date(iso).toLocaleDateString(undefined, {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
 }

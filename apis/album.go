@@ -165,10 +165,13 @@ func InstallAlbumHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				ctx := c.Request().Context()
 
+				q := c.Request().URL.Query()
+
 				tracks, err := app.AlbumService().GetAlbumTracks(
 					ctx,
 					service.GetAlbumTracksParams{
 						AlbumId: c.Param("id"),
+						Query:   getQueryParams(q),
 					},
 				)
 				if err != nil {

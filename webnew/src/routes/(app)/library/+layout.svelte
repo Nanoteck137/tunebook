@@ -2,6 +2,8 @@
 	import { page } from "$app/state";
 	import { Heart, Library, ListFilter, ListMusic } from "@lucide/svelte";
 	import { Button } from "$lib/components/ui";
+	import HeroCard from "$lib/components/HeroCard.svelte";
+	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import { cn } from "$lib/utils";
 
 	let { children } = $props();
@@ -35,15 +37,11 @@
 </script>
 
 <div class="section-library flex flex-col gap-6">
-	<div
-		class="flex flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
-	>
+	<HeroCard class="section-library">
 		<div class="flex items-center gap-4">
-			<div
-				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-tr from-section-gradiant-1 via-section-gradiant-2 to-section-gradiant-3 text-white"
-			>
-				<Library size={24} />
-			</div>
+			<HeroIcon>
+				<Library />
+			</HeroIcon>
 			<div class="flex min-w-0 flex-col">
 				<h1 class="text-2xl font-bold">Library</h1>
 				<p class="text-sm text-muted-foreground">
@@ -52,8 +50,9 @@
 			</div>
 		</div>
 
-		<div
+		<nav
 			class="flex flex-wrap items-center gap-1 border-t border-border/40 pt-3"
+			aria-label="Library sections"
 		>
 			{#each tabs as tab (tab.href)}
 				<Button
@@ -71,8 +70,8 @@
 					{tab.label}
 				</Button>
 			{/each}
-		</div>
-	</div>
+		</nav>
+	</HeroCard>
 
 	{@render children()}
 </div>

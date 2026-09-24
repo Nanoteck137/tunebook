@@ -3,14 +3,14 @@ import { z } from "zod";
 
 export const { sortTypes, SortTypeEnum, defaultSort } = defineEnumTypes(
 	[
-		{ label: "Name (A-Z)", value: "name-a-z" },
-		{ label: "Name (Z-A)", value: "name-z-a" },
+		{ label: "Name (A–Z)", value: "name-a-z" },
+		{ label: "Name (Z–A)", value: "name-z-a" },
 		{ label: "Year (New–Old)", value: "year-new" },
-		{ label: "Year (Old-New)", value: "year-old" },
-		{ label: "Created (New–Old)", value: "created-new" },
-		{ label: "Created (Old-New)", value: "created-old" },
+		{ label: "Year (Old–New)", value: "year-old" },
+		{ label: "Added (New–Old)", value: "created-new" },
+		{ label: "Added (Old–New)", value: "created-old" },
 		{ label: "Updated (New–Old)", value: "updated-new" },
-		{ label: "Updated (Old-New)", value: "updated-old" },
+		{ label: "Updated (Old–New)", value: "updated-old" },
 	] as const,
 	"name-a-z",
 );

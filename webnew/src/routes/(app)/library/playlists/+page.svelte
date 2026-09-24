@@ -4,29 +4,23 @@
 	import {
 		Button,
 		buttonVariants,
-		Checkbox,
-		DropdownMenu,
 		Input,
+		DropdownMenu,
 		Separator,
 	} from "$lib/components/ui";
 	import {
 		CheckIcon,
 		ChevronDown,
-		EllipsisVertical,
-		FileHeart,
 		ListSortAscendingIcon,
-		Play,
 		Plus,
-		Shuffle,
-		Star,
 		X,
 	} from "@lucide/svelte";
-	import { cn, formatPlayTime } from "$lib/utils";
+	import { cn } from "$lib/utils";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Playlist } from "$lib/api/types";
+	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
-	import { getMusicManager } from "$lib/music-manager.svelte";
 	import NewPlaylistModal from "../../playlists/NewPlaylistModal.svelte";
 	import {
 		sortTypes,
@@ -38,7 +32,6 @@
 
 	let { data } = $props();
 	const apiClient = getApiClient();
-	const musicManager = getMusicManager();
 
 	let openNewPlaylistModal = $state(false);
 	let selectedPlaylists = $state<string[]>([]);
@@ -102,13 +95,6 @@
 	function clearSearch() {
 		searchQuery = "";
 		updateSearch();
-	}
-
-	async function playPlaylist(playlistId: string, shuffle = false) {
-		await musicManager.queueRequest(
-			{ type: "addPlaylist", playlistId },
-			{ shuffle },
-		);
 	}
 
 	async function toggleQuick(playlistId: string) {
@@ -247,169 +233,23 @@
 			class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
 		>
 			{#each scroll.items as playlist (playlist.id)}
-				{@const isQuick = data.user?.quickPlaylist === playlist.id}
-				<div class="group relative flex flex-col">
-					<div class="relative">
-						<a
-							href="/playlists/{playlist.id}"
-							class="block overflow-hidden rounded-lg"
-						>
-							<img
-								src={playlist.coverArt.medium}
-								alt={playlist.name}
-								class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
-							/>
-						</a>
-
-						{#if selectedPlaylists.length > 0}
-							<div class="absolute top-1.5 left-1.5 z-10">
-								<Checkbox
-									checked={selectedPlaylists.includes(playlist.id)}
-									onCheckedChange={(checked) => {
-										if (checked) {
-											selectedPlaylists = [...selectedPlaylists, playlist.id];
-										} else {
-											selectedPlaylists = selectedPlaylists.filter(
-												(id) => playlist.id !== id,
-											);
-										}
-									}}
-								/>
-							</div>
-
-							<Button
-								class="absolute right-2 bottom-2 z-10 hidden h-10 w-10 items-center justify-center rounded-full opacity-0 shadow-lg transition-all group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
-								variant="default"
-								onclick={() => handleReorder(playlist.id)}
-								title="Move selected after this playlist"
-								aria-label={`Move selected after ${playlist.name}`}
-							>
-								<ChevronDown size={18} />
-							</Button>
-						{:else}
-							<button
-								class="absolute top-1.5 right-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all {isQuick
-									? 'bg-primary text-primary-foreground shadow-md'
-									: 'border bg-background/70 text-muted-foreground backdrop-blur-sm hover:scale-105 hover:text-foreground'}"
-								title={isQuick
-									? "Unset as quick playlist"
-									: "Set as quick playlist"}
-								aria-label={isQuick
-									? `Unset ${playlist.name} as quick playlist`
-									: `Set ${playlist.name} as quick playlist`}
-								onclick={() => toggleQuick(playlist.id)}
-							>
-								<Star size={14} class={isQuick ? "fill-current" : ""} />
-							</button>
-
-							<button
-								class="absolute right-2 bottom-2 hidden h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
-								title="Play playlist"
-								aria-label={`Play ${playlist.name}`}
-								onclick={() => playPlaylist(playlist.id)}
-							>
-								<Play size={18} />
-							</button>
-						{/if}
-					</div>
-
-					<div class="flex flex-col gap-0.5 pt-2">
-						<div class="flex items-center gap-1">
-							<a
-								href="/playlists/{playlist.id}"
-								class="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
-								title={playlist.name}
-							>
-								{playlist.name}
-							</a>
-
-							{#if selectedPlaylists.length <= 0}
-								<DropdownMenu.Root>
-									<DropdownMenu.Trigger
-										class={cn(
-											buttonVariants({ variant: "ghost", size: "icon-sm" }),
-											"-mr-1 shrink-0 rounded-full text-muted-foreground",
-										)}
-										aria-label={`More options for ${playlist.name}`}
-									>
-										<EllipsisVertical size={14} />
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content align="end">
-										<DropdownMenu.Group>
-											<DropdownMenu.Item
-												onSelect={() => playPlaylist(playlist.id)}
-											>
-												<Play size={14} />
-												Play
-											</DropdownMenu.Item>
-											<DropdownMenu.Item
-												onSelect={() => playPlaylist(playlist.id, true)}
-											>
-												<Shuffle size={14} />
-												Shuffle play
-											</DropdownMenu.Item>
-										</DropdownMenu.Group>
-
-										<DropdownMenu.Separator />
-
-										<DropdownMenu.Group>
-											<DropdownMenu.Item
-												onSelect={() => {
-													selectedPlaylists = [playlist.id];
-												}}
-											>
-												Select playlist
-											</DropdownMenu.Item>
-
-											{#if data.user?.quickPlaylist !== playlist.id}
-												<DropdownMenu.Item
-													onSelect={async () => {
-														const res = await apiClient.setQuickPlaylist({
-															playlistId: playlist.id,
-														});
-														if (!res.success) {
-															handleApiError(res.error);
-															return;
-														}
-
-														await invalidateAll();
-													}}
-												>
-													<FileHeart />
-													Set as Quick Playlist
-												</DropdownMenu.Item>
-											{:else}
-												<DropdownMenu.Item
-													onSelect={async () => {
-														const res = await apiClient.setQuickPlaylist({
-															playlistId: "",
-														});
-														if (!res.success) {
-															handleApiError(res.error);
-															return;
-														}
-
-														await invalidateAll();
-													}}
-												>
-													<FileHeart />
-													Remove Quick Playlist
-												</DropdownMenu.Item>
-											{/if}
-										</DropdownMenu.Group>
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
-							{/if}
-						</div>
-
-						<p class="truncate text-xs text-muted-foreground">
-							{playlist.trackCount} track{playlist.trackCount !== 1 ? "s" : ""}
-							{#if playlist.playTime > 0}
-								&middot; {formatPlayTime(playlist.playTime)}
-							{/if}
-						</p>
-					</div>
-				</div>
+				<PlaylistTile
+					{playlist}
+					selectionMode={selectedPlaylists.length > 0}
+					selected={selectedPlaylists.includes(playlist.id)}
+					onSelectChange={(checked) => {
+						if (checked) {
+							selectedPlaylists = [...selectedPlaylists, playlist.id];
+						} else {
+							selectedPlaylists = selectedPlaylists.filter(
+								(id) => playlist.id !== id,
+							);
+						}
+					}}
+					onMoveAfter={() => handleReorder(playlist.id)}
+					isQuick={data.user?.quickPlaylist === playlist.id}
+					onToggleQuick={() => toggleQuick(playlist.id)}
+				/>
 			{/each}
 		</div>
 	</InfiniteScroll>

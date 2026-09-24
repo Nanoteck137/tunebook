@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
+	import { page } from "$app/state";
 	import { getApiClient, handleApiError } from "$lib";
 	import { formatPlayTime } from "$lib/utils";
 	import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
 	import Image from "$lib/components/Image.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
@@ -16,24 +18,33 @@
 		Checkbox,
 		DropdownMenu,
 		Input,
-		Select,
 		Separator,
 	} from "$lib/components/ui";
 	import {
-		CheckIcon,
 		EllipsisVertical,
 		ListPlus,
-		ListSortAscendingIcon,
 		Pencil,
 		Play,
 		Shuffle,
 		Trash,
 		Upload,
 		Wand2,
+		X,
 	} from "@lucide/svelte";
 	import EditPlaylistModal from "./EditPlaylistModal.svelte";
 	import UploadPlaylistCoverModal from "./UploadPlaylistCoverModal.svelte";
 	import { toast } from "svelte-sonner";
+	import SectionImage from "$lib/components/SectionImage.svelte";
+	import Spacer from "$lib/components/Spacer.svelte";
+	import {
+		SortDropdown,
+		SortableHeader,
+		defaultSort,
+		buildTrackQuery,
+		trackColumns,
+		trackSortTypes,
+		type SortType,
+	} from "$lib/components/sort";
 
 	const { data } = $props();
 	const musicManager = getMusicManager();
@@ -43,21 +54,80 @@
 	let openEditPlaylistModal = $state(false);
 	let openUploadCoverModal = $state(false);
 
-	const sortOptions = [
-		{ label: "Playlist Order", value: "playlist-order" },
-		{ label: "Reverse Playlist Order", value: "playlist-order-reverse" },
-		{ label: "Name (A-Z)", value: "name-a-z" },
-		{ label: "Name (Z-A)", value: "name-z-a" },
-		{ label: "Recently Added (New–Old)", value: "added-new" },
-		{ label: "Recently Added (Old-New)", value: "added-old" },
-	] as const;
-	type SortOption = (typeof sortOptions)[number]["value"];
+	let sort = $state(
+		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+	);
 
-	let selectedSort = $state<SortOption>("playlist-order");
+	function updateSort(value: string) {
+		sort = value as SortType;
+
+		const query = page.url.searchParams;
+		query.delete("sort");
+
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
+
+		goto("?" + query.toString(), { invalidateAll: true });
+	}
+
+	let searchQuery = $state(page.url.searchParams.get("query") ?? "");
+
+	let searchTimer: ReturnType<typeof setTimeout>;
+
+	function onSearchInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const current = target.value;
+		searchQuery = current;
+
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			updateSearch();
+		}, 500);
+	}
+
+	function updateSearch() {
+		clearTimeout(searchTimer);
+
+		const query = page.url.searchParams;
+		query.delete("query");
+
+		if (searchQuery) {
+			query.set("query", searchQuery);
+		}
+
+		goto("?" + query.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
+	}
+
+	function clearSearch() {
+		searchQuery = "";
+		updateSearch();
+	}
+
+	let selectedTracks = $state<string[]>([]);
+
+	async function toggleSelectAll() {
+		if (selectedTracks.length > 0) {
+			selectedTracks = [];
+			return;
+		}
+
+		const res = await apiClient.getPlaylistItemIds(data.playlist.id);
+		if (!res.success) {
+			handleApiError(res.error);
+			return;
+		}
+
+		selectedTracks = res.data.ids;
+	}
 
 	const isOwner = $derived(data.user?.id === data.playlist.ownerId);
 
-	let heroRef = $state<HTMLDivElement | null>(null);
+	let heroRef = $state<HTMLElement | null>(null);
 	let showCompactHeader = $state(false);
 
 	$effect(() => {
@@ -103,8 +173,15 @@
 			page: data.page.page,
 		}),
 		load: async (page) => {
+			const query: Record<string, string> = {
+				page: String(page),
+				perPage: String(data.page.perPage),
+			};
+
+			buildTrackQuery(data.filter, "playlist", query);
+
 			const res = await apiClient.getPlaylistItems(data.playlist.id, {
-				query: { page: String(page), perPage: String(data.page.perPage) },
+				query,
 			});
 
 			if (!res.success) {
@@ -135,15 +212,22 @@
 	</Breadcrumb.Root>
 </div>
 
-<div
-	bind:this={heroRef}
-	class="section-playlists flex flex-col gap-6 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8"
+<HeroCard
+	bind:ref={heroRef}
+	class="section-playlists"
+	innerClass="md:flex-row md:items-end md:gap-8"
 >
-	<Image
-		class="w-40 min-w-40 self-center rounded-xl shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:w-52 md:min-w-52 dark:ring-white/10"
+	<SectionImage
+		class="w-40 min-w-40 self-center rounded-xl shadow-2xl md:w-52 md:min-w-52"
 		src={data.playlist.coverArt.large}
 		alt={data.playlist.name}
 	/>
+
+	<!-- <Image -->
+	<!-- 	class="w-40 min-w-40 self-center rounded-xl shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:w-52 md:min-w-52 dark:ring-white/10" -->
+	<!-- 	src={data.playlist.coverArt.large} -->
+	<!-- 	alt={data.playlist.name} -->
+	<!-- /> -->
 
 	<div class="flex min-w-0 flex-col gap-2">
 		<p
@@ -261,9 +345,9 @@
 			</DropdownMenu.Root>
 		</div>
 	</div>
-</div>
+</HeroCard>
 
-<div class="h-4"></div>
+<Spacer />
 
 <div
 	role="button"
@@ -286,7 +370,9 @@
 			alt={data.playlist.name}
 		/>
 
-		<p class="truncate text-sm font-semibold">{data.playlist.name}</p>
+		<p class="line-clamp-1 text-sm font-semibold text-ellipsis">
+			{data.playlist.name}
+		</p>
 
 		<div class="grow"></div>
 
@@ -317,67 +403,95 @@
 	</div>
 </div>
 
-<div class="h-4"></div>
+<Spacer />
 
-<div class="flex items-center justify-between gap-2 px-2">
-	<Input class="md:max-w-64" placeholder="Search tracks..." />
+<div class="flex items-center justify-between gap-2 sm:hidden">
+	<div class="relative flex-1">
+		<Input
+			class="pr-8"
+			placeholder="Search tracks..."
+			value={searchQuery}
+			oninput={onSearchInput}
+			onkeydown={(e) => {
+				if (e.key === "Enter") {
+					updateSearch();
+				}
+			}}
+		/>
+		{#if searchQuery}
+			<button
+				class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+				onclick={clearSearch}
+				aria-label="Clear search"
+			>
+				<X size={14} />
+			</button>
+		{/if}
+	</div>
 
 	<div class="flex items-center gap-2 pr-2">
-		<!-- <Select.Root -->
-		<!-- 	type="single" -->
-		<!-- 	allowDeselect={false} -->
-		<!-- 	value={selectedSort} -->
-		<!-- 	onValueChange={(v) => (selectedSort = v as SortOption)} -->
-		<!-- > -->
-		<!-- 	<Select.Trigger hideIcon> -->
-		<!-- 		<ListSortAscendingIcon /> -->
-		<!-- 	</Select.Trigger> -->
-		<!-- 	<Select.Trigger size="sm" class="w-44"> -->
-		<!-- 	  {sortOptions.find((i) => i.value === selectedSort)?.label ?? "Sort"} -->
-		<!-- 	</Select.Trigger> -->
-		<!-- 	<Select.Content align="end"> -->
-		<!-- 		{#each sortOptions as opt (opt.value)} -->
-		<!-- 			<Select.Item value={opt.value} label={opt.label} /> -->
-		<!-- 		{/each} -->
-		<!-- 	</Select.Content> -->
-		<!-- </Select.Root> -->
+		<SortDropdown
+			types={trackSortTypes.playlist}
+			{sort}
+			onSortChange={updateSort}
+		/>
 
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger
-				class={buttonVariants({ variant: "ghost", size: "icon" })}
-			>
-				<ListSortAscendingIcon />
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="end">
-				<DropdownMenu.Group>
-					{#each sortOptions as opt, i (opt.value)}
-						{@const selected = i === 1}
-						<DropdownMenu.Item
-							onSelect={async () => {}}
-							class={selected ? "bg-accent text-foreground" : ""}
-						>
-							{#if selected}
-								<CheckIcon />
-							{/if}
-							{opt.label}
-						</DropdownMenu.Item>
-					{/each}
-				</DropdownMenu.Group>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
-
-		<Checkbox></Checkbox>
+		<Checkbox
+			title="Select all"
+			aria-label="Select all"
+			checked={selectedTracks.length > 0}
+			onCheckedChange={() => toggleSelectAll()}
+		></Checkbox>
 	</div>
 </div>
 
-<div class="h-2"></div>
-<Separator />
+<Spacer size="sm" />
+
+<SortableHeader
+	{sort}
+	onSortChange={updateSort}
+	columns={trackColumns("playlist")}
+>
+	<div class="flex shrink-0 items-center gap-2 border-l border-border/40 pl-3">
+		<div class="relative">
+			<Input
+				class="h-7 w-44 pr-6"
+				placeholder="Search tracks..."
+				value={searchQuery}
+				oninput={onSearchInput}
+				onkeydown={(e) => {
+					if (e.key === "Enter") {
+						updateSearch();
+					}
+				}}
+			/>
+			{#if searchQuery}
+				<button
+					class="absolute top-1/2 right-1 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+					onclick={clearSearch}
+					aria-label="Clear search"
+				>
+					<X size={12} />
+				</button>
+			{/if}
+		</div>
+		<Checkbox
+			title="Select all"
+			aria-label="Select all"
+			checked={selectedTracks.length > 0}
+			onCheckedChange={() => toggleSelectAll()}
+		/>
+	</div>
+</SortableHeader>
+
+<Spacer size="sm" />
 
 <InfiniteScroll controller={scroll} errorMessage="Failed to load more tracks">
 	<TrackList
 		displayOrder
 		{totalTracks}
 		tracks={scroll.items}
+		bind:selectedTracks
 		onPlay={async (trackId, shuffle) => {
 			await musicManager.queueRequest(
 				{ type: "addPlaylist", playlistId: data.playlist.id },

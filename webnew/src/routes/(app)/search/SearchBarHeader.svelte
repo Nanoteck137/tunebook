@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { Button, InputGroup, Separator } from "$lib/components/ui";
+	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import {
 		Disc,
 		ListMusic,
@@ -55,11 +56,7 @@
 	class="section-search flex flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
 >
 	<div class="flex items-center gap-4">
-		<div
-			class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-tr from-section-gradiant-1 via-section-gradiant-2 to-section-gradiant-3 text-white"
-		>
-			<SearchIcon size={24} />
-		</div>
+		<HeroIcon><SearchIcon /></HeroIcon>
 		<div class="flex min-w-0 flex-col">
 			<h1 class="text-2xl font-bold">Search</h1>
 			<p class="text-sm text-muted-foreground">

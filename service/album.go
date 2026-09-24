@@ -79,6 +79,7 @@ func (s *AlbumService) GetAlbumById(
 
 type GetAlbumTracksParams struct {
 	AlbumId string
+	Query   types.QueryParams
 }
 
 func (s *AlbumService) GetAlbumTracks(
@@ -92,7 +93,7 @@ func (s *AlbumService) GetAlbumTracks(
 		return nil, err
 	}
 
-	tracks, err := s.db.GetTracksByAlbum(ctx, album.Id)
+	tracks, err := s.db.GetTracksByAlbum(ctx, album.Id, params.Query)
 	if err != nil {
 		return nil, albumErr.Wrap("get album tracks", err)
 	}

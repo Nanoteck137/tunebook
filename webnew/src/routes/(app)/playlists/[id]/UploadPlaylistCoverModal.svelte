@@ -106,7 +106,7 @@
         <Errors errors={$errors.cover} />
       </FormItem>
 
-      <Dialog.Footer class="gap-2 sm:gap-0">
+      <Dialog.Footer>
         <Button
           variant="outline"
           onclick={() => {

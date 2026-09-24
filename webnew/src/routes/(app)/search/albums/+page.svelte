@@ -171,7 +171,7 @@
 								<DropdownMenu.Content align="end">
 									<DropdownMenu.Group>
 										<DropdownMenu.Item onclick={() => showInfo(album.id)}>
-											<Info size={14} />
+											<Info />
 											Show more info
 										</DropdownMenu.Item>
 									</DropdownMenu.Group>

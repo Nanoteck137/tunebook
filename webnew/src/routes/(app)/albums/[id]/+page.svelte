@@ -1,31 +1,106 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { afterNavigate } from "$app/navigation";
+	import { afterNavigate, goto } from "$app/navigation";
 	import {
 		Breadcrumb,
 		Button,
 		buttonVariants,
+		Checkbox,
 		DropdownMenu,
 		Input,
 	} from "$lib/components/ui";
 	import {
 		EllipsisVertical,
 		ListPlus,
-		ListSortAscendingIcon,
-		CheckIcon,
 		Play,
 		Shuffle,
+		X,
 	} from "@lucide/svelte";
+	import {
+		SortDropdown,
+		SortableHeader,
+		defaultSort,
+		trackColumns,
+		trackSortTypes,
+		type SortType,
+	} from "$lib/components/sort";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte.js";
 	import Image from "$lib/components/Image.svelte";
 	import ArtistList from "$lib/components/ArtistList.svelte";
 	import { formatPlayTime } from "$lib/utils";
+	import SectionImage from "$lib/components/SectionImage.svelte";
+	import Spacer from "$lib/components/Spacer.svelte";
 
 	let { data } = $props();
 	const musicManager = getMusicManager();
 
 	let highlightTrackId = $derived(page.url.searchParams.get("track"));
+
+	let sort = $state(
+		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+	);
+
+	function updateSort(value: string) {
+		sort = value as SortType;
+
+		const query = page.url.searchParams;
+		query.delete("sort");
+
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
+
+		goto("?" + query.toString(), { invalidateAll: true });
+	}
+
+	let searchQuery = $state(page.url.searchParams.get("query") ?? "");
+
+	let searchTimer: ReturnType<typeof setTimeout>;
+
+	function onSearchInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const current = target.value;
+		searchQuery = current;
+
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			updateSearch();
+		}, 500);
+	}
+
+	function updateSearch() {
+		clearTimeout(searchTimer);
+
+		const query = page.url.searchParams;
+		query.delete("query");
+
+		if (searchQuery) {
+			query.set("query", searchQuery);
+		}
+
+		goto("?" + query.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
+	}
+
+	function clearSearch() {
+		searchQuery = "";
+		updateSearch();
+	}
+
+	let selectedTracks = $state<string[]>([]);
+
+	function toggleSelectAll() {
+		if (selectedTracks.length > 0) {
+			selectedTracks = [];
+			return;
+		}
+
+		selectedTracks = data.tracks.map((track) => track.id);
+	}
 
 	let didHighlight = false;
 
@@ -65,8 +140,8 @@
 <div
 	class="section-albums flex flex-col gap-6 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8"
 >
-	<Image
-		class="w-40 min-w-40 self-center rounded-xl shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:w-52 md:min-w-52 dark:ring-white/10"
+	<SectionImage
+		class="w-40 min-w-40 self-center rounded-xl shadow-2xl md:w-52 md:min-w-52"
 		src={data.album.coverArt.large}
 		alt={data.album.name}
 	/>
@@ -161,43 +236,93 @@
 	</div>
 </div>
 
-<div class="h-4"></div>
+<Spacer />
 
-<div class="flex flex-wrap items-center justify-between gap-2">
-	<div class="relative w-full md:max-w-56">
-		<Input class="pr-8" placeholder="Search tracks..." />
+<div class="flex items-center justify-between gap-2 sm:hidden">
+	<div class="relative flex-1">
+		<Input
+			class="pr-8"
+			placeholder="Search tracks..."
+			value={searchQuery}
+			oninput={onSearchInput}
+			onkeydown={(e) => {
+				if (e.key === "Enter") {
+					updateSearch();
+				}
+			}}
+		/>
+		{#if searchQuery}
+			<button
+				class="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+				onclick={clearSearch}
+				aria-label="Clear search"
+			>
+				<X size={14} />
+			</button>
+		{/if}
 	</div>
 
-	<div class="flex items-center gap-1">
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger
-				class={buttonVariants({ variant: "ghost", size: "icon" })}
-				title="Sort"
-				aria-label="Sort"
-			>
-				<ListSortAscendingIcon />
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="end">
-				<DropdownMenu.Group>
-					<DropdownMenu.Item>
-						<CheckIcon />
-						Name (A-Z)
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>Name (Z-A)</DropdownMenu.Item>
-					<DropdownMenu.Item>Disc / Track number</DropdownMenu.Item>
-				</DropdownMenu.Group>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+	<div class="flex items-center gap-2 pr-2">
+		<SortDropdown
+			types={trackSortTypes.album}
+			{sort}
+			onSortChange={updateSort}
+		/>
+
+		<Checkbox
+			title="Select all"
+			aria-label="Select all"
+			checked={selectedTracks.length > 0}
+			onCheckedChange={() => toggleSelectAll()}
+		></Checkbox>
 	</div>
 </div>
 
-<div class="h-4"></div>
+<SortableHeader
+	{sort}
+	onSortChange={updateSort}
+	columns={trackColumns("album")}
+>
+	<div class="flex shrink-0 items-center gap-2 border-l border-border/40 pl-3">
+		<div class="relative">
+			<Input
+				class="h-7 w-44 pr-6"
+				placeholder="Search tracks..."
+				value={searchQuery}
+				oninput={onSearchInput}
+				onkeydown={(e) => {
+					if (e.key === "Enter") {
+						updateSearch();
+					}
+				}}
+			/>
+			{#if searchQuery}
+				<button
+					class="absolute top-1/2 right-1 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+					onclick={clearSearch}
+					aria-label="Clear search"
+				>
+					<X size={12} />
+				</button>
+			{/if}
+		</div>
+		<Checkbox
+			title="Select all"
+			aria-label="Select all"
+			checked={selectedTracks.length > 0}
+			onCheckedChange={() => toggleSelectAll()}
+		/>
+	</div>
+</SortableHeader>
+
+<Spacer />
 
 <TrackList
 	isAlbumShowcase={true}
 	totalTracks={data.tracks.length}
 	tracks={data.tracks}
 	highlightId={highlightTrackId}
+	bind:selectedTracks
 	onPlay={async (trackId) => {
 		await musicManager.addAlbumTracks({
 			albumId: data.album.id,

@@ -3,16 +3,14 @@
 		Search,
 		X,
 		Plus,
-		EllipsisVertical,
-		Info,
-		Play,
 		ListFilter,
 		ListSortAscendingIcon,
 		CheckIcon,
-		Shuffle,
-		User,
+		Disc,
 	} from "@lucide/svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
+	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Album } from "$lib/api/types";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
@@ -21,7 +19,6 @@
 		Separator,
 		Button,
 		Input,
-		Dialog,
 		DropdownMenu,
 		buttonVariants,
 	} from "$lib/components/ui";
@@ -39,6 +36,7 @@
 	} from "./types";
 	import { page } from "$app/state";
 	import { fly } from "svelte/transition";
+	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 
 	let { data } = $props();
 
@@ -186,47 +184,31 @@
 		},
 		itemKey: (album) => album.id,
 	});
-
-	let infoAlbumId = $state<string | null>(null);
-	let infoOpen = $state(false);
-
-	let infoAlbum = $derived(
-		infoAlbumId
-			? (scroll.items.find((a) => a.id === infoAlbumId) ?? null)
-			: null,
-	);
-
-	function showInfo(id: string) {
-		infoAlbumId = id;
-		infoOpen = true;
-	}
-
-	function formatDate(iso: string) {
-		return new Date(iso).toLocaleDateString(undefined, {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		});
-	}
-
-	async function playAlbum(albumId: string, shuffle = false) {
-		await musicManager.queueRequest(
-			{ type: "addAlbum", albumId },
-			{ shuffle },
-		);
-	}
 </script>
 
 <div class="flex flex-col gap-4">
-	<div class="flex items-baseline gap-2 px-2">
-		<h1 class="text-xl font-bold">Albums</h1>
-		{#if data.page}
-			<span class="text-sm text-muted-foreground">{data.page.totalItems}</span>
-		{/if}
-	</div>
+	<HeroCard
+		class="section-albums"
+		innerClass="sm:flex-row sm:items-center sm:justify-between"
+	>
+		<div class="flex items-center gap-4">
+			<HeroIcon>
+				<Disc />
+			</HeroIcon>
+			<div class="flex min-w-0 flex-col">
+				<h1 class="text-2xl font-bold">Albums</h1>
+				<p class="text-sm text-muted-foreground">
+					Every album in your library
+					{#if data.page}
+						&middot; {data.page.totalItems}
+					{/if}
+				</p>
+			</div>
+		</div>
+	</HeroCard>
 
 	<!-- Toolbar -->
-	<div class="flex flex-wrap items-center justify-between gap-2 px-2">
+	<div class="flex flex-wrap items-center justify-between gap-2">
 		<div class="relative flex-1 md:max-w-64">
 			<Input
 				class="pr-8"
@@ -313,9 +295,9 @@
 		</div>
 	</div>
 
-	<Separator />
-
 	{#if filterOpen}
+		<Separator />
+
 		<div
 			transition:fly={{ y: -6, duration: 150 }}
 			class="flex flex-col gap-3 px-2"
@@ -402,8 +384,6 @@
 				{/each}
 			</div>
 		</div>
-
-		<Separator />
 	{/if}
 </div>
 
@@ -414,196 +394,7 @@
 		class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
 	>
 		{#each scroll.items as album (album.id)}
-			<div class="group relative flex flex-col">
-				<div class="relative">
-					<a
-						href="/albums/{album.id}"
-						class="block overflow-hidden rounded-lg"
-					>
-						<img
-							src={album.coverArt.medium}
-							alt={album.name}
-							class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
-						/>
-					</a>
-
-					<button
-						class="absolute right-2 bottom-2 hidden h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
-						title="Play album"
-						aria-label={`Play ${album.name}`}
-						onclick={() => playAlbum(album.id)}
-					>
-						<Play size={18} />
-					</button>
-				</div>
-
-				<div class="flex flex-col gap-0.5 pt-2">
-					<div class="flex items-center gap-1">
-						<a
-							href="/albums/{album.id}"
-							class="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
-							title={album.name}
-						>
-							{album.name}
-						</a>
-
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger
-								class={cn(
-									buttonVariants({ variant: "ghost", size: "icon-sm" }),
-									"-mr-1 shrink-0 rounded-full text-muted-foreground",
-								)}
-								aria-label={`More options for ${album.name}`}
-							>
-								<EllipsisVertical size={14} />
-							</DropdownMenu.Trigger>
-							<DropdownMenu.Content align="center">
-								<DropdownMenu.Group>
-									<DropdownMenu.Item onclick={() => playAlbum(album.id)}>
-										<Play size={14} />
-										Play
-									</DropdownMenu.Item>
-									<DropdownMenu.Item onclick={() => playAlbum(album.id, true)}>
-										<Shuffle size={14} />
-										Shuffle play
-									</DropdownMenu.Item>
-								</DropdownMenu.Group>
-
-								<DropdownMenu.Separator />
-
-								<DropdownMenu.Group>
-									<DropdownMenu.Sub>
-										<DropdownMenu.SubTrigger>
-											<User size={14} />
-											Go to artist
-										</DropdownMenu.SubTrigger>
-										<DropdownMenu.SubContent>
-											{#each album.artists as artist (artist.id)}
-												<a
-													href="/artists/{artist.id}"
-													class="flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
-												>
-													{artist.name}
-												</a>
-											{/each}
-										</DropdownMenu.SubContent>
-									</DropdownMenu.Sub>
-								</DropdownMenu.Group>
-
-								<DropdownMenu.Separator />
-
-								<DropdownMenu.Group>
-									<DropdownMenu.Item onclick={() => showInfo(album.id)}>
-										<Info size={14} />
-										Show more info
-									</DropdownMenu.Item>
-								</DropdownMenu.Group>
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
-					</div>
-
-					<p
-						class="truncate text-xs text-muted-foreground"
-						title={album.artists.map((a) => a.name).join(", ")}
-					>
-						{#if album.year}
-							{album.year} &middot;
-						{/if}
-						{album.artists.map((a) => a.name).join(", ")}
-					</p>
-				</div>
-			</div>
+			<AlbumTile {album} />
 		{/each}
 	</div>
 </InfiniteScroll>
-
-<Dialog.Root open={infoOpen} onOpenChange={(v) => (infoOpen = v)}>
-	<Dialog.Content class="max-w-md gap-0 overflow-hidden p-0">
-		{#if infoAlbum}
-			<div class="relative">
-				<img
-					src={infoAlbum.coverArt.original}
-					alt=""
-					aria-hidden="true"
-					class="h-44 w-full object-cover"
-				/>
-				<div
-					class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30"
-				></div>
-				<div class="absolute inset-x-0 bottom-0 flex items-end gap-4 p-4">
-					<img
-						src={infoAlbum.coverArt.large}
-						alt={infoAlbum.name}
-						class="h-20 w-20 shrink-0 rounded-md object-cover shadow-lg"
-					/>
-					<div class="min-w-0 flex-1 pb-0.5">
-						<p class="truncate text-lg leading-tight font-bold text-white">
-							{infoAlbum.name}
-						</p>
-						<p class="truncate text-sm text-white/80">
-							{#each infoAlbum.artists as artist, i (artist.id)}
-								{#if i > 0}
-									{", "}
-								{/if}
-								<a
-									href="/artists/{artist.id}"
-									class="hover:underline"
-									title={artist.name}
-								>
-									{artist.name}
-								</a>
-							{/each}
-						</p>
-					</div>
-				</div>
-			</div>
-
-			<div class="flex flex-col gap-4 p-4 pt-3">
-				<div class="flex items-center gap-2">
-					<Button
-						size="sm"
-						class="flex-1"
-						onclick={() => playAlbum(infoAlbum.id)}
-					>
-						<Play size={14} />
-						Play
-					</Button>
-					<Button
-						size="sm"
-						variant="outline"
-						class="flex-1"
-						onclick={() => playAlbum(infoAlbum.id, true)}
-					>
-						<Shuffle size={14} />
-						Shuffle
-					</Button>
-				</div>
-
-				<div class="rounded-lg border bg-card p-3 text-sm">
-					<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-						{#if infoAlbum.year}
-							<span class="text-muted-foreground">Year</span>
-							<span class="font-medium">{infoAlbum.year}</span>
-						{/if}
-						<span class="text-muted-foreground">Added</span>
-						<span class="font-medium">{formatDate(infoAlbum.created)}</span>
-						<span class="text-muted-foreground">Updated</span>
-						<span class="font-medium">{formatDate(infoAlbum.updated)}</span>
-					</div>
-				</div>
-
-				{#if infoAlbum.tags.length > 0}
-					<div class="flex flex-wrap gap-1.5">
-						{#each infoAlbum.tags as tag (tag)}
-							<span class="rounded-full bg-secondary px-2.5 py-0.5 text-xs"
-								>{tag}</span
-							>
-						{/each}
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<p class="p-4 text-sm text-muted-foreground">Album not found.</p>
-		{/if}
-	</Dialog.Content>
-</Dialog.Root>

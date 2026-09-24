@@ -73,18 +73,18 @@
   <Dialog.Content class="overflow-hidden sm:max-w-md">
     <div class="relative">
       <div
-        class="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-to-tr from-logo-1/10 via-logo-2/10 to-logo-3/10 blur-xl"
+        class="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-linear-to-tr from-logo-1/10 via-logo-2/10 to-logo-3/10 blur-xl"
       ></div>
 
       <Dialog.Header class="relative text-left">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3">
             <ListMusic size={18} class="text-white" />
           </div>
           <div>
             <Dialog.Title class="text-xl sm:text-2xl">
               <span
-                class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-transparent"
+                class="bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-transparent"
               >
                 Edit Playlist
               </span>
@@ -125,7 +125,7 @@
         <Errors errors={$errors.coverUrl} />
       </FormItem>
 
-      <Dialog.Footer class="gap-2 sm:gap-0">
+      <Dialog.Footer>
         <Button
           variant="outline"
           onclick={() => {

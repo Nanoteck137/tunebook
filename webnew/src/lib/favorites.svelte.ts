@@ -52,6 +52,31 @@ class Favorites {
 		await this.fetchIds();
 	}
 
+	async favoriteTracks(trackIds: string[]) {
+		await this.setTracks(trackIds, true);
+	}
+
+	async unfavoriteTracks(trackIds: string[]) {
+		await this.setTracks(trackIds, false);
+	}
+
+	private async setTracks(trackIds: string[], favorite: boolean) {
+		if (this.loading) return;
+
+		for (const id of trackIds) {
+			const res = favorite
+				? await this.apiClient.favoriteTrack(id)
+				: await this.apiClient.unfavoriteTrack(id);
+
+			if (!res.success) {
+				handleApiError(res.error);
+				return;
+			}
+		}
+
+		await this.fetchIds();
+	}
+
 	hasTrack(trackId: string) {
 		return !!this.ids.find((v) => v === trackId);
 	}

@@ -10,7 +10,8 @@
 		Separator,
 		buttonVariants,
 	} from "$lib/components/ui";
-	import { Play, Shuffle, Plus, X, ListFilter } from "@lucide/svelte";
+	import { Music, Play, Shuffle, Plus, X, ListFilter } from "@lucide/svelte";
+	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import TrackVariants from "$lib/components/track-list/TrackVariants.svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte";
@@ -101,34 +102,36 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4">
-	<div
-		class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+<div class="section-tracks flex flex-col gap-6">
+	<section
+		class="rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
 	>
-		<div class="flex items-baseline gap-2">
-			<h1 class="text-xl font-bold">Tracks</h1>
-			{#if data.page}
-				<span class="text-sm text-muted-foreground"
-					>{data.page.totalItems}</span
-				>
-			{/if}
-		</div>
+		<div class="flex flex-col gap-4">
+			<div class="flex items-center gap-4">
+				<HeroIcon><Music /></HeroIcon>
+				<div class="flex min-w-0 flex-col">
+					<h1 class="text-2xl font-bold">Tracks</h1>
+					<p class="text-sm text-muted-foreground">
+						Every track in your library
+						{#if data.page}
+							&middot; {data.page.totalItems}
+						{/if}
+					</p>
+				</div>
+			</div>
 
-		<div class="flex items-center gap-2">
-			<Button
-				variant="outline"
-				size="sm"
-				onclick={() => playTracks({ shuffle: true })}
-			>
-				<Shuffle size={14} />
-				Shuffle
-			</Button>
-			<Button size="sm" onclick={() => playTracks()}>
-				<Play size={14} />
-				Play All
-			</Button>
+			<div class="flex gap-2 pt-1">
+				<Button size="sm" onclick={() => playTracks({ shuffle: true })}>
+					<Shuffle size={14} />
+					Shuffle
+				</Button>
+				<Button size="sm" onclick={() => playTracks()}>
+					<Play size={14} />
+					Play All
+				</Button>
+			</div>
 		</div>
-	</div>
+	</section>
 
 	<div class="rounded-lg border bg-card p-3">
 		<div

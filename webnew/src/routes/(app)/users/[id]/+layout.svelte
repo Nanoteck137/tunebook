@@ -1,7 +1,17 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { Calendar } from "@lucide/svelte";
+	import {
+		BarChart3,
+		Calendar,
+		CalendarRange,
+		Heart,
+		History,
+		LayoutDashboard,
+		ListMusic,
+		Settings,
+	} from "@lucide/svelte";
 	import { Breadcrumb, Button } from "$lib/components/ui";
+	import { cn } from "$lib/utils";
 
 	const { data, children } = $props();
 
@@ -24,18 +34,63 @@
 	);
 
 	const tabs = $derived([
-		{ label: "Overview", href: `/users/${data.userData.id}`, public: true },
-		{ label: "Top", href: `/users/${data.userData.id}/top`, public: true },
+		{
+			label: "Overview",
+			href: `/users/${data.userData.id}`,
+			public: true,
+			icon: LayoutDashboard,
+			match: `/users/${data.userData.id}`,
+			exact: true,
+		},
+		{
+			label: "Top",
+			href: `/users/${data.userData.id}/top`,
+			public: true,
+			icon: BarChart3,
+			match: `/users/${data.userData.id}/top`,
+		},
 		{
 			label: "Playlists",
 			href: `/users/${data.userData.id}/playlists`,
 			public: true,
+			icon: ListMusic,
+			match: `/users/${data.userData.id}/playlists`,
 		},
-		{ label: "Favorites", href: `/users/${data.userData.id}/favorites` },
-		{ label: "History", href: `/users/${data.userData.id}/history` },
-		{ label: "Review", href: `/users/${data.userData.id}/review` },
-		{ label: "Settings", href: `/users/${data.userData.id}/settings` },
+		{
+			label: "Favorites",
+			href: `/users/${data.userData.id}/favorites`,
+			icon: Heart,
+			match: `/users/${data.userData.id}/favorites`,
+		},
+		{
+			label: "History",
+			href: `/users/${data.userData.id}/history`,
+			icon: History,
+			match: `/users/${data.userData.id}/history`,
+		},
+		{
+			label: "Review",
+			href: `/users/${data.userData.id}/review`,
+			icon: CalendarRange,
+			match: `/users/${data.userData.id}/review`,
+		},
+		{
+			label: "Settings",
+			href: `/users/${data.userData.id}/settings`,
+			icon: Settings,
+			match: `/users/${data.userData.id}/settings`,
+		},
 	]);
+
+	let pathname = $derived(page.url.pathname);
+
+	function isActive(tab: (typeof tabs)[number]) {
+		if (tab.exact) {
+			return pathname === tab.match;
+		}
+
+		return pathname.startsWith(tab.match);
+	}
 </script>
 
 <div class="section-users flex flex-col gap-6">
@@ -113,24 +168,30 @@
 				</p>
 			</div>
 		</div>
-	</div>
 
-	<nav class="flex flex-wrap gap-1">
-		{#each tabs as tab (tab.href)}
-			{#if tab.public || data.userData.id === data.user?.id}
-				<Button
-					class="transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent {page
-						.url.pathname === tab.href
-						? 'bg-accent text-accent-foreground'
-						: 'text-muted-foreground'}"
-					variant="ghost"
-					href={tab.href}
-				>
-					{tab.label}
-				</Button>
-			{/if}
-		{/each}
-	</nav>
+		<div
+			class="flex flex-wrap items-center gap-1 border-t border-border/40 pt-3"
+		>
+			{#each tabs as tab (tab.href)}
+				{#if tab.public || data.userData.id === data.user?.id}
+					<Button
+						variant="ghost"
+						size="sm"
+						href={tab.href}
+						class={cn(
+							"text-foreground hover:bg-accent hover:text-accent-foreground",
+							isActive(tab)
+								? "bg-accent text-accent-foreground"
+								: "text-muted-foreground",
+						)}
+					>
+						<tab.icon />
+						{tab.label}
+					</Button>
+				{/if}
+			{/each}
+		</div>
+	</div>
 
 	<div class="min-w-0 flex-1">
 		{@render children()}
