@@ -21,6 +21,7 @@
 	import { goto, invalidateAll } from "$app/navigation";
 	import { getFavorites } from "$lib/favorites.svelte";
 	import { getQuickPlaylist } from "$lib/quick-playlist.svelte";
+	import SectionImage from "$lib/components/SectionImage.svelte";
 	import FavoriteButton from "$lib/components/FavoriteButton.svelte";
 	import QuickAddButton from "$lib/components/QuickAddButton.svelte";
 	import { toast } from "svelte-sonner";
@@ -385,9 +386,12 @@
 											const playlist = await showPlaylistModal();
 											if (!playlist) return;
 
-											const res = await apiClient.addItemToPlaylist(playlist.id, {
-												trackId: track.id,
-											});
+											const res = await apiClient.addItemToPlaylist(
+												playlist.id,
+												{
+													trackId: track.id,
+												},
+											);
 											if (!res.success) {
 												handleApiError(res.error);
 												return;
@@ -426,30 +430,36 @@
 </div>
 
 <Dialog.Root open={infoOpen} onOpenChange={(v) => (infoOpen = v)}>
-	<Dialog.Content class="sm:max-w-lg">
-		<Dialog.Header>
-			<Dialog.Title>Track Info</Dialog.Title>
-			<Dialog.Description>
-				Detailed information about the track
-			</Dialog.Description>
-		</Dialog.Header>
-
+	<Dialog.Content class="max-w-md gap-0 overflow-hidden p-0">
 		{#if infoTrack}
-			<div class="flex flex-col gap-4 sm:flex-row">
-				<div class="flex shrink-0 justify-center sm:block">
-					<img
+			<div class="relative overflow-hidden">
+				<img
+					src={infoTrack.coverArt.original}
+					alt=""
+					aria-hidden="true"
+					class="h-44 w-full scale-105 object-cover blur-sm"
+				/>
+				<div
+					class="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-black/30"
+				></div>
+				<div class="absolute inset-x-0 bottom-0 flex items-end gap-4 p-4">
+					<SectionImage
+						variant="full"
 						src={infoTrack.coverArt.large}
 						alt={infoTrack.name}
-						class="h-48 w-48 rounded-lg border object-cover sm:h-44 sm:w-44"
+						class="section-tracks aspect-square w-20 shrink-0 rounded-md p-0.5 shadow-lg"
 					/>
-				</div>
-
-				<div class="flex min-w-0 flex-1 flex-col gap-2">
-					<div>
-						<p class="text-lg leading-tight font-semibold">{infoTrack.name}</p>
-						<p class="text-sm text-muted-foreground">
+					<div class="min-w-0 flex-1 pb-0.5">
+						<p
+							class="text-lg leading-tight font-bold text-ellipsis text-white"
+						>
+							{infoTrack.name}
+						</p>
+						<p class="text-sm text-ellipsis text-white/80">
 							{#each infoTrack.artists as artist, i (artist.id)}
-								{#if i > 0}{", "}{/if}
+								{#if i > 0}
+									{", "}
+								{/if}
 								<a
 									href="/artists/{artist.id}"
 									class="hover:underline"
@@ -460,53 +470,75 @@
 							{/each}
 						</p>
 					</div>
+				</div>
+			</div>
 
-					<div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+			<div class="flex flex-col gap-4 p-4 pt-3">
+				<div class="flex items-center gap-2">
+					<Button
+						size="sm"
+						class="flex-1"
+						onclick={() => onPlay(infoTrack.id, false)}
+					>
+						<Play />
+						Play
+					</Button>
+
+					<Button
+						size="sm"
+						variant="outline"
+						class="flex-1"
+						onclick={() => onPlay(infoTrack.id, true)}
+					>
+						<Shuffle />
+						Shuffle play
+					</Button>
+				</div>
+
+				<div class="rounded-lg border bg-card p-3 text-sm">
+					<div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
 						<span class="text-muted-foreground">Album</span>
-						<a href="/albums/{infoTrack.albumId}" class="hover:underline">
+						<a
+							href="/albums/{infoTrack.albumId}"
+							class="font-medium hover:underline"
+						>
 							{infoTrack.albumName}
 						</a>
 
 						{#if infoTrack.number}
 							<span class="text-muted-foreground">Track</span>
-							<span>#{infoTrack.number}</span>
+							<span class="font-medium">#{infoTrack.number}</span>
 						{/if}
 
 						<span class="text-muted-foreground">Duration</span>
-						<span>{formatDuration(infoTrack.duration)}</span>
+						<span class="font-medium"
+							>{formatDuration(infoTrack.duration)}</span
+						>
 
 						{#if infoTrack.year}
 							<span class="text-muted-foreground">Year</span>
-							<span>{infoTrack.year}</span>
-						{/if}
-
-						{#if infoTrack.tags.length > 0}
-							<span class="text-muted-foreground">Tags</span>
-							<div class="flex flex-wrap gap-1">
-								{#each infoTrack.tags as tag (tag)}
-									<span class="rounded-md bg-secondary px-1.5 py-0.5 text-xs"
-										>{tag}</span
-									>
-								{/each}
-							</div>
+							<span class="font-medium">{infoTrack.year}</span>
 						{/if}
 
 						<span class="text-muted-foreground">Added</span>
-						<span>{formatDate(infoTrack.created)}</span>
-
+						<span class="font-medium">{formatDate(infoTrack.created)}</span>
 						<span class="text-muted-foreground">Updated</span>
-						<span>{formatDate(infoTrack.updated)}</span>
+						<span class="font-medium">{formatDate(infoTrack.updated)}</span>
 					</div>
 				</div>
+
+				{#if infoTrack.tags.length > 0}
+					<div class="flex flex-wrap gap-1.5">
+						{#each infoTrack.tags as tag (tag)}
+							<span class="rounded-full bg-secondary px-2.5 py-0.5 text-xs">
+								{tag}
+							</span>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{:else}
-			<p class="text-sm text-muted-foreground">Track not found.</p>
+			<p class="p-4 text-sm text-muted-foreground">Track not found.</p>
 		{/if}
-
-		<Dialog.Footer>
-			<Button variant="outline" onclick={() => (infoOpen = false)}>
-				Close
-			</Button>
-		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>

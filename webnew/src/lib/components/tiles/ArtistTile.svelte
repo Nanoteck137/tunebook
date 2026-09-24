@@ -71,7 +71,7 @@
 
 <Dialog.Root bind:open={openShowMore}>
 	<Dialog.Content class="max-w-md gap-0 overflow-hidden p-0">
-		<div class="relative">
+		<div class="relative overflow-hidden">
 			<img
 				src={artist.coverArt.original}
 				alt=""
