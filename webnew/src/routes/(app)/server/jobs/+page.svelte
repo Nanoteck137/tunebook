@@ -14,6 +14,7 @@
 		jobStatusVariant,
 		TaskSyncStateEvent,
 	} from "../events";
+	import Spacer from "$lib/components/Spacer.svelte";
 
 	const { data } = $props();
 	const apiClient = getApiClient();
@@ -63,12 +64,14 @@
 	});
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
 	<section>
 		<SectionHeader>
 			<RefreshCw />
 			Tasks
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="flex flex-col divide-y rounded-lg border bg-card px-4">
 			{#each tasks as task (task.name)}
@@ -109,6 +112,8 @@
 			<ListChecks />
 			Jobs
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="flex flex-col gap-4 rounded-lg border bg-card p-4">
 			<div class="flex flex-wrap items-center gap-2">

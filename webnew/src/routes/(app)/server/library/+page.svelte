@@ -2,13 +2,13 @@
 	import { formatDuration } from "$lib/utils.js";
 	import { getApiClient, handleApiError } from "$lib";
 	import {
-		AlertCircle,
+		CircleAlert,
 		Disc3,
 		DiscAlbum,
 		FileMusic,
-		Loader2,
+		LoaderCircle,
 		RefreshCw,
-		Trash2,
+		Trash,
 		Users,
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
@@ -21,6 +21,7 @@
 		JobSyncStateEvent,
 		LibrarySyncStateEvent,
 	} from "../events";
+	import Spacer from "$lib/components/Spacer.svelte";
 
 	const apiClient = getApiClient();
 
@@ -91,7 +92,7 @@
 	});
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
 	<section>
 		<SectionHeader>
 			<RefreshCw />
@@ -104,7 +105,7 @@
 
 				<Button onclick={runSync} disabled={syncing}>
 					{#if syncing}
-						<Loader2 size={14} class="animate-spin" />
+						<LoaderCircle size={14} class="animate-spin" />
 						Syncing...
 					{:else}
 						Sync now
@@ -113,10 +114,12 @@
 			{/snippet}
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="flex flex-col gap-4 rounded-lg border bg-card p-4">
 			{#if syncing && syncState.currentItem}
 				<div class="flex items-center gap-3 rounded-lg border p-3">
-					<Loader2
+					<LoaderCircle
 						size={16}
 						class="shrink-0 animate-spin text-muted-foreground"
 					/>
@@ -184,11 +187,13 @@
 					onclick={() => (cleanupOpen = true)}
 					disabled={missingCount === 0}
 				>
-					<Trash2 size={14} />
+					<Trash />
 					Cleanup
 				</Button>
 			{/snippet}
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="flex flex-col gap-4 rounded-lg border bg-card p-4">
 			{#if syncState.missingArtists.length > 0}
@@ -243,7 +248,8 @@
 	{#if syncState.errors.length > 0}
 		<section>
 			<div class="mb-3 flex items-center px-2">
-				<AlertCircle class="size-4 text-destructive" />
+				<CircleAlert class="text-destructive" size={16} />
+
 				<h2 class="ml-1.5 text-lg font-bold text-destructive">Errors</h2>
 			</div>
 

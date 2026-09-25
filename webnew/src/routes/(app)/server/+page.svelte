@@ -16,6 +16,7 @@
 	import { Separator } from "$lib/components/ui";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { formatPlayTime } from "$lib/utils";
+	import Spacer from "$lib/components/Spacer.svelte";
 
 	const { data } = $props();
 
@@ -86,12 +87,14 @@
 	]);
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
 	<section>
 		<SectionHeader>
 			<Info />
 			Overview
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="rounded-lg border bg-card p-4">
 			<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
@@ -113,6 +116,8 @@
 			Stats
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="rounded-lg border bg-card p-4">
 			<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
 				{#each statTiles as tile (tile.label)}
@@ -133,6 +138,8 @@
 			<Play />
 			Usage
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="rounded-lg border bg-card p-4">
 			<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
@@ -159,6 +166,8 @@
 			<Disc3 />
 			Media Configuration
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="rounded-lg border bg-card p-4">
 			<div class="flex flex-col gap-6">

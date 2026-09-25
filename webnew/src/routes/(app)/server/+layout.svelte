@@ -6,7 +6,7 @@
 		ListChecks,
 		Server,
 	} from "@lucide/svelte";
-	import { Breadcrumb, Button } from "$lib/components/ui";
+	import { Button } from "$lib/components/ui";
 	import HeroIcon from "$lib/components/HeroIcon.svelte";
 	import { cn } from "$lib/utils";
 
@@ -43,11 +43,9 @@
 
 		return pathname.startsWith(tab.match);
 	}
-
-	const currentTab = $derived(tabs.find((tab) => isActive(tab)) ?? tabs[0]);
 </script>
 
-<div class="section-server flex flex-col gap-6">
+<div class="section-server flex flex-col gap-4">
 	<div
 		class="flex flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
 	>
