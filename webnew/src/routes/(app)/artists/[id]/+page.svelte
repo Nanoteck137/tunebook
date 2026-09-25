@@ -2,16 +2,25 @@
 	import Image from "$lib/components/Image.svelte";
 	import TrackListItem from "$lib/components/track-list/TrackListItem.svelte";
 	import { Separator } from "$lib/components/ui";
-	import { Disc, Music, TrendingUp, Users } from "@lucide/svelte";
+	import { Disc, Music, Play, TrendingUp, Users } from "@lucide/svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import TopTrackItem from "$lib/components/track-list/TopTrackItem.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
+	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
+	import TrackList from "$lib/components/track-list/TrackList.svelte";
+	import { getMusicManager } from "$lib/music-manager.svelte";
 
 	const { data } = $props();
+	const musicManager = getMusicManager();
 
 	let featuredCount = $derived(
 		data.featuredAlbumPage.totalItems + data.featuredTrackPage.totalItems,
 	);
+
+	async function playAlbum(albumId: string) {
+		await musicManager.queueRequest({ type: "addAlbum", albumId }, {});
+	}
 
 	function otherArtists(artists: { id: string; name: string }[]) {
 		return artists.filter((a) => a.id !== data.artist.id).map((a) => a.name);
@@ -59,14 +68,15 @@
 
 			<Spacer />
 
-			<div class="flex flex-col">
-				{#each data.tracks as track, i (track.id)}
-					<TrackListItem {track} />
-					{#if i < data.tracks.length - 1}
-						<Separator />
-					{/if}
-				{/each}
-			</div>
+			<TrackList
+				tracks={data.tracks}
+				onPlay={async (trackId, shuffle) => {
+					await musicManager.queueRequest(
+						{ type: "addArtist", artistId: data.artist.id },
+						{ queueIndexToTrackId: trackId, shuffle },
+					);
+				}}
+			/>
 		</section>
 	{/if}
 
@@ -84,43 +94,11 @@
 
 			<Spacer />
 
-			<div
-				class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-			>
+			<TileGrid>
 				{#each data.albums as album (album.id)}
-					<a
-						href="/albums/{album.id}"
-						class="group flex flex-col"
-						title={album.name}
-					>
-						<div class="relative overflow-hidden rounded-lg">
-							<Image
-								class="aspect-square w-full rounded-none transition-transform duration-300 group-hover:scale-105"
-								src={album.coverArt.medium}
-								alt={album.name}
-							/>
-						</div>
-						<div class="flex flex-col gap-0.5 pt-2">
-							<p
-								class="truncate text-sm font-medium group-hover:underline"
-								title={album.name}
-							>
-								{album.name}
-							</p>
-							<p
-								class="truncate text-xs text-muted-foreground"
-								title={album.artists.map((a) => a.name).join(", ")}
-							>
-								{#if album.year}
-									{album.year}
-								{:else}
-									{album.albumType}
-								{/if}
-							</p>
-						</div>
-					</a>
+					<AlbumTile {album} />
 				{/each}
-			</div>
+			</TileGrid>
 		</section>
 	{/if}
 
@@ -139,25 +117,37 @@
 						class="grid grid-cols-2 gap-3 px-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
 					>
 						{#each data.featuredAlbums as album (album.id)}
-							<a
-								href="/albums/{album.id}"
-								class="group flex flex-col"
-								title={album.name}
-							>
+							<div class="group flex flex-col">
 								<div class="relative overflow-hidden rounded-lg">
-									<Image
-										class="aspect-square w-full rounded-none transition-transform duration-300 group-hover:scale-105"
-										src={album.coverArt.medium}
-										alt={album.name}
-									/>
+									<a
+										href="/albums/{album.id}"
+										class="block overflow-hidden rounded-lg"
+										title={album.name}
+									>
+										<Image
+											class="aspect-square w-full rounded-none transition-transform duration-300 group-hover:scale-105"
+											src={album.coverArt.medium}
+											alt={album.name}
+										/>
+									</a>
+
+									<button
+										class="absolute right-2 bottom-2 hidden h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
+										title={`Play ${album.name}`}
+										aria-label={`Play ${album.name}`}
+										onclick={() => playAlbum(album.id)}
+									>
+										<Play size={18} />
+									</button>
 								</div>
 								<div class="flex flex-col gap-0.5 pt-2">
-									<p
+									<a
 										class="truncate text-sm font-medium group-hover:underline"
+										href="/albums/{album.id}"
 										title={album.name}
 									>
 										{album.name}
-									</p>
+									</a>
 									<p
 										class="truncate text-xs text-muted-foreground"
 										title={otherArtists(album.artists).join(", ")}
@@ -165,7 +155,7 @@
 										{otherArtists(album.artists).join(", ")}
 									</p>
 								</div>
-							</a>
+							</div>
 						{/each}
 					</div>
 				{/if}

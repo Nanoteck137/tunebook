@@ -30,12 +30,18 @@
 			<div
 				class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md"
 			>
-				<span class="text-sm font-medium tabular-nums group-hover:hidden">
+				<span
+					class="text-sm font-medium tabular-nums {onPlayClicked
+						? 'group-hover:hidden'
+						: ''}"
+				>
 					{rank}
 				</span>
-				<div class="hidden items-center justify-center group-hover:flex">
-					<Play size={20} />
-				</div>
+				{#if onPlayClicked}
+					<div class="hidden items-center justify-center group-hover:flex">
+						<Play size={20} />
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</button>
@@ -78,4 +84,3 @@
 		</DropdownMenu.Root>
 	{/if}
 </div>
-

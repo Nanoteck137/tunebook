@@ -35,7 +35,6 @@
 	} from "$lib/components/ui";
 
 	type Props = {
-		totalTracks: number;
 		tracks: Track[];
 
 		isAlbumShowcase?: boolean;
@@ -51,14 +50,17 @@
 	};
 
 	let {
-		isAlbumShowcase,
 		tracks,
-		displayOrder,
-		highlightId,
+
+		isAlbumShowcase = false,
+		displayOrder = false,
+		highlightId = null,
 		selectedTracks = $bindable([]),
+
 		onPlay,
 		onReorder,
 	}: Props = $props();
+
 	const apiClient = getApiClient();
 	const favoritesManager = getFavorites();
 	const quickPlaylistManager = getQuickPlaylist();
