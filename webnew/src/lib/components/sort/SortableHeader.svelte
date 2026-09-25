@@ -6,8 +6,8 @@
 
 	export type Column = {
 		label: string;
-		asc: SortType;
-		desc: SortType;
+		asc: string;
+		desc: string;
 		className: string;
 		title?: string;
 	};
@@ -22,13 +22,13 @@
 	}: {
 		class?: string;
 
-		sort: SortType;
-		onSortChange: (sort: SortType) => void;
+		sort: string;
+		onSortChange: (sort: string) => void;
 		columns: Column[];
 		children?: Snippet;
 	} = $props();
 
-	function cycle(asc: SortType, desc: SortType) {
+	function cycle(asc: string, desc: string) {
 		if (sort === asc) {
 			onSortChange(desc);
 		} else if (sort === desc) {

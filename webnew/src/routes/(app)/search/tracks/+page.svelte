@@ -99,7 +99,6 @@
 
 		<InfiniteScroll controller={scroll}>
 			<TrackList
-				totalTracks={scroll.items.length}
 				tracks={scroll.items}
 				onPlay={() => {}}
 			/>

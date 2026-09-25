@@ -17,6 +17,7 @@
 	import { fly } from "svelte/transition";
 	import { Button, buttonVariants, DropdownMenu } from "$lib/components/ui";
 	import { cn } from "$lib/utils";
+	import HeroCard from "$lib/components/HeroCard.svelte";
 	import { goto } from "$app/navigation";
 	import { getFavorites } from "$lib/favorites.svelte";
 	import { getQuickPlaylist } from "$lib/quick-playlist.svelte";
@@ -135,10 +136,17 @@
 	<title>Queue - Tunebook</title>
 </svelte:head>
 
-<div class="">
-	<div class="mb-6 flex items-end justify-between gap-4">
-		<div>
-			<h1 class="text-3xl font-bold">Queue</h1>
+<div class="section-queue flex flex-col gap-4">
+	<HeroCard>
+		<div class="flex min-w-0 flex-col gap-2">
+			<p
+				class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+			>
+				Up Next
+			</p>
+
+			<h1 class="text-2xl font-bold sm:text-4xl">Queue</h1>
+
 			<p class="text-sm text-muted-foreground">
 				{#if totalItems > 0}
 					Track {currentIndex + 1} of {totalItems}
@@ -146,24 +154,26 @@
 					No tracks in queue
 				{/if}
 			</p>
-		</div>
 
-		{#if totalItems > 0}
-			<Button
-				variant="outline"
-				size="sm"
-				onclick={clearQueue}
-				class="shrink-0"
-			>
-				<ListX />
-				<span class="hidden sm:inline">Clear queue</span>
-			</Button>
-		{/if}
-	</div>
+			{#if totalItems > 0}
+				<div class="flex items-center gap-2 pt-2">
+					<Button
+						variant="outline"
+						size="sm"
+						onclick={clearQueue}
+						class="shrink-0"
+					>
+						<ListX />
+						<span class="hidden sm:inline">Clear queue</span>
+					</Button>
+				</div>
+			{/if}
+		</div>
+	</HeroCard>
 
 	{#if currentMediaItem}
 		<div
-			class="relative mb-6 overflow-hidden rounded-xl border bg-accent/30"
+			class="relative overflow-hidden rounded-xl border bg-accent/30"
 			in:fly={{ y: 12, duration: 250 }}
 		>
 			<Image

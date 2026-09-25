@@ -193,7 +193,6 @@
 
 <InfiniteScroll controller={scroll}>
 	<TrackList
-		totalTracks={data.page.totalItems}
 		tracks={scroll.items}
 		onPlay={async (trackId) => {
 			await musicManager.queueRequest(

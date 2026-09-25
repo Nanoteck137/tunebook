@@ -252,6 +252,18 @@
 	--section-hero-from: oklch(0.25 0.06 20);
 }
 
+.section-queue {
+	--section-gradiant-1: #a78bfa;
+	--section-gradiant-2: #818cf8;
+	--section-gradiant-3: #6366f1;
+	--section-hero-from: oklch(0.93 0.06 280);
+	--section-hero-to: var(--background);
+}
+
+.dark .section-queue {
+	--section-hero-from: oklch(0.27 0.06 280);
+}
+
 @theme inline {
 	--font-sans: "Roboto Variable", sans-serif;
 	--font-heading: "Roboto Variable", sans-serif;

@@ -156,8 +156,6 @@
 		);
 	}
 
-	const totalTracks = $derived(data.page.totalItems);
-
 	const scroll = new InfiniteScrollController<Track>({
 		initialLoad: () => ({
 			items: data.items,
@@ -459,7 +457,6 @@
 <InfiniteScroll controller={scroll} errorMessage="Failed to load more tracks">
 	<TrackList
 		displayOrder
-		{totalTracks}
 		tracks={scroll.items}
 		bind:selectedTracks
 		onPlay={async (trackId, shuffle) => {

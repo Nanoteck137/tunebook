@@ -170,7 +170,6 @@
 
 <InfiniteScroll controller={scroll}>
 	<TrackList
-		totalTracks={data.page.totalItems}
 		tracks={scroll.items}
 		bind:selectedTracks
 		onPlay={async (trackId) => {

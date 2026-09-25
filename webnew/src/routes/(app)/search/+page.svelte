@@ -99,7 +99,6 @@
 			<Spacer />
 
 			<TrackList
-				totalTracks={topTracks.length}
 				tracks={topTracks}
 				onPlay={playTrack}
 			/>

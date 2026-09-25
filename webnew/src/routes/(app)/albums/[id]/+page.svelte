@@ -269,7 +269,6 @@
 
 <TrackList
 	isAlbumShowcase={true}
-	totalTracks={data.tracks.length}
 	tracks={data.tracks}
 	highlightId={highlightTrackId}
 	bind:selectedTracks
