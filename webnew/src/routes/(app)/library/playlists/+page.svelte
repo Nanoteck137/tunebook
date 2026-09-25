@@ -11,6 +11,7 @@
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Playlist } from "$lib/api/types";
 	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import NewPlaylistModal from "../../playlists/NewPlaylistModal.svelte";
@@ -165,9 +166,7 @@
 	</div>
 
 	<InfiniteScroll controller={scroll}>
-		<div
-			class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
-		>
+		<TileGrid>
 			{#if selectedPlaylists.length > 0}
 				<div class="group relative flex shrink-0 flex-col">
 					<button
@@ -223,7 +222,7 @@
 					onToggleQuick={() => toggleQuick(playlist.id)}
 				/>
 			{/each}
-		</div>
+		</TileGrid>
 	</InfiniteScroll>
 </div>
 

@@ -6,8 +6,10 @@
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 	import ArtistTile from "$lib/components/tiles/ArtistTile.svelte";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
 	import SearchBarHeader from "./SearchBarHeader.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import Spacer from "$lib/components/Spacer.svelte";
 
 	const { data } = $props();
 	const musicManager = getMusicManager();
@@ -52,7 +54,7 @@
 
 <div class="flex flex-col gap-6">
 	<SearchBarHeader
-		searchBarPlaceholder="Search artists, albums, tracks, playlists, users..."
+		searchBarPlaceholder="Search tracks, artists, albums..."
 		{value}
 		setValue={(v) => {
 			value = v;
@@ -94,6 +96,8 @@
 				Tracks
 			</SectionHeader>
 
+			<Spacer />
+
 			<TrackList
 				totalTracks={topTracks.length}
 				tracks={topTracks}
@@ -112,15 +116,13 @@
 				Artists
 			</SectionHeader>
 
-			<div class="flex flex-wrap gap-3 px-2">
+			<Spacer />
+
+			<TileGrid>
 				{#each data.artists.slice(0, 6) as artist (artist.id)}
-					<ArtistTile
-						id={artist.id}
-						cover={artist.coverArt.medium}
-						name={artist.name}
-					/>
+					<ArtistTile {artist} />
 				{/each}
-			</div>
+			</TileGrid>
 		</section>
 	{/if}
 
@@ -134,16 +136,13 @@
 				Albums
 			</SectionHeader>
 
-			<div class="flex flex-wrap gap-3 px-2">
+			<Spacer />
+
+			<TileGrid>
 				{#each data.albums.slice(0, 6) as album (album.id)}
-					<AlbumTile
-						id={album.id}
-						cover={album.coverArt.medium}
-						name={album.name}
-						artists={album.artists}
-					/>
+					<AlbumTile {album} />
 				{/each}
-			</div>
+			</TileGrid>
 		</section>
 	{/if}
 </div>

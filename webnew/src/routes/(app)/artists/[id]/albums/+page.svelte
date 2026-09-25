@@ -1,14 +1,18 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { Breadcrumb } from "$lib/components/ui";
+	import { Disc } from "@lucide/svelte";
 	import { SortToggleDropdown } from "$lib/components/sort";
 	import Image from "$lib/components/Image.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Album } from "$lib/api/types";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import { sortTypes, defaultSort, applySort, type SortType } from "./types";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
+	import Spacer from "$lib/components/Spacer.svelte";
+	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
 
 	let { data } = $props();
 	const apiClient = getApiClient();
@@ -60,75 +64,26 @@
 	});
 </script>
 
-<div class="flex flex-col gap-4">
-	<Breadcrumb.Root>
-		<Breadcrumb.List>
-			<Breadcrumb.Item>
-				<Breadcrumb.Link href="/artists">Artists</Breadcrumb.Link>
-			</Breadcrumb.Item>
-			<Breadcrumb.Separator />
-			<Breadcrumb.Item>
-				<Breadcrumb.Link href="/artists/{data.artist.id}">
-					{data.artist.name}
-				</Breadcrumb.Link>
-			</Breadcrumb.Item>
-			<Breadcrumb.Separator />
-			<Breadcrumb.Item>
-				<Breadcrumb.Page>Albums</Breadcrumb.Page>
-			</Breadcrumb.Item>
-		</Breadcrumb.List>
-	</Breadcrumb.Root>
+<SectionHeader count={data.page.totalItems}>
+	<Disc />
+	Albums
 
-	<div
-		class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-	>
-		<div class="flex items-baseline gap-2">
-			<h1 class="text-xl font-bold">Albums</h1>
-			{#if data.page}
-				<span class="text-sm text-muted-foreground"
-					>{data.page.totalItems}</span
-				>
-			{/if}
-		</div>
-
+	{#snippet actions()}
 		<SortToggleDropdown
 			types={sortTypes}
 			{sort}
 			{defaultSort}
 			onSortChange={updateSort}
 		/>
-	</div>
+	{/snippet}
+</SectionHeader>
 
-	<InfiniteScroll controller={scroll}>
-		<div
-			class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
-		>
-			{#each scroll.items as album (album.id)}
-				<a
-					href="/albums/{album.id}"
-					class="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
-				>
-					<Image
-						class="aspect-square w-full rounded-none border-0"
-						src={album.coverArt.medium}
-						alt={album.name}
-					/>
-					<div class="flex flex-col gap-0.5 p-2">
-						<p
-							class="truncate text-sm font-medium group-hover:underline"
-							title={album.name}
-						>
-							{album.name}
-						</p>
-						<p
-							class="truncate text-xs text-muted-foreground"
-							title={album.artists.map((a) => a.name).join(", ")}
-						>
-							{album.artists.map((a) => a.name).join(", ")}
-						</p>
-					</div>
-				</a>
-			{/each}
-		</div>
-	</InfiniteScroll>
-</div>
+<Spacer size="md" />
+
+<InfiniteScroll controller={scroll}>
+	<TileGrid>
+		{#each scroll.items as album (album.id)}
+			<AlbumTile {album} />
+		{/each}
+	</TileGrid>
+</InfiniteScroll>

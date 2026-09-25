@@ -10,6 +10,7 @@
 	} from "$lib/components/ui";
 	import { EllipsisVertical, Info } from "@lucide/svelte";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import { cn } from "$lib/utils";
 	import { onMount } from "svelte";
@@ -127,9 +128,7 @@
 		{/if}
 
 		<InfiniteScroll controller={scroll}>
-			<div
-				class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
-			>
+			<TileGrid>
 				{#each scroll.items as artist (artist.id)}
 					<div
 						class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
@@ -174,7 +173,7 @@
 						</div>
 					</div>
 				{/each}
-			</div>
+			</TileGrid>
 		</InfiniteScroll>
 	{/if}
 </div>

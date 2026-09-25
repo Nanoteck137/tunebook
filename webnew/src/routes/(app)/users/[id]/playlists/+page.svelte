@@ -6,6 +6,7 @@
 	import { cn, formatPlayTime } from "$lib/utils";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 
@@ -76,9 +77,7 @@
 <Spacer size="lg" />
 
 <InfiniteScroll controller={scroll}>
-	<div
-		class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
-	>
+	<TileGrid>
 		{#each scroll.items as playlist (playlist.id)}
 			<div class="group relative flex flex-col">
 				<div class="relative">
@@ -152,7 +151,7 @@
 				</div>
 			</div>
 		{/each}
-	</div>
+	</TileGrid>
 
 	{#if scroll.items.length === 0}
 		<p class="px-2 text-sm text-muted-foreground">No playlists yet.</p>

@@ -26,6 +26,7 @@
 	import { page } from "$app/state";
 	import { fly } from "svelte/transition";
 	import AlbumTile from "$lib/components/tiles/AlbumTile.svelte";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
 
 	let { data } = $props();
 
@@ -353,11 +354,9 @@
 <Spacer size="lg" />
 
 <InfiniteScroll controller={scroll}>
-	<div
-		class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
-	>
+	<TileGrid>
 		{#each scroll.items as album (album.id)}
 			<AlbumTile {album} />
 		{/each}
-	</div>
+	</TileGrid>
 </InfiniteScroll>

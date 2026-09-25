@@ -21,7 +21,6 @@
 	} from "$lib/components/sort";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
 	import { getMusicManager } from "$lib/music-manager.svelte.js";
-	import Image from "$lib/components/Image.svelte";
 	import ArtistList from "$lib/components/ArtistList.svelte";
 	import { formatPlayTime } from "$lib/utils";
 	import SectionImage from "$lib/components/SectionImage.svelte";
@@ -215,7 +214,7 @@
 	</div>
 </div>
 
-<Spacer />
+<Spacer size="md" />
 
 <div class="flex items-center justify-between gap-2 sm:hidden">
 	<DebouncedSearchInput
@@ -266,7 +265,7 @@
 	</div>
 </SortableHeader>
 
-<Spacer />
+<Spacer size="md" />
 
 <TrackList
 	isAlbumShowcase={true}

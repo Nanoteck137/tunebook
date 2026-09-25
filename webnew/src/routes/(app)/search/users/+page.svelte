@@ -4,6 +4,7 @@
 	import type { UserData } from "$lib/api/types";
 	import Image from "$lib/components/Image.svelte";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import { onMount } from "svelte";
 	import SearchBarHeader from "../SearchBarHeader.svelte";
@@ -98,9 +99,7 @@
 		{/if}
 
 		<InfiniteScroll controller={scroll}>
-			<div
-				class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7"
-			>
+			<TileGrid>
 				{#each scroll.items as user (user.id)}
 					<div
 						class="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
@@ -127,7 +126,7 @@
 						</div>
 					</div>
 				{/each}
-			</div>
+			</TileGrid>
 		</InfiniteScroll>
 	{/if}
 </div>

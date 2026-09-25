@@ -1,23 +1,19 @@
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
-import { TrackFilter, applySort } from "./types";
+import { TrackFilter, buildArtistTracksQuery } from "./types";
 
 export const load: PageLoad = async ({ parent, params, url }) => {
 	const data = await parent();
 
-	const query: Record<string, string> = {};
-
 	const filter = TrackFilter.parse({
+		query: url.searchParams.get("query") ?? "",
 		sort: url.searchParams.get("sort") ?? undefined,
 	});
-	applySort(filter, query);
 
-	const tracks = await data.apiClient.getTracks({
-		query: {
-			...query,
-			filter: `artistId = "${params.id}" or featuringArtists has "${params.id}"`,
-		},
-	});
+	const query: Record<string, string> = {};
+	buildArtistTracksQuery(filter, params.id, query);
+
+	const tracks = await data.apiClient.getTracks({ query });
 	if (!tracks.success) {
 		throw error(tracks.error.code, {
 			message: tracks.error.message,

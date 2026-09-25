@@ -45,9 +45,27 @@ export type SortType = (typeof sortValues)[number];
 export const defaultSort: SortType = "name-a-z";
 
 export const TrackFilter = z.object({
+	query: z.string().default(""),
 	sort: SortTypeEnum.default(defaultSort),
 });
 export type TrackFilter = z.infer<typeof TrackFilter>;
+
+export function buildArtistTracksQuery(
+	filter: TrackFilter,
+	artistId: string,
+	query: Record<string, string>,
+) {
+	const filters = [
+		`artistId = "${artistId}" or featuringArtists has "${artistId}"`,
+	];
+
+	if (filter.query !== "") {
+		filters.push(`name contains "${filter.query}"`);
+	}
+
+	query["filter"] = filters.join(" and ");
+	applySort(filter, query);
+}
 
 export function applySort(filter: TrackFilter, query: Record<string, string>) {
 	switch (filter.sort) {
