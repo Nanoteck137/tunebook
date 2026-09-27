@@ -163,6 +163,15 @@ func InstallHistoryHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				// An empty id means the play was not recorded (below the
+				// minimum percent, or the track is gone), so nothing
+				// changed and there is nothing to refresh.
+				if id != "" {
+					// The play changed this user's play counts for
+					// the current year and for their all-time review.
+					dispatchReviewCurrentYear(ctx, app, user.Id)
+				}
+
 				return PushTrackHistory{
 					Id: id,
 				}, nil

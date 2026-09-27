@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"mime/multipart"
 	"path"
+	"strconv"
+	"time"
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/broker"
@@ -1002,6 +1004,124 @@ func (s *UserService) GetUserTotalReviewMonths(
 type GenerateUserReviewParams struct {
 	UserId string
 	Year   int
+}
+
+type GenerateUserTotalReviewParams struct {
+	UserId string
+}
+
+// ReviewDebounceWindowMs is how long a generated review is treated as
+// fresh.
+//
+// Playback and favorite changes dispatch a refresh, but generation is
+// expensive: GenerateUserReview runs 65 ranked INSERT..SELECT statements
+// (5 categories plus 12 months) that store a row per track, album, artist,
+// tag and decade with no top-N cap. A unique key only prevents concurrent
+// jobs, so without a staleness window a user who keeps listening would
+// trigger a full rebuild every time the previous job finished.
+const ReviewDebounceWindowMs = 15 * 60 * 1000
+
+// ReviewNeedsRefresh reports whether a user's year review is missing or
+// older than maxAgeMs.
+func (s *UserService) ReviewNeedsRefresh(
+	ctx context.Context,
+	userId string,
+	year int,
+	maxAgeMs int64,
+) (bool, error) {
+	review, err := s.db.GetUserYearReview(ctx, database.GetUserYearReviewParams{
+		UserId: userId,
+		Year:   year,
+	})
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return true, nil
+		}
+
+		return false, userErr.Wrap("review needs refresh: get year review", err)
+	}
+
+	return time.Now().UnixMilli()-review.UpdatedAt > maxAgeMs, nil
+}
+
+// TotalReviewNeedsRefresh reports whether a user's all-time review is
+// missing or older than maxAgeMs. It doubles as the "last rebuilt at"
+// marker, since rebuilding a user's reviews always regenerates the
+// all-time review.
+func (s *UserService) TotalReviewNeedsRefresh(
+	ctx context.Context,
+	userId string,
+	maxAgeMs int64,
+) (bool, error) {
+	review, err := s.db.GetUserTotalReview(ctx, database.GetUserTotalReviewParams{
+		UserId: userId,
+	})
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return true, nil
+		}
+
+		return false, userErr.Wrap("review needs refresh: get total review", err)
+	}
+
+	return time.Now().UnixMilli()-review.UpdatedAt > maxAgeMs, nil
+}
+
+func (s *UserService) GenerateUserTotalReview(
+	ctx context.Context,
+	userId string,
+) error {
+	_, err := s.db.GetUserById(ctx, userId)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			return ErrUserServiceUserNotFound
+		}
+
+		return userErr.Wrap("generate user total review: user", err)
+	}
+
+	err = s.db.GenerateUserTotalReview(ctx, database.GenerateUserTotalReviewParams{
+		UserId: userId,
+	})
+	if err != nil {
+		return userErr.Wrap("generate user total review", err)
+	}
+
+	return nil
+}
+
+// RebuildUserReviews regenerates every year a user has listening stats for,
+// plus the all-time review. It is intentionally unconditional: the
+// scheduled rebuild is what repairs reviews whose ranked rows were removed
+// by the ON DELETE CASCADE from tracks when the library was cleaned up.
+func (s *UserService) RebuildUserReviews(
+	ctx context.Context,
+	userId string,
+) error {
+	years, err := s.db.GetUserStatsYears(ctx, database.GetUserStatsYearsParams{
+		UserId: userId,
+	})
+	if err != nil {
+		return userErr.Wrap("rebuild user reviews: get stats years", err)
+	}
+
+	for _, year := range years {
+		err = s.GenerateUserReview(ctx, GenerateUserReviewParams{
+			UserId: userId,
+			Year:   year,
+		})
+		if err != nil {
+			return userErr.Wrap(
+				"rebuild user reviews: generate year "+strconv.Itoa(year), err)
+		}
+	}
+
+	err = s.GenerateUserTotalReview(ctx, userId)
+	if err != nil {
+		return userErr.Wrap("rebuild user reviews: total", err)
+	}
+
+	return nil
 }
 
 func (s *UserService) GenerateUserReview(

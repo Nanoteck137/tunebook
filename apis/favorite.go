@@ -147,6 +147,11 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 					return nil, handleTrackServiceErrors(err)
 				}
 
+				// Favorite state is joined against every year's play
+				// history at generation time, so this can have changed
+				// reviews other than the current one.
+				dispatchReviewAll(ctx, app, user.Id)
+
 				return nil, nil
 			},
 		},
@@ -173,6 +178,8 @@ func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, handleTrackServiceErrors(err)
 				}
+
+				dispatchReviewAll(ctx, app, user.Id)
 
 				return nil, nil
 			},

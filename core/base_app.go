@@ -264,6 +264,7 @@ func (app *BaseApp) Bootstrap() error {
 		tasks.NewCacheCleanupTask(app.jobService),
 		tasks.NewLibraryCleanupTask(app.jobService),
 		tasks.NewJobsCleanupTask(app.jobService),
+		tasks.NewUserReviewRebuildTask(app.userService, app.jobService),
 		tasks.NewTestTask(app.jobService),
 	}
 
@@ -284,6 +285,9 @@ func (app *BaseApp) Bootstrap() error {
 		jobs.NewGeneratePlaylistImageJob(app.playlistService),
 		jobs.NewUserStatsUpdateJob(app.userService),
 		jobs.NewUserTrackStatsRebuildJob(app.userService),
+		jobs.NewUserReviewGenerateJob(app.userService),
+		jobs.NewUserReviewGenerateTotalJob(app.userService),
+		jobs.NewUserReviewRebuildJob(app.userService),
 		jobs.NewTestJob(),
 	}
 
