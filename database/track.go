@@ -35,6 +35,8 @@ type Track struct {
 	Number   sql.NullInt64 `db:"number"`
 	Year     sql.NullInt64 `db:"year"`
 
+	AlbumPosition int64 `db:"album_position"`
+
 	AlbumName     string         `db:"album_name"`
 	AlbumCoverArt sql.NullString `db:"album_cover_art"`
 
@@ -135,6 +137,8 @@ func TrackQuery() *goqu.SelectDataset {
 			tracksTbl.Col("duration"),
 			tracksTbl.Col("year"),
 
+			tracksTbl.Col("album_position"),
+
 			tracksTbl.Col("created"),
 			tracksTbl.Col("updated"),
 
@@ -175,6 +179,8 @@ type CreateTrackParams struct {
 	Number   sql.NullInt64
 	Year     sql.NullInt64
 
+	AlbumPosition int64
+
 	Created int64
 	Updated int64
 }
@@ -209,6 +215,8 @@ func (db DB) CreateTrack(
 		"number":   params.Number,
 		"year":     params.Year,
 
+		"album_position": params.AlbumPosition,
+
 		"created": params.Created,
 		"updated": params.Updated,
 	})
@@ -235,6 +243,8 @@ type TrackChanges struct {
 	Number   Change[sql.NullInt64]
 	Year     Change[sql.NullInt64]
 
+	AlbumPosition Change[int64]
+
 	Created Change[int64]
 }
 
@@ -257,6 +267,8 @@ func (db DB) UpdateTrack(
 	addToRecord(record, "duration", changes.Duration)
 	addToRecord(record, "number", changes.Number)
 	addToRecord(record, "year", changes.Year)
+
+	addToRecord(record, "album_position", changes.AlbumPosition)
 
 	addToRecord(record, "created", changes.Created)
 
@@ -391,8 +403,7 @@ func (db DB) GetTrackIdsByAlbum(
 
 	// Apply default album track ordering
 	query = query.Order(
-		tracksTbl.Col("number").Asc().NullsLast(),
-		tracksTbl.Col("name").Asc(),
+		tracksTbl.Col("album_position").Asc(),
 	)
 
 	return Multiple[string](db, ctx, query)
@@ -514,8 +525,7 @@ func (db DB) GetTracksByAlbum(
 
 	if params.Sort == "" {
 		query = query.Order(
-			tracksTbl.Col("number").Asc().NullsLast(),
-			tracksTbl.Col("name").Asc(),
+			tracksTbl.Col("album_position").Asc(),
 		)
 	}
 

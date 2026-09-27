@@ -709,6 +709,7 @@ func (s *LibraryService) createTrack(
 			Int64: entry.Year,
 			Valid: entry.Year != 0,
 		},
+		AlbumPosition: entry.AlbumPosition,
 	})
 	if err != nil {
 		return fmt.Errorf("create track: %w", err)
@@ -805,6 +806,11 @@ func (s *LibraryService) buildTrackChanges(
 			Valid: entry.Year != 0,
 		},
 		Changed: entry.Year != dbTrack.Year.Int64,
+	}
+
+	changes.AlbumPosition = database.Change[int64]{
+		Value:   entry.AlbumPosition,
+		Changed: entry.AlbumPosition != dbTrack.AlbumPosition,
 	}
 
 	return changes, nil
