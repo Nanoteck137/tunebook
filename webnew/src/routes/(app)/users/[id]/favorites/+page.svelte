@@ -70,12 +70,24 @@
 		goto("?" + query.toString(), { invalidateAll: true });
 	}
 
+	// The ad-hoc half of the filter (just the text search). Sent alongside
+	// filterId so the queue matches the tracks the list is actually showing:
+	// the backend ANDs the two.
+	let searchFilter = $derived.by(() => {
+		if (data.filter.query === "") return "";
+
+		const query: Record<string, string> = {};
+		constructFilterSort({ ...data.filter, sort: defaultSort }, query);
+		return query["filter"] ?? "";
+	});
+
 	function play(shuffle = false) {
 		return musicManager.queueRequest(
 			{
 				type: "addFavorites",
 				userId: data.userData.id,
 				filterId: filterId ?? undefined,
+				filter: searchFilter,
 			},
 			{ shuffle },
 		);
@@ -192,6 +204,7 @@
 						type: "addFavorites",
 						userId: data.userData.id,
 						filterId: filterId ?? undefined,
+						filter: searchFilter,
 					},
 					{ queueIndexToTrackId: trackId },
 				);

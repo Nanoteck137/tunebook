@@ -58,6 +58,7 @@ type GetQueueItem struct {
 
 type AddToQueue struct {
 	FilterId            string  `json:"filterId,omitempty"`
+	Filter              string  `json:"filter,omitempty"`
 	Position            string  `json:"position"`
 	Shuffle             bool    `json:"shuffle,omitempty"`
 	CurrentIndex        *int    `json:"currentIndex,omitempty"`
@@ -278,6 +279,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						UserId:              user.Id,
 						AlbumId:             c.Param("albumId"),
 						FilterId:            body.FilterId,
+						Filter:              body.Filter,
 						Position:            body.Position,
 						Shuffle:             body.Shuffle,
 						CurrentIndex:        currentIndex,
@@ -327,6 +329,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						UserId:              user.Id,
 						ArtistId:            c.Param("artistId"),
 						FilterId:            body.FilterId,
+						Filter:              body.Filter,
 						Position:            body.Position,
 						Shuffle:             body.Shuffle,
 						CurrentIndex:        currentIndex,
@@ -376,6 +379,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						UserId:              user.Id,
 						PlaylistId:          c.Param("playlistId"),
 						FilterId:            body.FilterId,
+						Filter:              body.Filter,
 						Position:            body.Position,
 						Shuffle:             body.Shuffle,
 						CurrentIndex:        currentIndex,
@@ -425,6 +429,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						UserId:              user.Id,
 						FavoriteUserId:      c.Param("userId"),
 						FilterId:            body.FilterId,
+						Filter:              body.Filter,
 						Position:            body.Position,
 						Shuffle:             body.Shuffle,
 						CurrentIndex:        currentIndex,
@@ -474,6 +479,7 @@ func InstallQueueHandlers(app core.App, group pyrin.Group) {
 						UserId:              user.Id,
 						TrackIds:            body.TrackIds,
 						FilterId:            body.FilterId,
+						Filter:              body.Filter,
 						Position:            body.Position,
 						Shuffle:             body.Shuffle,
 						CurrentIndex:        currentIndex,

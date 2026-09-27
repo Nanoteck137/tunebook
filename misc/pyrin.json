@@ -10,6 +10,11 @@
           "omitEmpty": true
         },
         {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
           "name": "position",
           "type": "string",
           "omitEmpty": false
@@ -40,6 +45,11 @@
           "omitEmpty": true
         },
         {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
           "name": "position",
           "type": "string",
           "omitEmpty": false
@@ -66,6 +76,11 @@
       "fields": [
         {
           "name": "filterId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "filter",
           "type": "string",
           "omitEmpty": true
         },
@@ -110,6 +125,11 @@
           "omitEmpty": true
         },
         {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
           "name": "position",
           "type": "string",
           "omitEmpty": false
@@ -140,6 +160,11 @@
           "omitEmpty": true
         },
         {
+          "name": "filter",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
           "name": "position",
           "type": "string",
           "omitEmpty": false
@@ -166,6 +191,11 @@
       "fields": [
         {
           "name": "filterId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "filter",
           "type": "string",
           "omitEmpty": true
         },

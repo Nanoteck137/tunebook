@@ -7,6 +7,7 @@ import (
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/broker"
+	"github.com/nanoteck137/tunebook/tools/query"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
 )
@@ -60,7 +61,12 @@ func (s *TrackService) GetTracks(
 			return nil, types.Page{}, trackErr.Wrap("get filter", err)
 		}
 
-		params.Query.Filter = dbFilter.Filter
+		combined, err := query.AndFilters(dbFilter.Filter, params.Query.Filter)
+		if err != nil {
+			return nil, types.Page{}, trackErr.Wrap("combine filter", err)
+		}
+
+		params.Query.Filter = combined
 	}
 
 	tracks, page, err := s.db.GetTracks(ctx, database.GetTracksParams{
@@ -96,7 +102,16 @@ func (s *TrackService) GetFavoriteTracks(
 	if params.FilterId != "" {
 		dbFilter, err := s.db.GetTrackFilterById(ctx, params.FilterId)
 		if err == nil {
-			params.Query.Filter = dbFilter.Filter
+			combined, err := query.AndFilters(
+				dbFilter.Filter,
+				params.Query.Filter,
+			)
+			if err != nil {
+				return nil, types.Page{}, trackErr.Wrap(
+					"combine filter", err)
+			}
+
+			params.Query.Filter = combined
 		}
 	}
 

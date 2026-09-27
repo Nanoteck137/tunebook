@@ -117,10 +117,21 @@
 		selectedTracks = scroll.items.map((track) => track.id);
 	}
 
+	// The ad-hoc half of the filter (just the text search). Sent alongside
+	// filterId so the queue matches the tracks the list is actually showing:
+	// the backend ANDs the two.
+	let searchFilter = $derived.by(() => {
+		if (data.filter.query === "") return "";
+
+		const query: Record<string, string> = {};
+		constructFilterSort({ ...data.filter, sort: defaultSort }, query);
+		return query["filter"] ?? "";
+	});
+
 	async function playTracks(options: { shuffle?: boolean } = {}) {
 		if (filterId) {
 			await musicManager.queueRequest(
-				{ type: "addFilter", filterId },
+				{ type: "addFilter", filterId, filter: searchFilter },
 				options,
 			);
 		} else {

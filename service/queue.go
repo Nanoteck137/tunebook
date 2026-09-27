@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/nanoteck137/tunebook/database"
+	"github.com/nanoteck137/tunebook/tools/query"
 	"github.com/nanoteck137/tunebook/types"
 )
 
@@ -326,12 +327,16 @@ func (s *QueueService) AddItems(
 	return nil
 }
 
+// resolveFilter turns a saved filter id into a filter expression, ANDing it
+// with any ad-hoc filter supplied by the caller. Passing an empty filterId
+// still returns the ad-hoc filter, so callers do not need to special-case it.
 func (s *QueueService) resolveFilter(
 	ctx context.Context,
 	filterId string,
+	additional string,
 ) (string, error) {
 	if filterId == "" {
-		return "", nil
+		return additional, nil
 	}
 
 	filter, err := s.db.GetTrackFilterById(ctx, filterId)
@@ -343,7 +348,12 @@ func (s *QueueService) resolveFilter(
 		return "", queueErr.Wrap("get track filter", err)
 	}
 
-	return filter.Filter, nil
+	combined, err := query.AndFilters(filter.Filter, additional)
+	if err != nil {
+		return "", queueErr.Wrap("combine track filter", err)
+	}
+
+	return combined, nil
 }
 
 type addToPositionParams struct {
@@ -387,6 +397,7 @@ type AddAlbumToQueueParams struct {
 	UserId              string
 	AlbumId             string
 	FilterId            string
+	Filter              string
 	Position            string
 	Shuffle             bool
 	CurrentIndex        int
@@ -397,7 +408,7 @@ func (s *QueueService) AddAlbumToQueue(
 	ctx context.Context,
 	params AddAlbumToQueueParams,
 ) error {
-	filterStr, err := s.resolveFilter(ctx, params.FilterId)
+	filterStr, err := s.resolveFilter(ctx, params.FilterId, params.Filter)
 	if err != nil {
 		return err
 	}
@@ -433,6 +444,7 @@ type AddArtistToQueueParams struct {
 	UserId              string
 	ArtistId            string
 	FilterId            string
+	Filter              string
 	Position            string
 	Shuffle             bool
 	CurrentIndex        int
@@ -443,7 +455,7 @@ func (s *QueueService) AddArtistToQueue(
 	ctx context.Context,
 	params AddArtistToQueueParams,
 ) error {
-	filterStr, err := s.resolveFilter(ctx, params.FilterId)
+	filterStr, err := s.resolveFilter(ctx, params.FilterId, params.Filter)
 	if err != nil {
 		return err
 	}
@@ -479,6 +491,7 @@ type AddPlaylistToQueueParams struct {
 	UserId              string
 	PlaylistId          string
 	FilterId            string
+	Filter              string
 	Position            string
 	Shuffle             bool
 	CurrentIndex        int
@@ -489,7 +502,7 @@ func (s *QueueService) AddPlaylistToQueue(
 	ctx context.Context,
 	params AddPlaylistToQueueParams,
 ) error {
-	filterStr, err := s.resolveFilter(ctx, params.FilterId)
+	filterStr, err := s.resolveFilter(ctx, params.FilterId, params.Filter)
 	if err != nil {
 		return err
 	}
@@ -525,6 +538,7 @@ type AddFavoritesToQueueParams struct {
 	UserId              string
 	FavoriteUserId      string
 	FilterId            string
+	Filter              string
 	Position            string
 	Shuffle             bool
 	CurrentIndex        int
@@ -535,7 +549,7 @@ func (s *QueueService) AddFavoritesToQueue(
 	ctx context.Context,
 	params AddFavoritesToQueueParams,
 ) error {
-	filterStr, err := s.resolveFilter(ctx, params.FilterId)
+	filterStr, err := s.resolveFilter(ctx, params.FilterId, params.Filter)
 	if err != nil {
 		return err
 	}
@@ -571,6 +585,7 @@ type AddTracksToQueueParams struct {
 	UserId              string
 	TrackIds            []string
 	FilterId            string
+	Filter              string
 	Position            string
 	Shuffle             bool
 	CurrentIndex        int
@@ -584,7 +599,7 @@ func (s *QueueService) AddTracksToQueue(
 	trackIds := params.TrackIds
 
 	if params.FilterId != "" {
-		filterStr, err := s.resolveFilter(ctx, params.FilterId)
+		filterStr, err := s.resolveFilter(ctx, params.FilterId, params.Filter)
 		if err != nil {
 			return err
 		}

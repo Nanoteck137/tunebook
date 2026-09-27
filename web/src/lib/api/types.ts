@@ -5,6 +5,8 @@ import { z } from "zod";
 export const AddAlbumToQueueBody = z.object({
   // Name: AddAlbumToQueueBody.filterId
   "filterId": z.string().optional(),
+  // Name: AddAlbumToQueueBody.filter
+  "filter": z.string().optional(),
   // Name: AddAlbumToQueueBody.position
   "position": z.string(),
   // Name: AddAlbumToQueueBody.shuffle
@@ -20,6 +22,8 @@ export type AddAlbumToQueueBody = z.infer<typeof AddAlbumToQueueBody>;
 export const AddArtistToQueueBody = z.object({
   // Name: AddArtistToQueueBody.filterId
   "filterId": z.string().optional(),
+  // Name: AddArtistToQueueBody.filter
+  "filter": z.string().optional(),
   // Name: AddArtistToQueueBody.position
   "position": z.string(),
   // Name: AddArtistToQueueBody.shuffle
@@ -35,6 +39,8 @@ export type AddArtistToQueueBody = z.infer<typeof AddArtistToQueueBody>;
 export const AddFavoritesToQueueBody = z.object({
   // Name: AddFavoritesToQueueBody.filterId
   "filterId": z.string().optional(),
+  // Name: AddFavoritesToQueueBody.filter
+  "filter": z.string().optional(),
   // Name: AddFavoritesToQueueBody.position
   "position": z.string(),
   // Name: AddFavoritesToQueueBody.shuffle
@@ -57,6 +63,8 @@ export type AddItemToPlaylistBody = z.infer<typeof AddItemToPlaylistBody>;
 export const AddPlaylistToQueueBody = z.object({
   // Name: AddPlaylistToQueueBody.filterId
   "filterId": z.string().optional(),
+  // Name: AddPlaylistToQueueBody.filter
+  "filter": z.string().optional(),
   // Name: AddPlaylistToQueueBody.position
   "position": z.string(),
   // Name: AddPlaylistToQueueBody.shuffle
@@ -72,6 +80,8 @@ export type AddPlaylistToQueueBody = z.infer<typeof AddPlaylistToQueueBody>;
 export const AddToQueue = z.object({
   // Name: AddToQueue.filterId
   "filterId": z.string().optional(),
+  // Name: AddToQueue.filter
+  "filter": z.string().optional(),
   // Name: AddToQueue.position
   "position": z.string(),
   // Name: AddToQueue.shuffle
@@ -87,6 +97,8 @@ export type AddToQueue = z.infer<typeof AddToQueue>;
 export const AddTracksToQueueBody = z.object({
   // Name: AddTracksToQueueBody.filterId
   "filterId": z.string().optional(),
+  // Name: AddTracksToQueueBody.filter
+  "filter": z.string().optional(),
   // Name: AddTracksToQueueBody.position
   "position": z.string(),
   // Name: AddTracksToQueueBody.shuffle

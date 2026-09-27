@@ -548,9 +548,19 @@ export class MusicManager {
 		request:
 			| { type: "addArtist"; artistId: string }
 			| { type: "addAlbum"; albumId: string }
-			| { type: "addPlaylist"; playlistId: string; filterId?: string }
-			| { type: "addFavorites"; userId: string; filterId?: string }
-			| { type: "addFilter"; filterId: string },
+			| {
+					type: "addPlaylist";
+					playlistId: string;
+					filterId?: string;
+					filter?: string;
+			  }
+			| {
+					type: "addFavorites";
+					userId: string;
+					filterId?: string;
+					filter?: string;
+			  }
+			| { type: "addFilter"; filterId: string; filter?: string },
 		options: {
 			shuffle?: boolean;
 			append?: "back";
@@ -592,14 +602,14 @@ export class MusicManager {
 				res = await this.apiClient.addPlaylistToQueue(
 					this.#deviceId,
 					request.playlistId,
-					{ ...body, filterId: request.filterId },
+					{ ...body, filterId: request.filterId, filter: request.filter },
 				);
 				break;
 			case "addFavorites":
 				res = await this.apiClient.addFavoritesToQueue(
 					this.#deviceId,
 					request.userId,
-					{ ...body, filterId: request.filterId },
+					{ ...body, filterId: request.filterId, filter: request.filter },
 				);
 				break;
 			case "addFilter":
@@ -607,6 +617,7 @@ export class MusicManager {
 					...body,
 					trackIds: [],
 					filterId: request.filterId,
+					filter: request.filter,
 				});
 				break;
 		}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/tools/broker"
+	"github.com/nanoteck137/tunebook/tools/query"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
 )
@@ -436,7 +437,13 @@ func (s *PlaylistService) GetPlaylistItems(
 				"get items: db get filter", err)
 		}
 
-		params.Query.Filter = filter.Filter
+		combined, err := query.AndFilters(filter.Filter, params.Query.Filter)
+		if err != nil {
+			return nil, types.Page{}, playlistErr.Wrap(
+				"get items: combine filter", err)
+		}
+
+		params.Query.Filter = combined
 	}
 
 	tracks, page, err := s.db.GetPlaylistTracks(
