@@ -275,11 +275,11 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	jobList := []service.Job{
-		jobs.NewLibrarySyncJob(app.libraryService),
+		jobs.NewLibrarySyncJob(app.libraryService, app.jobService),
 		jobs.NewSearchIndexJob(app.searchService),
 		jobs.NewAuthCleanupJob(app.authService),
 		jobs.NewCacheCleanupJob(app.filesystemService),
-		jobs.NewLibraryCleanupJob(app.libraryService),
+		jobs.NewLibraryCleanupJob(app.libraryService, app.jobService),
 		jobs.NewJobsCleanupJob(app.jobService),
 		jobs.NewGeneratePlaylistImageJob(app.playlistService),
 		jobs.NewUserStatsUpdateJob(app.userService),

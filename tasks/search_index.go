@@ -30,9 +30,8 @@ func (j *SearchIndexTask) Info() service.TaskInfo {
 }
 
 func (j *SearchIndexTask) Run(ctx context.Context) error {
-	return j.jobService.PushJob(
-		ctx,
-		jobs.SearchIndex,
-		nil,
-	)
+	// Shares the unique key with the post-sync and post-cleanup dispatches so
+	// a scheduled run cannot race a reindex that was just queued because the
+	// library changed.
+	return jobs.DispatchSearchIndex(ctx, j.jobService)
 }
