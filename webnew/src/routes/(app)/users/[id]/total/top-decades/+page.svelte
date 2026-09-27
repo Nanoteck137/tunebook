@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { CalendarRange } from "@lucide/svelte";
 	import type { RankedDecade } from "$lib/api/types";
-	import RankedItem from "../RankedItem.svelte";
+	import RankedItem from "$lib/components/RankedItem.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { Breadcrumb } from "$lib/components/ui";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
@@ -80,8 +80,8 @@
 			<CalendarRange size={32} class="text-muted-foreground/40" />
 			<p class="text-sm font-medium">No decades yet</p>
 			<p class="max-w-sm text-sm text-muted-foreground">
-				Decades ranked by play count will appear here once your all-time review is
-				generated.
+				Decades ranked by play count will appear here once your all-time review
+				is generated.
 			</p>
 		</div>
 	{/if}

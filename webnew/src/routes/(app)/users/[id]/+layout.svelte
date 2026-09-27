@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import {
-		BarChart3,
 		Calendar,
 		CalendarRange,
+		ChartColumn,
 		Heart,
-		History,
 		LayoutDashboard,
 		ListMusic,
+		RotateCcwClock,
 		Settings,
 	} from "@lucide/svelte";
 	import { Breadcrumb, Button } from "$lib/components/ui";
@@ -46,7 +46,7 @@
 			label: "Total",
 			href: `/users/${data.userData.id}/total`,
 			public: true,
-			icon: BarChart3,
+			icon: ChartColumn,
 			match: `/users/${data.userData.id}/total`,
 		},
 		{
@@ -65,7 +65,7 @@
 		{
 			label: "History",
 			href: `/users/${data.userData.id}/history`,
-			icon: History,
+			icon: RotateCcwClock,
 			match: `/users/${data.userData.id}/history`,
 		},
 		{

@@ -1,78 +1,101 @@
 <script lang="ts">
 	import { Music } from "@lucide/svelte";
-	import type { Track } from "$lib/api/types";
+	import type { RankedTrack } from "$lib/api/types";
+	import RankedItem from "$lib/components/RankedItem.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import { Breadcrumb } from "$lib/components/ui";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
+	import { getApiClient, handleApiError } from "$lib";
 
 	let { data } = $props();
+	const apiClient = getApiClient();
 
-	// TODO(patrik): Infinite scroll 
+	const scroll = new InfiniteScrollController<RankedTrack>({
+		initialLoad: () => ({
+			items: data.tracks,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (nextPage) => {
+			const res = await apiClient.getUserYearReviewTracks(
+				data.userData.id,
+				String(data.year),
+				{
+					query: {
+						page: String(nextPage),
+						perPage: String(data.page.perPage),
+					},
+				},
+			);
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
+			}
 
-	function trackArtistNames(track: Track): string {
-		return track.artists.map((a) => a.name).join(", ");
-	}
+			return {
+				items: res.data.tracks,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (track) => track.id,
+	});
 </script>
 
-<div class="flex flex-col gap-10">
-	<div
-		class="flex flex-col gap-2 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-6 sm:p-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
-	>
-		<p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-			<a href="/users/{data.userData.id}/review/{data.year}" class="hover:underline">
-				{data.year} in Review
-			</a>
-		</p>
+<div class="flex flex-col gap-4">
+	<Breadcrumb.Root>
+		<Breadcrumb.List>
+			<Breadcrumb.Item>
+				<Breadcrumb.Link href="/users/{data.userData.id}/review">
+					Year in Review
+				</Breadcrumb.Link>
+			</Breadcrumb.Item>
+			<Breadcrumb.Separator />
+			<Breadcrumb.Item>
+				<Breadcrumb.Link href="/users/{data.userData.id}/review/{data.year}">
+					{data.year}
+				</Breadcrumb.Link>
+			</Breadcrumb.Item>
+			<Breadcrumb.Separator />
+			<Breadcrumb.Item>
+				<Breadcrumb.Page>Top Tracks</Breadcrumb.Page>
+			</Breadcrumb.Item>
+		</Breadcrumb.List>
+	</Breadcrumb.Root>
 
-		<div class="flex items-center gap-3">
-			<h1 class="text-4xl font-bold md:text-5xl">Top Tracks</h1>
-			<span class="text-2xl font-bold text-muted-foreground">{data.year}</span>
+	<SectionHeader count={data.page.totalItems}>
+		<Music />
+		Top Tracks
+	</SectionHeader>
+
+	<p class="text-sm text-muted-foreground">
+		{data.page.totalItems.toLocaleString()}
+		{data.tracks.length === 1 ? "track" : "tracks"} ranked by plays
+	</p>
+
+	{#if data.page.totalItems > 0}
+		<InfiniteScroll controller={scroll} className="gap-2">
+			{#each scroll.items as item (item.id)}
+				<RankedItem
+					rank={item.rank}
+					name={item.name}
+					playCount={item.playCount}
+					href="/albums/{item.albumId}"
+					subtitle={item.artists.map((a) => a.name).join(", ")}
+					art={item.coverArt.small}
+				/>
+			{/each}
+		</InfiniteScroll>
+	{:else}
+		<div
+			class="flex flex-col items-center gap-2 rounded-lg border py-16 text-center"
+		>
+			<Music size={32} class="text-muted-foreground/40" />
+			<p class="text-sm font-medium">No top tracks yet</p>
+			<p class="max-w-sm text-sm text-muted-foreground">
+				tracks ranked by play count will appear here once your yearly review is
+				generated.
+			</p>
 		</div>
-
-		<p class="text-sm text-muted-foreground">
-			{data.page.totalItems.toLocaleString()}
-			{data.tracks.length === 1 ? "track" : "tracks"} ranked by plays
-		</p>
-	</div>
-
-	<section>
-		<div class="flex flex-col gap-2">
-			{#if data.tracks.length > 0}
-				{#each data.tracks as item (item.id)}
-					<a
-						href="/tracks/{item.id}"
-						class="flex items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:bg-accent"
-					>
-						<span
-							class="w-7 shrink-0 text-center text-sm font-bold text-muted-foreground"
-						>
-							{item.rank}
-						</span>
-						<img
-							src={item.coverArt.small}
-							alt=""
-							class="h-10 w-10 shrink-0 rounded object-cover"
-						/>
-						<span class="min-w-0 flex-1">
-							<span class="block truncate text-sm font-medium">
-								{item.name}
-							</span>
-							<span class="block truncate text-xs text-muted-foreground">
-								{trackArtistNames(item)}
-							</span>
-						</span>
-						<span class="shrink-0 text-xs text-muted-foreground">
-							{item.playCount.toLocaleString()} plays
-						</span>
-					</a>
-				{/each}
-			{:else}
-				<div
-					class="flex flex-col items-center gap-2 rounded-lg border bg-card p-8 text-center"
-				>
-					<Music class="size-6 text-muted-foreground" />
-					<p class="text-sm text-muted-foreground">
-						No tracks to show this year.
-					</p>
-				</div>
-			{/if}
-		</div>
-	</section>
+	{/if}
 </div>

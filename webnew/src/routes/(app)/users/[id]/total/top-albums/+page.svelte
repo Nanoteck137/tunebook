@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { DiscAlbum } from "@lucide/svelte";
 	import type { RankedAlbum } from "$lib/api/types";
-	import RankedItem from "../RankedItem.svelte";
+	import RankedItem from "$lib/components/RankedItem.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { Breadcrumb } from "$lib/components/ui";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
@@ -87,8 +87,8 @@
 			<DiscAlbum size={32} class="text-muted-foreground/40" />
 			<p class="text-sm font-medium">No top albums yet</p>
 			<p class="max-w-sm text-sm text-muted-foreground">
-				Albums ranked by play count will appear here once your all-time review is
-				generated.
+				Albums ranked by play count will appear here once your all-time review
+				is generated.
 			</p>
 		</div>
 	{/if}

@@ -1,90 +1,128 @@
 <script lang="ts">
 	import { DiscAlbum } from "@lucide/svelte";
-	import type { Album } from "$lib/api/types";
+	import type { RankedAlbum } from "$lib/api/types";
+	import RankedItem from "$lib/components/RankedItem.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import { Breadcrumb } from "$lib/components/ui";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
+	import { getApiClient, handleApiError } from "$lib";
 
 	let { data } = $props();
-
-	// TODO(patrik): Infinite scroll 
+	const apiClient = getApiClient();
 
 	const monthNames = [
-		"January", "February", "March", "April", "May", "June",
-		"July", "August", "September", "October", "November", "December",
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
 	];
 
-	function albumArtistNames(album: Album): string {
-		return album.artists.map((a) => a.name).join(", ");
-	}
+	let monthName = $derived(monthNames[data.month - 1]);
+
+	const scroll = new InfiniteScrollController<RankedAlbum>({
+		initialLoad: () => ({
+			items: data.albums,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (nextPage) => {
+			const res = await apiClient.getUserYearReviewMonthAlbums(
+				data.userData.id,
+				String(data.year),
+				String(data.month),
+				{
+					query: {
+						page: String(nextPage),
+						perPage: String(data.page.perPage),
+					},
+				},
+			);
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
+			}
+
+			return {
+				items: res.data.albums,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (album) => album.id,
+	});
 </script>
 
-<div class="flex flex-col gap-10">
-	<div
-		class="flex flex-col gap-2 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-6 sm:p-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
-	>
-		<p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-			<a href="/users/{data.userData.id}/review/{data.year}" class="hover:underline">
-				{data.year} in Review
-			</a>
-			&middot;
-			<a
-				href="/users/{data.userData.id}/review/{data.year}/months/{data.month}"
-				class="hover:underline"
-			>
-				{monthNames[data.month - 1]}
-			</a>
-		</p>
-
-		<div class="flex items-center gap-3">
-			<h1 class="text-4xl font-bold md:text-5xl">Top Albums</h1>
-			<span class="text-2xl font-bold text-muted-foreground">{data.year}</span>
-		</div>
-
-		<p class="text-sm text-muted-foreground">
-			{data.page.totalItems.toLocaleString()}
-			{data.albums.length === 1 ? "album" : "albums"} ranked by plays
-		</p>
-	</div>
-
-	<section>
-		<div class="flex flex-col gap-2">
-			{#if data.albums.length > 0}
-				{#each data.albums as item (item.id)}
-					<a
-						href="/albums/{item.id}"
-						class="flex items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:bg-accent"
-					>
-						<span
-							class="w-7 shrink-0 text-center text-sm font-bold text-muted-foreground"
-						>
-							{item.rank}
-						</span>
-						<img
-							src={item.coverArt.small}
-							alt=""
-							class="h-10 w-10 shrink-0 rounded object-cover"
-						/>
-						<span class="min-w-0 flex-1">
-							<span class="block truncate text-sm font-medium">
-								{item.name}
-							</span>
-							<span class="block truncate text-xs text-muted-foreground">
-								{albumArtistNames(item)}
-							</span>
-						</span>
-						<span class="shrink-0 text-xs text-muted-foreground">
-							{item.playCount.toLocaleString()} plays
-						</span>
-					</a>
-				{/each}
-			{:else}
-				<div
-					class="flex flex-col items-center gap-2 rounded-lg border bg-card p-8 text-center"
+<div class="flex flex-col gap-4">
+	<Breadcrumb.Root>
+		<Breadcrumb.List>
+			<Breadcrumb.Item>
+				<Breadcrumb.Link href="/users/{data.userData.id}/review">
+					Year in Review
+				</Breadcrumb.Link>
+			</Breadcrumb.Item>
+			<Breadcrumb.Separator />
+			<Breadcrumb.Item>
+				<Breadcrumb.Link href="/users/{data.userData.id}/review/{data.year}">
+					{data.year}
+				</Breadcrumb.Link>
+			</Breadcrumb.Item>
+			<Breadcrumb.Separator />
+			<Breadcrumb.Item>
+				<Breadcrumb.Link
+					href="/users/{data.userData
+						.id}/review/{data.year}/months/{data.month}"
 				>
-					<DiscAlbum class="size-6 text-muted-foreground" />
-					<p class="text-sm text-muted-foreground">
-						No albums to show this month.
-					</p>
-				</div>
-			{/if}
+					{monthName}
+				</Breadcrumb.Link>
+			</Breadcrumb.Item>
+			<Breadcrumb.Separator />
+			<Breadcrumb.Item>
+				<Breadcrumb.Page>Top Albums</Breadcrumb.Page>
+			</Breadcrumb.Item>
+		</Breadcrumb.List>
+	</Breadcrumb.Root>
+
+	<SectionHeader count={data.page.totalItems}>
+		<DiscAlbum />
+		Top Albums
+	</SectionHeader>
+
+	<p class="text-sm text-muted-foreground">
+		{data.page.totalItems.toLocaleString()}
+		{data.albums.length === 1 ? "album" : "albums"} ranked by plays
+	</p>
+
+	{#if data.page.totalItems > 0}
+		<InfiniteScroll controller={scroll} className="gap-2">
+			{#each scroll.items as item (item.id)}
+				<RankedItem
+					rank={item.rank}
+					name={item.name}
+					playCount={item.playCount}
+					href="/albums/{item.id}"
+					subtitle={item.artists.map((a) => a.name).join(", ")}
+					art={item.coverArt.small}
+				/>
+			{/each}
+		</InfiniteScroll>
+	{:else}
+		<div
+			class="flex flex-col items-center gap-2 rounded-lg border py-16 text-center"
+		>
+			<DiscAlbum size={32} class="text-muted-foreground/40" />
+			<p class="text-sm font-medium">No top albums yet</p>
+			<p class="max-w-sm text-sm text-muted-foreground">
+				albums ranked by play count will appear here once your monthly review
+				is generated.
+			</p>
 		</div>
-	</section>
+	{/if}
 </div>

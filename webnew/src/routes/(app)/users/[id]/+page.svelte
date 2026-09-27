@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import {
-		BarChart3,
+		ChartColumn,
 		Clock,
 		DiscAlbum,
 		Heart,
@@ -14,7 +14,7 @@
 		User,
 	} from "@lucide/svelte";
 	import TopTrackItem from "$lib/components/track-list/TopTrackItem.svelte";
-	import { DropdownMenu, buttonVariants } from "$lib/components/ui";
+	import { DropdownMenu } from "$lib/components/ui";
 	import { formatPlayTime } from "$lib/utils";
 	import { getFavorites } from "$lib/favorites.svelte";
 	import { getQuickPlaylist } from "$lib/quick-playlist.svelte";
@@ -214,7 +214,7 @@
 	{#if recentReviews.length > 0}
 		<section>
 			<SectionHeader viewAllHref="/users/{data.userData.id}/review">
-				<BarChart3 />
+				<ChartColumn />
 				Year in Review
 			</SectionHeader>
 

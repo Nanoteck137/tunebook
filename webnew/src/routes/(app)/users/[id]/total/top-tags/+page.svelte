@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Tags } from "@lucide/svelte";
 	import type { RankedTag } from "$lib/api/types";
-	import RankedItem from "../RankedItem.svelte";
+	import RankedItem from "$lib/components/RankedItem.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import { Breadcrumb } from "$lib/components/ui";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";

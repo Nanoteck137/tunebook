@@ -17,7 +17,9 @@
 </script>
 
 {#snippet row()}
-	<span class="w-7 shrink-0 text-center text-sm font-bold text-muted-foreground">
+	<span
+		class="w-7 shrink-0 text-center text-sm font-bold text-muted-foreground"
+	>
 		{rank}
 	</span>
 	{#if art}

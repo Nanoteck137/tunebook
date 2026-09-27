@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { Activity, CalendarDays, ChevronLeft, ChevronRight, Heart } from "@lucide/svelte";
+	import {
+		Activity,
+		CalendarDays,
+		ChevronLeft,
+		ChevronRight,
+		Heart,
+	} from "@lucide/svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 	import { Breadcrumb, Button } from "$lib/components/ui";
@@ -69,11 +75,9 @@
 					variant="ghost"
 					size="icon-sm"
 					disabled={data.monthNum <= 1}
-					href={
-						data.monthNum > 1
-							? `/users/${data.userData.id}/total/months/${data.monthNum - 1}`
-							: undefined
-					}
+					href={data.monthNum > 1
+						? `/users/${data.userData.id}/total/months/${data.monthNum - 1}`
+						: undefined}
 					aria-label="Previous month"
 				>
 					<ChevronLeft />
@@ -82,11 +86,9 @@
 					variant="ghost"
 					size="icon-sm"
 					disabled={data.monthNum >= 12}
-					href={
-						data.monthNum < 12
-							? `/users/${data.userData.id}/total/months/${data.monthNum + 1}`
-							: undefined
-					}
+					href={data.monthNum < 12
+						? `/users/${data.userData.id}/total/months/${data.monthNum + 1}`
+						: undefined}
 					aria-label="Next month"
 				>
 					<ChevronRight />
@@ -165,8 +167,8 @@
 			<CalendarDays size={32} class="text-muted-foreground/40" />
 			<p class="text-sm font-medium">No listening data for {monthName}</p>
 			<p class="max-w-sm text-sm text-muted-foreground">
-				This month has no plays in your all-time review. Use the arrows to browse
-				the other months.
+				This month has no plays in your all-time review. Use the arrows to
+				browse the other months.
 			</p>
 		</div>
 	{/if}
