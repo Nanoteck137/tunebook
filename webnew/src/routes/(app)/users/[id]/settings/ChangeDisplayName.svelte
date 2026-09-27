@@ -7,8 +7,11 @@
 	import { zod4 } from "sveltekit-superforms/adapters";
 	import { defaults, superForm } from "sveltekit-superforms/client";
 	import { z } from "zod";
+	import { untrack } from "svelte";
 	import Spinner from "$lib/components/Spinner.svelte";
 	import { toast } from "svelte-sonner";
+
+	let { currentName }: { currentName: string } = $props();
 
 	const Schema = z.object({
 		displayName: z.string().min(1),
@@ -16,7 +19,11 @@
 
 	const apiClient = getApiClient();
 
-	const f = superForm(defaults(zod4(Schema)), {
+	// Seeded once on mount. Reseeding on every revalidation would discard
+	// whatever the user has typed but not yet submitted.
+	const initialName = untrack(() => currentName);
+
+	const f = superForm(defaults({ displayName: initialName }, zod4(Schema)), {
 		id: "change-display-name",
 		SPA: true,
 		validators: zod4(Schema),
@@ -53,7 +60,10 @@
 	</FormItem>
 
 	<div>
-		<Button type="submit" disabled={$submitting}>
+		<Button
+			type="submit"
+			disabled={$submitting || $form.displayName.trim() === currentName}
+		>
 			Update
 			{#if $submitting}
 				<Spinner />

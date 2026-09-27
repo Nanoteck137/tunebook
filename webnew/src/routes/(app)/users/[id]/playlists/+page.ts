@@ -1,15 +1,22 @@
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
+import { FullFilter, constructFilterSort } from "../../../playlists/types";
 
-export const load: PageLoad = async ({ parent, params }) => {
+export const load: PageLoad = async ({ parent, params, url }) => {
 	const data = await parent();
 
-	const res = await data.apiClient.getPlaylists({
-		query: {
-			filter: `ownerId = "${params.id}"`,
-			sort: "position",
-		},
+	const query: Record<string, string> = {};
+
+	const filter = FullFilter.parse({
+		query: url.searchParams.get("query") ?? "",
+		sort: url.searchParams.get("sort") ?? undefined,
+		filters: {},
+		excludes: {},
 	});
+
+	constructFilterSort(filter, query, params.id);
+
+	const res = await data.apiClient.getPlaylists({ query });
 	if (!res.success) {
 		throw error(res.error.code, { message: res.error.message });
 	}
@@ -18,5 +25,6 @@ export const load: PageLoad = async ({ parent, params }) => {
 		...data,
 		page: res.data.page,
 		playlists: res.data.playlists,
+		filter,
 	};
 };

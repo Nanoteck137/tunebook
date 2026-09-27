@@ -7,7 +7,7 @@
 		children,
 	}: {
 		class?: string;
-		children: Snippet;
+		children?: Snippet;
 	} = $props();
 </script>
 
@@ -17,5 +17,5 @@
 		className,
 	)}
 >
-	{@render children()}
+	{@render children?.()}
 </div>

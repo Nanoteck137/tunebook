@@ -7,6 +7,7 @@
 		LogOut,
 		MonitorIcon,
 		MoonIcon,
+		QrCode,
 		Search,
 		Server,
 		SunIcon,
@@ -29,11 +30,16 @@
 		initPlaylistModalManager,
 		showPlaylistModal,
 	} from "$lib/playlist-modal.svelte";
+	import {
+		initQuickCodeModalManager,
+		showQuickCodeModal,
+	} from "$lib/quick-code-modal.svelte";
 	import { isRoleAdmin } from "$lib/utils";
 	import { page } from "$app/state";
 	import { Button, buttonVariants, DropdownMenu } from "$lib/components/ui";
 	import { toast } from "svelte-sonner";
 	import PlaylistSelectorModal from "$lib/components/new-modals/PlaylistSelectorModal.svelte";
+	import QuickCodeModal from "$lib/components/new-modals/QuickCodeModal.svelte";
 	import { resetMode, setMode } from "mode-watcher";
 
 	let { children, data } = $props();
@@ -54,6 +60,8 @@
 	setFavorites(apiClient);
 
 	initPlaylistModalManager(apiClient);
+
+	initQuickCodeModalManager();
 
 	let quickPlaylist = setQuickPlaylist(apiClient);
 
@@ -89,6 +97,7 @@
 </svelte:head>
 
 <PlaylistSelectorModal />
+<QuickCodeModal />
 
 {#if data.user}
 	<header
@@ -244,6 +253,15 @@
 							>
 								<User />
 								Account
+							</DropdownMenu.Item>
+
+							<DropdownMenu.Item
+								onSelect={() => {
+									showQuickCodeModal();
+								}}
+							>
+								<QrCode />
+								Quick Code
 							</DropdownMenu.Item>
 
 							{#if isRoleAdmin(data.user.role)}

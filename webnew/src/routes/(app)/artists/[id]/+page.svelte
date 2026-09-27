@@ -33,7 +33,7 @@
 			<SectionHeader
 				count={data.userTopTrackPage?.totalItems ?? data.userTopTracks.length}
 				viewAllHref={data.user
-					? `/users/${data.user.id}/review/total/top-tracks`
+					? `/users/${data.user.id}/total/top-tracks`
 					: undefined}
 			>
 				<TrendingUp />

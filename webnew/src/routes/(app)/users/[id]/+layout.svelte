@@ -43,11 +43,11 @@
 			exact: true,
 		},
 		{
-			label: "Top",
-			href: `/users/${data.userData.id}/top`,
+			label: "Total",
+			href: `/users/${data.userData.id}/total`,
 			public: true,
 			icon: BarChart3,
-			match: `/users/${data.userData.id}/top`,
+			match: `/users/${data.userData.id}/total`,
 		},
 		{
 			label: "Playlists",

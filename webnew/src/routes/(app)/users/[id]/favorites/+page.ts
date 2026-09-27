@@ -1,18 +1,26 @@
-import type { TrackFilter } from "$lib/api/types";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
+import {
+	FullFilter,
+	constructFilterSort,
+} from "../../../library/favorites/types";
 
 export const load: PageLoad = async ({ parent, params, url }) => {
 	const data = await parent();
 
-	let filters: TrackFilter[] | null = null;
-	const res = await data.apiClient.getTrackFilters();
-	if (!res.success) {
-		throw error(res.error.code, { message: res.error.message });
+	const filters = await data.apiClient.getTrackFilters();
+	if (!filters.success) {
+		throw error(filters.error.code, { message: filters.error.message });
 	}
-	filters = res.data.filters;
 
 	const query: Record<string, string> = {};
+
+	const filter = FullFilter.parse({
+		query: url.searchParams.get("query") ?? "",
+		sort: url.searchParams.get("sort") ?? undefined,
+	});
+
+	constructFilterSort(filter, query);
 
 	const filterId = url.searchParams.get("filterId");
 	if (filterId) {
@@ -28,8 +36,9 @@ export const load: PageLoad = async ({ parent, params, url }) => {
 
 	return {
 		...data,
-		filters,
+		filters: filters.data.filters,
 		page: favorites.data.page,
 		tracks: favorites.data.items,
+		filter,
 	};
 };

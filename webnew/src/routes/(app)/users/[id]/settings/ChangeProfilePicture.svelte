@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from "$app/navigation";
 	import { getApiClient, handleApiError } from "$lib";
-	import Errors from "$lib/components/Errors.svelte";
-	import FormItem from "$lib/components/FormItem.svelte";
 	import { Button, Input, Label, Separator } from "$lib/components/ui";
 	import Spinner from "$lib/components/Spinner.svelte";
 	import { toast } from "svelte-sonner";
@@ -16,21 +14,32 @@
 
 	let pictureUrl = $state("");
 	let settingUrl = $state(false);
-	let urlError = $state("");
+
+	// Created in an effect rather than in a derived so the previous blob is
+	// always revoked. Building it in a derived leaked one object URL per
+	// recompute and never released any of them.
+	let objectUrl: string | null = $state(null);
+
+	$effect(() => {
+		if (!selectedFile) {
+			objectUrl = null;
+			return;
+		}
+
+		const url = URL.createObjectURL(selectedFile);
+		objectUrl = url;
+
+		return () => URL.revokeObjectURL(url);
+	});
 
 	let previewUrl = $derived(
-		selectedFile
-			? URL.createObjectURL(selectedFile)
-			: pictureUrl
-				? pictureUrl
-				: currentPicture,
+		objectUrl ?? (pictureUrl.trim() || currentPicture),
 	);
 
 	async function handleUpload() {
 		if (!selectedFile) return;
 
 		uploading = true;
-		urlError = "";
 
 		const formData = new FormData();
 		formData.append("image", selectedFile);
@@ -49,12 +58,11 @@
 	}
 
 	async function handleSetUrl() {
-		if (!pictureUrl) return;
+		if (!pictureUrl.trim()) return;
 
 		settingUrl = true;
-		urlError = "";
 
-		const res = await apiClient.updateMe({ pictureUrl });
+		const res = await apiClient.updateMe({ pictureUrl: pictureUrl.trim() });
 		if (!res.success) {
 			handleApiError(res.error);
 			settingUrl = false;
@@ -69,18 +77,21 @@
 </script>
 
 <div class="flex items-center gap-4">
-	<img class="h-16 w-16 rounded-full object-cover" src={previewUrl} alt="" />
+	<img
+		class="h-16 w-16 shrink-0 rounded-full object-cover ring-1 ring-border"
+		src={previewUrl}
+		alt=""
+	/>
 
-	<div class="flex flex-col gap-2">
+	<div class="flex min-w-0 flex-col gap-2">
 		<Input
 			type="file"
 			accept="image/png,image/jpeg"
+			class="max-w-sm"
 			onchange={(e) => {
 				const file = (e.target as HTMLInputElement).files?.[0];
-				if (file) {
-					selectedFile = file;
-					pictureUrl = "";
-				}
+				selectedFile = file;
+				pictureUrl = "";
 			}}
 		/>
 
@@ -95,11 +106,11 @@
 	</div>
 </div>
 
-<Separator class="my-4" />
+<Separator class="my-1" />
 
-<div class="flex flex-col gap-4">
-	<FormItem>
-		<Label for="pictureUrl">Image URL</Label>
+<div class="flex flex-col gap-2">
+	<Label for="pictureUrl">Or set from URL</Label>
+	<div class="flex flex-col gap-2 sm:flex-row">
 		<Input
 			id="pictureUrl"
 			type="url"
@@ -108,14 +119,14 @@
 			bind:value={pictureUrl}
 			oninput={() => {
 				selectedFile = undefined;
-				urlError = "";
 			}}
 		/>
-		<Errors errors={urlError ? [urlError] : undefined} />
-	</FormItem>
 
-	<div>
-		<Button onclick={handleSetUrl} disabled={!pictureUrl || settingUrl}>
+		<Button
+			variant="outline"
+			onclick={handleSetUrl}
+			disabled={!pictureUrl.trim() || settingUrl}
+		>
 			Set from URL
 			{#if settingUrl}
 				<Spinner />

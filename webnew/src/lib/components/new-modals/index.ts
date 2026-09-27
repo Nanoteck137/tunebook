@@ -9,3 +9,4 @@ export interface Modal<T> {
 }
 
 export { default as PlaylistSelectorModal } from "./PlaylistSelectorModal.svelte";
+export { default as QuickCodeModal } from "./QuickCodeModal.svelte";

@@ -1,16 +1,27 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { EllipsisVertical, Play, Shuffle, X } from "@lucide/svelte";
-	import { Button, buttonVariants, DropdownMenu } from "$lib/components/ui";
+	import { onMount } from "svelte";
+	import { Heart, Play, Shuffle } from "@lucide/svelte";
+	import { Button } from "$lib/components/ui";
 	import { getMusicManager } from "$lib/music-manager.svelte";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Track } from "$lib/api/types";
 	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
 	import TrackList from "$lib/components/track-list/TrackList.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
+	import { SortToggleDropdown } from "$lib/components/sort";
+	import SavedFilterButton from "$lib/components/SavedFilterButton.svelte";
+	import SavedFilterCard from "$lib/components/SavedFilterCard.svelte";
+	import {
+		sortTypes,
+		defaultSort,
+		type SortType,
+		constructFilterSort,
+	} from "../../../library/favorites/types";
 	import Spacer from "$lib/components/Spacer.svelte";
-	// import FilterButton from "../../../tracks/FilterButton.svelte";
 
 	let { data } = $props();
 
@@ -19,21 +30,55 @@
 
 	let filterId = $derived(page.url.searchParams.get("filterId"));
 
-	function clearFilter() {
-		const query = page.url.searchParams;
-		query.delete("filterId");
-		goto("?" + query.toString(), {
+	let filterOpen = $state(false);
+
+	let value = $state("");
+
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
+		}
+
+		await goto("?" + params.toString(), {
 			invalidateAll: true,
+			keepFocus: true,
 			replaceState: true,
 		});
 	}
 
-	async function playAll() {
-		await musicManager.queueRequest({
-			type: "addFavorites",
-			userId: data.userData.id,
-			filterId: filterId ?? undefined,
-		});
+	let sort = $state(
+		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+	);
+
+	function updateSort(value: string) {
+		sort = value as SortType;
+
+		const query = page.url.searchParams;
+		query.delete("sort");
+
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
+
+		goto("?" + query.toString(), { invalidateAll: true });
+	}
+
+	function play(shuffle = false) {
+		return musicManager.queueRequest(
+			{
+				type: "addFavorites",
+				userId: data.userData.id,
+				filterId: filterId ?? undefined,
+			},
+			{ shuffle },
+		);
 	}
 
 	const scroll = new InfiniteScrollController<Track>({
@@ -47,6 +92,8 @@
 				page: String(nextPage),
 				perPage: String(data.page.perPage),
 			};
+
+			constructFilterSort(data.filter, query);
 
 			if (filterId) {
 				query["filterId"] = filterId;
@@ -67,93 +114,88 @@
 		},
 		itemKey: (track) => track.id,
 	});
+
+	let hasActiveFilter = $derived(
+		data.filter.query !== "" || filterId !== null,
+	);
 </script>
 
-<div class="flex flex-col gap-6">
-	<div
-		class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
-	>
-		<div class="flex min-w-0 flex-col gap-2">
-			<p
-				class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-			>
-				Favorites
-			</p>
+<div class="flex flex-col gap-4">
+	<SectionHeader count={data.page.totalItems}>
+		<Heart />
+		Favorites
 
-			<h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
-				{data.userData.displayName}
-			</h1>
-
-			<p class="text-sm text-muted-foreground">
-				{data.page.totalItems}
-				{data.page.totalItems === 1 ? "track" : "tracks"}
-			</p>
-
-			<div class="flex gap-2 pt-2">
-				<Button onclick={() => playAll()}>
+		{#snippet actions()}
+			<div class="flex items-center gap-2">
+				<Button size="sm" onclick={() => play()}>
 					<Play />
 					Play
 				</Button>
 				<Button
+					size="icon-sm"
 					variant="ghost"
-					size="icon"
-					onclick={async () => {
-						await musicManager.queueRequest(
-							{
-								type: "addFavorites",
-								userId: data.userData.id,
-								filterId: filterId ?? undefined,
-							},
-							{ shuffle: true },
-						);
-					}}
+					onclick={() => play(true)}
+					title="Shuffle play"
+					aria-label="Shuffle play"
 				>
 					<Shuffle />
 				</Button>
-				{#if filterId}
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger
-							class={buttonVariants({ variant: "ghost", size: "icon" })}
-						>
-							<EllipsisVertical />
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="start">
-							<DropdownMenu.Group>
-								<DropdownMenu.Item onSelect={clearFilter}>
-									<X />
-									Clear filter
-								</DropdownMenu.Item>
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-				{/if}
 			</div>
+		{/snippet}
+	</SectionHeader>
+
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<DebouncedSearchInput
+			class="flex-1 md:max-w-64"
+			placeholder="Search favorites..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
+
+		<div class="flex items-center gap-1">
+			<SavedFilterButton
+				bind:filterOpen
+				hasFilters={data.filters && data.filters.length > 0}
+			/>
+
+			<SortToggleDropdown
+				types={sortTypes}
+				{sort}
+				{defaultSort}
+				onSortChange={(value) => updateSort(value)}
+			/>
 		</div>
 	</div>
 
-	{#if data.filters && data.filters.length > 0}
-		<div class="flex flex-wrap items-center gap-2">
-			<!-- {#each data.filters as filter (filter.filterId)} -->
-			<!--   <FilterButton {filter} /> -->
-			<!-- {/each} -->
-		</div>
-	{/if}
+	<SavedFilterCard {filterOpen} filters={data.filters} />
 </div>
 
-<Spacer size="lg" />
+<Spacer size="md" />
 
 <InfiniteScroll controller={scroll}>
-	<TrackList
-		tracks={scroll.items}
-		onPlay={async (trackId) => {
-			await musicManager.queueRequest(
-				{
-					type: "addFavorites",
-					userId: data.userData.id,
-					filterId: filterId ?? undefined,
-				},
-				{ queueIndexToTrackId: trackId },
-			);
-		}}
-	/>
+	{#if scroll.items.length === 0}
+		<div class="flex flex-col items-center gap-2 rounded-lg border py-16">
+			<Heart size={32} class="text-muted-foreground/40" />
+			<p class="text-sm text-muted-foreground">
+				{hasActiveFilter
+					? "No favorites match the current search or filter"
+					: "No favorites yet"}
+			</p>
+		</div>
+	{:else}
+		<TrackList
+			tracks={scroll.items}
+			onPlay={async (trackId) => {
+				await musicManager.queueRequest(
+					{
+						type: "addFavorites",
+						userId: data.userData.id,
+						filterId: filterId ?? undefined,
+					},
+					{ queueIndexToTrackId: trackId },
+				);
+			}}
+		/>
+	{/if}
 </InfiniteScroll>

@@ -1,19 +1,35 @@
 <script lang="ts">
-	import { EllipsisVertical, Play, Shuffle } from "@lucide/svelte";
-	import { buttonVariants, DropdownMenu } from "$lib/components/ui";
+	import { goto, invalidateAll } from "$app/navigation";
+	import { page } from "$app/state";
+	import { onMount } from "svelte";
+	import { ChevronDown, ListMusic, Plus, X } from "@lucide/svelte";
+	import { Button } from "$lib/components/ui";
 	import { getApiClient, handleApiError } from "$lib";
 	import type { Playlist } from "$lib/api/types";
-	import { cn, formatPlayTime } from "$lib/utils";
-	import { getMusicManager } from "$lib/music-manager.svelte";
-	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
+	import { SortToggleDropdown } from "$lib/components/sort";
+	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
 	import TileGrid from "$lib/components/tiles/TileGrid.svelte";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
 	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
+	import NewPlaylistModal from "../../../playlists/NewPlaylistModal.svelte";
+	import {
+		sortTypes,
+		defaultSort,
+		type SortType,
+		constructFilterSort,
+	} from "../../../playlists/types";
+	import { toast } from "svelte-sonner";
 	import Spacer from "$lib/components/Spacer.svelte";
 
 	let { data } = $props();
-
-	const musicManager = getMusicManager();
 	const apiClient = getApiClient();
+
+	let isOwner = $derived(data.userData.id === data.user?.id);
+
+	let openNewPlaylistModal = $state(false);
+	let selectedPlaylists = $state<string[]>([]);
 
 	const scroll = new InfiniteScrollController<Playlist>({
 		initialLoad: () => ({
@@ -25,9 +41,9 @@
 			const query: Record<string, string> = {
 				page: String(nextPage),
 				perPage: String(data.page.perPage),
-				filter: `ownerId = "${data.userData.id}"`,
-				sort: "position",
 			};
+
+			constructFilterSort(data.filter, query, data.userData.id);
 
 			const res = await apiClient.getPlaylists({ query });
 			if (!res.success) {
@@ -43,117 +59,191 @@
 		itemKey: (playlist) => playlist.id,
 	});
 
-	function playPlaylist(playlistId: string, shuffle = false) {
-		return musicManager.queueRequest(
-			{ type: "addPlaylist", playlistId },
-			{ shuffle },
-		);
+	let sort = $state(
+		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+	);
+
+	function updateSort(value: string) {
+		sort = value as SortType;
+
+		selectedPlaylists = [];
+
+		const query = page.url.searchParams;
+		query.delete("sort");
+
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
+
+		goto("?" + query.toString(), { invalidateAll: true });
+	}
+
+	let value = $state("");
+
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
+		}
+
+		await goto("?" + params.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
+	}
+
+	async function toggleQuick(playlistId: string) {
+		const isQuick = data.user?.quickPlaylist === playlistId;
+
+		const res = await apiClient.setQuickPlaylist({
+			playlistId: isQuick ? "" : playlistId,
+		});
+		if (!res.success) {
+			handleApiError(res.error);
+			return;
+		}
+
+		await invalidateAll();
+	}
+
+	function toggleSelect(playlistId: string, checked: boolean) {
+		if (checked) {
+			selectedPlaylists = [...selectedPlaylists, playlistId];
+		} else {
+			selectedPlaylists = selectedPlaylists.filter((id) => id !== playlistId);
+		}
+	}
+
+	async function handleReorder(anchorPlaylistId: string | null) {
+		const res = await apiClient.reorderPlaylists({
+			before: false,
+			anchorPlaylistId: anchorPlaylistId ?? "",
+			playlistIds: selectedPlaylists,
+		});
+		if (!res.success) {
+			return handleApiError(res.error);
+		}
+
+		selectedPlaylists = [];
+		toast.success("Updated playlists");
+
+		if (sort !== "position") {
+			updateSort("position");
+		} else {
+			invalidateAll();
+		}
 	}
 </script>
 
-<div class="flex flex-col gap-6">
-	<div
-		class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
-	>
-		<div class="flex min-w-0 flex-col gap-2">
-			<p
-				class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-			>
-				Playlists
-			</p>
+<div class="flex flex-col gap-4">
+	<SectionHeader count={data.page.totalItems}>
+		<ListMusic />
+		Playlists
 
-			<h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
-				{data.userData.displayName}
-			</h1>
+		{#snippet actions()}
+			{#if isOwner}
+				<Button size="sm" onclick={() => (openNewPlaylistModal = true)}>
+					<Plus size={14} />
+					New Playlist
+				</Button>
+			{/if}
+		{/snippet}
+	</SectionHeader>
 
-			<p class="text-sm text-muted-foreground">
-				{data.page.totalItems}
-				{data.page.totalItems === 1 ? "playlist" : "playlists"}
-			</p>
-		</div>
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<DebouncedSearchInput
+			class="flex-1 md:max-w-64"
+			placeholder="Search playlists..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
+
+		<SortToggleDropdown
+			types={sortTypes}
+			{sort}
+			{defaultSort}
+			onSortChange={(value) => updateSort(value)}
+		/>
 	</div>
 </div>
 
-<Spacer size="lg" />
+<Spacer size="md" />
 
 <InfiniteScroll controller={scroll}>
-	<TileGrid>
-		{#each scroll.items as playlist (playlist.id)}
-			<div class="group relative flex flex-col">
-				<div class="relative">
-					<a
-						href="/playlists/{playlist.id}"
-						class="block overflow-hidden rounded-lg"
+	{#if scroll.items.length === 0}
+		<div class="flex flex-col items-center gap-2 rounded-lg border py-16">
+			<ListMusic size={32} class="text-muted-foreground/40" />
+			<p class="text-sm text-muted-foreground">
+				{data.filter.query
+					? "No playlists match your search"
+					: isOwner
+						? "You haven't created any playlists yet"
+						: "No playlists yet"}
+			</p>
+		</div>
+	{:else}
+		<TileGrid class="xl:grid-cols-5 2xl:grid-cols-5">
+			{#if isOwner && selectedPlaylists.length > 0}
+				<div class="group relative flex shrink-0 flex-col">
+					<button
+						class="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border/60 bg-muted/40 text-muted-foreground transition-colors group-hover:border-primary/60 group-hover:bg-accent/50 group-hover:text-foreground"
+						onclick={() => handleReorder(null)}
+						aria-label={`Move ${selectedPlaylists.length} selected playlists to the beginning`}
 					>
-						<img
-							src={playlist.coverArt.medium}
-							alt={playlist.name}
-							class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
-						/>
-					</a>
+						<div class="flex flex-col items-center gap-1.5">
+							<ChevronDown
+								class="h-5 w-5 text-muted-foreground/60 transition-colors group-hover:text-foreground"
+							/>
+							<span class="px-2 text-xs font-medium">
+								Place {selectedPlaylists.length} here
+							</span>
+						</div>
+					</button>
 
 					<button
-						class="absolute right-2 bottom-2 hidden h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:scale-105 group-hover:opacity-100 hover:scale-110 sm:flex"
-						title="Play playlist"
-						aria-label={`Play ${playlist.name}`}
-						onclick={() => playPlaylist(playlist.id)}
+						class="absolute top-1.5 left-1.5 flex h-7 w-7 items-center justify-center rounded-full border bg-background/70 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+						onclick={() => (selectedPlaylists = [])}
+						aria-label="Clear selection"
+						title="Clear selection"
 					>
-						<Play size={18} />
+						<X size={14} />
 					</button>
-				</div>
 
-				<div class="flex flex-col gap-0.5 pt-2">
-					<div class="flex items-center gap-1">
-						<a
-							href="/playlists/{playlist.id}"
-							class="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
-							title={playlist.name}
+					<div class="flex flex-col gap-0.5 pt-2">
+						<span
+							class="truncate text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground"
 						>
-							{playlist.name}
-						</a>
-
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger
-								class={cn(
-									buttonVariants({ variant: "ghost", size: "icon-sm" }),
-									"-mr-1 shrink-0 rounded-full text-muted-foreground",
-								)}
-								aria-label={`More options for ${playlist.name}`}
-							>
-								<EllipsisVertical size={14} />
-							</DropdownMenu.Trigger>
-							<DropdownMenu.Content align="end">
-								<DropdownMenu.Group>
-									<DropdownMenu.Item
-										onSelect={() => playPlaylist(playlist.id)}
-									>
-										<Play />
-										Play
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										onSelect={() => playPlaylist(playlist.id, true)}
-									>
-										<Shuffle />
-										Shuffle play
-									</DropdownMenu.Item>
-								</DropdownMenu.Group>
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
+							Move to beginning
+						</span>
 					</div>
-
-					<p class="truncate text-xs text-muted-foreground">
-						{playlist.trackCount}
-						{playlist.trackCount !== 1 ? "tracks" : "track"}
-						{#if playlist.playTime > 0}
-							&middot; {formatPlayTime(playlist.playTime)}
-						{/if}
-					</p>
 				</div>
-			</div>
-		{/each}
-	</TileGrid>
+			{/if}
 
-	{#if scroll.items.length === 0}
-		<p class="px-2 text-sm text-muted-foreground">No playlists yet.</p>
+			{#each scroll.items as playlist (playlist.id)}
+				<PlaylistTile
+					{playlist}
+					selectionMode={isOwner && selectedPlaylists.length > 0}
+					selected={selectedPlaylists.includes(playlist.id)}
+					onSelectChange={isOwner
+						? (checked) => toggleSelect(playlist.id, checked)
+						: undefined}
+					onMoveAfter={isOwner ? () => handleReorder(playlist.id) : undefined}
+					isQuick={isOwner && data.user?.quickPlaylist === playlist.id}
+					onToggleQuick={isOwner ? () => toggleQuick(playlist.id) : undefined}
+				/>
+			{/each}
+		</TileGrid>
 	{/if}
 </InfiniteScroll>
+
+{#if isOwner}
+	<NewPlaylistModal bind:open={openNewPlaylistModal} />
+{/if}

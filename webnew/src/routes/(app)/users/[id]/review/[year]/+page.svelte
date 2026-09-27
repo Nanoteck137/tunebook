@@ -2,17 +2,14 @@
 	import { goto } from "$app/navigation";
 	import {
 		Activity,
-		BarChart3,
 		CalendarDays,
+		ChartColumn,
 		DiscAlbum,
 		Heart,
 		ListPlus,
 		Music,
 		Play,
-		Repeat,
 		Shuffle,
-		SkipForward,
-		Sprout,
 		Tags,
 		Users,
 	} from "@lucide/svelte";
@@ -23,6 +20,7 @@
 	import { DropdownMenu } from "$lib/components/ui";
 	import { getFavorites } from "$lib/favorites.svelte";
 	import { toast } from "svelte-sonner";
+	import Spacer from "$lib/components/Spacer.svelte";
 
 	let { data } = $props();
 	const favoritesManager = getFavorites();
@@ -37,8 +35,18 @@
 
 	let monthlyHours = $derived(data.months.map((m) => m.playTime / 3600));
 	let monthLabels = $derived([
-		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"Jun",
+		"Jul",
+		"Aug",
+		"Sep",
+		"Oct",
+		"Nov",
+		"Dec",
 	]);
 	let maxMonthlyHours = $derived(Math.max(...monthlyHours, 1 / 60));
 
@@ -134,9 +142,11 @@
 
 	<section>
 		<SectionHeader>
-			<BarChart3 />
+			<ChartColumn />
 			Summary
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
@@ -207,6 +217,8 @@
 			At a Glance
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
 			<div class="flex flex-col gap-1.5 rounded-lg border bg-card p-4">
 				<span class="text-xs text-muted-foreground">Avg Completion</span>
@@ -250,6 +262,8 @@
 			<Music />
 			Top Tracks
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="flex flex-col">
 			{#each topTracks as item (item.id)}
@@ -302,9 +316,7 @@
 								const wasFav = favoritesManager.hasTrack(item.id);
 								await favoritesManager.toggleTrack(item.id);
 								toast.success(
-									wasFav
-										? "Removed from favorites"
-										: "Added to favorites",
+									wasFav ? "Removed from favorites" : "Added to favorites",
 								);
 							}}
 						>
@@ -331,17 +343,12 @@
 			Top Albums
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
-			{#each data.topAlbums as item (item.id)}
-				<div
-					class="flex w-40 shrink-0 flex-col transition-all"
-				>
-					<AlbumTile
-						id={item.id}
-						cover={item.coverArt.small}
-						name={item.name}
-						artists={item.artists}
-					/>
+			{#each data.topAlbums as album (album.id)}
+				<div class="flex w-40 shrink-0 flex-col transition-all">
+					<AlbumTile size="sm" {album} />
 				</div>
 			{/each}
 		</div>
@@ -356,16 +363,12 @@
 			Top Artists
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="flex items-start gap-4 overflow-x-auto pb-2">
-			{#each data.topArtists as item (item.id)}
-				<div
-					class="flex w-40 shrink-0 flex-col transition-all"
-				>
-					<ArtistTile
-						id={item.id}
-						cover={item.coverArt.small}
-						name={item.name}
-					/>
+			{#each data.topArtists as artist (artist.id)}
+				<div class="flex w-40 shrink-0 flex-col transition-all">
+					<ArtistTile size="md" {artist} />
 				</div>
 			{/each}
 		</div>
@@ -373,9 +376,11 @@
 
 	<section>
 		<SectionHeader>
-			<BarChart3 />
+			<ChartColumn />
 			Monthly Listening
 		</SectionHeader>
+
+		<Spacer />
 
 		<div class="flex h-56 items-end gap-2 sm:h-48">
 			{#each monthLabels as label, i}
@@ -419,6 +424,8 @@
 			Monthly Breakdown
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
 			{#each monthLabels as label, i (label)}
 				{@const count = data.months[i]?.playCount ?? 0}
@@ -447,6 +454,8 @@
 			Top Tags
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="flex flex-wrap gap-2">
 			{#each data.topTags as tag (tag.tagSlug)}
 				<div
@@ -472,6 +481,8 @@
 			Decades
 		</SectionHeader>
 
+		<Spacer />
+
 		<div class="flex flex-col gap-2">
 			{#each data.topDecades as decade (decade.decade)}
 				{@const count = decade.playCount}
@@ -494,4 +505,3 @@
 		</div>
 	</section>
 </div>
-

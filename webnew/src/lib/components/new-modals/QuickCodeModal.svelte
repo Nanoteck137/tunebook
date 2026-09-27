@@ -3,6 +3,7 @@
 	import Errors from "$lib/components/Errors.svelte";
 	import FormItem from "$lib/components/FormItem.svelte";
 	import { Button, Dialog, Input, Label } from "$lib/components/ui";
+	import { getQuickCodeModalManager } from "$lib/quick-code-modal.svelte";
 	import { QrCode } from "@lucide/svelte";
 	import { zod4 } from "sveltekit-superforms/adapters";
 	import { defaults, superForm } from "sveltekit-superforms/client";
@@ -14,17 +15,13 @@
 		code: z.string().min(1),
 	});
 
-	export type Props = {
-		open: boolean;
-	};
-
-	let { open = $bindable() }: Props = $props();
+	const manager = getQuickCodeModalManager();
 	const apiClient = getApiClient();
 
 	let codeInput: HTMLInputElement | undefined = $state();
 
 	$effect(() => {
-		if (open) {
+		if (manager.open) {
 			reset({});
 			codeInput?.focus();
 		}
@@ -49,7 +46,7 @@
 						return handleApiError(res.error);
 					}
 
-					open = false;
+					manager.open = false;
 
 					toast.success("Successfully logged in");
 					reset({ data: {} });
@@ -59,7 +56,7 @@
 	);
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root bind:open={manager.open}>
 	<Dialog.Content class="overflow-hidden sm:max-w-md">
 		<div class="relative">
 			<div
@@ -104,11 +101,11 @@
 				<Errors errors={$errors.code} />
 			</FormItem>
 
-			<Dialog.Footer class="gap-2 sm:gap-0">
+			<Dialog.Footer>
 				<Button
 					variant="outline"
 					onclick={() => {
-						open = false;
+						manager.open = false;
 					}}
 				>
 					Close

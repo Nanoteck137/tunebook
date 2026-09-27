@@ -4,112 +4,80 @@
 	import ChangeProfilePicture from "./ChangeProfilePicture.svelte";
 	import ApiToken from "./ApiToken.svelte";
 	import NewApiTokenModal from "./NewApiTokenModal.svelte";
-	import { Camera, KeyRound, Plus, QrCode, User } from "@lucide/svelte";
-	import QuickCodeModal from "./QuickCodeModal.svelte";
+	import QuickCode from "./QuickCode.svelte";
+	import { KeyRound, Plus, Settings, ShieldCheck, User } from "@lucide/svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 
 	let { data } = $props();
 
 	let openNewApiTokenModal = $state(false);
-	let openQuickCodeModal = $state(false);
 </script>
 
-<div class="flex flex-col gap-6">
-	<div
-		class="flex flex-col gap-6 rounded-lg border bg-linear-to-b from-[oklch(0.93_0.045_75)] to-background p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8 dark:from-[oklch(0.24_0.03_80)] dark:to-background"
-	>
-		<div class="flex min-w-0 flex-col gap-2">
-			<p
-				class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-			>
-				Settings
-			</p>
+<div class="flex flex-col gap-8">
+	<SectionHeader>
+		<Settings />
+		Settings
+	</SectionHeader>
 
-			<h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
-				{data.userData.displayName}
-			</h1>
+	<section class="flex flex-col gap-4">
+		<SectionHeader>
+			<User />
+			Profile
+		</SectionHeader>
 
-			<p class="text-sm text-muted-foreground">
-				Manage your profile, security, and API access.
-			</p>
-		</div>
-	</div>
+		<div class="flex flex-col gap-6 rounded-lg border p-4">
+			<ChangeDisplayName currentName={data.userData.displayName} />
 
-	<div class="flex flex-col gap-10">
-		<section>
-			<SectionHeader>
-				<Camera />
-				Profile Picture
-			</SectionHeader>
-			<p class="mb-3 px-2 text-sm text-muted-foreground">
-				Change your profile picture.
-			</p>
+			<Separator />
+
 			<ChangeProfilePicture currentPicture={data.userData.picture.large} />
-		</section>
+		</div>
+	</section>
 
-		<section>
-			<SectionHeader>
-				<User />
-				Display Name
-			</SectionHeader>
-			<p class="mb-3 px-2 text-sm text-muted-foreground">
-				Change how your name appears across Tunebook.
-			</p>
-			<ChangeDisplayName />
-		</section>
+	<section class="flex flex-col gap-4">
+		<SectionHeader>
+			<ShieldCheck />
+			Security
+		</SectionHeader>
 
-		<Separator />
+		<div class="rounded-lg border p-4">
+			<QuickCode />
+		</div>
+	</section>
 
-		<section>
-			<SectionHeader>
-				<QrCode />
-				Quick Code
-				{#snippet actions()}
-					<Button
-						size="sm"
-						variant="outline"
-						onclick={() => {
-							openQuickCodeModal = true;
-						}}
-					>
-						<QrCode size={14} />
-						Enter Code
-					</Button>
-				{/snippet}
-			</SectionHeader>
-			<p class="mb-3 px-2 text-sm text-muted-foreground">
-				Claim a quick connect code to log in on another device.
-			</p>
-		</section>
+	<section class="flex flex-col gap-4">
+		<SectionHeader count={data.tokens.length}>
+			<KeyRound />
+			API Tokens
+			{#snippet actions()}
+				<Button
+					size="sm"
+					variant="outline"
+					onclick={() => {
+						openNewApiTokenModal = true;
+					}}
+				>
+					<Plus size={14} />
+					New Token
+				</Button>
+			{/snippet}
+		</SectionHeader>
 
-		<section>
-			<SectionHeader count={data.tokens.length}>
-				<KeyRound />
-				API Tokens
-				{#snippet actions()}
-					<Button
-						size="sm"
-						variant="outline"
-						onclick={() => {
-							openNewApiTokenModal = true;
-						}}
-					>
-						<Plus size={14} />
-						New Token
-					</Button>
-				{/snippet}
-			</SectionHeader>
-			<p class="mb-3 px-2 text-sm text-muted-foreground">
-				Manage API tokens for programmatic access.
-			</p>
-			<div class="flex flex-col">
+		{#if data.tokens.length === 0}
+			<div class="flex flex-col items-center gap-2 rounded-lg border py-16">
+				<KeyRound size={32} class="text-muted-foreground/40" />
+				<p class="text-sm text-muted-foreground">
+					No API tokens yet. Create one to access Tunebook programmatically.
+				</p>
+			</div>
+		{:else}
+			<div class="flex flex-col divide-y rounded-lg border px-4">
 				{#each data.tokens as token (token.id)}
 					<ApiToken {token} />
 				{/each}
 			</div>
-		</section>
-	</div>
+		{/if}
+	</section>
 </div>
 
 <NewApiTokenModal bind:open={openNewApiTokenModal} />
-<QuickCodeModal bind:open={openQuickCodeModal} />
