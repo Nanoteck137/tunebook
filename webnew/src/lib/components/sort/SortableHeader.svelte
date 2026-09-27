@@ -1,16 +1,8 @@
 <script lang="ts">
 	import { ArrowDown, ArrowUp, ArrowUpDown } from "@lucide/svelte";
 	import type { Snippet } from "svelte";
-	import type { SortType } from "./types";
+	import type { Column } from "./types";
 	import { cn } from "$lib/utils";
-
-	export type Column = {
-		label: string;
-		asc: string;
-		desc: string;
-		className: string;
-		title?: string;
-	};
 
 	let {
 		class: className = "",
@@ -24,7 +16,7 @@
 
 		sort: string;
 		onSortChange: (sort: string) => void;
-		columns: Column[];
+		columns: Column<string>[];
 		children?: Snippet;
 	} = $props();
 
@@ -38,13 +30,16 @@
 		}
 	}
 
-	function active(col: Column) {
+	function active(col: Column<string>) {
 		return sort === col.asc || sort === col.desc;
 	}
 </script>
 
 <div
-	class={cn("group/header hidden items-center gap-3 pl-2 pr-4 text-xs font-medium text-muted-foreground select-none sm:flex sm:gap-4", className)}
+	class={cn(
+		"group/header hidden items-center gap-3 pr-4 pl-2 text-xs font-medium text-muted-foreground select-none sm:flex sm:gap-4",
+		className,
+	)}
 	role="row"
 >
 	{#each columns as col (col.label)}

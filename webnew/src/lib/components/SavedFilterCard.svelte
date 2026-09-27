@@ -16,7 +16,7 @@
 		class?: string;
 
 		filterOpen: boolean;
-		filters?: TrackFilter[];
+		filters?: TrackFilter[] | null;
 	} = $props();
 
 	let activeFilterId = $derived(page.url.searchParams.get("filterId"));

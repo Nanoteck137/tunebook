@@ -131,7 +131,7 @@
 		}
 	}
 
-	const columns: Column[] = [
+	const columns: Column<SortType>[] = [
 		{
 			label: "Title",
 			asc: "name-a-z",
@@ -210,7 +210,7 @@
 		<div class="flex items-center gap-2 pr-2">
 			<SavedFilterButton
 				bind:filterOpen
-				hasFilters={data.filters && data.filters.length > 0}
+				hasFilters={(data.filters?.length ?? 0) > 0}
 			/>
 
 			<SortToggleDropdown
@@ -235,7 +235,7 @@
 		>
 			<SavedFilterButton
 				bind:filterOpen
-				hasFilters={data.filters && data.filters.length > 0}
+				hasFilters={(data.filters?.length ?? 0) > 0}
 			/>
 
 			<DebouncedSearchInput

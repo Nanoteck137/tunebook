@@ -14,7 +14,9 @@ const orderLabels: Record<TrackKind, { asc: string; desc: string }> = {
 	album: { asc: "Track number", desc: "Reverse track number" },
 };
 
-function makeSortTypes(kind: TrackKind) {
+// The sort values are identical for both kinds; only the header labels differ
+// (see `orderLabels`), so this intentionally takes no arguments.
+function makeSortTypes() {
 	return [
 		{
 			label: "Order",
@@ -38,8 +40,8 @@ function makeSortTypes(kind: TrackKind) {
 }
 
 export const trackSortTypes = {
-	playlist: makeSortTypes("playlist"),
-	album: makeSortTypes("album"),
+	playlist: makeSortTypes(),
+	album: makeSortTypes(),
 };
 
 const trackSortValues = [
@@ -69,10 +71,13 @@ export function trackSortQuery(kind: TrackKind, sort: SortType): string {
 	}
 }
 
-export type Column = {
+// Generic over the owning route's sort union. Each browse page defines its own
+// sort vocabulary (e.g. tracks uses name-a-z/artist/album/...), so columns must
+// not be pinned to the playlist/album SortType above.
+export type Column<S extends string = SortType> = {
 	label: string;
-	asc: SortType;
-	desc: SortType;
+	asc: S;
+	desc: S;
 	className: string;
 	title?: string;
 };

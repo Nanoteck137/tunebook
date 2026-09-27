@@ -42,7 +42,6 @@
 				{:else}
 					<Pagination.Item>
 						<Pagination.Link
-							href="?page={page.value}"
 							{page}
 							isActive={currentPage === page.value}
 						>

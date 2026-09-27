@@ -19,7 +19,12 @@
 	const { data } = $props();
 	const apiClient = getApiClient();
 
-	let jobs = $state<JobTy[]>(data.jobs);
+	// The loader snapshot is the default; once SSE delivers a job-sync-state
+	// event it becomes the source of truth. Deriving from `sseJobs ?? data.jobs`
+	// keeps the list reactive to loader re-runs instead of freezing the value
+	// that was present at mount.
+	let sseJobs = $state<JobTy[] | null>(null);
+	let jobs = $derived(sseJobs ?? data.jobs);
 	let tasks = $state<TaskSyncStateEventTaskTy[]>([]);
 
 	let filter = $state("all");
@@ -52,7 +57,7 @@
 				tasks = TaskSyncStateEvent.parse(d).tasks;
 			},
 			"job-sync-state": (d) => {
-				jobs = JobSyncStateEvent.parse(d).jobs;
+				sseJobs = JobSyncStateEvent.parse(d).jobs;
 			},
 		}).then((e) => {
 			eventSource = e;
