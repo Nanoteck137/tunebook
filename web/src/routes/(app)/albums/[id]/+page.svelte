@@ -24,6 +24,7 @@
 	import ArtistList from "$lib/components/ArtistList.svelte";
 	import { formatPlayTime } from "$lib/utils";
 	import SectionImage from "$lib/components/SectionImage.svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
 	import Spacer from "$lib/components/Spacer.svelte";
 
 	let { data } = $props();
@@ -115,8 +116,9 @@
 	</Breadcrumb.Root>
 </div>
 
-<div
-	class="section-albums flex flex-col gap-6 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6 md:flex-row md:items-end md:gap-8"
+<HeroCard
+	class="section-albums"
+	innerClass="gap-6 md:flex-row md:items-end md:gap-8"
 >
 	<SectionImage
 		class="aspect-square w-40 min-w-40 self-center rounded-xl shadow-2xl md:w-52 md:min-w-52"
@@ -212,7 +214,7 @@
 			</DropdownMenu.Root>
 		</div>
 	</div>
-</div>
+</HeroCard>
 
 <Spacer size="md" />
 
