@@ -14,6 +14,7 @@
 	import PlaylistTile from "$lib/components/tiles/PlaylistTile.svelte";
 	import SectionHeader from "$lib/components/SectionHeader.svelte";
 	import HeroIcon from "$lib/components/HeroIcon.svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
 	import { Button } from "$lib/components/ui";
 	import Spacer from "$lib/components/Spacer.svelte";
 
@@ -60,9 +61,7 @@
 </script>
 
 <div class="section-browse flex flex-col gap-8">
-	<section
-		class="rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
-	>
+	<HeroCard class="section-browse">
 		<div class="flex items-center gap-4">
 			<HeroIcon>
 				<Compass />
@@ -74,7 +73,7 @@
 				</p>
 			</div>
 		</div>
-	</section>
+	</HeroCard>
 
 	<section>
 		<SectionHeader>
