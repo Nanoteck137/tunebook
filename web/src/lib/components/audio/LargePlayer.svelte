@@ -72,6 +72,14 @@
 			nextItems = items;
 		});
 	});
+
+	// Points the album page at the current track, so it scrolls to and
+	// highlights it instead of landing at the top of the track list.
+	let currentAlbumHref = $derived(
+		currentMediaItem
+			? `/albums/${currentMediaItem.album.id}?track=${currentMediaItem.trackId}`
+			: "#",
+	);
 </script>
 
 {#snippet queueSheet()}
@@ -299,7 +307,7 @@
 		<!-- Left: Now playing -->
 		<div class="flex min-w-0 flex-1 basis-1/3 items-center gap-3">
 			<a
-				href={currentMediaItem ? `/albums/${currentMediaItem.album.id}` : "#"}
+				href={currentAlbumHref}
 				class="shrink-0"
 				title={currentMediaItem?.album.name ?? ""}
 			>
@@ -313,9 +321,7 @@
 
 			<div class="flex min-w-0 flex-1 flex-col">
 				<a
-					href={currentMediaItem
-						? `/albums/${currentMediaItem.album.id}`
-						: "#"}
+					href={currentAlbumHref}
 					class="truncate text-sm font-semibold hover:underline"
 					title={currentMediaItem?.name ?? ""}
 				>
