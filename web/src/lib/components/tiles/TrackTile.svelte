@@ -1,33 +1,44 @@
 <script lang="ts">
-  import ArtistList, { type Artist } from "$lib/components/ArtistList.svelte";
+	import { getMusicManager } from "$lib/music-manager.svelte";
+	import type { Track } from "$lib/api/types";
+	import Tile from "./Tile.svelte";
 
-  type Props = {
-    id: string;
-    cover: string;
-    name: string;
-    artists: Artist[];
-  };
+	type Props = {
+		track: Track;
+		size?: "default" | "sm";
+		class?: string;
+	};
 
-  const { cover, name, artists }: Props = $props();
+	const { track, size = "default", class: className }: Props = $props();
+	const musicManager = getMusicManager();
+
+	async function play() {
+		await musicManager.addTracks({
+			trackIds: [track.id],
+			trackId: track.id,
+			clear: true,
+		});
+	}
 </script>
 
-<div class="flex shrink-0 flex-col items-center">
-  <!-- svelte-ignore a11y_invalid_attribute -->
-  <a href="#" class="group w-40 cursor-pointer">
-    <img
-      class="aspect-square w-40 rounded-lg object-cover"
-      src={cover}
-      alt=""
-      title={name}
-    />
+{#snippet subtitle()}
+	{#if track.artists.length > 0}
+		<p
+			class="line-clamp-1 text-xs text-ellipsis text-muted-foreground"
+			title={track.artists.map((a) => a.name).join(", ")}
+		>
+			{track.artists.map((a) => a.name).join(", ")}
+		</p>
+	{/if}
+{/snippet}
 
-    <div
-      class="mt-2 w-40 truncate text-sm font-medium group-hover:underline"
-      title={name}
-    >
-      {name}
-    </div>
-  </a>
-
-  <ArtistList class="justify-start text-muted-foreground" {artists} />
-</div>
+<Tile
+	href="/albums/{track.albumId}?track={track.id}"
+	src={track.coverArt.medium}
+	name={track.name}
+	sectionClass="section-tracks"
+	nameClass={size === "sm" ? "line-clamp-1" : "line-clamp-2"}
+	onPlay={play}
+	{subtitle}
+	class={className}
+/>

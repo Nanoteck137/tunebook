@@ -1,141 +1,182 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
-  import { page } from "$app/state";
-  import { Breadcrumb, Button, Select, Separator } from "@nanoteck137/nano-ui";
-  import { Play, Shuffle } from "lucide-svelte";
-  import TrackList from "$lib/components/track-list/TrackList.svelte";
-  import { getMusicManager } from "$lib/music-manager.svelte";
-  import Pagination from "$lib/components/Pagination.svelte";
-  import Spacer from "$lib/components/Spacer.svelte";
-  import { defineEnumTypes } from "$lib/utils";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import { onMount } from "svelte";
+	import { Button, Checkbox } from "$lib/components/ui";
+	import { Music, Play, Shuffle } from "@lucide/svelte";
+	import { SortToggleDropdown } from "$lib/components/sort";
+	import TrackList from "$lib/components/track-list/TrackList.svelte";
+	import { getMusicManager } from "$lib/music-manager.svelte";
+	import { getApiClient, handleApiError } from "$lib";
+	import type { Track } from "$lib/api/types";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
+	import SectionHeader from "$lib/components/SectionHeader.svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
+	import {
+		sortTypes,
+		defaultSort,
+		buildArtistTracksQuery,
+		type SortType,
+	} from "./types";
+	import Spacer from "$lib/components/Spacer.svelte";
 
-  let { data } = $props();
-  const musicManager = getMusicManager();
+	let { data } = $props();
+	const musicManager = getMusicManager();
+	const apiClient = getApiClient();
 
-  const { sortTypes, defaultSort } = defineEnumTypes(
-    [
-      { label: "Name (A-Z)", value: "name-a-z" },
-      { label: "Name (Z-A)", value: "name-z-a" },
-      { label: "Artist", value: "artist" },
-      { label: "Album", value: "album" },
-      { label: "Duration", value: "duration" },
-      { label: "Year", value: "year" },
-      { label: "Added (New–Old)", value: "created-new" },
-      { label: "Added (Old-New)", value: "created-old" },
-    ] as const,
-    "name-a-z",
-  );
+	let sort = $state(
+		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+	);
 
-  type SortType = (typeof sortTypes)[number]["value"];
+	function updateSort(value: string) {
+		sort = value as SortType;
 
-  let sort = $state(
-    (page.url.searchParams.get("sort") as SortType) ?? defaultSort,
-  );
+		const query = page.url.searchParams;
+		query.delete("sort");
 
-  function updateSort(value: string) {
-    sort = value as SortType;
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
 
-    const query = page.url.searchParams;
-    query.delete("sort");
+		goto("?" + query.toString(), { invalidateAll: true });
+	}
 
-    if (sort !== defaultSort) {
-      query.set("sort", sort);
-    }
+	let value = $state("");
 
-    goto("?" + query.toString(), { invalidateAll: true });
-  }
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
+		}
+
+		await goto("?" + params.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
+	}
+
+	const scroll = new InfiniteScrollController<Track>({
+		initialLoad: () => ({
+			items: data.tracks,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (nextPage) => {
+			const query: Record<string, string> = {
+				page: String(nextPage),
+				perPage: String(data.page.perPage),
+			};
+
+			buildArtistTracksQuery(data.filter, data.artist.id, query);
+
+			const res = await apiClient.getTracks({ query });
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
+			}
+
+			return {
+				items: res.data.tracks,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (track) => track.id,
+	});
+
+	let selectedTracks = $state<string[]>([]);
+
+	function toggleSelectAll() {
+		if (selectedTracks.length > 0) {
+			selectedTracks = [];
+			return;
+		}
+
+		selectedTracks = scroll.items.map((track) => track.id);
+	}
 </script>
 
 <div class="flex flex-col gap-4">
-  <Breadcrumb.Root>
-    <Breadcrumb.List>
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href="/artists">Artists</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href="/artists/{data.artist.id}">
-          {data.artist.name}
-        </Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
-        <Breadcrumb.Page>Tracks</Breadcrumb.Page>
-      </Breadcrumb.Item>
-    </Breadcrumb.List>
-  </Breadcrumb.Root>
+	<SectionHeader count={data.page.totalItems}>
+		<Music />
+		Tracks
 
-  <div
-    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-  >
-    <div class="flex items-baseline gap-2">
-      <h1 class="text-xl font-bold">Tracks</h1>
-      {#if data.page}
-        <span class="text-sm text-muted-foreground"
-          >{data.page.totalItems}</span
-        >
-      {/if}
-    </div>
+		{#snippet actions()}
+			<div class="flex items-center gap-2">
+				<Button
+					size="sm"
+					onclick={async () => {
+						await musicManager.queueRequest(
+							{ type: "addArtist", artistId: data.artist.id },
+							{},
+						);
+					}}
+				>
+					<Play />
+					Play
+				</Button>
+				<Button
+					size="icon-sm"
+					variant="ghost"
+					onclick={async () => {
+						await musicManager.queueRequest(
+							{ type: "addArtist", artistId: data.artist.id },
+							{ shuffle: true },
+						);
+					}}
+				>
+					<Shuffle />
+				</Button>
+			</div>
+		{/snippet}
+	</SectionHeader>
 
-    <div class="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onclick={async () => {
-          await musicManager.queueRequest(
-            { type: "addArtist", artistId: data.artist.id },
-            { shuffle: true },
-          );
-        }}
-      >
-        <Shuffle size={14} />
-        Shuffle
-      </Button>
-      <Button
-        size="sm"
-        onclick={async () => {
-          await musicManager.queueRequest(
-            { type: "addArtist", artistId: data.artist.id },
-            {},
-          );
-        }}
-      >
-        <Play size={14} />
-        Play All
-      </Button>
-    </div>
+	<!-- Toolbar -->
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<DebouncedSearchInput
+			class="flex-1 md:max-w-64"
+			placeholder="Search tracks..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
 
-    <Select.Root
-      type="single"
-      allowDeselect={false}
-      value={sort}
-      onValueChange={updateSort}
-    >
-      <Select.Trigger class="h-9 w-full sm:w-40">
-        {sortTypes.find((i) => i.value === sort)?.label ?? "Sort"}
-      </Select.Trigger>
-      <Select.Content>
-        {#each sortTypes as ty (ty.value)}
-          <Select.Item value={ty.value} label={ty.label} />
-        {/each}
-      </Select.Content>
-    </Select.Root>
-  </div>
+		<div class="flex items-center gap-1 pr-2">
+			<SortToggleDropdown
+				types={sortTypes}
+				{sort}
+				{defaultSort}
+				onSortChange={updateSort}
+			/>
 
-  <TrackList
-    totalTracks={data.tracks.length}
-    tracks={data.tracks}
-    onPlay={async (trackId) => {
-      await musicManager.queueRequest(
-        { type: "addArtist", artistId: data.artist.id },
-        { queueIndexToTrackId: trackId },
-      );
-    }}
-  />
-
-  <Spacer size="lg" />
-  <Separator />
-  <Spacer size="lg" />
-
-  <Pagination page={data.page} />
+			<Checkbox
+				title="Select all"
+				aria-label="Select all"
+				checked={selectedTracks.length > 0}
+				onCheckedChange={() => toggleSelectAll()}
+			/>
+		</div>
+	</div>
 </div>
+
+<Spacer size="md" />
+
+<InfiniteScroll controller={scroll}>
+	<TrackList
+		tracks={scroll.items}
+		bind:selectedTracks
+		onPlay={async (trackId) => {
+			await musicManager.queueRequest(
+				{ type: "addArtist", artistId: data.artist.id },
+				{ queueIndexToTrackId: trackId },
+			);
+		}}
+	/>
+</InfiniteScroll>

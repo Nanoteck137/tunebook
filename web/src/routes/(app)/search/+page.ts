@@ -1,89 +1,62 @@
-import type { Album, Artist, Playlist, Track, UserData } from "$lib/api/types";
+import type { Album, Artist, Track } from "$lib/api/types";
 import type { PageLoad } from "./$types";
 
 type Err = {
-  code: number;
-  message: string;
-  type: string;
+	code: number;
+	message: string;
+	type: string;
 };
 
 export const load: PageLoad = async ({ parent, url }) => {
-  const data = await parent();
+	const data = await parent();
 
-  const query = url.searchParams.get("query") ?? "";
+	const query = url.searchParams.get("query") ?? "";
 
-  let artists = [] as Artist[];
-  let artistError: Err | null = null;
+	let artists = [] as Artist[];
+	let artistError: Err | null = null;
 
-  let albums = [] as Album[];
-  let albumError: Err | null = null;
+	let albums = [] as Album[];
+	let albumError: Err | null = null;
 
-  let tracks = [] as Track[];
-  let trackError: Err | null = null;
+	let tracks = [] as Track[];
+	let trackError: Err | null = null;
 
-  let playlists = [] as Playlist[];
-  let playlistError: Err | null = null;
+	const [artistQuery, albumQuery, trackQuery] = await Promise.all([
+		data.apiClient.searchArtists({ query: { query } }),
+		data.apiClient.searchAlbums({ query: { query } }),
+		data.apiClient.searchTracks({ query: { query } }),
+	]);
 
-  let users = [] as UserData[];
-  let userError: Err | null = null;
+	if (!artistQuery.success) {
+		artistError = artistQuery.error;
+	} else {
+		artists = artistQuery.data.artists;
+	}
 
-  const [artistQuery, albumQuery, trackQuery, playlistQuery, userQuery] =
-    await Promise.all([
-      data.apiClient.searchArtists({ query: { query } }),
-      data.apiClient.searchAlbums({ query: { query } }),
-      data.apiClient.searchTracks({ query: { query } }),
-      data.apiClient.searchPlaylists({ query: { query } }),
-      data.apiClient.searchUsers({ query: { query } }),
-    ]);
+	if (!albumQuery.success) {
+		albumError = albumQuery.error;
+	} else {
+		albums = albumQuery.data.albums;
+	}
 
-  if (!artistQuery.success) {
-    artistError = artistQuery.error;
-  } else {
-    artists = artistQuery.data.artists;
-  }
+	if (!trackQuery.success) {
+		trackError = trackQuery.error;
+	} else {
+		tracks = trackQuery.data.tracks;
+	}
 
-  if (!albumQuery.success) {
-    albumError = albumQuery.error;
-  } else {
-    albums = albumQuery.data.albums;
-  }
+	return {
+		...data,
 
-  if (!trackQuery.success) {
-    trackError = trackQuery.error;
-  } else {
-    tracks = trackQuery.data.tracks;
-  }
+		query,
 
-  if (!playlistQuery.success) {
-    playlistError = playlistQuery.error;
-  } else {
-    playlists = playlistQuery.data.playlists;
-  }
+		artistError,
+		artists,
 
-  if (!userQuery.success) {
-    userError = userQuery.error;
-  } else {
-    users = userQuery.data.users;
-  }
+		albumError,
+		albums,
 
-  return {
-    ...data,
-
-    query,
-
-    artistError,
-    artists,
-
-    albumError,
-    albums,
-
-    trackError,
-    tracks,
-
-    playlistError,
-    playlists,
-
-    userError,
-    users,
-  };
+		trackError,
+		tracks,
+	};
 };

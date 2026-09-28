@@ -1,282 +1,509 @@
 <script lang="ts">
-  import { goto, invalidateAll } from "$app/navigation";
-  import { page } from "$app/state";
-  import { getApiClient, handleApiError } from "$lib";
-  import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
-  import Image from "$lib/components/Image.svelte";
-  import TrackList from "$lib/components/track-list/TrackList.svelte";
-  import { getMusicManager } from "$lib/music-manager.svelte.js";
-  import {
-    Breadcrumb,
-    Button,
-    buttonVariants,
-    DropdownMenu,
-    Pagination,
-  } from "@nanoteck137/nano-ui";
-  import {
-    EllipsisVertical,
-    ListPlus,
-    Pencil,
-    Play,
-    Shuffle,
-    Trash,
-    Upload,
-    Wand2,
-  } from "lucide-svelte";
-  import toast from "svelte-5-french-toast";
-  import EditPlaylistModal from "./EditPlaylistModal.svelte";
-  import UploadPlaylistCoverModal from "./UploadPlaylistCoverModal.svelte";
+	import { goto, invalidateAll } from "$app/navigation";
+	import { page } from "$app/state";
+	import { onMount } from "svelte";
+	import { getApiClient, handleApiError } from "$lib";
+	import { formatPlayTime } from "$lib/utils";
+	import ConfirmModal from "$lib/components/new-modals/ConfirmModal.svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
+	import Image from "$lib/components/Image.svelte";
+	import TrackList from "$lib/components/track-list/TrackList.svelte";
+	import SavedFilterButton from "$lib/components/SavedFilterButton.svelte";
+	import SavedFilterCard from "$lib/components/SavedFilterCard.svelte";
+	import { getMusicManager } from "$lib/music-manager.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import type { Track } from "$lib/api/types";
+	import {
+		Breadcrumb,
+		Button,
+		buttonVariants,
+		Checkbox,
+		DropdownMenu,
+	} from "$lib/components/ui";
+	import {
+		EllipsisVertical,
+		ListPlus,
+		Pencil,
+		Play,
+		Shuffle,
+		Trash,
+		Upload,
+		WandSparkles,
+	} from "@lucide/svelte";
+	import EditPlaylistModal from "./EditPlaylistModal.svelte";
+	import UploadPlaylistCoverModal from "./UploadPlaylistCoverModal.svelte";
+	import { toast } from "svelte-sonner";
+	import SectionImage from "$lib/components/SectionImage.svelte";
+	import Spacer from "$lib/components/Spacer.svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
+	import {
+		SortableHeader,
+		SortToggleDropdown,
+		defaultSort,
+		buildTrackQuery,
+		trackColumns,
+		trackSortTypes,
+		type SortType,
+	} from "$lib/components/sort";
 
-  const { data } = $props();
-  const musicManager = getMusicManager();
-  const apiClient = getApiClient();
+	const { data } = $props();
+	const musicManager = getMusicManager();
+	const apiClient = getApiClient();
 
-  let openConfirmDelete = $state(false);
-  let openEditPlaylistModal = $state(false);
-  let openUploadCoverModal = $state(false);
+	let openConfirmDelete = $state(false);
+	let openEditPlaylistModal = $state(false);
+	let openUploadCoverModal = $state(false);
 
-  const isOwner = $derived(data.user?.id === data.playlist.ownerId);
+	let filterId = $derived(page.url.searchParams.get("filterId"));
+	let filterOpen = $state(false);
+
+	let sort = $state(
+		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+	);
+
+	function updateSort(value: string) {
+		sort = value as SortType;
+
+		const query = page.url.searchParams;
+		query.delete("sort");
+
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
+
+		goto("?" + query.toString(), { invalidateAll: true });
+	}
+
+	let value = $state("");
+
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
+		}
+
+		await goto("?" + params.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
+	}
+
+	let selectedTracks = $state<string[]>([]);
+
+	async function toggleSelectAll() {
+		if (selectedTracks.length > 0) {
+			selectedTracks = [];
+			return;
+		}
+
+		const res = await apiClient.getPlaylistItemIds(data.playlist.id);
+		if (!res.success) {
+			handleApiError(res.error);
+			return;
+		}
+
+		selectedTracks = res.data.ids;
+	}
+
+	const isOwner = $derived(data.user?.id === data.playlist.ownerId);
+
+	let heroRef = $state<HTMLElement | null>(null);
+	let showCompactHeader = $state(false);
+
+	$effect(() => {
+		const el = heroRef;
+		if (!el) return;
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				showCompactHeader = !entry.isIntersecting;
+			},
+			{ rootMargin: "-56px 0px 0px 0px", threshold: 0 },
+		);
+
+		observer.observe(el);
+		return () => observer.disconnect();
+	});
+
+	$effect(() => {
+		if (showCompactHeader) {
+			document.body.setAttribute("data-hero", "true");
+		} else {
+			document.body.setAttribute("data-hero", "false");
+		}
+
+		return () => {
+			document.body.removeAttribute("data-hero");
+		};
+	});
+
+	async function playPlaylist(opts: { shuffle?: boolean } = {}) {
+		await musicManager.queueRequest(
+			{
+				type: "addPlaylist",
+				playlistId: data.playlist.id,
+				filterId: page.url.searchParams.get("filterId") ?? undefined,
+			},
+			{ shuffle: opts.shuffle },
+		);
+	}
+
+	const scroll = new InfiniteScrollController<Track>({
+		initialLoad: () => ({
+			items: data.items,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (page) => {
+			const query: Record<string, string> = {
+				page: String(page),
+				perPage: String(data.page.perPage),
+			};
+
+			buildTrackQuery(data.filter, "playlist", query);
+
+			if (filterId) {
+				query["filterId"] = filterId;
+			}
+
+			const res = await apiClient.getPlaylistItems(data.playlist.id, {
+				query,
+			});
+
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
+			}
+
+			return {
+				items: res.data.items,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (track) => track.id,
+	});
 </script>
 
 <div class="py-2">
-  <Breadcrumb.Root>
-    <Breadcrumb.List>
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href="/playlists">Playlists</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
-        <Breadcrumb.Page>{data.playlist.name}</Breadcrumb.Page>
-      </Breadcrumb.Item>
-    </Breadcrumb.List>
-  </Breadcrumb.Root>
+	<Breadcrumb.Root>
+		<Breadcrumb.List>
+			<Breadcrumb.Item>
+				<Breadcrumb.Link href="/library/playlists">Playlists</Breadcrumb.Link>
+			</Breadcrumb.Item>
+			<Breadcrumb.Separator />
+			<Breadcrumb.Item>
+				<Breadcrumb.Page>{data.playlist.name}</Breadcrumb.Page>
+			</Breadcrumb.Item>
+		</Breadcrumb.List>
+	</Breadcrumb.Root>
 </div>
+
+<HeroCard
+	bind:ref={heroRef}
+	class="section-playlists"
+	innerClass="md:flex-row md:items-end md:gap-8"
+>
+	<SectionImage
+		class="aspect-square w-40 min-w-40 self-center rounded-xl shadow-2xl md:w-52 md:min-w-52"
+		src={data.playlist.coverArt.large}
+		alt={data.playlist.name}
+	/>
+
+	<div class="flex min-w-0 flex-col gap-2">
+		<p
+			class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+		>
+			Playlist
+		</p>
+
+		<h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
+			{data.playlist.name}
+		</h1>
+
+		<div
+			class="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground"
+		>
+			<a
+				href="/users/{data.playlist.ownerId}"
+				class="font-medium text-foreground hover:underline"
+				title={data.playlist.ownerDisplayName}
+			>
+				{data.playlist.ownerDisplayName}
+			</a>
+			<span>&middot; {data.playlist.trackCount} tracks</span>
+			{#if data.playlist.playTime > 0}
+				<span>&middot; {formatPlayTime(data.playlist.playTime)}</span>
+			{/if}
+		</div>
+
+		<div class="flex gap-2 pt-2">
+			<Button onclick={() => playPlaylist()}>
+				<Play />
+				Play
+			</Button>
+
+			<Button
+				variant="ghost"
+				size="icon"
+				onclick={() => playPlaylist({ shuffle: true })}
+				title="Shuffle"
+				aria-label="Shuffle"
+			>
+				<Shuffle />
+			</Button>
+
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger
+					class={buttonVariants({ variant: "ghost", size: "icon" })}
+				>
+					<EllipsisVertical />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="start">
+					<DropdownMenu.Group>
+						<DropdownMenu.Item
+							onSelect={async () => {
+								await musicManager.queueRequest(
+									{ type: "addPlaylist", playlistId: data.playlist.id },
+									{ append: "back" },
+								);
+							}}
+						>
+							<ListPlus />
+							Append to Queue
+						</DropdownMenu.Item>
+
+						{#if isOwner}
+							<DropdownMenu.Separator />
+
+							<DropdownMenu.Item
+								onSelect={() => {
+									openEditPlaylistModal = true;
+								}}
+							>
+								<Pencil />
+								Edit Playlist
+							</DropdownMenu.Item>
+
+							<DropdownMenu.Item
+								onSelect={() => {
+									openUploadCoverModal = true;
+								}}
+							>
+								<Upload />
+								Upload Cover
+							</DropdownMenu.Item>
+
+							<DropdownMenu.Item
+								onSelect={async () => {
+									const res = await apiClient.generatePlaylistImage(
+										data.playlist.id,
+									);
+									if (!res.success) {
+										handleApiError(res.error);
+									} else {
+										toast.success("Generating cover");
+									}
+								}}
+							>
+								<WandSparkles />
+								Generate Cover
+							</DropdownMenu.Item>
+
+							<DropdownMenu.Separator />
+
+							<DropdownMenu.Item
+								onSelect={() => {
+									openConfirmDelete = true;
+								}}
+							>
+								<Trash />
+								Delete Playlist
+							</DropdownMenu.Item>
+						{/if}
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		</div>
+	</div>
+</HeroCard>
+
+<Spacer size="md" />
 
 <div
-  class="flex flex-col gap-6 rounded-lg border bg-gradient-to-b from-zinc-900 to-background p-4 sm:p-6 md:flex-row md:items-end md:gap-8"
+	role="button"
+	tabindex={showCompactHeader ? 0 : -1}
+	onclick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+	onkeydown={(e) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+	}}
+	class="fixed inset-x-0 top-14 z-40 cursor-pointer border-b bg-background/95 backdrop-blur transition-opacity duration-300 supports-backdrop-filter:bg-background/60 {showCompactHeader
+		? 'opacity-100'
+		: 'pointer-events-none opacity-0'}"
 >
-  <Image
-    class="w-40 min-w-40 self-center shadow-lg md:w-52 md:min-w-52"
-    src={data.playlist.coverArt.large}
-    alt={data.playlist.name}
-  />
+	<div class="old-container mx-auto flex h-14 items-center gap-3 px-6 sm:px-8">
+		<Image
+			class="h-10 w-10 shrink-0 shadow-sm"
+			src={data.playlist.coverArt.small}
+			alt={data.playlist.name}
+		/>
 
-  <div class="flex min-w-0 flex-col gap-2">
-    <p
-      class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-    >
-      Playlist
-    </p>
+		<p class="line-clamp-1 text-sm font-semibold text-ellipsis">
+			{data.playlist.name}
+		</p>
 
-    <h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
-      {data.playlist.name}
-    </h1>
+		<div class="grow"></div>
 
-    <div
-      class="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground"
-    >
-      <span class="font-medium text-foreground"
-        >{data.playlist.ownerDisplayName}</span
-      >
-      <span>&middot; {data.playlist.trackCount} tracks</span>
-    </div>
+		<Button
+			size="icon-sm"
+			title="Play"
+			aria-label="Play"
+			onclick={(e) => {
+				e.stopPropagation();
+				playPlaylist();
+			}}
+		>
+			<Play />
+		</Button>
 
-    <div class="flex gap-2 pt-2">
-      <Button
-        size="sm"
-        onclick={async () => {
-          await musicManager.queueRequest(
-            { type: "addPlaylist", playlistId: data.playlist.id },
-            {},
-          );
-        }}
-      >
-        <Play size={14} />
-        Play
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        onclick={async () => {
-          await musicManager.queueRequest(
-            { type: "addPlaylist", playlistId: data.playlist.id },
-            { shuffle: true },
-          );
-        }}
-      >
-        <Shuffle size={14} />
-        Shuffle
-      </Button>
-
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger
-          class={buttonVariants({ variant: "outline", size: "icon" })}
-        >
-          <EllipsisVertical />
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="start">
-          <DropdownMenu.Group>
-            <DropdownMenu.Item
-              onSelect={async () => {
-                await musicManager.queueRequest(
-                  { type: "addPlaylist", playlistId: data.playlist.id },
-                  { append: "back" },
-                );
-              }}
-            >
-              <ListPlus />
-              Append to Queue
-            </DropdownMenu.Item>
-
-            {#if isOwner}
-              <DropdownMenu.Separator />
-
-              <DropdownMenu.Item
-                onSelect={() => {
-                  openEditPlaylistModal = true;
-                }}
-              >
-                <Pencil />
-                Edit Playlist
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Item
-                onSelect={() => {
-                  openUploadCoverModal = true;
-                }}
-              >
-                <Upload />
-                Upload Cover
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Item
-                onSelect={async () => {
-                  const res = await apiClient.generatePlaylistImage(
-                    data.playlist.id,
-                  );
-                  if (!res.success) {
-                    handleApiError(res.error);
-                  } else {
-                    toast.success("Generating cover");
-                  }
-                }}
-              >
-                <Wand2 />
-                Generate Cover
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Separator />
-
-              <DropdownMenu.Item
-                onSelect={() => {
-                  openConfirmDelete = true;
-                }}
-              >
-                <Trash />
-                Delete Playlist
-              </DropdownMenu.Item>
-            {/if}
-          </DropdownMenu.Group>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
-    </div>
-  </div>
+		<Button
+			size="icon-sm"
+			variant="ghost"
+			title="Shuffle"
+			aria-label="Shuffle"
+			onclick={(e) => {
+				e.stopPropagation();
+				playPlaylist({ shuffle: true });
+			}}
+		>
+			<Shuffle />
+		</Button>
+	</div>
 </div>
 
-<div class="h-4"></div>
+<div class="flex items-center justify-between gap-2 sm:hidden">
+	<DebouncedSearchInput
+		class="flex-1"
+		placeholder="Search tracks..."
+		{value}
+		setValue={(v) => (value = v)}
+		{search}
+	/>
 
-<TrackList
-  displayOrder
-  totalTracks={data.page.totalItems}
-  tracks={data.items}
-  onPlay={async (trackId, shuffle) => {
-    await musicManager.queueRequest(
-      { type: "addPlaylist", playlistId: data.playlist.id },
-      { queueIndexToTrackId: trackId, shuffle },
-    );
-  }}
-  onReorder={async (items, anchor) => {
-    const res = await apiClient.reorderPlaylistItems(data.playlist.id, {
-      before: false,
-      anchorTrackId: anchor ?? "",
-      trackIds: items,
-    });
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
+	<div class="flex items-center gap-2 pr-2">
+		<SavedFilterButton
+			bind:filterOpen
+			hasFilters={data.filters && data.filters.length > 0}
+		/>
 
-    toast.success("Updated playlist");
-    invalidateAll();
-  }}
-/>
+		<SortToggleDropdown
+			types={trackSortTypes.playlist}
+			{sort}
+			{defaultSort}
+			onSortChange={updateSort}
+		/>
 
-<div class="h-4"></div>
+		<Checkbox
+			title="Select all"
+			aria-label="Select all"
+			checked={selectedTracks.length > 0}
+			onCheckedChange={() => toggleSelectAll()}
+		></Checkbox>
+	</div>
+</div>
 
-<Pagination.Root
-  page={data.page.page + 1}
-  count={data.page.totalItems}
-  perPage={data.page.perPage}
-  siblingCount={1}
-  onPageChange={(p) => {
-    const query = page.url.searchParams;
-    query.set("page", (p - 1).toString());
-
-    goto(`?${query.toString()}`, { invalidateAll: true, keepFocus: true });
-  }}
+<SortableHeader
+	{sort}
+	onSortChange={updateSort}
+	columns={trackColumns("playlist")}
 >
-  {#snippet children({ pages, currentPage })}
-    <Pagination.Content>
-      <Pagination.Item>
-        <Pagination.PrevButton />
-      </Pagination.Item>
-      {#each pages as page (page.key)}
-        {#if page.type === "ellipsis"}
-          <Pagination.Item>
-            <Pagination.Ellipsis />
-          </Pagination.Item>
-        {:else}
-          <Pagination.Item>
-            <Pagination.Link
-              href="?page={page.value}"
-              {page}
-              isActive={currentPage === page.value}
-            >
-              {page.value}
-            </Pagination.Link>
-          </Pagination.Item>
-        {/if}
-      {/each}
-      <Pagination.Item>
-        <Pagination.NextButton />
-      </Pagination.Item>
-    </Pagination.Content>
-  {/snippet}
-</Pagination.Root>
+	<div class="flex shrink-0 items-center gap-2 border-l border-border/40 pl-3">
+		<SavedFilterButton
+			bind:filterOpen
+			hasFilters={data.filters && data.filters.length > 0}
+		/>
+
+		<DebouncedSearchInput
+			inputClass="h-7 w-44 pr-6"
+			iconSize={12}
+			placeholder="Search tracks..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
+		<Checkbox
+			title="Select all"
+			aria-label="Select all"
+			checked={selectedTracks.length > 0}
+			onCheckedChange={() => toggleSelectAll()}
+		/>
+	</div>
+</SortableHeader>
+
+<SavedFilterCard class="mt-2" {filterOpen} filters={data.filters} />
+
+<Spacer size="md" />
+
+<InfiniteScroll controller={scroll} errorMessage="Failed to load more tracks">
+	<TrackList
+		displayOrder
+		tracks={scroll.items}
+		bind:selectedTracks
+		onPlay={async (trackId, shuffle) => {
+			await musicManager.queueRequest(
+				{ type: "addPlaylist", playlistId: data.playlist.id },
+				{ queueIndexToTrackId: trackId, shuffle },
+			);
+		}}
+		onReorder={async (items, anchor) => {
+			const res = await apiClient.reorderPlaylistItems(data.playlist.id, {
+				before: false,
+				anchorTrackId: anchor ?? "",
+				trackIds: items,
+			});
+			if (!res.success) {
+				return handleApiError(res.error);
+			}
+
+			toast.success("Updated playlist");
+			invalidateAll();
+		}}
+	/>
+</InfiniteScroll>
 
 <ConfirmModal
-  bind:open={openConfirmDelete}
-  removeTrigger
-  confirmDelete
-  onResult={async () => {
-    const res = await apiClient.deletePlaylist(data.playlist.id);
-    if (!res.success) {
-      handleApiError(res.error);
-      invalidateAll();
-      return;
-    }
+	bind:open={openConfirmDelete}
+	removeTrigger
+	confirmDelete
+	onResult={async () => {
+		const res = await apiClient.deletePlaylist(data.playlist.id);
+		if (!res.success) {
+			handleApiError(res.error);
+			invalidateAll();
+			return;
+		}
 
-    toast.success("Deleted playlist");
-    goto("/playlists", { invalidateAll: true });
-  }}
+		toast.success("Deleted playlist");
+		goto("/library/playlists", { invalidateAll: true });
+	}}
 />
 
 <EditPlaylistModal
-  bind:open={openEditPlaylistModal}
-  playlist={data.playlist}
+	bind:open={openEditPlaylistModal}
+	playlist={data.playlist}
 />
 
 <UploadPlaylistCoverModal
-  bind:open={openUploadCoverModal}
-  playlistId={data.playlist.id}
+	bind:open={openUploadCoverModal}
+	playlistId={data.playlist.id}
 />

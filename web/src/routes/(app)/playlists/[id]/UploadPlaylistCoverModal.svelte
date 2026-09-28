@@ -3,14 +3,14 @@
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { Button, Dialog, Label } from "@nanoteck137/nano-ui";
-  import { ImageUp } from "lucide-svelte";
-  import toast from "svelte-5-french-toast";
-  import { zod } from "sveltekit-superforms/adapters";
+  import { Button, Dialog, Label } from "$lib/components/ui";
+  import { ImageUp } from "@lucide/svelte";
+  import { zod4 } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
   import Spinner from "$lib/components/Spinner.svelte";
   import type { Playlist } from "$lib/api/types";
+	import { toast } from "svelte-sonner";
 
   const Schema = z.object({
     cover: z.instanceof(FileList),
@@ -31,11 +31,11 @@
   });
 
   const { form, errors, enhance, reset, submitting } = superForm(
-    defaults(zod(Schema)),
+    defaults(zod4(Schema)),
     {
       id: "upload-playlist-cover-modal",
       SPA: true,
-      validators: zod(Schema),
+      validators: zod4(Schema),
       dataType: "json",
       resetForm: true,
       async onUpdate({ form, cancel }) {
@@ -106,7 +106,7 @@
         <Errors errors={$errors.cover} />
       </FormItem>
 
-      <Dialog.Footer class="gap-2 sm:gap-0">
+      <Dialog.Footer>
         <Button
           variant="outline"
           onclick={() => {

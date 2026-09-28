@@ -3,13 +3,13 @@
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
-  import { ListFilter } from "lucide-svelte";
-  import toast from "svelte-5-french-toast";
-  import { zod } from "sveltekit-superforms/adapters";
+  import { Button, Dialog, Input, Label } from "$lib/components/ui";
+  import { ListFilter } from "@lucide/svelte";
+  import { zod4 } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
   import Spinner from "$lib/components/Spinner.svelte";
+	import { toast } from "svelte-sonner";
 
   const Schema = z.object({
     name: z.string().min(1, "Name cannot be empty"),
@@ -36,11 +36,11 @@
   });
 
   const { form, errors, enhance, reset, submitting } = superForm(
-    defaults(zod(Schema)),
+    defaults(zod4(Schema)),
     {
       id: "new-filter-modal",
       SPA: true,
-      validators: zod(Schema),
+      validators: zod4(Schema),
       dataType: "json",
       resetForm: true,
       async onUpdate({ form, cancel }) {

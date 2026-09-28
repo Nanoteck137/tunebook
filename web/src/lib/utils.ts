@@ -1,77 +1,108 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { z } from "zod";
+import z from "zod";
+
+export function cn(...inputs: ClassValue[]) {
+	return twMerge(clsx(inputs));
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type WithoutChild<T> = T extends { child?: any } ? Omit<T, "child"> : T;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type WithoutChildren<T> = T extends { children?: any }
+	? Omit<T, "children">
+	: T;
+export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
+export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
+	ref?: U | null;
+};
 
 export function capitilize(s: string) {
-  if (s.length === 0) return "";
-  return s[0].toUpperCase() + s.substring(1);
+	if (s.length === 0) return "";
+	return s[0].toUpperCase() + s.substring(1);
 }
 
 export function formatTime(s: number) {
-  const min = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
+	if (Number.isNaN(s)) {
+		return "0:00"
+	}
 
-  return `${min}:${sec.toString().padStart(2, "0")}`;
+	const min = Math.floor(s / 60);
+	const sec = Math.floor(s % 60);
+
+	return `${min}:${sec.toString().padStart(2, "0")}`;
 }
 
 export function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
+	if (ms < 1000) return `${ms}ms`;
 
-  const s = Math.floor(ms / 1000);
-  const subsec = ms % 1000;
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
+	const s = Math.floor(ms / 1000);
+	const subsec = ms % 1000;
+	const h = Math.floor(s / 3600);
+	const m = Math.floor((s % 3600) / 60);
+	const sec = s % 60;
 
-  return [
-    h && `${h}h`,
-    m && `${m}m`,
-    (sec || subsec) && `${sec}.${String(subsec).padStart(3, "0")}s`,
-  ]
-    .filter(Boolean)
-    .join(" ");
+	return [
+		h && `${h}h`,
+		m && `${m}m`,
+		(sec || subsec) && `${sec}.${String(subsec).padStart(3, "0")}s`,
+	]
+		.filter(Boolean)
+		.join(" ");
 }
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+export function formatPlayTime(seconds: number): string {
+	const h = Math.floor(seconds / 3600);
+	const m = Math.floor((seconds % 3600) / 60);
+
+	if (h > 0) return `${h}h ${m}m`;
+	return `${m}m`;
 }
 
 export function isRoleAdmin(role: string) {
-  switch (role) {
-    case "super_user":
-    case "admin":
-      return true;
-    default:
-      return false;
-  }
+	switch (role) {
+		case "super_user":
+		case "admin":
+			return true;
+		default:
+			return false;
+	}
 }
 
 export function getPagedQueryOptions(searchParams: URLSearchParams) {
-  const query: Record<string, string> = {};
+	const query: Record<string, string> = {};
 
-  const page = searchParams.get("page");
-  if (page) {
-    query["page"] = page;
-  }
+	const page = searchParams.get("page");
+	if (page) {
+		query["page"] = page;
+	}
 
-  return query;
+	return query;
 }
 
 export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function defineEnumTypes<
-  const T extends readonly { label: string; value: string }[],
+	const T extends readonly { label: string; value: string }[],
 >(entries: T, defaultVal?: T[number]["value"]) {
-  return {
-    sortTypes: entries as T,
-    SortTypeEnum: z.enum(
-      entries.map((e) => e.value) as [
-        T[number]["value"],
-        ...T[number]["value"][],
-      ],
-    ),
-    defaultSort: (defaultVal ?? entries[0].value) as T[number]["value"],
-  };
+	return {
+		sortTypes: entries as T,
+		SortTypeEnum: z.enum(
+			entries.map((e) => e.value) as [
+				T[number]["value"],
+				...T[number]["value"][],
+			],
+		),
+		defaultSort: (defaultVal ?? entries[0].value) as T[number]["value"],
+	};
+}
+
+export function formatDate(iso: string) {
+	return new Date(iso).toLocaleDateString(undefined, {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
 }

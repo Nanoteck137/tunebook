@@ -46,8 +46,8 @@
           name = "tunebook-web";
           version = fullVersion;
 
-          src = gitignore.lib.gitignoreSource ./webnew;
-          npmDepsHash = "sha256-sQ6Uif8oozCUYkqqBn2rt9KDvlY50Tx80OygfN9sKtg=";
+          src = gitignore.lib.gitignoreSource ./web;
+          npmDepsHash = "sha256-6Jx/T5LXlD10YHXIOgkj+7WbgpeUJyKzAAj3W9gb6Qs=";
 
           PUBLIC_VERSION=version;
           PUBLIC_COMMIT=self.dirtyRev or self.rev or "no-commit";

@@ -1,239 +1,294 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
-  import { page } from "$app/state";
-  import { Button, Input, Select, Separator } from "@nanoteck137/nano-ui";
-  import { Play, Shuffle, Plus, X } from "lucide-svelte";
-  import TrackList from "$lib/components/track-list/TrackList.svelte";
-  import { getMusicManager } from "$lib/music-manager.svelte";
-  import Spacer from "$lib/components/Spacer.svelte";
-  import NewFilterModal from "./NewFilterModal.svelte";
-  import FilterButton from "./FilterButton.svelte";
-  import Pagination from "$lib/components/Pagination.svelte";
-  import { sortTypes, defaultSort, type SortType } from "./types";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import { onMount } from "svelte";
+	import { getApiClient, handleApiError } from "$lib";
+	import type { Track } from "$lib/api/types";
+	import { Button, Checkbox } from "$lib/components/ui";
+	import {
+		SortableHeader,
+		SortToggleDropdown,
+		type Column,
+	} from "$lib/components/sort";
+	import { Music, Play, Shuffle } from "@lucide/svelte";
+	import HeroIcon from "$lib/components/HeroIcon.svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
+	import TrackList from "$lib/components/track-list/TrackList.svelte";
+	import { getMusicManager } from "$lib/music-manager.svelte";
+	import InfiniteScroll from "$lib/components/InfiniteScroll.svelte";
+	import { InfiniteScrollController } from "$lib/infinite-scroll.svelte";
+	import DebouncedSearchInput from "$lib/components/DebouncedSearchInput.svelte";
+	import SavedFilterButton from "$lib/components/SavedFilterButton.svelte";
+	import SavedFilterCard from "$lib/components/SavedFilterCard.svelte";
+	import {
+		sortTypes,
+		defaultSort,
+		constructFilterSort,
+		type SortType,
+	} from "./types";
+	import Spacer from "$lib/components/Spacer.svelte";
 
-  let { data } = $props();
-  const musicManager = getMusicManager();
+	let { data } = $props();
+	const musicManager = getMusicManager();
+	const apiClient = getApiClient();
 
-  let openNewFilterModal = $state(false);
-  let selectedSort = $state<SortType>(defaultSort);
+	let filterId = $derived(page.url.searchParams.get("filterId"));
 
-  let tagInput = $state("");
-  let tagMode = $state<"include" | "exclude">("include");
-  let tags = $state<{ value: string; mode: "include" | "exclude" }[]>([]);
+	let filterOpen = $state(false);
 
-  function addTag() {
-    const t = tagInput.trim();
-    if (!t) return;
+	let sort = $state(
+		(page.url.searchParams.get("sort") as SortType) ?? defaultSort,
+	);
 
-    if (!tags.some((x) => x.value === t && x.mode === tagMode)) {
-      tags = [...tags, { value: t, mode: tagMode }];
-    }
+	function updateSort(value: string) {
+		sort = value as SortType;
 
-    tagInput = "";
-  }
+		const query = page.url.searchParams;
+		query.delete("sort");
 
-  function removeTag(value: string, mode: "include" | "exclude") {
-    tags = tags.filter((t) => !(t.value === value && t.mode === mode));
-  }
+		if (sort !== defaultSort) {
+			query.set("sort", sort);
+		}
 
-  let filterId = $derived(page.url.searchParams.get("filterId"));
+		goto("?" + query.toString(), { invalidateAll: true });
+	}
 
-  function clearFilter() {
-    const query = page.url.searchParams;
-    query.delete("filterId");
-    goto("?" + query.toString(), {
-      invalidateAll: true,
-      replaceState: true,
-    });
-  }
+	let value = $state("");
 
-  async function playTracks(options: { shuffle?: boolean } = {}) {
-    if (filterId) {
-      await musicManager.queueRequest(
-        { type: "addFilter", filterId },
-        options,
-      );
-    } else {
-      await musicManager.addTracks({
-        trackIds: data.tracks.map((t) => t.id),
-        clear: true,
-      });
-    }
-  }
+	onMount(() => {
+		value = page.url.searchParams.get("query") ?? "";
+	});
+
+	async function search(query: string) {
+		const params = page.url.searchParams;
+		params.delete("query");
+
+		if (query) {
+			params.set("query", query);
+		}
+
+		await goto("?" + params.toString(), {
+			invalidateAll: true,
+			keepFocus: true,
+			replaceState: true,
+		});
+	}
+
+	const scroll = new InfiniteScrollController<Track>({
+		initialLoad: () => ({
+			items: data.tracks,
+			hasMore: data.page.page + 1 < data.page.totalPages,
+			page: data.page.page,
+		}),
+		load: async (nextPage) => {
+			const query: Record<string, string> = {
+				page: String(nextPage),
+				perPage: String(data.page.perPage),
+			};
+
+			constructFilterSort(data.filter, query);
+
+			if (filterId) {
+				query["filterId"] = filterId;
+			}
+
+			const res = await apiClient.getTracks({ query });
+			if (!res.success) {
+				handleApiError(res.error);
+				return null;
+			}
+
+			return {
+				items: res.data.tracks,
+				hasMore: res.data.page.page + 1 < res.data.page.totalPages,
+			};
+		},
+		itemKey: (track) => track.id,
+	});
+
+	let selectedTracks = $state<string[]>([]);
+
+	function toggleSelectAll() {
+		if (selectedTracks.length > 0) {
+			selectedTracks = [];
+			return;
+		}
+
+		selectedTracks = scroll.items.map((track) => track.id);
+	}
+
+	// The ad-hoc half of the filter (just the text search). Sent alongside
+	// filterId so the queue matches the tracks the list is actually showing:
+	// the backend ANDs the two.
+	let searchFilter = $derived.by(() => {
+		if (data.filter.query === "") return "";
+
+		const query: Record<string, string> = {};
+		constructFilterSort({ ...data.filter, sort: defaultSort }, query);
+		return query["filter"] ?? "";
+	});
+
+	async function playTracks(options: { shuffle?: boolean } = {}) {
+		if (filterId) {
+			await musicManager.queueRequest(
+				{ type: "addFilter", filterId, filter: searchFilter },
+				options,
+			);
+		} else {
+			await musicManager.addTracks({
+				trackIds: scroll.items.map((t) => t.id),
+				clear: true,
+			});
+		}
+	}
+
+	const columns: Column<SortType>[] = [
+		{
+			label: "Title",
+			asc: "name-a-z",
+			desc: "name-z-a",
+			className:
+				"-ml-1 flex min-w-0 flex-1 items-center gap-1 rounded-sm px-1 py-0.5 transition-colors hover:text-foreground",
+		},
+		{
+			label: "Album",
+			asc: "album",
+			desc: "album-desc",
+			className:
+				"-ml-1 hidden shrink-0 items-center gap-1 rounded-sm px-1 py-0.5 transition-colors hover:text-foreground md:flex",
+		},
+		{
+			label: "Duration",
+			asc: "duration",
+			desc: "duration-desc",
+			className:
+				"hidden shrink-0 items-center gap-1 rounded-sm px-1 py-0.5 transition-colors hover:text-foreground md:flex",
+		},
+		{
+			label: "Added",
+			asc: "created-new",
+			desc: "created-old",
+			className:
+				"-ml-1 hidden shrink-0 items-center gap-1 rounded-sm px-1 py-0.5 transition-colors hover:text-foreground lg:flex",
+		},
+	];
 </script>
 
 <div class="flex flex-col gap-4">
-  <div
-    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-  >
-    <div class="flex items-baseline gap-2">
-      <h1 class="text-xl font-bold">Tracks</h1>
-      {#if data.page}
-        <span class="text-sm text-muted-foreground"
-          >{data.page.totalItems}</span
-        >
-      {/if}
-    </div>
+	<HeroCard
+		class="section-tracks"
+		innerClass="sm:flex-row sm:items-center sm:justify-between"
+	>
+		<div class="flex items-center gap-4">
+			<HeroIcon>
+				<Music />
+			</HeroIcon>
+			<div class="flex min-w-0 flex-col">
+				<h1 class="text-2xl font-bold">Tracks</h1>
+				<p class="text-sm text-muted-foreground">
+					Every track in your library
+					{#if data.page}
+						&middot; {data.page.totalItems}
+					{/if}
+				</p>
+			</div>
+		</div>
 
-    <div class="flex items-center gap-2">
-      <Button variant="outline" size="sm" onclick={() => playTracks({ shuffle: true })}>
-        <Shuffle size={14} />
-        Shuffle
-      </Button>
-      <Button size="sm" onclick={() => playTracks()}>
-        <Play size={14} />
-        Play All
-      </Button>
-    </div>
-  </div>
+		<div class="flex gap-2">
+			<Button size="sm" onclick={() => playTracks()}>
+				<Play />
+				Play
+			</Button>
+			<Button
+				size="icon-sm"
+				variant="ghost"
+				onclick={() => playTracks({ shuffle: true })}
+			>
+				<Shuffle />
+			</Button>
+		</div>
+	</HeroCard>
 
-  <div class="rounded-lg border bg-card p-3">
-    <div
-      class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
-    >
-      <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-        <Input class="h-9 sm:w-56" placeholder="Search tracks..." disabled />
-        <Select.Root type="single" allowDeselect={false} onValueChange={(v) => selectedSort = v as SortType}>
-          <Select.Trigger class="h-9 w-full sm:w-40">
-            {sortTypes.find((i) => i.value === selectedSort)?.label ?? "Sort"}
-          </Select.Trigger>
-          <Select.Content>
-            {#each sortTypes as ty (ty.value)}
-              <Select.Item value={ty.value} label={ty.label} />
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      </div>
+	<div class="flex items-center justify-between gap-2 sm:hidden">
+		<DebouncedSearchInput
+			class="flex-1"
+			placeholder="Search tracks..."
+			{value}
+			setValue={(v) => (value = v)}
+			{search}
+		/>
 
-    </div>
+		<div class="flex items-center gap-2 pr-2">
+			<SavedFilterButton
+				bind:filterOpen
+				hasFilters={(data.filters?.length ?? 0) > 0}
+			/>
 
-    <div class="mt-3 flex flex-wrap items-center gap-1.5">
-      <span class="text-xs font-medium text-muted-foreground">Tags</span>
+			<SortToggleDropdown
+				types={sortTypes}
+				{sort}
+				{defaultSort}
+				onSortChange={updateSort}
+			/>
 
-      <div class="flex items-center gap-1">
-        <button
-          class="rounded-l-md border px-1.5 py-1 text-xs font-medium transition-colors {tagMode ===
-          'include'
-            ? 'border-primary bg-primary text-primary-foreground'
-            : 'bg-transparent text-muted-foreground hover:text-foreground'}"
-          onclick={() => (tagMode = "include")}
-        >
-          + Inc
-        </button>
-        <button
-          class="-ml-px rounded-r-md border px-1.5 py-1 text-xs font-medium transition-colors {tagMode ===
-          'exclude'
-            ? 'border-destructive bg-destructive text-destructive-foreground'
-            : 'bg-transparent text-muted-foreground hover:text-foreground'}"
-          onclick={() => (tagMode = "exclude")}
-        >
-          - Exc
-        </button>
-      </div>
+			<Checkbox
+				title="Select all"
+				aria-label="Select all"
+				checked={selectedTracks.length > 0}
+				onCheckedChange={() => toggleSelectAll()}
+			></Checkbox>
+		</div>
+	</div>
 
-      <Input
-        class="h-7 w-28 text-xs"
-        placeholder="Tag name..."
-        bind:value={tagInput}
-        onkeydown={(e) => {
-          if (e.key === "Enter") {
-            addTag();
-          }
-        }}
-      />
+	<SortableHeader {sort} onSortChange={updateSort} {columns}>
+		<div
+			class="flex shrink-0 items-center gap-2 border-l border-border/40 pl-3"
+		>
+			<SavedFilterButton
+				bind:filterOpen
+				hasFilters={(data.filters?.length ?? 0) > 0}
+			/>
 
-      <button
-        class="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
-        onclick={addTag}
-      >
-        <Plus size={14} />
-      </button>
+			<DebouncedSearchInput
+				inputClass="h-7 w-44 pr-6"
+				iconSize={12}
+				placeholder="Search tracks..."
+				{value}
+				setValue={(v) => (value = v)}
+				{search}
+			/>
 
-      {#each tags as t (t.value + t.mode)}
-        <span
-          class="flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs {t.mode ===
-          'include'
-            ? 'bg-primary/10 text-primary'
-            : 'bg-destructive/10 text-destructive'}"
-        >
-          {t.mode === "include" ? "+" : "-"}{t.value}
-          <button
-            class="hover:text-inherit/80"
-            onclick={() => removeTag(t.value, t.mode)}
-          >
-            <X size={11} />
-          </button>
-        </span>
-      {/each}
+			<Checkbox
+				title="Select all"
+				aria-label="Select all"
+				checked={selectedTracks.length > 0}
+				onCheckedChange={() => toggleSelectAll()}
+			/>
+		</div>
+	</SortableHeader>
 
-      {#if tags.length > 0}
-        <button
-          class="text-xs text-muted-foreground hover:text-foreground"
-          onclick={() => (tags = [])}
-        >
-          Clear
-        </button>
-      {/if}
-    </div>
-
-    <div class="mt-3 flex flex-wrap items-center gap-2">
-      {#if data.filters && data.filters.length > 0}
-        <span class="text-xs font-medium text-muted-foreground"
-          >Saved Filters</span
-        >
-        {#each data.filters as filter (filter.filterId)}
-          <FilterButton {filter} />
-        {/each}
-      {/if}
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onclick={() => (openNewFilterModal = true)}
-      >
-        <Plus size={14} />
-        New Filter
-      </Button>
-
-      {#if page.url.searchParams.has("filterId")}
-        <Button
-          variant="ghost"
-          size="sm"
-          onclick={clearFilter}
-        >
-          <X size={14} />
-          Clear
-        </Button>
-      {/if}
-    </div>
-  </div>
+	<SavedFilterCard {filterOpen} filters={data.filters} />
 </div>
 
 <Spacer size="md" />
 
-<TrackList
-  totalTracks={data.page.totalItems}
-  tracks={data.tracks}
-  onPlay={async (trackId) => {
-    if (filterId) {
-      await musicManager.queueRequest(
-        { type: "addFilter", filterId },
-        { queueIndexToTrackId: trackId },
-      );
-    } else {
-      await musicManager.addTracks({
-        trackIds: data.tracks.map((t) => t.id),
-        trackId,
-        clear: true,
-      });
-    }
-  }}
-/>
-
-<Spacer size="lg" />
-<Separator />
-<Spacer size="lg" />
-
-<Pagination page={data.page} />
-
-<NewFilterModal bind:open={openNewFilterModal} />
+<InfiniteScroll controller={scroll}>
+	<TrackList
+		tracks={scroll.items}
+		bind:selectedTracks
+		onPlay={async (trackId) => {
+			if (filterId) {
+				await musicManager.queueRequest(
+					{ type: "addFilter", filterId },
+					{ queueIndexToTrackId: trackId },
+				);
+			} else {
+				await musicManager.addTracks({
+					trackIds: scroll.items.map((t) => t.id),
+					trackId,
+					clear: true,
+				});
+			}
+		}}
+	/>
+</InfiniteScroll>

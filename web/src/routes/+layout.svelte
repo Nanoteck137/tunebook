@@ -1,7 +1,19 @@
 <script lang="ts">
-  import "../app.css";
+	import { ModeWatcher } from "mode-watcher";
+	import "../app.css";
+	import { Toaster, Tooltip } from "$lib/components/ui";
+	import { onMount } from "svelte";
 
-  const { children } = $props();
+	const { children } = $props();
+
+	onMount(() => {
+		document.documentElement.style.removeProperty("background-color");
+	});
 </script>
 
-{@render children()}
+<ModeWatcher />
+<Toaster />
+
+<Tooltip.Provider>
+	{@render children()}
+</Tooltip.Provider>

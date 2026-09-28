@@ -3,9 +3,9 @@
   import { getApiClient, handleApiError, setApiClientAuth } from "$lib";
   import type { AuthQuickConnectInitiate } from "$lib/api/types.js";
   import { getMusicManager } from "$lib/music-manager.svelte";
-  import { Button } from "@nanoteck137/nano-ui";
-  import { LogIn, QrCode, RefreshCw } from "lucide-svelte";
-  import toast from "svelte-5-french-toast";
+  import { Button } from "$lib/components/ui";
+  import { LogIn, QrCode, RefreshCw } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 
   const { data } = $props();
   const apiClient = getApiClient();
@@ -201,7 +201,7 @@
 
 <div class="mt-16 flex flex-col items-center justify-center gap-8 p-4">
   <div
-    class="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3"
+    class="flex h-32 w-32 items-center justify-center rounded-full bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -217,7 +217,7 @@
     </svg>
   </div>
   <h1
-    class="bg-gradient-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-5xl font-bold text-transparent"
+    class="bg-linear-to-tr from-logo-1 via-logo-2 to-logo-3 bg-clip-text text-5xl font-bold text-transparent"
   >
     Tunebook
   </h1>

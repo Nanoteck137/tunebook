@@ -1,36 +1,39 @@
-import { isRoleAdmin } from "$lib/utils";
-import { error, redirect } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ parent }) => {
-  const data = await parent();
+	const data = await parent();
 
-  if (!isRoleAdmin(data.user?.role ?? "")) {
-    redirect(301, "/");
-  }
+	const [mediaSettings, systemInfo, serverStats] = await Promise.all([
+		data.apiClient.getMediaSettings(),
+		data.apiClient.getSystemInfo(),
+		data.apiClient.getSystemStats(),
+	]);
 
-  const [mediaSettings, systemInfo] = await Promise.all([
-    data.apiClient.getMediaSettings(),
-    data.apiClient.getSystemInfo(),
-  ]);
+	if (!mediaSettings.success) {
+		throw error(mediaSettings.error.code, {
+			message: mediaSettings.error.message,
+			type: mediaSettings.error.type,
+		});
+	}
 
-  if (!mediaSettings.success) {
-    throw error(mediaSettings.error.code, {
-      message: mediaSettings.error.message,
-      type: mediaSettings.error.type,
-    });
-  }
+	if (!systemInfo.success) {
+		throw error(systemInfo.error.code, {
+			message: systemInfo.error.message,
+			type: systemInfo.error.type,
+		});
+	}
 
-  if (!systemInfo.success) {
-    throw error(systemInfo.error.code, {
-      message: systemInfo.error.message,
-      type: systemInfo.error.type,
-    });
-  }
+	if (!serverStats.success) {
+		throw error(serverStats.error.code, {
+			message: serverStats.error.message,
+			type: serverStats.error.type,
+		});
+	}
 
-  return {
-    ...data,
-    mediaSettings: mediaSettings.data,
-    systemInfo: systemInfo.data,
-  };
+	return {
+		mediaSettings: mediaSettings.data,
+		systemInfo: systemInfo.data,
+		serverStats: serverStats.data,
+	};
 };

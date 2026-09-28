@@ -1,32 +1,49 @@
 import { getPagedQueryOptions } from "$lib/utils";
+import { TrackFilter, buildTrackQuery } from "$lib/components/sort";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
+import type { TrackFilter as SavedTrackFilter } from "$lib/api/types";
 
 export const load: PageLoad = async ({ parent, params, url }) => {
-  const data = await parent();
+	const data = await parent();
 
-  const playlist = await data.apiClient.getPlaylistById(params.id);
-  if (!playlist.success) {
-    throw error(playlist.error.code, { message: playlist.error.message });
-  }
+	const playlist = await data.apiClient.getPlaylistById(params.id);
+	if (!playlist.success) {
+		throw error(playlist.error.code, { message: playlist.error.message });
+	}
 
-  const query = getPagedQueryOptions(url.searchParams);
-  const filterId = url.searchParams.get("filterId");
-  if (filterId) {
-    query["filterId"] = filterId;
-  }
+	const filtersRes = await data.apiClient.getTrackFilters();
+	if (!filtersRes.success) {
+		throw error(filtersRes.error.code, { message: filtersRes.error.message });
+	}
 
-  const items = await data.apiClient.getPlaylistItems(params.id, {
-    query,
-  });
-  if (!items.success) {
-    throw error(items.error.code, { message: items.error.message });
-  }
+	const query = getPagedQueryOptions(url.searchParams);
+	delete query.page;
 
-  return {
-    ...data,
-    playlist: playlist.data.playlist,
-    page: items.data.page,
-    items: items.data.items,
-  };
+	const filter = TrackFilter.parse({
+		query: url.searchParams.get("query") ?? "",
+		sort: url.searchParams.get("sort") ?? undefined,
+	});
+	buildTrackQuery(filter, "playlist", query);
+
+	const filterId = url.searchParams.get("filterId");
+	if (filterId) {
+		query["filterId"] = filterId;
+	}
+
+	const items = await data.apiClient.getPlaylistItems(params.id, {
+		query,
+	});
+	if (!items.success) {
+		throw error(items.error.code, { message: items.error.message });
+	}
+
+	return {
+		...data,
+		playlist: playlist.data.playlist,
+		page: items.data.page,
+		items: items.data.items,
+		filter,
+		filters: filtersRes.data.filters,
+	};
 };

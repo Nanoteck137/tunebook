@@ -1,5 +1,5 @@
 <script>
-  import { Skeleton } from "@nanoteck137/nano-ui";
+  import { Skeleton } from "$lib/components/ui";
 </script>
 
 <div class="flex shrink-0 flex-col">

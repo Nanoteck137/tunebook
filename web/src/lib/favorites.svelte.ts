@@ -3,66 +3,91 @@ import type { ApiClient } from "$lib/api/client";
 import { getContext, setContext } from "svelte";
 
 class Favorites {
-  apiClient: ApiClient;
-  ids = $state<string[]>([]);
+	apiClient: ApiClient;
+	ids = $state<string[]>([]);
 
-  loading = $state(false);
+	loading = $state(false);
 
-  constructor(apiClient: ApiClient) {
-    this.apiClient = apiClient;
+	constructor(apiClient: ApiClient) {
+		this.apiClient = apiClient;
 
-    if (localStorage.getItem("token")) {
-      this.fetchIds();
-    }
-  }
+		if (localStorage.getItem("token")) {
+			this.fetchIds();
+		}
+	}
 
-  async fetchIds() {
-    this.loading = true;
+	async fetchIds() {
+		this.loading = true;
 
-    const ids = await this.apiClient.getFavoriteTrackIds();
-    if (!ids.success) {
-      handleApiError(ids.error);
-      return;
-    }
+		const ids = await this.apiClient.getFavoriteTrackIds();
+		if (!ids.success) {
+			handleApiError(ids.error);
+			return;
+		}
 
-    this.ids = ids.data.ids;
+		this.ids = ids.data.ids;
 
-    this.loading = false;
-  }
+		this.loading = false;
+	}
 
-  async toggleTrack(trackId: string) {
-    if (this.loading) return;
+	async toggleTrack(trackId: string) {
+		if (this.loading) return;
 
-    if (this.hasTrack(trackId)) {
-      const res = await this.apiClient.unfavoriteTrack(trackId);
+		if (this.hasTrack(trackId)) {
+			const res = await this.apiClient.unfavoriteTrack(trackId);
 
-      if (!res.success) {
-        handleApiError(res.error);
-        return;
-      }
-    } else {
-      const res = await this.apiClient.favoriteTrack(trackId);
+			if (!res.success) {
+				handleApiError(res.error);
+				return;
+			}
+		} else {
+			const res = await this.apiClient.favoriteTrack(trackId);
 
-      if (!res.success) {
-        handleApiError(res.error);
-        return;
-      }
-    }
+			if (!res.success) {
+				handleApiError(res.error);
+				return;
+			}
+		}
 
-    await this.fetchIds();
-  }
+		await this.fetchIds();
+	}
 
-  hasTrack(trackId: string) {
-    return !!this.ids.find((v) => v === trackId);
-  }
+	async favoriteTracks(trackIds: string[]) {
+		await this.setTracks(trackIds, true);
+	}
+
+	async unfavoriteTracks(trackIds: string[]) {
+		await this.setTracks(trackIds, false);
+	}
+
+	private async setTracks(trackIds: string[], favorite: boolean) {
+		if (this.loading) return;
+
+		for (const id of trackIds) {
+			const res = favorite
+				? await this.apiClient.favoriteTrack(id)
+				: await this.apiClient.unfavoriteTrack(id);
+
+			if (!res.success) {
+				handleApiError(res.error);
+				return;
+			}
+		}
+
+		await this.fetchIds();
+	}
+
+	hasTrack(trackId: string) {
+		return !!this.ids.find((v) => v === trackId);
+	}
 }
 
 const FAVORITES_KEY = Symbol("FAVORITES");
 
 export function setFavorites(apiClient: ApiClient) {
-  return setContext(FAVORITES_KEY, new Favorites(apiClient));
+	return setContext(FAVORITES_KEY, new Favorites(apiClient));
 }
 
 export function getFavorites() {
-  return getContext<ReturnType<typeof setFavorites>>(FAVORITES_KEY);
+	return getContext<ReturnType<typeof setFavorites>>(FAVORITES_KEY);
 }
