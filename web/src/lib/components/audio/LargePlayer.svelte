@@ -31,6 +31,35 @@
 	let currentQueueItem = $state<MediaItem | null>(null);
 	let nextItems = $state<MediaItem[]>([]);
 
+	let queueOpen = $state(false);
+	let nowPlayingSection = $state<HTMLElement | null>(null);
+
+	// Land on the current track when the sheet opens. The "Played" list sits
+	// above it, so without this the current item is usually below the fold.
+	$effect(() => {
+		// Read synchronously so this also re-runs once the sheet has mounted
+		// and bound the section, which happens after open flips to true.
+		const open = queueOpen;
+		const target = nowPlayingSection;
+
+		if (!open || !target) return;
+
+		// The sheet renders in a portal, so the scroll viewport has no height
+		// on the first frame.
+		let cancelled = false;
+
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (cancelled) return;
+				target.scrollIntoView({ behavior: "smooth", block: "start" });
+			});
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
 	$effect(() => {
 		currentMediaItem = musicManager.currentItem;
 		currentQueueItem = musicManager.currentItem;
@@ -46,7 +75,7 @@
 </script>
 
 {#snippet queueSheet()}
-	<Sheet.Root>
+	<Sheet.Root bind:open={queueOpen}>
 		<Sheet.Trigger class={iconButton} title="Queue" aria-label="Queue">
 			<ListMusic size="20" />
 		</Sheet.Trigger>
@@ -138,7 +167,7 @@
 
 					<!-- Now Playing -->
 					{#if currentQueueItem}
-						<div>
+						<div bind:this={nowPlayingSection} class="scroll-mt-3">
 							<p
 								class="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 							>

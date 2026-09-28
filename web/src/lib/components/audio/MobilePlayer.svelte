@@ -182,6 +182,34 @@
 		queueDragY = 0;
 		queueDragging = false;
 	}
+
+	let nowPlayingSection = $state<HTMLElement | null>(null);
+
+	// Land on the current track when the sheet opens. The "Played" list sits
+	// above it, so without this the current item is usually below the fold.
+	$effect(() => {
+		// Read synchronously so this also re-runs once the sheet has mounted
+		// and bound the section, which happens after open flips to true.
+		const isOpen = queueOpen;
+		const target = nowPlayingSection;
+
+		if (!isOpen || !target) return;
+
+		// The sheet animates in, so the scroll viewport has no settled height
+		// on the first frame.
+		let cancelled = false;
+
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (cancelled) return;
+				target.scrollIntoView({ behavior: "smooth", block: "start" });
+			});
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	});
 </script>
 
 <!-- Bottom mini bar -->
@@ -592,7 +620,7 @@
 
 						<!-- Now Playing -->
 						{#if currentQueueItem}
-							<div>
+							<div bind:this={nowPlayingSection} class="scroll-mt-3">
 								<p
 									class="mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 								>
