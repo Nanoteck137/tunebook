@@ -8,6 +8,7 @@
 	} from "@lucide/svelte";
 	import { Button } from "$lib/components/ui";
 	import HeroIcon from "$lib/components/HeroIcon.svelte";
+	import HeroCard from "$lib/components/HeroCard.svelte";
 	import { cn } from "$lib/utils";
 
 	let { children } = $props();
@@ -46,9 +47,7 @@
 </script>
 
 <div class="section-server flex flex-col gap-4">
-	<div
-		class="flex flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6"
-	>
+	<HeroCard class="section-server">
 		<div class="flex items-center gap-4">
 			<HeroIcon><Server /></HeroIcon>
 			<div class="flex min-w-0 flex-col">
@@ -59,8 +58,9 @@
 			</div>
 		</div>
 
-		<div
+		<nav
 			class="flex flex-wrap items-center gap-1 border-t border-border/40 pt-3"
+			aria-label="Server sections"
 		>
 			{#each tabs as tab (tab.href)}
 				<Button
@@ -78,8 +78,8 @@
 					{tab.label}
 				</Button>
 			{/each}
-		</div>
-	</div>
+		</nav>
+	</HeroCard>
 
 	{@render children()}
 </div>
