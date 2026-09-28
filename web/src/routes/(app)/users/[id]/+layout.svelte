@@ -11,6 +11,7 @@
 		Settings,
 	} from "@lucide/svelte";
 	import { Breadcrumb, Button } from "$lib/components/ui";
+	import HeroCard from "$lib/components/HeroCard.svelte";
 	import { cn } from "$lib/utils";
 
 	const { data, children } = $props();
@@ -108,43 +109,10 @@
 		</Breadcrumb.Root>
 	</div>
 
-	<div
-		class="flex min-w-0 flex-col gap-4 rounded-lg border bg-linear-to-b from-section-hero-from to-section-hero-to p-4 shadow-sm sm:p-6 md:gap-8"
-	>
-		<div class="flex min-w-0 flex-col gap-4 md:hidden">
-			<div class="flex items-center gap-4">
-				<img
-					class="h-20 min-h-20 w-20 min-w-20 shrink-0 rounded-full shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] dark:ring-white/10"
-					src={data.userData.picture.large}
-					alt=""
-				/>
-
-				<div class="flex min-w-0 flex-col gap-0.5">
-					<p
-						class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-					>
-						Profile
-					</p>
-
-					<h1 class="line-clamp-2 text-2xl font-bold">
-						{data.userData.displayName}
-					</h1>
-				</div>
-			</div>
-
-			<div class="flex flex-col items-start gap-1 text-sm">
-				<p class="font-medium text-foreground">{roleLabel}</p>
-
-				<p class="flex items-center gap-1.5 text-muted-foreground">
-					<Calendar size={14} />
-					<span>Member since {createdString}</span>
-				</p>
-			</div>
-		</div>
-
-		<div class="hidden gap-6 md:flex md:items-end md:gap-8">
+	<HeroCard class="section-users">
+		<div class="flex min-w-0 flex-col gap-4 md:flex-row md:items-end md:gap-8">
 			<img
-				class="h-52 min-h-52 w-52 min-w-52 shrink-0 rounded-full shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] dark:ring-white/10"
+				class="h-20 min-h-20 w-20 min-w-20 shrink-0 rounded-full shadow-2xl ring-1 ring-black/15 transition-transform duration-300 hover:scale-[1.02] md:h-52 md:min-h-52 md:w-52 md:min-w-52 dark:ring-white/10"
 				src={data.userData.picture.large}
 				alt=""
 			/>
@@ -156,7 +124,7 @@
 					Profile
 				</p>
 
-				<h1 class="line-clamp-2 text-4xl font-bold">
+				<h1 class="line-clamp-2 text-2xl font-bold md:text-4xl">
 					{data.userData.displayName}
 				</h1>
 
@@ -169,8 +137,9 @@
 			</div>
 		</div>
 
-		<div
+		<nav
 			class="flex flex-wrap items-center gap-1 border-t border-border/40 pt-3"
+			aria-label="Profile sections"
 		>
 			{#each tabs as tab (tab.href)}
 				{#if tab.public || data.userData.id === data.user?.id}
@@ -190,8 +159,8 @@
 					</Button>
 				{/if}
 			{/each}
-		</div>
-	</div>
+		</nav>
+	</HeroCard>
 
 	<div class="min-w-0 flex-1">
 		{@render children()}
