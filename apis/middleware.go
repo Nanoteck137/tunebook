@@ -4,15 +4,13 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/nanoteck137/tunebook/utils"
 )
 
 func loggerMiddleware(logName string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			sr := &utils.StatusRecorder{ResponseWriter: w, Status: http.StatusOK}
+			sr := &StatusRecorder{ResponseWriter: w, Status: http.StatusOK}
 			next.ServeHTTP(sr, r)
 
 			slog.LogAttrs(r.Context(), slog.LevelInfo, logName,

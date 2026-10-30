@@ -10,7 +10,6 @@ import (
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
 	"github.com/nanoteck137/tunebook/render"
-	"github.com/nanoteck137/tunebook/utils"
 )
 
 func InstallStaticHandlers(app core.App, group pyrin.Group) {
@@ -51,7 +50,7 @@ func InstallStaticHandlers(app core.App, group pyrin.Group) {
 
 				fs := http.FileServer(http.FS(root))
 
-				hookedWriter := &utils.HookedResponseWriter{
+				hookedWriter := &HookedResponseWriter{
 					ResponseWriter: c.Response(),
 				}
 				fs.ServeHTTP(hookedWriter, c.Request())
