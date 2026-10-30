@@ -9,27 +9,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/core"
-	"github.com/nanoteck137/tunebook/render"
 )
 
 func InstallStaticHandlers(app core.App, group pyrin.Group) {
 	group.Register(
-		pyrin.NormalHandler{
-			Method: http.MethodGet,
-			Path:   "/static/*",
-			Middlewares: []pyrin.MiddlewareFunc{
-				middleware.Compress(5),
-			},
-			HandlerFunc: func(c pyrin.Context) error {
-				fs := http.StripPrefix(
-					"/static", http.FileServerFS(render.StaticFS))
-
-				fs.ServeHTTP(c.Response(), c.Request())
-
-				return nil
-			},
-		},
-
 		pyrin.NormalHandler{
 			Method: http.MethodGet,
 			Path:   "/*",
