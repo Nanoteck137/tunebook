@@ -113,12 +113,5 @@
           ];
         };
       }
-    ) // {
-      nixosModules.backend = import ./nix/backend.nix { inherit self; };
-      nixosModules.default = { ... }: {
-        imports = [
-          self.nixosModules.backend
-        ];
-      };
-    };
+    );
 }
