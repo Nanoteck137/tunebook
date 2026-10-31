@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/tunebook/apis/render"
 	"github.com/nanoteck137/tunebook/core"
-	"github.com/nanoteck137/tunebook/render"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
@@ -184,19 +184,19 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 				err := authService.CompleteProviderRequest(state, code)
 				if err != nil {
 					if errors.Is(err, service.ErrAuthServiceRequestExpired) {
-						render.RenderCallbackRequestExpired(c.Response())
+						render.CallbackRequestExpired(c.Response())
 						c.Response().WriteHeader(http.StatusOK)
 
 						return nil
 					}
 
-					render.RenderCallbackError(c.Response())
+					render.CallbackError(c.Response())
 					c.Response().WriteHeader(http.StatusOK)
 
 					return nil
 				}
 
-				render.RenderCallbackSuccess(c.Response())
+				render.CallbackSuccess(c.Response())
 				c.Response().WriteHeader(http.StatusOK)
 
 				return nil

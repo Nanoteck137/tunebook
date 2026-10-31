@@ -109,6 +109,7 @@
             just
             meilisearch
             sqlite
+            tailwindcss_4
 
             inputs.versionctl.packages.${system}.default
           ];

@@ -25,7 +25,7 @@ type Data struct {
 
 var templates = template.Must(template.New("index").ParseFS(embedFS, "templates/index.html"))
 
-func RenderCallbackSuccess(w io.Writer) error {
+func CallbackSuccess(w io.Writer) error {
 	return templates.ExecuteTemplate(w, "base", Data{
 		Icon:    "success",
 		AppName: tunebook.AppName,
@@ -35,7 +35,7 @@ func RenderCallbackSuccess(w io.Writer) error {
 	})
 }
 
-func RenderCallbackRequestExpired(w io.Writer) error {
+func CallbackRequestExpired(w io.Writer) error {
 	return templates.ExecuteTemplate(w, "base", Data{
 		Icon:    "error",
 		AppName: tunebook.AppName,
@@ -45,7 +45,7 @@ func RenderCallbackRequestExpired(w io.Writer) error {
 	})
 }
 
-func RenderCallbackError(w io.Writer) error {
+func CallbackError(w io.Writer) error {
 	return templates.ExecuteTemplate(w, "base", Data{
 		Icon:    "error",
 		AppName: tunebook.AppName,
