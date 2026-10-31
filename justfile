@@ -4,6 +4,10 @@ default:
 gen:
     go run ./cmd/internal gen
 
+meilisearch port="7700" key="dev-key":
+    mkdir -p work/meilisearch
+    meilisearch --config-file-path /dev/null --env development --db-path work/meilisearch --http-addr 127.0.0.1:{{port}} --master-key {{key}}
+
 clean:
     rm -rf work
     rm -rf tmp

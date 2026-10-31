@@ -107,6 +107,7 @@
             imagemagick
             ffmpeg
             just
+            meilisearch
             sqlite
 
             inputs.versionctl.packages.${system}.default
