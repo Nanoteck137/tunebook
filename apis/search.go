@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -34,7 +34,7 @@ type SearchUsers struct {
 	Users []UserData `json:"users"`
 }
 
-func InstallSearchHandlers(app core.App, group pyrin.Group) {
+func InstallSearchHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "SearchArtists",

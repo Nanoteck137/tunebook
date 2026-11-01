@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tools/anvil"
 	"github.com/nanoteck137/validate"
@@ -74,7 +74,7 @@ type ReorderTrackFiltersBody struct {
 	FilterIds      []string `json:"filterIds"`
 }
 
-func InstallFilterHandlers(app core.App, group pyrin.Group) {
+func InstallFilterHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetTrackFilters",

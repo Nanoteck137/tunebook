@@ -7,12 +7,12 @@ import (
 	"strconv"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
 )
 
-func InstallFilesHandlers(app core.App, g pyrin.Group) {
+func InstallFilesHandlers(app *app.App, g pyrin.Group) {
 	g.Register(
 		pyrin.NormalHandler{
 			Name:   "GetAlbumImage",

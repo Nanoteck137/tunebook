@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 )
 
 type Tag struct {
@@ -15,7 +15,7 @@ type GetTags struct {
 	Tags []Tag `json:"tags"`
 }
 
-func InstallTagHandlers(app core.App, group pyrin.Group) {
+func InstallTagHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetTags",

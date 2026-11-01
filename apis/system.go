@@ -8,7 +8,7 @@ import (
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/service"
 )
 
@@ -40,7 +40,7 @@ type GetSystemStats struct {
 	DatabaseSize int64  `json:"databaseSize"`
 }
 
-func InstallSystemHandlers(app core.App, group pyrin.Group) {
+func InstallSystemHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetSystemInfo",

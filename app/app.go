@@ -1,4 +1,4 @@
-package core
+package app
 
 import (
 	"context"
@@ -13,9 +13,7 @@ import (
 	"github.com/nanoteck137/tunebook/tools/broker"
 )
 
-var _ App = (*BaseApp)(nil)
-
-type BaseApp struct {
+type App struct {
 	db     *database.Database
 	config *config.Config
 
@@ -40,83 +38,83 @@ type BaseApp struct {
 	broker *broker.Broker
 }
 
-func (app *BaseApp) UserService() *service.UserService {
+func (app *App) UserService() *service.UserService {
 	return app.userService
 }
 
-func (app *BaseApp) ArtistService() *service.ArtistService {
+func (app *App) ArtistService() *service.ArtistService {
 	return app.artistService
 }
 
-func (app *BaseApp) AlbumService() *service.AlbumService {
+func (app *App) AlbumService() *service.AlbumService {
 	return app.albumService
 }
 
-func (app *BaseApp) TrackService() *service.TrackService {
+func (app *App) TrackService() *service.TrackService {
 	return app.trackService
 }
 
-func (app *BaseApp) PlaylistService() *service.PlaylistService {
+func (app *App) PlaylistService() *service.PlaylistService {
 	return app.playlistService
 }
 
-func (app *BaseApp) HistoryService() *service.HistoryService {
+func (app *App) HistoryService() *service.HistoryService {
 	return app.historyService
 }
 
-func (app *BaseApp) QueueService() *service.QueueService {
+func (app *App) QueueService() *service.QueueService {
 	return app.queueService
 }
 
-func (app *BaseApp) JobService() *service.JobService {
+func (app *App) JobService() *service.JobService {
 	return app.jobService
 }
 
-func (app *BaseApp) TaskService() *service.TaskService {
+func (app *App) TaskService() *service.TaskService {
 	return app.taskService
 }
 
-func (app *BaseApp) NotificationService() *service.NotificationService {
+func (app *App) NotificationService() *service.NotificationService {
 	return app.notificationService
 }
 
-func (app *BaseApp) MediaService() *service.MediaService {
+func (app *App) MediaService() *service.MediaService {
 	return app.mediaService
 }
 
-func (app *BaseApp) Broker() *broker.Broker {
+func (app *App) Broker() *broker.Broker {
 	return app.broker
 }
 
-func (app *BaseApp) ImageService() *service.ImageService {
+func (app *App) ImageService() *service.ImageService {
 	return app.imageService
 }
 
-func (app *BaseApp) FilesystemService() *service.FilesystemService {
+func (app *App) FilesystemService() *service.FilesystemService {
 	return app.filesystemService
 }
 
-func (app *BaseApp) LibraryService() *service.LibraryService {
+func (app *App) LibraryService() *service.LibraryService {
 	return app.libraryService
 }
 
-func (app *BaseApp) SearchService() *service.SearchService {
+func (app *App) SearchService() *service.SearchService {
 	return app.searchService
 }
 
-func (app *BaseApp) AuthService() *service.AuthService {
+func (app *App) AuthService() *service.AuthService {
 	return app.authService
 }
 
-func (app *BaseApp) DB() *database.Database {
+func (app *App) DB() *database.Database {
 	return app.db
 }
 
-func (app *BaseApp) Config() *config.Config {
+func (app *App) Config() *config.Config {
 	return app.config
 }
 
-func (app *BaseApp) Bootstrap() error {
+func (app *App) Bootstrap() error {
 	var err error
 
 	app.filesystemService = service.NewFilesystemService(
@@ -301,13 +299,13 @@ func (app *BaseApp) Bootstrap() error {
 	return nil
 }
 
-func (app *BaseApp) Start() {
+func (app *App) Start() {
 	app.jobService.Start()
 	app.taskService.Start()
 	app.broker.Start()
 }
 
-func (app *BaseApp) Shutdown() error {
+func (app *App) Shutdown() error {
 	app.jobService.Stop()
 	app.taskService.Stop()
 
@@ -319,8 +317,8 @@ func (app *BaseApp) Shutdown() error {
 	return nil
 }
 
-func NewBaseApp(config *config.Config) *BaseApp {
-	return &BaseApp{
+func NewApp(config *config.Config) *App {
+	return &App{
 		config: config,
 	}
 }

@@ -7,8 +7,8 @@ import (
 	"syscall"
 
 	"github.com/nanoteck137/tunebook/apis"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/config"
-	"github.com/nanoteck137/tunebook/core"
 	"github.com/spf13/cobra"
 )
 
@@ -24,17 +24,17 @@ var serveCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		app := core.NewBaseApp(config)
+		a := app.NewApp(config)
 
-		err = app.Bootstrap()
+		err = a.Bootstrap()
 		if err != nil {
 			slog.Error("failed to bootstrap app", "err", err)
 			os.Exit(1)
 		}
 
-		app.Start()
+		a.Start()
 
-		e, err := apis.Server(app)
+		e, err := apis.Server(a)
 		if err != nil {
 			slog.Error("failed to create server", "err", err)
 			os.Exit(1)
@@ -54,7 +54,7 @@ var serveCmd = &cobra.Command{
 		}()
 
 		go func() {
-			err = e.Start(app.Config().ListenAddr)
+			err = e.Start(a.Config().ListenAddr)
 			if err != nil {
 				slog.Error("failed to start server", "err", err)
 				os.Exit(1)
@@ -67,7 +67,7 @@ var serveCmd = &cobra.Command{
 
 		slog.Info("stopping server")
 
-		err = app.Shutdown()
+		err = a.Shutdown()
 		if err != nil {
 			slog.Error("failed to shutdown app", "err", err)
 			os.Exit(1)

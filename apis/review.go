@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
 )
@@ -28,7 +28,7 @@ import (
 // one finished. The staleness check is what actually bounds the cost.
 func dispatchReviewYear(
 	ctx context.Context,
-	app core.App,
+	app *app.App,
 	userId string,
 	year int,
 ) {
@@ -71,7 +71,7 @@ func dispatchReviewYear(
 
 // dispatchReviewTotal queues regeneration of one user's all-time review,
 // unless it was generated recently.
-func dispatchReviewTotal(ctx context.Context, app core.App, userId string) {
+func dispatchReviewTotal(ctx context.Context, app *app.App, userId string) {
 	needs, err := app.UserService().TotalReviewNeedsRefresh(
 		ctx,
 		userId,
@@ -108,7 +108,7 @@ func dispatchReviewTotal(ctx context.Context, app core.App, userId string) {
 // dispatchReviewCurrentYear refreshes the reviews that change as a result of
 // playback. Plays always stamp the current year, so only that year and the
 // all-time review can have moved.
-func dispatchReviewCurrentYear(ctx context.Context, app core.App, userId string) {
+func dispatchReviewCurrentYear(ctx context.Context, app *app.App, userId string) {
 	year := time.Now().Year()
 
 	dispatchReviewYear(ctx, app, userId, year)
@@ -121,7 +121,7 @@ func dispatchReviewCurrentYear(ctx context.Context, app core.App, userId string)
 // GetUserYearFavoritePlays joins the *current* favorites against each year's
 // play history, so favoriting or unfavoriting a track changes favorite_plays
 // in every year the user played it, not just the current one.
-func dispatchReviewAll(ctx context.Context, app core.App, userId string) {
+func dispatchReviewAll(ctx context.Context, app *app.App, userId string) {
 	needs, err := app.UserService().TotalReviewNeedsRefresh(
 		ctx,
 		userId,

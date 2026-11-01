@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -18,7 +18,7 @@ type GetFavoriteTrackIds struct {
 	Ids []string `json:"ids"`
 }
 
-func InstallFavoriteHandlers(app core.App, group pyrin.Group) {
+func InstallFavoriteHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetUserTrackFavoritesById",

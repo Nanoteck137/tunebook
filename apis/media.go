@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -53,7 +53,7 @@ func handleMediaServiceErrors(err error) error {
 	return err
 }
 
-func InstallMediaHandlers(app core.App, group pyrin.Group) {
+func InstallMediaHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.NormalHandler{
 			Name:   "StreamTrack",

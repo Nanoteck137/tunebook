@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/tools/anvil"
@@ -304,7 +304,7 @@ type GetUserTotalReviewMonths struct {
 	Months []UserTotalReviewMonth `json:"months"`
 }
 
-func InstallUserHandlers(app core.App, group pyrin.Group) {
+func InstallUserHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetAllUserYearReviewMonths",

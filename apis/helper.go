@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/types"
 )
@@ -26,7 +26,7 @@ func RequireAdmin(user *database.User) error {
 }
 
 func User(
-	app core.App,
+	app *app.App,
 	c pyrin.Context,
 	checks ...UserCheckFunc,
 ) (*database.User, error) {
@@ -58,7 +58,7 @@ func parseAuthHeader(authHeader string) string {
 	return splits[1]
 }
 
-func getUser(app core.App, c pyrin.Context) (*database.User, error) {
+func getUser(app *app.App, c pyrin.Context) (*database.User, error) {
 	ctx := c.Request().Context()
 
 	apiTokenHeader := c.Request().Header.Get("X-Api-Token")

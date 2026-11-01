@@ -7,7 +7,7 @@ import (
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/tunebook/apis/render"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
 	"github.com/nanoteck137/tunebook/utils"
@@ -113,7 +113,7 @@ func handleAuthServiceErrors(err error) error {
 	return err
 }
 
-func InstallAuthHandlers(app core.App, group pyrin.Group) {
+func InstallAuthHandlers(app *app.App, group pyrin.Group) {
 	// NOTE(patrik): Provider Authentication
 	group.Register(
 		pyrin.ApiHandler{

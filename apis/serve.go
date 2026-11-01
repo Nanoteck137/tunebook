@@ -5,10 +5,10 @@ import (
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 )
 
-func RegisterApiHandlers(app core.App, g pyrin.Group) {
+func RegisterApiHandlers(app *app.App, g pyrin.Group) {
 	InstallSystemHandlers(app, g)
 	InstallAuthHandlers(app, g)
 	InstallUserHandlers(app, g)
@@ -33,13 +33,13 @@ func RegisterApiHandlers(app core.App, g pyrin.Group) {
 	InstallFavoriteHandlers(app, g)
 }
 
-func RegisterHandlers(app core.App, router pyrin.Router) {
+func RegisterHandlers(app *app.App, router pyrin.Router) {
 	RegisterApiHandlers(app, router.Group("/api/v1"))
 	InstallFilesHandlers(app, router.Group("/files"))
 	InstallStaticHandlers(app, router.Group("/"))
 }
 
-func Server(app core.App) (*pyrin.Server, error) {
+func Server(app *app.App) (*pyrin.Server, error) {
 	s := pyrin.NewServer(&pyrin.ServerConfig{
 		ErrorCallback: func(err error) {
 			slog.Error("api error",

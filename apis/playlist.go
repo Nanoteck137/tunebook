@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/jobs"
 	"github.com/nanoteck137/tunebook/service"
@@ -189,7 +189,7 @@ func handlePlaylistServiceErrors(err error) error {
 	return err
 }
 
-func InstallPlaylistHandlers(app core.App, group pyrin.Group) {
+func InstallPlaylistHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetPlaylists",

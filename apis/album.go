@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/tunebook/core"
+	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/database"
 	"github.com/nanoteck137/tunebook/service"
 	"github.com/nanoteck137/tunebook/types"
@@ -94,7 +94,7 @@ func handleAlbumServiceErrors(err error) error {
 	return err
 }
 
-func InstallAlbumHandlers(app core.App, group pyrin.Group) {
+func InstallAlbumHandlers(app *app.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
 			Name:         "GetAlbums",
