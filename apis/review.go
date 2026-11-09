@@ -3,7 +3,6 @@ package apis
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"github.com/nanoteck137/tunebook/app"
 	"github.com/nanoteck137/tunebook/jobs"
@@ -105,12 +104,15 @@ func dispatchReviewTotal(ctx context.Context, app *app.App, userId string) {
 	}
 }
 
-// dispatchReviewCurrentYear refreshes the reviews that change as a result of
-// playback. Plays always stamp the current year, so only that year and the
-// all-time review can have moved.
-func dispatchReviewCurrentYear(ctx context.Context, app *app.App, userId string) {
-	year := time.Now().Year()
-
+// dispatchReviewForYear refreshes the reviews that change as a result of
+// playback. Plays are bucketed by their event timestamp, so the event's year
+// and the all-time review can have moved.
+func dispatchReviewForYear(
+	ctx context.Context,
+	app *app.App,
+	userId string,
+	year int,
+) {
 	dispatchReviewYear(ctx, app, userId, year)
 	dispatchReviewTotal(ctx, app, userId)
 }

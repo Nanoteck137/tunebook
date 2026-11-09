@@ -303,7 +303,7 @@ func handleErr(err error) error {
 	var e sqlite3.Error
 	if errors.As(err, &e) {
 		switch e.ExtendedCode {
-		case sqlite3.ErrConstraintPrimaryKey:
+		case sqlite3.ErrConstraintPrimaryKey, sqlite3.ErrConstraintUnique:
 			return ErrItemAlreadyExists
 		}
 	}

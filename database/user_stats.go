@@ -117,8 +117,11 @@ func (db DB) IncrementUserStats(
 			"num_tracks_played":  goqu.L("num_tracks_played + 1"),
 			"num_tracks_skipped": goqu.L("num_tracks_skipped + ?", params.SkipDelta),
 			"listening_time":     goqu.L("listening_time + ?", params.ListeningTimeDelta),
-			"last_listened_at":   params.LastListenedAt,
-			"updated":            now,
+			"last_listened_at": goqu.L(
+				"MAX(COALESCE(last_listened_at, 0), ?)",
+				params.LastListenedAt,
+			),
+			"updated": now,
 		}),
 	)
 

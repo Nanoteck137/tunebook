@@ -531,6 +531,10 @@ export const TrackHistory = z.object({
   "userId": z.string(),
   // Name: TrackHistory.track
   "track": Track,
+  // Name: TrackHistory.clientEventId
+  "clientEventId": z.string().optional(),
+  // Name: TrackHistory.source
+  "source": z.string(),
   // Name: TrackHistory.listenedAt
   "listenedAt": z.number(),
   // Name: TrackHistory.playbackType
@@ -1217,8 +1221,50 @@ export type GetUserYearReviewTracks = z.infer<typeof GetUserYearReviewTracks>;
 export const PushTrackHistory = z.object({
   // Name: PushTrackHistory.id
   "id": z.string(),
+  // Name: PushTrackHistory.duplicate
+  "duplicate": z.boolean(),
+  // Name: PushTrackHistory.status
+  "status": z.string().optional(),
+  // Name: PushTrackHistory.listenedAt
+  "listenedAt": z.number().optional(),
+  // Name: PushTrackHistory.percentPlayed
+  "percentPlayed": z.number().optional(),
+  // Name: PushTrackHistory.source
+  "source": z.string(),
 });
 export type PushTrackHistory = z.infer<typeof PushTrackHistory>;
+
+// Name: PushTrackHistoryBatchResult
+export const PushTrackHistoryBatchResult = z.object({
+  // Name: PushTrackHistoryBatchResult.clientEventId
+  "clientEventId": z.string().optional(),
+  // Name: PushTrackHistoryBatchResult.id
+  "id": z.string().optional(),
+  // Name: PushTrackHistoryBatchResult.result
+  "result": z.string(),
+  // Name: PushTrackHistoryBatchResult.status
+  "status": z.string().optional(),
+  // Name: PushTrackHistoryBatchResult.listenedAt
+  "listenedAt": z.number().optional(),
+  // Name: PushTrackHistoryBatchResult.percentPlayed
+  "percentPlayed": z.number().optional(),
+  // Name: PushTrackHistoryBatchResult.duplicate
+  "duplicate": z.boolean(),
+  // Name: PushTrackHistoryBatchResult.reason
+  "reason": z.string().optional(),
+  // Name: PushTrackHistoryBatchResult.error
+  "error": z.string().optional(),
+  // Name: PushTrackHistoryBatchResult.source
+  "source": z.string().optional(),
+});
+export type PushTrackHistoryBatchResult = z.infer<typeof PushTrackHistoryBatchResult>;
+
+// Name: PushTrackHistoryBatch
+export const PushTrackHistoryBatch = z.object({
+  // Name: PushTrackHistoryBatch.results
+  "results": z.array(PushTrackHistoryBatchResult),
+});
+export type PushTrackHistoryBatch = z.infer<typeof PushTrackHistoryBatch>;
 
 // Name: PushTrackHistoryBody
 export const PushTrackHistoryBody = z.object({
@@ -1228,8 +1274,21 @@ export const PushTrackHistoryBody = z.object({
   "playbackType": z.string(),
   // Name: PushTrackHistoryBody.percentPlayed
   "percentPlayed": z.number(),
+  // Name: PushTrackHistoryBody.clientEventId
+  "clientEventId": z.string().optional(),
+  // Name: PushTrackHistoryBody.listenedAt
+  "listenedAt": z.number().nullable().optional(),
+  // Name: PushTrackHistoryBody.source
+  "source": z.string(),
 });
 export type PushTrackHistoryBody = z.infer<typeof PushTrackHistoryBody>;
+
+// Name: PushTrackHistoryBatchBody
+export const PushTrackHistoryBatchBody = z.object({
+  // Name: PushTrackHistoryBatchBody.events
+  "events": z.array(PushTrackHistoryBody),
+});
+export type PushTrackHistoryBatchBody = z.infer<typeof PushTrackHistoryBatchBody>;
 
 // Name: RemovePlaylistItemBody
 export const RemovePlaylistItemBody = z.object({

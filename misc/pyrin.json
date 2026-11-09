@@ -1633,6 +1633,106 @@
           "name": "id",
           "type": "string",
           "omitEmpty": false
+        },
+        {
+          "name": "duplicate",
+          "type": "bool",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "listenedAt",
+          "type": "int",
+          "omitEmpty": true
+        },
+        {
+          "name": "percentPlayed",
+          "type": "int",
+          "omitEmpty": true
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "PushTrackHistoryBatch",
+      "fields": [
+        {
+          "name": "results",
+          "type": "[]PushTrackHistoryBatchResult",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "PushTrackHistoryBatchBody",
+      "fields": [
+        {
+          "name": "events",
+          "type": "[]PushTrackHistoryBody",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "PushTrackHistoryBatchResult",
+      "fields": [
+        {
+          "name": "clientEventId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "result",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "listenedAt",
+          "type": "int",
+          "omitEmpty": true
+        },
+        {
+          "name": "percentPlayed",
+          "type": "int",
+          "omitEmpty": true
+        },
+        {
+          "name": "duplicate",
+          "type": "bool",
+          "omitEmpty": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "error",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "omitEmpty": true
         }
       ]
     },
@@ -1652,6 +1752,21 @@
         {
           "name": "percentPlayed",
           "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "clientEventId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "listenedAt",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "source",
+          "type": "string",
           "omitEmpty": false
         }
       ]
@@ -2222,6 +2337,16 @@
         {
           "name": "track",
           "type": "Track",
+          "omitEmpty": false
+        },
+        {
+          "name": "clientEventId",
+          "type": "string",
+          "omitEmpty": true
+        },
+        {
+          "name": "source",
+          "type": "string",
           "omitEmpty": false
         },
         {
@@ -3051,6 +3176,14 @@
       "path": "/api/v1/history/tracks",
       "response": "PushTrackHistory",
       "body": "PushTrackHistoryBody"
+    },
+    {
+      "type": "api",
+      "name": "PushTrackHistoryBatch",
+      "method": "POST",
+      "path": "/api/v1/history/tracks/batch",
+      "response": "PushTrackHistoryBatch",
+      "body": "PushTrackHistoryBatchBody"
     },
     {
       "type": "api",

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -27,6 +28,9 @@ type TrackHistory struct {
 	UserId  string `db:"history_user_id"`
 	TrackId string `db:"history_track_id"`
 
+	ClientEventId sql.NullString `db:"history_client_event_id"`
+	Source        string         `db:"history_source"`
+
 	ListenedAt int64 `db:"history_listened_at"`
 
 	PlaybackType string `db:"history_playback_type"`
@@ -50,6 +54,18 @@ func TrackHistorySchema() *schema.Schema {
 			"trackId",
 			query.TypeString,
 			schema.Column("track_history.track_id"),
+		).
+		AddField(
+			"clientEventId",
+			query.TypeString,
+			schema.Column("track_history.client_event_id"),
+			schema.Nullable(),
+		).
+		AddField(
+			"source",
+			query.TypeString,
+			schema.Column("track_history.source"),
+			schema.Nullable(),
 		).
 		AddField(
 			"listenedAt",
@@ -97,6 +113,10 @@ func TrackHistoryQuery() *goqu.SelectDataset {
 			trackHistoryTbl.Col("user_id").As("history_user_id"),
 			trackHistoryTbl.Col("track_id").As("history_track_id"),
 
+			trackHistoryTbl.Col("client_event_id").As("history_client_event_id"),
+			goqu.COALESCE(trackHistoryTbl.Col("source"), "").
+				As("history_source"),
+
 			trackHistoryTbl.Col("listened_at").As("history_listened_at"),
 
 			trackHistoryTbl.Col("playback_type").As("history_playback_type"),
@@ -120,6 +140,9 @@ type CreateTrackHistoryParams struct {
 
 	UserId  string
 	TrackId string
+
+	ClientEventId string
+	Source        string
 
 	ListenedAt int64
 
@@ -146,11 +169,18 @@ func (db DB) CreateTrackHistory(
 		params.Id = createTrackHistoryId()
 	}
 
+	if params.Source == "" {
+		return "", errors.New("database: track history source is required")
+	}
+
 	query := dialect.Insert(trackHistoryTbl).Rows(goqu.Record{
 		"id": params.Id,
 
 		"user_id":  params.UserId,
 		"track_id": params.TrackId,
+
+		"client_event_id": params.ClientEventId,
+		"source":          params.Source,
 
 		"listened_at": params.ListenedAt,
 
@@ -190,6 +220,9 @@ type GetTrackHistoryParams struct {
 	UserId string
 	Page   types.PageParams
 	Query  types.QueryParams
+
+	ListenedAfter  int64
+	ListenedBefore int64
 }
 
 func (db DB) GetTrackHistory(
@@ -201,6 +234,15 @@ func (db DB) GetTrackHistory(
 	var err error
 
 	query = query.Where(trackHistoryTbl.Col("user_id").Eq(params.UserId))
+
+	if params.ListenedAfter > 0 {
+		query = query.Where(
+			trackHistoryTbl.Col("listened_at").Gt(params.ListenedAfter))
+	}
+	if params.ListenedBefore > 0 {
+		query = query.Where(
+			trackHistoryTbl.Col("listened_at").Lt(params.ListenedBefore))
+	}
 
 	query, err = ApplyQuery(query, trackHistorySchema, params.Query)
 	if err != nil {
@@ -229,6 +271,24 @@ func (db DB) GetTrackHistoryById(
 ) (TrackHistory, error) {
 	query := TrackHistoryQuery().
 		Where(trackHistoryTbl.Col("id").Eq(id))
+
+	return Single[TrackHistory](db, ctx, query)
+}
+
+func (db DB) GetTrackHistoryByClientEventId(
+	ctx context.Context,
+	userId string,
+	clientEventId string,
+) (TrackHistory, error) {
+	if clientEventId == "" {
+		return TrackHistory{}, ErrItemNotFound
+	}
+
+	query := TrackHistoryQuery().
+		Where(
+			trackHistoryTbl.Col("user_id").Eq(userId),
+			trackHistoryTbl.Col("client_event_id").Eq(clientEventId),
+		)
 
 	return Single[TrackHistory](db, ctx, query)
 }

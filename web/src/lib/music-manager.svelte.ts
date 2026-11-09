@@ -183,11 +183,29 @@ class Queue {
 }
 
 function generateRandomId(): string {
-	const bytes = new Uint8Array(16);
-	crypto.getRandomValues(bytes);
-	return Array.from(bytes)
-		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("");
+	if (
+		typeof crypto !== "undefined" &&
+		typeof crypto.getRandomValues === "function"
+	) {
+		const bytes = new Uint8Array(16);
+		crypto.getRandomValues(bytes);
+		return Array.from(bytes)
+			.map((b) => b.toString(16).padStart(2, "0"))
+			.join("");
+	}
+
+	return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function generateClientEventId(): string {
+	if (
+		typeof crypto !== "undefined" &&
+		typeof crypto.randomUUID === "function"
+	) {
+		return crypto.randomUUID();
+	}
+
+	return generateRandomId();
 }
 
 function getDeviceId(): string {
@@ -258,6 +276,8 @@ export class MusicManager {
 	currentItem = $state<MediaItem | null>(null);
 
 	#trackEventSent = $state(false);
+	#trackEventId: string | null = null;
+	#trackStartedAt: number | null = null;
 
 	#restorePosition = 0;
 
@@ -305,6 +325,8 @@ export class MusicManager {
 		this.duration = 0;
 		this.buffered = 0;
 		this.#trackEventSent = false;
+		this.#trackEventId = null;
+		this.#trackStartedAt = null;
 		this.#restorePosition = 0;
 
 		this.#updateMediaSession();
@@ -359,6 +381,9 @@ export class MusicManager {
 
 		this.#audio.addEventListener("playing", () => {
 			this.playing = true;
+			if (this.#trackStartedAt === null) {
+				this.#trackStartedAt = Date.now();
+			}
 			this.#updateMediaSession();
 		});
 
@@ -424,12 +449,23 @@ export class MusicManager {
 		if (!this.currentItem) return;
 
 		const pct = this.duration > 0 ? this.currentTime / this.duration : 0;
-		const percentPlayed = Math.round(pct * 100);
+		const percentPlayed = Math.min(
+			100,
+			Math.max(0, Math.round(pct * 100)),
+		);
+
+		const clientEventId = this.#trackEventId ?? generateClientEventId();
+		this.#trackEventId = clientEventId;
+
+		const listenedAt = this.#trackStartedAt ?? Date.now();
 
 		const res = await this.apiClient.pushTrackHistory({
 			trackId: this.currentItem.trackId,
 			playbackType: "normal",
 			percentPlayed,
+			clientEventId,
+			listenedAt,
+			source: "web",
 		});
 
 		if (!res.success) {
@@ -504,6 +540,8 @@ export class MusicManager {
 		if (mediaItem) {
 			if (mediaItem.trackId !== this.currentItem?.trackId) {
 				this.#trackEventSent = false;
+				this.#trackEventId = null;
+				this.#trackStartedAt = null;
 				this.#restorePosition = 0;
 			}
 

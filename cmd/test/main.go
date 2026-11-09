@@ -415,6 +415,7 @@ func synthesizeYear(
 					"playback_type":  "normal",
 					"status":         status,
 					"percent_played": percentPlayed,
+					"source":         "web",
 
 					"created": listenedAt,
 					"updated": listenedAt,

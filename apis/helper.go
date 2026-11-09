@@ -214,6 +214,20 @@ func parseIntQuery(q url.Values, name string, defaultVal int) int {
 	return defaultVal
 }
 
+func parseEpochMsQuery(q url.Values, name string) (int64, error) {
+	s := q.Get(name)
+	if s == "" {
+		return 0, nil
+	}
+
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil || v < 0 {
+		return 0, InvalidQueryParam(name)
+	}
+
+	return v, nil
+}
+
 func formatTime(ms int64) string {
 	return time.UnixMilli(ms).UTC().Format(time.RFC3339)
 }

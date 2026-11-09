@@ -31,6 +31,12 @@ const (
 	ErrTypeHistoryNotFound      pyrin.ErrorType = "HISTORY_NOT_FOUND"
 	ErrTypeUnsupportedImageType pyrin.ErrorType = "UNSUPPORTED_IMAGE_TYPE"
 
+	ErrTypeInvalidHistoryEvent  pyrin.ErrorType = "INVALID_HISTORY_EVENT"
+	ErrTypeInvalidListenedAt    pyrin.ErrorType = "INVALID_LISTENED_AT"
+	ErrTypeInvalidPlaybackType  pyrin.ErrorType = "INVALID_PLAYBACK_TYPE"
+	ErrTypeInvalidSource        pyrin.ErrorType = "INVALID_SOURCE"
+	ErrTypeHistoryBatchTooLarge pyrin.ErrorType = "HISTORY_BATCH_TOO_LARGE"
+
 	ErrTypeChallengeMismatch pyrin.ErrorType = "CHALLENGE_MISMATCH"
 	ErrTypeProviderNotFound  pyrin.ErrorType = "PROVIDER_NOT_FOUND"
 	ErrTypeRequestNotFound   pyrin.ErrorType = "REQUEST_NOT_FOUND"
@@ -185,6 +191,54 @@ func HistoryNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeHistoryNotFound,
 		Message: "History not found",
+	}
+}
+
+func InvalidHistoryEvent() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidHistoryEvent,
+		Message: "Invalid history event",
+	}
+}
+
+func InvalidListenedAt() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidListenedAt,
+		Message: "Invalid listenedAt",
+	}
+}
+
+func InvalidPlaybackType() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidPlaybackType,
+		Message: "Invalid playback type",
+	}
+}
+
+func InvalidSource() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidSource,
+		Message: "Invalid source",
+	}
+}
+
+func HistoryBatchTooLarge() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeHistoryBatchTooLarge,
+		Message: "History batch too large",
+	}
+}
+
+func InvalidQueryParam(name string) *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidQuery,
+		Message: "Invalid query parameter: " + name,
 	}
 }
 

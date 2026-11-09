@@ -328,6 +328,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/history/tracks", "POST", api.PushTrackHistory, z.any().optional(), body, options)
   }
   
+  pushTrackHistoryBatch(body: api.PushTrackHistoryBatchBody, options?: ExtraOptions) {
+    return this.request("/api/v1/history/tracks/batch", "POST", api.PushTrackHistoryBatch, z.any().optional(), body, options)
+  }
+  
   removePlaylistItem(playlistId: string, body: api.RemovePlaylistItemBody, options?: ExtraOptions) {
     return this.request(`/api/v1/playlists/${playlistId}/items`, "DELETE", z.undefined().optional(), z.any().optional(), body, options)
   }
@@ -744,6 +748,10 @@ export class ClientUrls {
   
   pushTrackHistory() {
     return createUrl(this.baseUrl, "/api/v1/history/tracks")
+  }
+  
+  pushTrackHistoryBatch() {
+    return createUrl(this.baseUrl, "/api/v1/history/tracks/batch")
   }
   
   removePlaylistItem(playlistId: string) {
